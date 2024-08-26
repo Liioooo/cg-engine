@@ -1,0 +1,44 @@
+<Scene>
+    <Entity id="camera">
+        <Components>
+            <TransformComponent position="0 4 12" rotation="0 -25 0" scale="1 1 1" />
+            <CameraComponent primary="true" projection="perspective" near="0.1" far="500" fov="80" exposure="0.75" />
+        </Components>
+    </Entity>
+    <Entity>
+        <Components>
+            <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
+            <MeshRendererComponent asset-file="city_map.fbx" />
+        </Components>
+    </Entity>
+    <Entity>
+        <Components>
+            <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
+            <SkyboxComponent hdri-path="kloppenheim_02_2k.hdr" lod="0.1" intensity="0.3" />
+        </Components>
+    </Entity>
+    <Entity>
+        <Components>
+            <TransformComponent position="0 0 0" rotation="25 0 -35" scale="1 1 1" />
+            <DirectionalLightComponent color="#ffffff" intensity="0.6" />
+        </Components>
+    </Entity>
+    <Entity id="canvas">
+        <Components>
+            <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
+            <ScriptComponent script-name="startScript" />
+            <UiCanvasComponent>
+                <UiText id="lost" left="50vw" top="25vh" y-align="center" x-align="center" font="SpaceMono-Bold.ttf" size="15vh" text="Pac3D" color="1 1 1 1" />
+
+                <UiRect id="playButton" left="50vw" top="50vh" width="25vw" height="12vh" fill-color="1 1 1 1" line-color="0.8 0 0 1" y-align="center" x-align="center" z-index="0" />
+                <UiText id="playText" left="50vw" top="50vh" y-align="center" x-align="center" font="SpaceMono-Bold.ttf" size="9vh" text="Play" color="0 0 0 1" z-index="1" />
+
+                <UiRect id="controlsButton" left="50vw" top="70vh" width="22vw" height="9vh" fill-color="1 1 1 1" line-color="0.8 0 0 1" y-align="center" x-align="center" z-index="0" />
+                <UiText id="controlsText" left="50vw" top="70vh" y-align="center" x-align="center" font="SpaceMono-Bold.ttf" size="5vh" text="Controls" color="0 0 0 1" z-index="1" />
+
+                <UiRect id="exitButton" left="50vw" top="85vh" width="22vw" height="10vh" fill-color="1 1 1 1" line-color="0.8 0 0 1" y-align="center" x-align="center" z-index="0" />
+                <UiText id="exitText" left="50vw" top="85vh" y-align="center" x-align="center" font="SpaceMono-Bold.ttf" size="5vh" text="Exit Game" color="0 0 0 1" z-index="1" />
+            </UiCanvasComponent>
+        </Components>
+    </Entity>
+</Scene>

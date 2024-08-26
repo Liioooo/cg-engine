@@ -1,24 +1,24 @@
 [submodule "CgEngine_Solution/vendor/glfw"]
-	path = CgEngine_Solution/vendor/glfw
+	path = CgEngine/vendor/glfw
 	url = https://github.com/glfw/glfw
 	branch = master
 [submodule "CgEngine_Solution/vendor/glm"]
-	path = CgEngine_Solution/vendor/glm
+	path = CgEngine/vendor/glm
 	url = https://github.com/g-truc/glm
 	branch = master
 [submodule "CgEngine_Solution/vendor/spdlog"]
-	path = CgEngine_Solution/vendor/spdlog
+	path = CgEngine/vendor/spdlog
 	url = https://github.com/gabime/spdlog
 	branch = master
 [submodule "CgEngine_Solution/vendor/pugixml"]
-	path = CgEngine_Solution/vendor/pugixml
+	path = CgEngine/vendor/pugixml
 	url = https://github.com/zeux/pugixml.git
 	branch = master
 [submodule "CgEngine_Solution/vendor/assimp"]
-	path = CgEngine_Solution/vendor/assimp
+	path = CgEngine/vendor/assimp
 	url = https://github.com/assimp/assimp.git
 	branch = master
 [submodule "CgEngine_Solution/vendor/freetype"]
-	path = CgEngine_Solution/vendor/freetype
+	path = CgEngine/vendor/freetype
 	url = https://gitlab.freedesktop.org/freetype/freetype.git
 	branch = master
