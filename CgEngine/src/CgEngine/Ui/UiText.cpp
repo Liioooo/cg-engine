@@ -1,5 +1,5 @@
 #include "UiText.h"
-#include "GlobalObjectManager.h"
+#include "Application.h"
 
 namespace CgEngine {
     void UiText::setColor(const glm::vec4& c) {
@@ -17,7 +17,7 @@ namespace CgEngine {
     }
 
     void UiText::setFont(const std::string& name) {
-        font = GlobalObjectManager::getInstance().getResourceManager().getResource<Font>(name);
+        font = Application::get().getResourceManager().getResource<Font>(name);
         textDirty = true;
     }
 

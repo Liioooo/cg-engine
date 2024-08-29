@@ -1,13 +1,15 @@
 #include "MeshRendererComponent.h"
-#include "GlobalObjectManager.h"
+#include "Application.h"
 
 namespace CgEngine {
     void MeshRendererComponent::onAttach(Scene& scene, MeshRendererComponentParams &params) {
+        auto& resourceManager = Application::get().getResourceManager();
+
         if (!params.mesh.empty()) {
-            mesh = GlobalObjectManager::getInstance().getResourceManager().getResource<MeshVertices>(params.mesh);
+            mesh = resourceManager.getResource<MeshVertices>(params.mesh);
             meshNodes.push_back(0);
         } else {
-            mesh = GlobalObjectManager::getInstance().getResourceManager().getResource<MeshVertices>(params.assetFile);
+            mesh = resourceManager.getResource<MeshVertices>(params.assetFile);
             if (params.meshNodes.empty()) {
                 for (uint32_t i = 0; i < mesh->getMeshNodes().size(); i++) {
                     if (!mesh->getMeshNodes().at(i).submeshIndices.empty()) {
@@ -28,7 +30,7 @@ namespace CgEngine {
         if (params.material.empty()) {
             material = nullptr;
         } else {
-            material = GlobalObjectManager::getInstance().getResourceManager().getResource<Material>(params.material);
+            material = resourceManager.getResource<Material>(params.material);
         }
 
         castShadows = params.castShadows;

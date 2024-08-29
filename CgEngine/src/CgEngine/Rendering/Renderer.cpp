@@ -1,7 +1,7 @@
+#include <Application.h>
 #include "Renderer.h"
 #include "glad/glad.h"
 #include "Asserts.h"
-#include "GlobalObjectManager.h"
 #include "FileSystem.h"
 
 namespace CgEngine {
@@ -352,7 +352,7 @@ namespace CgEngine {
     }
 
     std::pair<TextureCube*, TextureCube*> Renderer::createEnvironmentMap(const std::string &hdriPath) {
-        auto& resourceManager = GlobalObjectManager::getInstance().getResourceManager();
+        auto& resourceManager = Application::get().getResourceManager();
 
         TextureCube* irradianceMap = nullptr;
         TextureCube* prefilterMap = nullptr;

@@ -3,7 +3,6 @@
 #include "Rendering/Renderer.h"
 #include "Asserts.h"
 #include "FileSystem.h"
-#include "GlobalObjectManager.h"
 #include "Application.h"
 #include <filesystem>
 
@@ -145,7 +144,7 @@ namespace CgEngine {
             vertexOffset += submesh.vertexCount;
         }
 
-        auto& physicsCooking = GlobalObjectManager::getInstance().getPhysicsSystem().getPhysicsCooking();
+        auto& physicsCooking = Application::get().getPhysicsSystem().getPhysicsCooking();
         auto* physicsMesh = physicsCooking.cookTriangleMesh(physicsVertices.data(), physicsVertices.size(), physicsIndices.data(), physicsIndices.size());
         meshNode.physicsTriangleMesh = physicsMesh;
         return *physicsMesh;
@@ -171,7 +170,7 @@ namespace CgEngine {
             }
         }
 
-        auto& physicsCooking = GlobalObjectManager::getInstance().getPhysicsSystem().getPhysicsCooking();
+        auto& physicsCooking = Application::get().getPhysicsSystem().getPhysicsCooking();
         auto* physicsMesh = physicsCooking.cookConvexMesh(physicsVertices.data(), physicsVertices.size());
         meshNode.physicsConvexMesh = physicsMesh;
         return *physicsMesh;
@@ -707,7 +706,7 @@ namespace CgEngine {
             mesh->boneInfluencesBuffer->setData(mesh->boneInfluences.data(), mesh->boneInfluences.size() * sizeof(BoneInfluence));
         }
 
-        auto resourceManager = GlobalObjectManager::getInstance().getResourceManager();
+        auto resourceManager = Application::get().getResourceManager();
 
         if (scene->HasMaterials()) {
             auto& applicationOptions = Application::get().getApplicationOptions();

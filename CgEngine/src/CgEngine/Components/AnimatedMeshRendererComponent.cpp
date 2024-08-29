@@ -1,9 +1,11 @@
 #include "AnimatedMeshRendererComponent.h"
-#include "GlobalObjectManager.h"
+#include "Application.h"
 
 namespace CgEngine {
     void AnimatedMeshRendererComponent::onAttach(Scene& scene, AnimatedMeshRendererComponentParams &params) {
-        mesh = GlobalObjectManager::getInstance().getResourceManager().getResource<MeshVertices>(params.assetFile);
+        auto& resourceManager = Application::get().getResourceManager();
+
+        mesh = resourceManager.getResource<MeshVertices>(params.assetFile);
 
         CG_ASSERT(!mesh->getAnimations().empty(), "Mesh does not contain any Animations")
 
@@ -26,7 +28,7 @@ namespace CgEngine {
         if (params.material.empty()) {
             material = nullptr;
         } else {
-            material = GlobalObjectManager::getInstance().getResourceManager().getResource<Material>(params.material);
+            material = resourceManager.getResource<Material>(params.material);
         }
 
         castShadows = params.castShadows;

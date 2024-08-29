@@ -2,7 +2,6 @@
 #include "Asserts.h"
 #include "Rendering/SceneRenderer.h"
 #include "Application.h"
-#include "GlobalObjectManager.h"
 
 namespace CgEngine {
     Scene::Scene(int viewportWidth, int viewportHeight) : viewportWidth(viewportWidth), viewportHeight(viewportHeight) {
@@ -257,7 +256,7 @@ namespace CgEngine {
 #ifdef CG_ENABLE_DEBUG_FEATURES
         auto& applicationOptions = Application::get().getApplicationOptions();
         if (applicationOptions.debugShowPhysicsColliders) {
-            auto& resourceManager = GlobalObjectManager::getInstance().getResourceManager();
+            auto& resourceManager = Application::get().getResourceManager();
 
             auto& cubeMesh = *resourceManager.getResource<MeshVertices>("CG_CubeMesh");
             for (auto it = componentManager->begin<BoxColliderComponent>(); it != componentManager->end<BoxColliderComponent>(); it++) {
@@ -293,7 +292,7 @@ namespace CgEngine {
         }
 
         if (applicationOptions.debugShowBoundingBoxes) {
-            auto& resourceManager = GlobalObjectManager::getInstance().getResourceManager();
+            auto& resourceManager = Application::get().getResourceManager();
 
             auto& cubeMesh = *resourceManager.getResource<MeshVertices>("CG_CubeMesh");
             for (auto it = componentManager->begin<MeshRendererComponent>(); it != componentManager->end<MeshRendererComponent>(); it++) {

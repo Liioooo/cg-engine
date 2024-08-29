@@ -1,12 +1,13 @@
 #pragma once
 
 #include <INIReader.h>
+#include <Scripting/ScriptManager.h>
+#include <Resources/ResourceManager.h>
 #include "Rendering/SceneRenderer.h"
 #include "Window.h"
 #include "Events/WindowCloseEvent.h"
 #include "Events/WindowResizeEvent.h"
 #include "Events/KeyPressedEvent.h"
-#include "GlobalObjectManager.h"
 #include "Scene/SceneManager.h"
 #include "TimeStep.h"
 
@@ -36,16 +37,23 @@ namespace CgEngine {
         void shutdown();
         float getTime();
         ApplicationOptions& getApplicationOptions();
+        ScriptManager& getScriptManager();
+        PhysicsSystem& getPhysicsSystem();
+        ResourceManager& getResourceManager();
+        SceneManager& getSceneManager();
 
         template<typename S>
         void registerNativeScript(const std::string& name) {
-            GlobalObjectManager::getInstance().getScriptManager().registerNativeScript<S>(name);
+            scriptManager.registerNativeScript<S>(name);
         }
 
     private:
-        INIReader* iniReader;
+        INIReader iniReader;
         ApplicationOptions applicationOptions;
+        ScriptManager scriptManager;
         SceneManager* sceneManager;
+        PhysicsSystem physicsSystem;
+        ResourceManager resourceManager;
         SceneRenderer* sceneRenderer;
         Window* window;
         bool isRunning = true;
@@ -58,7 +66,7 @@ namespace CgEngine {
         void onWindowResize(WindowResizeEvent& event);
         void onKeyPressed(KeyPressedEvent& event);
 
-        static Application* instance;
+        static inline Application* instance;
     };
 
 }

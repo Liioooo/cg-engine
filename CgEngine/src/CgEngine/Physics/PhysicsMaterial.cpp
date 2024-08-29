@@ -1,6 +1,6 @@
 #include "PhysicsMaterial.h"
-#include "GlobalObjectManager.h"
 #include "FileSystem.h"
+#include "Application.h"
 
 namespace CgEngine {
     PhysicsMaterial* PhysicsMaterial::createResource(const std::string& name) {
@@ -8,7 +8,7 @@ namespace CgEngine {
             return new PhysicsMaterial(0.6f, 0.6f, 0.0f);
         }
 
-        auto& resourceManager = GlobalObjectManager::getInstance().getResourceManager();
+        auto& resourceManager = Application::get().getResourceManager();
 
         const pugi::xml_document& materialsXML = resourceManager.getResource<XMLFile>(FileSystem::getAsGamePath("physics-materials.xml"))->getXMLDocument();
         const auto& materials = materialsXML.child("Materials");
@@ -21,7 +21,7 @@ namespace CgEngine {
     }
 
     PhysicsMaterial::PhysicsMaterial(float staticFriction, float dynamicFriction, float restitution) : staticFriction(staticFriction), dynamicFriction(dynamicFriction), restitution(restitution) {
-        auto& physxPhysics = GlobalObjectManager::getInstance().getPhysicsSystem().getPhysxPhysics();
+        auto& physxPhysics = Application::get().getPhysicsSystem().getPhysxPhysics();
 
         physxMaterial = physxPhysics.createMaterial(staticFriction, dynamicFriction, restitution);
     }

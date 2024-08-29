@@ -1,6 +1,6 @@
 #include "CapsuleColliderComponent.h"
 #include "Scene/Scene.h"
-#include "GlobalObjectManager.h"
+#include "Application.h"
 
 namespace CgEngine {
     void CapsuleColliderComponent::onAttach(Scene& scene, CapsuleColliderComponentParams& params) {
@@ -9,7 +9,7 @@ namespace CgEngine {
         isTrigger = params.isTrigger;
         halfHeight = params.halfHeight;
 
-        physicsMaterial = GlobalObjectManager::getInstance().getResourceManager().getResource<PhysicsMaterial>(params.material);
+        physicsMaterial = Application::get().getResourceManager().getResource<PhysicsMaterial>(params.material);
 
 
         if (scene.hasComponent<RigidBodyComponent>(entity)) {

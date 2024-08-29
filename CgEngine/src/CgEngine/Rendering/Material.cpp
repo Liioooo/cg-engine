@@ -1,12 +1,11 @@
 #include "Material.h"
 #include "Renderer.h"
-#include "GlobalObjectManager.h"
 #include "FileSystem.h"
 #include "Application.h"
 
 namespace CgEngine {
     Material *Material::createResource(const std::string& name) {
-        auto& resourceManager = GlobalObjectManager::getInstance().getResourceManager();
+        auto& resourceManager = Application::get().getResourceManager();
 
         const pugi::xml_document& materialsXML = resourceManager.getResource<XMLFile>(FileSystem::getAsGamePath("materials.xml"))->getXMLDocument();
         const auto& materials = materialsXML.child("Materials");

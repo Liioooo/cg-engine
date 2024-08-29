@@ -99,13 +99,13 @@ namespace CgEngine {
                 case GLFW_PRESS: {
                     glfwGetCursorPos(w, &x, &y);
                     MouseButtonPressedEvent e(static_cast<MouseButton>(button), static_cast<float>(x), static_cast<float>(y));
-                    static_cast<Window *>(glfwGetWindowUserPointer(w))->eventCallback(e);
+                    static_cast<Window*>(glfwGetWindowUserPointer(w))->eventCallback(e);
                     break;
                 }
                 case GLFW_RELEASE: {
                     glfwGetCursorPos(w, &x, &y);
                     MouseButtonReleasedEvent e(static_cast<MouseButton>(button), static_cast<float>(x), static_cast<float>(y));
-                    static_cast<Window *>(glfwGetWindowUserPointer(w))->eventCallback(e);
+                    static_cast<Window*>(glfwGetWindowUserPointer(w))->eventCallback(e);
                     break;
                 }
             }

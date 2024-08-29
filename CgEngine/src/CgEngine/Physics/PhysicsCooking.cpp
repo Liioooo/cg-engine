@@ -1,6 +1,6 @@
 #include "PhysicsCooking.h"
-#include "GlobalObjectManager.h"
 #include "Asserts.h"
+#include "Application.h"
 
 namespace CgEngine {
     PhysicsCooking::PhysicsCooking(physx::PxFoundation* pxFoundation, const physx::PxTolerancesScale& tolerancesScale) {
@@ -33,7 +33,7 @@ namespace CgEngine {
 
         CG_ASSERT(status, "Failed to cook TriangleMesh")
 
-        auto& physxPhysics = GlobalObjectManager::getInstance().getPhysicsSystem().getPhysxPhysics();
+        auto& physxPhysics = Application::get().getPhysicsSystem().getPhysxPhysics();
 
         physx::PxDefaultMemoryInputData readBuffer(writeBuffer.getData(), writeBuffer.getSize());
 
@@ -53,7 +53,7 @@ namespace CgEngine {
 
         CG_ASSERT(status, "Failed to cook ConvexMesh")
 
-        auto& physxPhysics = GlobalObjectManager::getInstance().getPhysicsSystem().getPhysxPhysics();
+        auto& physxPhysics = Application::get().getPhysicsSystem().getPhysxPhysics();
 
         physx::PxDefaultMemoryInputData readBuffer(writeBuffer.getData(), writeBuffer.getSize());
 

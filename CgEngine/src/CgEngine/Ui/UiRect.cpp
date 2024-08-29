@@ -1,6 +1,6 @@
 #include "UiRect.h"
-#include "GlobalObjectManager.h"
 #include "FileSystem.h"
+#include "Application.h"
 
 namespace CgEngine {
     void UiRect::setWidth(float width, UIPosUnit unit) {
@@ -30,7 +30,7 @@ namespace CgEngine {
     }
 
     void UiRect::setTexture(const std::string& textureName) {
-        auto& resourceManager = GlobalObjectManager::getInstance().getResourceManager();
+        auto& resourceManager = Application::get().getResourceManager();
         std::string texturePath = FileSystem::getAsGamePath(textureName);
 
         if (resourceManager.hasResource<Texture2D>(texturePath)) {

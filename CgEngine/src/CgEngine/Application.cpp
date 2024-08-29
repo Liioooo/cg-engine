@@ -1,20 +1,11 @@
 #include "Application.h"
 #include "Logging.h"
-#include "GlobalObjectManager.h"
 #include "FileSystem.h"
 
 namespace CgEngine {
-    Application* Application::instance = nullptr;
-
-    Application::Application(const std::string &settingsIni) {
+    Application::Application(const std::string &settingsIni) : iniReader(settingsIni) {
         CgEngine::Logging::init();
         CG_LOGGING_INFO("Starting Application");
-
-        try {
-            iniReader = new INIReader(settingsIni);
-        } catch (const std::runtime_error& e) {
-            CG_LOGGING_ERROR(e.what())
-        }
         Application::instance = this;
     }
 
@@ -22,7 +13,7 @@ namespace CgEngine {
         CG_LOGGING_INFO("Shutting Down!");
 
         Renderer::shutdown();
-        delete iniReader;
+        delete sceneManager;
         delete window;
     }
 
@@ -31,30 +22,31 @@ namespace CgEngine {
     }
 
     void Application::init() {
-        applicationOptions.debugShowPhysicsColliders = iniReader->GetBoolean("application", "debug_show_physics_colliders", false);
-        applicationOptions.debugShowBoundingBoxes = iniReader->GetBoolean("application", "debug_show_bounding_boxes", false);
-        applicationOptions.debugShowNormals = iniReader->GetBoolean("application", "debug_show_normals", false);
-        applicationOptions.debugRenderLines = iniReader->GetBoolean("application", "debug_render_lines", false);
-        applicationOptions.anisotropicFiltering = static_cast<float>(iniReader->GetReal("application", "anisotropic_filtering", 1.0));
-        applicationOptions.shadowMapResolution = iniReader->GetInteger("application", "shadow_map_resolution", 2048);
-        applicationOptions.enableBloom = iniReader->GetBoolean("application", "enable_bloom", true);
+        applicationOptions.debugShowPhysicsColliders = iniReader.GetBoolean("application", "debug_show_physics_colliders", false);
+        applicationOptions.debugShowBoundingBoxes = iniReader.GetBoolean("application", "debug_show_bounding_boxes", false);
+        applicationOptions.debugShowNormals = iniReader.GetBoolean("application", "debug_show_normals", false);
+        applicationOptions.debugRenderLines = iniReader.GetBoolean("application", "debug_render_lines", false);
+        applicationOptions.anisotropicFiltering = static_cast<float>(iniReader.GetReal("application", "anisotropic_filtering", 1.0));
+        applicationOptions.shadowMapResolution = iniReader.GetInteger("application", "shadow_map_resolution", 2048);
+        applicationOptions.enableBloom = iniReader.GetBoolean("application", "enable_bloom", true);
 
         WindowSpecification windowSpecification;
-        windowSpecification.width = iniReader->GetInteger("window", "width", 1280);
-        windowSpecification.height = iniReader->GetInteger("window", "height", 720);
-        windowSpecification.title = iniReader->Get("window", "title", "CG Engine");
-        std::string icon = iniReader->Get("window", "icon", "");
+        windowSpecification.width = iniReader.GetInteger("window", "width", 1280);
+        windowSpecification.height = iniReader.GetInteger("window", "height", 720);
+        windowSpecification.title = iniReader.Get("window", "title", "CG Engine");
+        std::string icon = iniReader.Get("window", "icon", "");
         windowSpecification.icon = icon.empty() ? icon : FileSystem::getAsGamePath(icon);
-        windowSpecification.fullScreen = iniReader->GetBoolean("window", "fullscreen", false);
-        windowSpecification.refreshRate = iniReader->GetInteger("window", "refresh_rate", 60);
-        windowSpecification.vSync = iniReader->GetBoolean("window", "v_sync", true);
+        windowSpecification.fullScreen = iniReader.GetBoolean("window", "fullscreen", false);
+        windowSpecification.refreshRate = iniReader.GetInteger("window", "refresh_rate", 60);
+        windowSpecification.vSync = iniReader.GetBoolean("window", "v_sync", true);
 
         window = new Window(windowSpecification, EVENT_BIND_FN(onEvent));
 
-        sceneManager = &GlobalObjectManager::getInstance().getSceneManager();
-        sceneManager->setViewportSize(window->getWidth(), window->getHeight());
-        sceneManager->setActiveScene(iniReader->Get("game", "startScene", "default_scene.xml"));
         sceneRenderer = new SceneRenderer(window->getWidth(), window->getHeight());
+
+        sceneManager = new SceneManager();
+        sceneManager->setViewportSize(window->getWidth(), window->getHeight());
+        sceneManager->setActiveScene(iniReader.Get("game", "startScene", "default_scene.xml"));
     }
 
     void Application::run() {
@@ -63,9 +55,9 @@ namespace CgEngine {
         while (isRunning) {
             window->pollEvents();
 
-            Scene& activeScene = *sceneManager->getActiveScene();
-            activeScene.onUpdate(timeStep);
-            activeScene.onRender(*sceneRenderer);
+            Scene* activeScene = sceneManager->getActiveScene();
+            activeScene->onUpdate(timeStep);
+            activeScene->onRender(*sceneRenderer);
 
             window->swapBuffers();
 
@@ -89,6 +81,22 @@ namespace CgEngine {
 
     ApplicationOptions& Application::getApplicationOptions() {
         return applicationOptions;
+    }
+
+    ScriptManager& Application::getScriptManager() {
+        return scriptManager;
+    }
+
+    PhysicsSystem& Application::getPhysicsSystem() {
+        return physicsSystem;
+    }
+
+    ResourceManager& Application::getResourceManager() {
+        return resourceManager;
+    }
+
+    SceneManager& Application::getSceneManager() {
+        return *sceneManager;
     }
 
     Window &Application::getWindow() {

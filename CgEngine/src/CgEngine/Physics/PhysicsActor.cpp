@@ -1,15 +1,16 @@
 #include "PhysicsActor.h"
-#include "GlobalObjectManager.h"
 #include "PhysicsShapeBox.h"
 #include "PhysicsShapeSphere.h"
 #include "PhysicsShapeCapsule.h"
 #include "PhysicsShapeTriangleMesh.h"
 #include "PhysicsShapeConvexMesh.h"
 #include "Uuid.h"
+#include "Scene/Scene.h"
+#include "Application.h"
 
 namespace CgEngine {
     PhysicsActor::PhysicsActor(Scene* scene, Entity entity, glm::vec3 pos, glm::quat orientation, bool isDynamic, PhysicsCollisionDetection collisionDetection) : AbstractPhysicsActor(scene, entity), dynamic(isDynamic) {
-        auto& physicsSystem = GlobalObjectManager::getInstance().getPhysicsSystem();
+        auto& physicsSystem = Application::get().getPhysicsSystem();
 
         physx::PxTransform transform(PhysXUtils::glmToPhysXVec(pos), PhysXUtils::glmToPhysXQuat(orientation));
 

@@ -1,6 +1,6 @@
 #include "BoxColliderComponent.h"
 #include "Scene/Scene.h"
-#include "GlobalObjectManager.h"
+#include "Application.h"
 
 namespace CgEngine {
     void BoxColliderComponent::onAttach(Scene& scene, BoxColliderComponentParams& params) {
@@ -8,7 +8,7 @@ namespace CgEngine {
         offset = params.offset;
         isTrigger = params.isTrigger;
 
-        physicsMaterial = GlobalObjectManager::getInstance().getResourceManager().getResource<PhysicsMaterial>(params.material);
+        physicsMaterial = Application::get().getResourceManager().getResource<PhysicsMaterial>(params.material);
 
 
         if (scene.hasComponent<RigidBodyComponent>(entity)) {

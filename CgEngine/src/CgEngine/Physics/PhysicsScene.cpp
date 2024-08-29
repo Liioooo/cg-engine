@@ -1,7 +1,7 @@
 #include "PhysicsScene.h"
-#include "GlobalObjectManager.h"
 #include "Asserts.h"
 #include "Scene/Scene.h"
+#include "Application.h"
 
 namespace CgEngine {
     physx::PxQueryHitType::Enum RaycastQueryFilterCallback::preFilter(const physx::PxFilterData& filterData, const physx::PxShape* shape, const physx::PxRigidActor* actor, physx::PxHitFlags& queryFlags) {
@@ -13,7 +13,7 @@ namespace CgEngine {
     }
 
     PhysicsScene::PhysicsScene() {
-        auto& physicsSystem = GlobalObjectManager::getInstance().getPhysicsSystem();
+        auto& physicsSystem = Application::get().getPhysicsSystem();
 
         simulateTimeStep = physicsSystem.getPhysxSettings().simulateTimeStep;
 
@@ -56,7 +56,7 @@ namespace CgEngine {
     }
 
     PhysicsController* PhysicsScene::createController(Scene& scene, Entity entity, bool hasGravity, float stepOffset, float stepDownOffset, float slopeLimit) {
-        auto& physicsSystem = GlobalObjectManager::getInstance().getPhysicsSystem();
+        auto& physicsSystem = Application::get().getPhysicsSystem();
 
         physx::PxController* physXController = nullptr;
 

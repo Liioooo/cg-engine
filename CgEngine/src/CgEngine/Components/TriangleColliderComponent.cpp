@@ -1,13 +1,13 @@
 #include "TriangleColliderComponent.h"
 #include "Scene/Scene.h"
-#include "GlobalObjectManager.h"
+#include "Application.h"
 
 namespace CgEngine {
     void TriangleColliderComponent::onAttach(Scene& scene, TriangleColliderComponentParams& params) {
         isTrigger = params.isTrigger;
         meshNode = params.meshNode;
 
-        auto& resourceManager = GlobalObjectManager::getInstance().getResourceManager();
+        auto& resourceManager = Application::get().getResourceManager();
 
         physicsMaterial = resourceManager.getResource<PhysicsMaterial>(params.material);
         mesh = resourceManager.getResource<MeshVertices>(params.assetFile);

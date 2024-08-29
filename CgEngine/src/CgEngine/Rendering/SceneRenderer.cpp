@@ -1,11 +1,12 @@
 #include "SceneRenderer.h"
 #include "Asserts.h"
-#include "GlobalObjectManager.h"
 #include "Application.h"
 
 namespace CgEngine {
     SceneRenderer::SceneRenderer(uint32_t viewportWidth, uint32_t viewportHeight) : viewportWidth(viewportWidth), viewportHeight(viewportHeight) {
         emptyMaterial = new Material("EmptyMaterial");
+
+        auto& resourceManager = Application::get().getResourceManager();
 
         {
             ApplicationOptions& applicationOptions = Application::get().getApplicationOptions();
@@ -25,7 +26,7 @@ namespace CgEngine {
             auto* framebuffer = new Framebuffer(shadowMapFramebufferSpec);
 
             RenderPassSpecification shadowMapRenderPassSpec;
-            shadowMapRenderPassSpec.shader = GlobalObjectManager::getInstance().getResourceManager().getResource<Shader>("dirShadowMap");
+            shadowMapRenderPassSpec.shader = resourceManager.getResource<Shader>("dirShadowMap");
             shadowMapRenderPassSpec.framebuffer = framebuffer;
             shadowMapRenderPassSpec.clearColorBuffer = false;
             shadowMapRenderPassSpec.clearDepthBuffer = true;
@@ -46,7 +47,7 @@ namespace CgEngine {
             auto* framebuffer = new Framebuffer(preDepthFramebufferSpec);
 
             RenderPassSpecification preDepthRenderPassSpec;
-            preDepthRenderPassSpec.shader = GlobalObjectManager::getInstance().getResourceManager().getResource<Shader>("preDepth");
+            preDepthRenderPassSpec.shader = resourceManager.getResource<Shader>("preDepth");
             preDepthRenderPassSpec.framebuffer = framebuffer;
             preDepthRenderPassSpec.clearColorBuffer = false;
             preDepthRenderPassSpec.clearDepthBuffer = true;
@@ -68,7 +69,7 @@ namespace CgEngine {
             auto* framebuffer = new Framebuffer(geoFramebufferSpec);
 
             RenderPassSpecification geoRenderPassSpec;
-            geoRenderPassSpec.shader = GlobalObjectManager::getInstance().getResourceManager().getResource<Shader>("pbr");
+            geoRenderPassSpec.shader = resourceManager.getResource<Shader>("pbr");
             geoRenderPassSpec.framebuffer = framebuffer;
             geoRenderPassSpec.depthCompareOperator = DepthCompareOperator::LessOrEqual;
             geoRenderPassSpec.clearDepthBuffer = false;
@@ -78,7 +79,7 @@ namespace CgEngine {
         }
         {
             RenderPassSpecification skyboxRenderPassSpec;
-            skyboxRenderPassSpec.shader = GlobalObjectManager::getInstance().getResourceManager().getResource<Shader>("skybox");
+            skyboxRenderPassSpec.shader = resourceManager.getResource<Shader>("skybox");
             skyboxRenderPassSpec.framebuffer = geometryRenderPass->getSpecification().framebuffer;
             skyboxRenderPassSpec.depthCompareOperator = DepthCompareOperator::LessOrEqual;
             skyboxRenderPassSpec.clearColorBuffer = false;
@@ -109,7 +110,7 @@ namespace CgEngine {
             auto* framebuffer = new Framebuffer(bloomFramebufferSpec);
 
             RenderPassSpecification bloomDownSamplePassSpec;
-            bloomDownSamplePassSpec.shader = GlobalObjectManager::getInstance().getResourceManager().getResource<Shader>("bloomDownSample");
+            bloomDownSamplePassSpec.shader = resourceManager.getResource<Shader>("bloomDownSample");
             bloomDownSamplePassSpec.clearColorBuffer = true;
             bloomDownSamplePassSpec.clearDepthBuffer = false;
             bloomDownSamplePassSpec.depthTest = false;
@@ -119,7 +120,7 @@ namespace CgEngine {
             bloomDownSamplePass = new RenderPass(bloomDownSamplePassSpec);
 
             RenderPassSpecification bloomUpSamplePassSpec;
-            bloomUpSamplePassSpec.shader = GlobalObjectManager::getInstance().getResourceManager().getResource<Shader>("bloomUpSample");
+            bloomUpSamplePassSpec.shader = resourceManager.getResource<Shader>("bloomUpSample");
             bloomUpSamplePassSpec.clearColorBuffer = false;
             bloomUpSamplePassSpec.clearDepthBuffer = false;
             bloomUpSamplePassSpec.depthTest = false;
@@ -134,7 +135,7 @@ namespace CgEngine {
         }
         {
             RenderPassSpecification physicsCollidersRenderPassSpec;
-            physicsCollidersRenderPassSpec.shader = GlobalObjectManager::getInstance().getResourceManager().getResource<Shader>("colliders");
+            physicsCollidersRenderPassSpec.shader = resourceManager.getResource<Shader>("colliders");
             physicsCollidersRenderPassSpec.framebuffer = geometryRenderPass->getSpecification().framebuffer;
             physicsCollidersRenderPassSpec.depthTest = false;
             physicsCollidersRenderPassSpec.depthWrite = false;
@@ -150,7 +151,7 @@ namespace CgEngine {
         }
         {
             RenderPassSpecification boundingBoxRenderPassSpec;
-            boundingBoxRenderPassSpec.shader = GlobalObjectManager::getInstance().getResourceManager().getResource<Shader>("colliders");
+            boundingBoxRenderPassSpec.shader = resourceManager.getResource<Shader>("colliders");
             boundingBoxRenderPassSpec.framebuffer = geometryRenderPass->getSpecification().framebuffer;
             boundingBoxRenderPassSpec.depthTest = true;
             boundingBoxRenderPassSpec.depthWrite = false;
@@ -167,7 +168,7 @@ namespace CgEngine {
         }
         {
             RenderPassSpecification mormalsDebugRenderPassSpec;
-            mormalsDebugRenderPassSpec.shader = GlobalObjectManager::getInstance().getResourceManager().getResource<Shader>("normalsVisualize");
+            mormalsDebugRenderPassSpec.shader = resourceManager.getResource<Shader>("normalsVisualize");
             mormalsDebugRenderPassSpec.framebuffer = geometryRenderPass->getSpecification().framebuffer;
             mormalsDebugRenderPassSpec.depthTest = true;
             mormalsDebugRenderPassSpec.depthWrite = false;
@@ -182,7 +183,7 @@ namespace CgEngine {
         }
         {
             RenderPassSpecification debugLinesRenderPassSpec;
-            debugLinesRenderPassSpec.shader = GlobalObjectManager::getInstance().getResourceManager().getResource<Shader>("lines");
+            debugLinesRenderPassSpec.shader = resourceManager.getResource<Shader>("lines");
             debugLinesRenderPassSpec.framebuffer = geometryRenderPass->getSpecification().framebuffer;
             debugLinesRenderPassSpec.depthTest = true;
             debugLinesRenderPassSpec.depthWrite = false;
@@ -203,7 +204,7 @@ namespace CgEngine {
 
             auto* framebuffer = new Framebuffer(screenFramebufferSpec);
             RenderPassSpecification screenRenderPassSpec;
-            screenRenderPassSpec.shader = GlobalObjectManager::getInstance().getResourceManager().getResource<Shader>("screen");
+            screenRenderPassSpec.shader = resourceManager.getResource<Shader>("screen");
             screenRenderPassSpec.framebuffer = framebuffer;
             screenRenderPassSpec.depthTest = false;
 
@@ -215,7 +216,7 @@ namespace CgEngine {
         }
         {
             RenderPassSpecification uiCircleRenderPassSpec;
-            uiCircleRenderPassSpec.shader = GlobalObjectManager::getInstance().getResourceManager().getResource<Shader>("uiCircle");
+            uiCircleRenderPassSpec.shader = resourceManager.getResource<Shader>("uiCircle");
             uiCircleRenderPassSpec.clearColorBuffer = false;
             uiCircleRenderPassSpec.clearDepthBuffer = false;
             uiCircleRenderPassSpec.depthTest = false;
@@ -229,7 +230,7 @@ namespace CgEngine {
             uiCirclePass = new RenderPass(uiCircleRenderPassSpec);
 
             RenderPassSpecification uiRectRenderPassSpec;
-            uiRectRenderPassSpec.shader = GlobalObjectManager::getInstance().getResourceManager().getResource<Shader>("uiRect");
+            uiRectRenderPassSpec.shader = resourceManager.getResource<Shader>("uiRect");
             uiRectRenderPassSpec.clearColorBuffer = false;
             uiRectRenderPassSpec.clearDepthBuffer = false;
             uiRectRenderPassSpec.depthTest = false;
@@ -243,7 +244,7 @@ namespace CgEngine {
             uiRectPass = new RenderPass(uiRectRenderPassSpec);
 
             RenderPassSpecification uiTextRenderPassSpec;
-            uiTextRenderPassSpec.shader = GlobalObjectManager::getInstance().getResourceManager().getResource<Shader>("uiText");
+            uiTextRenderPassSpec.shader = resourceManager.getResource<Shader>("uiText");
             uiTextRenderPassSpec.clearColorBuffer = false;
             uiTextRenderPassSpec.clearDepthBuffer = false;
             uiTextRenderPassSpec.depthTest = false;
@@ -263,9 +264,9 @@ namespace CgEngine {
             Renderer::getWhiteTexture().bind(i);
         }
 
-        ubCameraData = new UniformBuffer<UBCameraData>("CameraData", 0, *GlobalObjectManager::getInstance().getResourceManager().getResource<Shader>("pbr"));
-        ubLightData = new UniformBuffer<UBLightData>("LightData", 1, *GlobalObjectManager::getInstance().getResourceManager().getResource<Shader>("pbr"));
-        ubDirShadowData = new UniformBuffer<UBDirShadowData>("DirShadowData", 2, *GlobalObjectManager::getInstance().getResourceManager().getResource<Shader>("dirShadowMap"));
+        ubCameraData = new UniformBuffer<UBCameraData>("CameraData", 0, *resourceManager.getResource<Shader>("pbr"));
+        ubLightData = new UniformBuffer<UBLightData>("LightData", 1, *resourceManager.getResource<Shader>("pbr"));
+        ubDirShadowData = new UniformBuffer<UBDirShadowData>("DirShadowData", 2, *resourceManager.getResource<Shader>("dirShadowMap"));
 
         boneTransformsBuffer = new ShaderStorageBuffer();
         boneTransformsBuffer->setData(nullptr, maxBones * maxAnimatedComponents * sizeof(glm::mat4));
@@ -691,7 +692,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::skinMeshes() {
-        auto& resourceManager = GlobalObjectManager::getInstance().getResourceManager();
+        auto& resourceManager = Application::get().getResourceManager();
         auto& skinning = *resourceManager.getResource<ComputeShader>("skinning");
 
         skinning.bind();

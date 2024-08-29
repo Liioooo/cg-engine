@@ -1,7 +1,7 @@
+#include <Application.h>
 #include "NativeScript.h"
 #include "Scene/Scene.h"
 #include "Rendering/SceneRenderer.h"
-#include "GlobalObjectManager.h"
 
 namespace CgEngine {
     void NativeScript::setScene(Scene* scene) {
@@ -61,7 +61,7 @@ namespace CgEngine {
     }
 
     void NativeScript::setActiveScene(const std::string& name) {
-        GlobalObjectManager::getInstance().getSceneManager().setActiveScene(name);
+        Application::get().getSceneManager().setActiveScene(name);
     }
 
     PhysicsRaycastHit NativeScript::physicsRaycast(const glm::vec3& origin, const glm::vec3& direction, float maxDistance, const std::unordered_set<Entity>& excludeEntities) {

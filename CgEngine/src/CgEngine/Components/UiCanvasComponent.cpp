@@ -1,8 +1,8 @@
 #include "FileSystem.h"
 #include "UiCanvasComponent.h"
-#include "GlobalObjectManager.h"
 #include "Ui/UiCircle.h"
 #include "Asserts.h"
+#include "Application.h"
 
 namespace CgEngine {
     void UiCanvasComponent::onAttach(Scene& scene, UiCanvasComponentParams& params) {
@@ -76,7 +76,7 @@ namespace CgEngine {
         std::string textureName = elementNode.attribute("texture").as_string("");
         if (!textureName.empty()) {
             std::string texturePath = FileSystem::getAsGamePath(textureName);
-            auto& resourceManager = GlobalObjectManager::getInstance().getResourceManager();
+            auto& resourceManager = Application::get().getResourceManager();
             element->setTexture(resourceManager.getResource<Texture2D>(texturePath));
         }
 
@@ -93,7 +93,7 @@ namespace CgEngine {
 
         std::string textureName = elementNode.attribute("texture").as_string("");
         if (!textureName.empty()) {
-            auto& resourceManager = GlobalObjectManager::getInstance().getResourceManager();
+            auto& resourceManager = Application::get().getResourceManager();
             std::string texturePath = FileSystem::getAsGamePath(textureName);
 
             if (resourceManager.hasResource<Texture2D>(texturePath)) {
