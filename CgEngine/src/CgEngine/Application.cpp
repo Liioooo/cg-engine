@@ -55,6 +55,8 @@ namespace CgEngine {
         while (isRunning) {
             window->pollEvents();
 
+            resourceManager.updateAsyncResources();
+
             Scene* activeScene = sceneManager->getActiveScene();
             activeScene->onUpdate(timeStep);
             activeScene->onRender(*sceneRenderer);

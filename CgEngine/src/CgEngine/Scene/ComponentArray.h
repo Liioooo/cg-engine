@@ -15,7 +15,7 @@ namespace CgEngine {
     template<typename C>
     class ComponentArray : public IComponentArray {
     public:
-        using ConstIterator = typename std::vector<C>::const_iterator ;
+        using ConstIterator = typename std::vector<C>::const_iterator;
         using Iterator = typename std::vector<C>::iterator;
 
     public:

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Resources/Resource.h>
+
 namespace CgEngine {
 
     enum class TextureFormat {
@@ -27,9 +29,23 @@ namespace CgEngine {
         void freImageData(unsigned char* data);
     }
 
-    class Texture2D {
+    struct Texture2DResourceSpecification {
+        bool srgb = false;
+        TextureWrap wrap = TextureWrap::Repeat;
+        MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear;
+        float anisotropicFiltering = 1.0f;
+    };
+
+    class Texture2D : public Resource {
     public:
         static Texture2D* createResource(const std::string& name);
+        static Texture2D* createResource(const std::string& name, const Texture2DResourceSpecification& spec);
+
+        void resourceManagerLoadAsync() override;
+        bool resourceManagerAsyncLoadingFinished() override;
+        void resourceManagerSetAsyncLoadedData() override;
+
+        static inline bool canLoadAsync = true;
 
         Texture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear, float anisotropicFiltering = 1.0f);
         Texture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, const void* data, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear, float anisotropicFiltering = 1.0f);
@@ -51,14 +67,28 @@ namespace CgEngine {
         void setClampBorderColor(const glm::vec4& color);
         void bufferSubData(int x, int y, int w, int h, const void* data);
         void setUnpackAlignment(int alignment);
-        bool isLoaded() const;
 
     private:
         uint32_t id;
         uint32_t width;
         uint32_t height;
         TextureFormat format;
-        bool loaded = false;
+
+        struct AsyncLoadData {
+            int width;
+            int height;
+            TextureFormat format;
+            int channels;
+            unsigned char* data = nullptr;
+        };
+
+        struct AsyncLoadInfo {
+            Texture2DResourceSpecification spec;
+            std::string name;
+        };
+        AsyncLoadInfo asyncLoadInfo;
+
+        std::future<AsyncLoadData> asyncLoadFuture;
     };
 
     class Texture2DArray {
@@ -87,7 +117,7 @@ namespace CgEngine {
         TextureFormat format;
     };
 
-    class TextureCube {
+    class TextureCube : public Resource {
     public:
         static TextureCube* createResource(const std::string& name);
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Resources/Resource.h>
+
 namespace CgEngine {
 
     class Texture2D;
@@ -26,7 +28,7 @@ namespace CgEngine {
         unsigned int shaderDataTypeToOpenGLBaseType(ShaderDataType type);
     }
 
-    class Shader {
+    class Shader : public Resource {
     public:
         static Shader* createResource(const std::string& name);
 
@@ -53,7 +55,7 @@ namespace CgEngine {
         std::unordered_map<std::string, int32_t> uniformLocations{};
     };
 
-    class ComputeShader {
+    class ComputeShader : public Resource {
     public:
         static ComputeShader* createResource(const std::string& name);
 

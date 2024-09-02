@@ -163,7 +163,7 @@ namespace CgEngine {
     template<typename T>
     T AnimatedMeshRendererComponent::interpolate(uint32_t frameIndex, const std::vector<AnimationKeyFrame<T>>& keyFrames, const std::function<T(const T&, const T&, float)>& interpolateFn) {
         frameIndex = glm::min(frameIndex, static_cast<uint32_t>(keyFrames.size() - 1));
-        uint32_t previousIndex = glm::max(frameIndex - 1, 0u);
+        uint32_t previousIndex = frameIndex == 0 ? 0u : frameIndex - 1;
 
         float scaleFactor = 0.0f;
         float midWayLength = animationTime - keyFrames.at(previousIndex).timeStamp;

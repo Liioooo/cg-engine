@@ -1,10 +1,11 @@
 #pragma once
 
 #include "pugixml.hpp"
+#include "Resources/Resource.h"
 
 namespace CgEngine {
 
-    class XMLFile {
+    class XMLFile : public Resource {
     public:
         static XMLFile* createResource(const std::string& name);
 

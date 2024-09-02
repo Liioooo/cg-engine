@@ -96,13 +96,12 @@ namespace CgEngine {
             auto& resourceManager = Application::get().getResourceManager();
             std::string texturePath = FileSystem::getAsGamePath(textureName);
 
-            if (resourceManager.hasResource<Texture2D>(texturePath)) {
-                element->setTexture(resourceManager.getResource<Texture2D>(texturePath));
-            } else {
-                auto* texture = new Texture2D(texturePath, false, TextureWrap::Repeat, MipMapFiltering::Bilinear);
-                resourceManager.insertResource(texturePath, texture);
-                element->setTexture(texture);
-            }
+            Texture2DResourceSpecification spec{};
+            spec.srgb = false;
+            spec.wrap = TextureWrap::Repeat;
+            spec.mipMapFiltering = MipMapFiltering::Bilinear;
+
+            element->setTexture(resourceManager.getResource<Texture2D>(texturePath, spec));
         }
 
         auto width = stringToPosAndUnit(elementNode.attribute("width").as_string("0"));

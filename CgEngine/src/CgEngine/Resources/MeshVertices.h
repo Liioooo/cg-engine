@@ -48,12 +48,12 @@ namespace CgEngine {
         glm::mat4 transform{1.0f};
     };
 
-    class MeshVertices {
+    class MeshVertices : public Resource {
     public:
         static MeshVertices* createResource(const std::string& name);
+
         static MeshVertices* createFromPhysx(const glm::vec3* vertices, uint32_t numVertices, const uint32_t* indices, uint32_t numIndices);
 
-        MeshVertices() = default;
         ~MeshVertices();
 
         VertexArrayObject* getVAO();
@@ -74,6 +74,8 @@ namespace CgEngine {
         const ShaderStorageBuffer* getBoneInfluencesBuffer() const;
 
     private:
+        MeshVertices() = default;
+
         static MeshVertices* createCubeMesh();
         static MeshVertices* createSphereMesh(uint32_t latSegments, uint32_t lonSegments);
         static MeshVertices* createCapsuleMesh(float height, float radius);

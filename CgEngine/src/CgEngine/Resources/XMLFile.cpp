@@ -10,6 +10,7 @@ namespace CgEngine {
     XMLFile::XMLFile(const std::string &name) {
         CG_ASSERT(FileSystem::checkFileExists(name), "Scene file " + name + "does not exist!")
         xmlDocument.load_string(FileSystem::readFileToString(name).c_str());
+        setLoaded();
     }
 
     const pugi::xml_document& XMLFile::getXMLDocument() {

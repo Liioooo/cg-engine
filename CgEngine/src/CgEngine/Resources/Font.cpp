@@ -56,6 +56,8 @@ namespace CgEngine {
 
             currentAtlasOffset += static_cast<int>(glyphSlot->bitmap.width) + 2;
         }
+
+        setLoaded();
     }
 
     Font::~Font() {

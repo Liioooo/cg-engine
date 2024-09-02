@@ -158,6 +158,7 @@ namespace CgEngine {
         glLinkProgram(programId);
         ShaderUtils::checkErrors(programId, "PROGRAM");
 
+        setLoaded();
         CG_LOGGING_DEBUG("Loaded Shader: {0}", this->name)
     }
 
@@ -227,6 +228,7 @@ namespace CgEngine {
 
         glLinkProgram(programId);
         ShaderUtils::checkErrors(programId, "PROGRAM");
+        setLoaded();
     }
 
     ComputeShader::~ComputeShader() {

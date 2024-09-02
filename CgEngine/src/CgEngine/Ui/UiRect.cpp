@@ -25,7 +25,7 @@ namespace CgEngine {
         this->fillColor = fillColor;
     }
 
-    void UiRect::setTexture(CgEngine::Texture2D* texture) {
+    void UiRect::setTexture(Texture2D* texture) {
         this->texture = texture;
     }
 
@@ -33,13 +33,12 @@ namespace CgEngine {
         auto& resourceManager = Application::get().getResourceManager();
         std::string texturePath = FileSystem::getAsGamePath(textureName);
 
-        if (resourceManager.hasResource<Texture2D>(texturePath)) {
-            setTexture(resourceManager.getResource<Texture2D>(texturePath));
-        } else {
-            auto* tex = new Texture2D(texturePath, false, TextureWrap::Repeat, MipMapFiltering::Bilinear);
-            resourceManager.insertResource(texturePath, tex);
-            setTexture(tex);
-        }
+        Texture2DResourceSpecification spec{};
+        spec.srgb = false;
+        spec.wrap = TextureWrap::Repeat;
+        spec.mipMapFiltering = MipMapFiltering::Bilinear;
+
+        setTexture(resourceManager.getResource<Texture2D>(texturePath, spec));
     }
 
     float UiRect::getLineWidth() const {

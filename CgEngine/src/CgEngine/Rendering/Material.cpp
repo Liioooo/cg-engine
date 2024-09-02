@@ -67,13 +67,13 @@ namespace CgEngine {
         } else {
             std::string albedoTexturePath = FileSystem::getAsGamePath(albedoTexture);
 
-            if (resourceManager.hasResource<Texture2D>(albedoTexturePath)) {
-                material->setTexture2D("u_Mat_AlbedoTexture", *resourceManager.getResource<Texture2D>(albedoTexturePath), 0);
-            } else {
-                auto* texture = new Texture2D(albedoTexturePath, albedoTextureSRGB, TextureWrap::Repeat, MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering);
-                resourceManager.insertResource(albedoTexturePath, texture);
-                material->setTexture2D("u_Mat_AlbedoTexture", *texture, 0);
-            }
+            Texture2DResourceSpecification spec{};
+            spec.srgb = albedoTextureSRGB;
+            spec.wrap = TextureWrap::Repeat;
+            spec.mipMapFiltering = MipMapFiltering::Trilinear;
+            spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
+
+            material->setTexture2D("u_Mat_AlbedoTexture", *resourceManager.getResource<Texture2D>(albedoTexturePath, spec), 0);
         }
         if (metalnessTexture.empty()) {
             material->setTexture2D("u_Mat_MetalnessTexture", Renderer::getWhiteTexture(), 2);
@@ -96,7 +96,9 @@ namespace CgEngine {
         return material;
     }
 
-    Material::Material(std::string name) : materialName(std::move(name)), uuid(Uuid()) {}
+    Material::Material(std::string name) : materialName(std::move(name)), uuid(Uuid()) {
+        setLoaded();
+    }
 
     const std::string &Material::getName() const {
         return materialName;

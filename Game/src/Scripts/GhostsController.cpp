@@ -290,10 +290,10 @@ namespace Game {
                     lightColor = {1.0f, 0.05f, 0.05f};
                     break;
                 case 1:
-                    lightColor = {0.2f, 1.0f, 0.1f};
+                    lightColor = {0.05f, 0.05f, 1.0f};
                     break;
                 case 2:
-                    lightColor = {0.05f, 0.05f, 1.0f};
+                    lightColor = {0.2f, 1.0f, 0.1f};
                     break;
             }
 

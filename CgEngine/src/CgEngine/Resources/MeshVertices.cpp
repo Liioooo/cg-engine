@@ -312,6 +312,7 @@ namespace CgEngine {
         meshNode.localTransform = glm::mat4(1.0f);
         meshNode.aaBoundingBox.addBoxCoordinates({-0.5f, -0.5f, -0.5f}, {0.5f, 0.5f, 0.5f});
 
+        mesh->setLoaded();
         return mesh;
     }
 
@@ -410,6 +411,7 @@ namespace CgEngine {
         meshNode.localTransform = glm::mat4(1.0f);
         meshNode.aaBoundingBox.addBoxCoordinates({-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f, 1.0f});
 
+        mesh->setLoaded();
         return mesh;
     }
 
@@ -576,6 +578,7 @@ namespace CgEngine {
         meshNode.localTransform = glm::mat4(1.0f);
         meshNode.aaBoundingBox.addBoxCoordinates({-radius, -(height / 2 + radius), -radius}, {radius, height / 2 + radius, radius});
 
+        mesh->setLoaded();
         return mesh;
     }
 
@@ -723,33 +726,22 @@ namespace CgEngine {
                 aiString aiEmissiveTexPath;
                 aiTextureMapMode aiEmissiveWrapMode[3];
                 bool hasEmissiveTexture = aiMaterial->GetTexture(aiTextureType_EMISSIVE, 0, &aiEmissiveTexPath, nullptr, nullptr, nullptr, nullptr, aiEmissiveWrapMode) == AI_SUCCESS;
-                bool useEmissiveColor = !hasEmissiveTexture;
                 if (hasEmissiveTexture) {
                     std::string texturePath = getTexturePath(modelPath, aiEmissiveTexPath.C_Str());
-                    if (resourceManager.hasResource<Texture2D>(texturePath)) {
-                        material->setTexture2D("u_Mat_EmissionTexture", *resourceManager.getResource<Texture2D>(texturePath), 4);
-                        if (hasEmissionIntensity) {
-                            material->set("u_Mat_Emission", {aiEmissionIntensity, aiEmissionIntensity, aiEmissionIntensity});
-                        } else {
-                            material->set("u_Mat_Emission", {1.0f, 1.0f, 1.0f});
-                        }
+
+                    Texture2DResourceSpecification spec{};
+                    spec.srgb = true;
+                    spec.wrap = getTextureWrapFromAssimp(aiEmissiveWrapMode[0]);
+                    spec.mipMapFiltering = MipMapFiltering::Trilinear;
+                    spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
+
+                    material->setTexture2D("u_Mat_EmissionTexture", *resourceManager.getResource<Texture2D>(texturePath, spec), 4);
+                    if (hasEmissionIntensity) {
+                        material->set("u_Mat_Emission", {aiEmissionIntensity, aiEmissionIntensity, aiEmissionIntensity});
                     } else {
-                        auto *texture = new Texture2D(texturePath, true, getTextureWrapFromAssimp(aiEmissiveWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering);
-                        if (texture->isLoaded()) {
-                            material->setTexture2D("u_Mat_EmissionTexture", *texture, 4);
-                            if (hasEmissionIntensity) {
-                                material->set("u_Mat_Emission", {aiEmissionIntensity, aiEmissionIntensity, aiEmissionIntensity});
-                            } else {
-                                material->set("u_Mat_Emission", {1.0f, 1.0f, 1.0f});
-                            }
-                            resourceManager.insertResource<Texture2D>(texturePath, texture);
-                        } else {
-                            useEmissiveColor = true;
-                            delete texture;
-                        }
+                        material->set("u_Mat_Emission", {1.0f, 1.0f, 1.0f});
                     }
-                }
-                if (useEmissiveColor) {
+                } else {
                     material->setTexture2D("u_Mat_EmissionTexture", Renderer::getWhiteTexture(), 4);
                     if (hasEmissionColor) {
                         if (hasEmissionIntensity) {
@@ -769,25 +761,18 @@ namespace CgEngine {
                 aiString aiAlbedoTexPath;
                 aiTextureMapMode aiAlbedoWrapMode[3];
                 bool hasAlbedoTexture = aiMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &aiAlbedoTexPath, nullptr, nullptr, nullptr, nullptr, aiAlbedoWrapMode) == AI_SUCCESS;
-                bool useAlbedoColor = !hasAlbedoTexture;
                 if (hasAlbedoTexture) {
                     std::string texturePath = getTexturePath(modelPath, aiAlbedoTexPath.C_Str());
-                    if (resourceManager.hasResource<Texture2D>(texturePath)) {
-                        material->setTexture2D("u_Mat_AlbedoTexture", *resourceManager.getResource<Texture2D>(texturePath), 0);
-                        material->set("u_Mat_AlbedoColor", {1.0f, 1.0f, 1.0f});
-                    } else {
-                        auto *texture = new Texture2D(texturePath, true, getTextureWrapFromAssimp(aiAlbedoWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering);
-                        if (texture->isLoaded()) {
-                            material->setTexture2D("u_Mat_AlbedoTexture", *texture, 0);
-                            material->set("u_Mat_AlbedoColor", {1.0f, 1.0f, 1.0f});
-                            resourceManager.insertResource<Texture2D>(texturePath, texture);
-                        } else {
-                            useAlbedoColor = true;
-                            delete texture;
-                        }
-                    }
-                }
-                if (useAlbedoColor) {
+
+                    Texture2DResourceSpecification spec{};
+                    spec.srgb = true;
+                    spec.wrap = getTextureWrapFromAssimp(aiAlbedoWrapMode[0]);
+                    spec.mipMapFiltering = MipMapFiltering::Trilinear;
+                    spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
+
+                    material->setTexture2D("u_Mat_AlbedoTexture", *resourceManager.getResource<Texture2D>(texturePath, spec), 0);
+                    material->set("u_Mat_AlbedoColor", {1.0f, 1.0f, 1.0f});
+                } else {
                     material->setTexture2D("u_Mat_AlbedoTexture", Renderer::getWhiteTexture(), 0);
                     material->set("u_Mat_AlbedoColor", {aiAlbedo.r, aiAlbedo.g, aiAlbedo.b});
                 }
@@ -801,25 +786,18 @@ namespace CgEngine {
                 aiString aiRoughnessTexPath;
                 aiTextureMapMode aiRoughnessWrapMode[3];
                 bool hasRoughnessTexture = aiMaterial->GetTexture(aiTextureType_SHININESS, 0, &aiRoughnessTexPath, nullptr, nullptr, nullptr, nullptr, aiRoughnessWrapMode) == AI_SUCCESS;
-                bool useRoughnessValue = !hasRoughnessTexture;
                 if (hasRoughnessTexture) {
                     std::string texturePath = getTexturePath(modelPath, aiRoughnessTexPath.C_Str());
-                    if (resourceManager.hasResource<Texture2D>(texturePath)) {
-                        material->setTexture2D("u_Mat_RoughnessTexture", *resourceManager.getResource<Texture2D>(texturePath), 3);
-                        material->set("u_Mat_Roughness", 1.0f);
-                    } else {
-                        auto *texture = new Texture2D(texturePath, false, getTextureWrapFromAssimp(aiRoughnessWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering);
-                        if (texture->isLoaded()) {
-                            material->setTexture2D("u_Mat_RoughnessTexture", *texture, 3);
-                            material->set("u_Mat_Roughness", 1.0f);
-                            resourceManager.insertResource<Texture2D>(texturePath, texture);
-                        } else {
-                            useRoughnessValue = true;
-                            delete texture;
-                        }
-                    }
-                }
-                if (useRoughnessValue) {
+
+                    Texture2DResourceSpecification spec{};
+                    spec.srgb = false;
+                    spec.wrap = getTextureWrapFromAssimp(aiAlbedoWrapMode[0]);
+                    spec.mipMapFiltering = MipMapFiltering::Trilinear;
+                    spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
+
+                    material->setTexture2D("u_Mat_RoughnessTexture", *resourceManager.getResource<Texture2D>(texturePath, spec), 3);
+                    material->set("u_Mat_Roughness", 1.0f);
+                } else {
                     material->setTexture2D("u_Mat_RoughnessTexture", Renderer::getWhiteTexture(), 3);
                     material->set("u_Mat_Roughness", roughness);
                 }
@@ -827,25 +805,18 @@ namespace CgEngine {
                 aiString aiNormalTexPath;
                 aiTextureMapMode aiNormalWrapMode[3];
                 bool hasNormalMap = aiMaterial->GetTexture(aiTextureType_NORMALS, 0, &aiNormalTexPath, nullptr, nullptr, nullptr, nullptr, aiNormalWrapMode) == AI_SUCCESS;
-                bool dontUseNormals = !hasNormalMap;
                 if (hasNormalMap) {
                     std::string texturePath = getTexturePath(modelPath, aiNormalTexPath.C_Str());
-                    if (resourceManager.hasResource<Texture2D>(texturePath)) {
-                        material->setTexture2D("u_Mat_NormalTexture", *resourceManager.getResource<Texture2D>(texturePath), 1);
-                        material->set("u_Mat_UseNormals", true);
-                    } else {
-                        auto *texture = new Texture2D(texturePath, false, getTextureWrapFromAssimp(aiNormalWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering);
-                        if (texture->isLoaded()) {
-                            material->setTexture2D("u_Mat_NormalTexture", *texture, 1);
-                            material->set("u_Mat_UseNormals", true);
-                            resourceManager.insertResource<Texture2D>(texturePath, texture);
-                        } else {
-                            dontUseNormals = true;
-                            delete texture;
-                        }
-                    }
-                }
-                if (dontUseNormals) {
+
+                    Texture2DResourceSpecification spec{};
+                    spec.srgb = false;
+                    spec.wrap = getTextureWrapFromAssimp(aiAlbedoWrapMode[0]);
+                    spec.mipMapFiltering = MipMapFiltering::Trilinear;
+                    spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
+
+                    material->setTexture2D("u_Mat_NormalTexture", *resourceManager.getResource<Texture2D>(texturePath, spec), 1);
+                    material->set("u_Mat_UseNormals", true);
+                } else {
                     material->setTexture2D("u_Mat_NormalTexture", Renderer::getWhiteTexture(), 1);
                     material->set("u_Mat_UseNormals", false);
                 }
@@ -858,25 +829,18 @@ namespace CgEngine {
                 aiString aiMetalnessTexPath;
                 aiTextureMapMode aiMetalnessWrapMode[3];
                 bool hasMetalnessTexture = aiMaterial->GetTexture(aiTextureType_METALNESS, 0, &aiMetalnessTexPath, nullptr, nullptr, nullptr, nullptr, aiMetalnessWrapMode) == AI_SUCCESS;
-                bool useMetalnessValue = !hasMetalnessTexture;
                 if (hasMetalnessTexture) {
                     std::string texturePath = getTexturePath(modelPath, aiMetalnessTexPath.C_Str());
-                    if (resourceManager.hasResource<Texture2D>(texturePath)) {
-                        material->setTexture2D("u_Mat_MetalnessTexture", *resourceManager.getResource<Texture2D>(texturePath), 2);
-                        material->set("u_Mat_Metalness", 1.0f);
-                    } else {
-                        auto *texture = new Texture2D(texturePath, false, getTextureWrapFromAssimp(aiMetalnessWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering);
-                        if (texture->isLoaded()) {
-                            material->setTexture2D("u_Mat_MetalnessTexture", *texture, 2);
-                            material->set("u_Mat_Metalness", 1.0f);
-                            resourceManager.insertResource<Texture2D>(texturePath, texture);
-                        } else {
-                            useMetalnessValue = true;
-                            delete texture;
-                        }
-                    }
-                }
-                if (useMetalnessValue) {
+
+                    Texture2DResourceSpecification spec{};
+                    spec.srgb = false;
+                    spec.wrap = getTextureWrapFromAssimp(aiAlbedoWrapMode[0]);
+                    spec.mipMapFiltering = MipMapFiltering::Trilinear;
+                    spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
+
+                    material->setTexture2D("u_Mat_MetalnessTexture", *resourceManager.getResource<Texture2D>(texturePath, spec), 2);
+                    material->set("u_Mat_Metalness", 1.0f);
+                } else {
                     material->setTexture2D("u_Mat_MetalnessTexture", Renderer::getWhiteTexture(), 2);
                     material->set("u_Mat_Metalness", metalness);
                 }
@@ -887,6 +851,7 @@ namespace CgEngine {
 
         CG_LOGGING_DEBUG("Loaded Mesh Asset: {0}", path);
 
+        mesh->setLoaded();
         return mesh;
     }
 

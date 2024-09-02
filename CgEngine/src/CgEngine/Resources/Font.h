@@ -17,7 +17,7 @@ namespace CgEngine {
         float textureCoord;
     };
 
-    class Font {
+    class Font : public Resource {
     public:
         static Font* createResource(const std::string& name);
 

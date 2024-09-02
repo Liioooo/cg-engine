@@ -24,6 +24,8 @@ namespace CgEngine {
         auto& physxPhysics = Application::get().getPhysicsSystem().getPhysxPhysics();
 
         physxMaterial = physxPhysics.createMaterial(staticFriction, dynamicFriction, restitution);
+
+        setLoaded();
     }
 
     float PhysicsMaterial::getStaticFriction() const {

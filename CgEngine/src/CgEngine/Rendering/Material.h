@@ -11,7 +11,7 @@ namespace CgEngine {
         uint32_t textureSlot;
     };
 
-    class Material {
+    class Material : public Resource {
     public:
         static Material* createResource(const std::string& name);
 

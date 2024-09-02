@@ -1,10 +1,11 @@
 #pragma once
 
 #include "PxPhysicsAPI.h"
+#include "Resources/Resource.h"
 
 namespace CgEngine {
 
-    class PhysicsMaterial {
+    class PhysicsMaterial : public Resource {
     public:
         static PhysicsMaterial* createResource(const std::string& name);
 

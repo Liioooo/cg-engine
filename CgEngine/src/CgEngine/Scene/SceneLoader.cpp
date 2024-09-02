@@ -1,5 +1,6 @@
 #include "SceneLoader.h"
 #include "pugixml.hpp"
+#include "Timer.h"
 
 namespace CgEngine {
     Scene* SceneLoader::loadScene(XMLFile* xmlSceneFile, int viewportWidth, int viewportHeight) {
@@ -41,6 +42,8 @@ namespace CgEngine {
     }
 
     void SceneLoader::createComponent(Scene *scene, Entity entity, const pugi::xml_node &node) {
+        CG_TIME_FN_INFO(node.name())
+
         std::string name = node.name();
         if (name == "TransformComponent") {
             createTransformComponent(scene, entity, node);
