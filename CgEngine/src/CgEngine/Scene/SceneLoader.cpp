@@ -31,10 +31,16 @@ namespace CgEngine {
         }
 
         const auto& componentsNode = node.child("Components");
+        const auto& transformNode = componentsNode.child("TransformComponent");
+
+        createTransformComponent(scene, entity, transformNode);
+
         for (const auto &compNode: componentsNode.children()) {
+            if (std::string_view(compNode.name()) == "TransformComponent") {
+                continue;
+            }
             createComponent(scene, entity, compNode);
         }
-        CG_ASSERT(scene->hasComponent<TransformComponent>(entity), "Every entity must contain a TransformComponent!")
 
         for (const auto &child: node.children("Entity")) {
             createEntity(scene, entity, child);
@@ -44,7 +50,7 @@ namespace CgEngine {
     void SceneLoader::createComponent(Scene *scene, Entity entity, const pugi::xml_node &node) {
         CG_TIME_FN_INFO(node.name())
 
-        std::string name = node.name();
+        std::string_view name = node.name();
         if (name == "TransformComponent") {
             createTransformComponent(scene, entity, node);
         } else if (name == "MeshRendererComponent") {
@@ -83,179 +89,179 @@ namespace CgEngine {
     }
 
      void SceneLoader::createTransformComponent(Scene *scene, Entity entity, const pugi::xml_node &node) {
-        glm::vec3 position = stringTupleToVec3(node.attribute("position").as_string());
-        glm::vec3 rotation = stringTupleToVec3(node.attribute("rotation").as_string());
-        glm::vec3 scale = stringTupleToVec3(node.attribute("scale").as_string());
-        TransformComponentParams params{position, glm::radians(rotation), scale};
+        TransformComponentParams params;
+        if (!node.attribute("position").empty()) params.position = stringTupleToVec3(node.attribute("position").as_string());
+        if (!node.attribute("rotation").empty()) params.rotation = glm::radians(stringTupleToVec3(node.attribute("rotation").as_string()));
+        if (!node.attribute("scale").empty()) params.scale = stringTupleToVec3(node.attribute("scale").as_string());
+
         scene->attachComponent<TransformComponent>(entity, params);
     }
 
     void SceneLoader::createMeshRendererComponent(Scene *scene, Entity entity, const pugi::xml_node &node) {
-        MeshRendererComponentParams params{
-            node.attribute("asset-file").as_string(),
-            node.attribute("mesh").as_string(),
-            node.attribute("material").as_string(),
-            node.attribute("cast-shadows").as_bool(true),
-            getListFromString(node.attribute("mesh-nodes").as_string())
-        };
+        MeshRendererComponentParams params;
+        if (!node.attribute("asset-file").empty()) params.assetFile = node.attribute("asset-file").as_string();
+        if (!node.attribute("mesh").empty()) params.mesh = node.attribute("mesh").as_string();
+        if (!node.attribute("material").empty()) params.material = node.attribute("material").as_string();
+        if (!node.attribute("cast-shadows").empty()) params.castShadows = node.attribute("cast-shadows").as_bool();
+        if (!node.attribute("mesh-nodes").empty()) params.meshNodes = getListFromString(node.attribute("mesh-nodes").as_string());
+
         scene->attachComponent<MeshRendererComponent>(entity, params);
     }
 
     void SceneLoader::createAnimatedMeshRendererComponent(CgEngine::Scene* scene, CgEngine::Entity entity, const pugi::xml_node& node) {
-        AnimatedMeshRendererComponentParams params{
-                node.attribute("asset-file").as_string(),
-                node.attribute("material").as_string(),
-                node.attribute("cast-shadows").as_bool(true),
-                getListFromString(node.attribute("mesh-nodes").as_string()),
-                node.attribute("animation").as_string(""),
-                node.attribute("animation-speed").as_float(1.0f),
-                node.attribute("auto-play").as_bool(true),
-                node.attribute("loop").as_bool(true)
-        };
+        AnimatedMeshRendererComponentParams params;
+        if (!node.attribute("asset-file").empty()) params.assetFile = node.attribute("asset-file").as_string();
+        if (!node.attribute("material").empty()) params.material = node.attribute("material").as_string();
+        if (!node.attribute("cast-shadows").empty()) params.castShadows = node.attribute("cast-shadows").as_bool();
+        if (!node.attribute("mesh-nodes").empty()) params.meshNodes = getListFromString(node.attribute("mesh-nodes").as_string());
+        if (!node.attribute("animation").empty()) params.animation = node.attribute("animation").as_string("");
+        if (!node.attribute("animation-speed").empty()) params.animationSpeed = node.attribute("animation-speed").as_float();
+        if (!node.attribute("auto-play").empty()) params.autoPlayAnimation = node.attribute("auto-play").as_bool();
+        if (!node.attribute("loop").empty()) params.loopAnimation = node.attribute("loop").as_bool();
+
         scene->attachComponent<AnimatedMeshRendererComponent>(entity, params);
     }
 
     void SceneLoader::createCameraComponent(Scene *scene, Entity entity, const pugi::xml_node &node) {
-        CameraComponentParams params{
-            node.attribute("projection").as_string("perspective"),
-            node.attribute("near").as_float(0.1f),
-            node.attribute("far").as_float(100.0f),
-            node.attribute("fov").as_float(60.0f),
-            node.attribute("ortho-size").as_float(10.0f),
-            node.attribute("primary").as_bool(false),
-            node.attribute("exposure").as_float(1.0f),
-            node.attribute("bloom-intensity").as_float(1.0f),
-            node.attribute("bloom-threshold").as_float(0.2f),
+        CameraComponentParams params;
+        if (!node.attribute("projection").empty()) params.projection = node.attribute("projection").as_string();
+        if (!node.attribute("near").empty()) params.cnear = node.attribute("near").as_float();
+        if (!node.attribute("far").empty()) params.cfar = node.attribute("far").as_float();
+        if (!node.attribute("fov").empty()) params.cfov = node.attribute("fov").as_float();
+        if (!node.attribute("ortho-size").empty()) params.orthoSize = node.attribute("ortho-size").as_float();
+        if (!node.attribute("primary").empty()) params.isPrimary = node.attribute("primary").as_bool();
+        if (!node.attribute("exposure").empty()) params.exposure = node.attribute("exposure").as_float();
+        if (!node.attribute("bloom-intensity").empty()) params.bloomIntensity = node.attribute("bloom-intensity").as_float();
+        if (!node.attribute("bloom-threshold").empty()) params.bloomThreshold = node.attribute("bloom-threshold").as_float();
 
-        };
         scene->attachComponent<CameraComponent>(entity, params);
     }
 
     void SceneLoader::createScriptComponent(Scene *scene, Entity entity, const pugi::xml_node &node) {
-        ScriptComponentParams params{
-            node.attribute("script-name").as_string()
-        };
+        ScriptComponentParams params;
+        if (!node.attribute("script-name").empty()) params.scriptName = node.attribute("script-name").as_string();
+
         scene->attachComponent<ScriptComponent>(entity, params);
     }
 
     void SceneLoader::createDirectionalLightComponent(Scene *scene, Entity entity, const pugi::xml_node &node) {
-        DirectionalLightComponentParams params{
-                hexStringToColor(node.attribute("color").as_string("1 1 1")),
-                node.attribute("intensity").as_float(1.0f),
-                node.attribute("cast-shadows").as_bool(true)
-        };
+        DirectionalLightComponentParams params;
+        if (!node.attribute("color").empty()) params.color = hexStringToColor(node.attribute("color").as_string());
+        if (!node.attribute("intensity").empty()) params.intensity = node.attribute("intensity").as_float();
+        if (!node.attribute("cast-shadows").empty()) params.castShadows = node.attribute("cast-shadows").as_bool();
+
         scene->attachComponent<DirectionalLightComponent>(entity, params);
     }
 
     void SceneLoader::createPointLightComponent(Scene *scene, Entity entity, const pugi::xml_node &node) {
-        PointLightComponentParams params{
-                hexStringToColor(node.attribute("color").as_string("1 1 1")),
-                node.attribute("intensity").as_float(1.0f),
-                node.attribute("radius").as_float(5.0f),
-                node.attribute("falloff").as_float(1.0f),
-        };
+        PointLightComponentParams params;
+        if (!node.attribute("color").empty()) params.color = hexStringToColor(node.attribute("color").as_string());
+        if (!node.attribute("intensity").empty()) params.intensity = node.attribute("intensity").as_float();
+        if (!node.attribute("radius").empty()) params.radius = node.attribute("radius").as_float();
+        if (!node.attribute("falloff").empty()) params.falloff = node.attribute("falloff").as_float();
+
         scene->attachComponent<PointLightComponent>(entity, params);
     }
 
     void SceneLoader::createSpotLightComponent(Scene *scene, Entity entity, const pugi::xml_node &node) {
-        SpotLightComponentParams params{
-                hexStringToColor(node.attribute("color").as_string("1 1 1")),
-                node.attribute("intensity").as_float(1.0f),
-                node.attribute("radius").as_float(5.0f),
-                node.attribute("falloff").as_float(1.0f),
-                glm::radians(node.attribute("inner-angle").as_float(30.0f)),
-                glm::radians(node.attribute("outer-angle").as_float(35.0f)),
-        };
+        SpotLightComponentParams params;
+        if (!node.attribute("color").empty()) params.color = hexStringToColor(node.attribute("color").as_string("1 1 1"));
+        if (!node.attribute("intensity").empty()) params.intensity = node.attribute("intensity").as_float(1.0f);
+        if (!node.attribute("radius").empty()) params.radius = node.attribute("radius").as_float(5.0f);
+        if (!node.attribute("falloff").empty()) params.falloff = node.attribute("falloff").as_float(1.0f);
+        if (!node.attribute("inner-angle").empty()) params.innerAngle = glm::radians(node.attribute("inner-angle").as_float(30.0f));
+        if (!node.attribute("outer-angle").empty()) params.outerAngle = glm::radians(node.attribute("outer-angle").as_float(35.0f));
+
         scene->attachComponent<SpotLightComponent>(entity, params);
     }
 
     void SceneLoader::createSkyboxComponent(Scene *scene, Entity entity, const pugi::xml_node &node) {
-        SkyboxComponentParams params{
-            node.attribute("hdri-path").as_string(),
-            node.attribute("intensity").as_float(1.0f),
-            node.attribute("lod").as_float(1.0f)
-        };
+        SkyboxComponentParams params;
+        if (!node.attribute("hdri-path").empty()) params.hdriPath = node.attribute("hdri-path").as_string();
+        if (!node.attribute("intensity").empty()) params.intensity = node.attribute("intensity").as_float();
+        if (!node.attribute("lod").empty()) params.lod = node.attribute("lod").as_float();
+
         scene->attachComponent<SkyboxComponent>(entity, params);
     }
 
     void SceneLoader::createRigidBodyComponent(Scene* scene, Entity entity, const pugi::xml_node& node) {
-        RigidBodyComponentParams params{
-            node.attribute("dynamic").as_bool(false),
-            node.attribute("kinematic").as_bool(false),
-            node.attribute("disable-gravity").as_bool(false),
-            node.attribute("mass").as_float(1.0f),
-            node.attribute("linear-drag").as_float(0.0f),
-            node.attribute("angular-drag").as_float(0.0f),
-            std::strcmp(node.attribute("collision-detection").as_string("discrete"), "discrete") ? PhysicsCollisionDetection::Discrete : PhysicsCollisionDetection::Continuous,
-        };
+        RigidBodyComponentParams params;
+        if (!node.attribute("dynamic").empty()) params.isDynamic = node.attribute("dynamic").as_bool();
+        if (!node.attribute("kinematic").empty()) params.isKinematic = node.attribute("kinematic").as_bool();
+        if (!node.attribute("disable-gravity").empty()) params.disableGravity=  node.attribute("disable-gravity").as_bool();
+        if (!node.attribute("mass").empty()) params.mass = node.attribute("mass").as_float();
+        if (!node.attribute("linear-drag").empty()) params.linearDrag = node.attribute("linear-drag").as_float();
+        if (!node.attribute("angular-drag").empty()) params.angularDrag = node.attribute("angular-drag").as_float();
+        if (!node.attribute("collision-detection").empty()) params.collisionDetection = std::string_view(node.attribute("collision-detection").as_string()) == "discrete" ? PhysicsCollisionDetection::Discrete : PhysicsCollisionDetection::Continuous;
+
         scene->attachComponent<RigidBodyComponent>(entity, params);
     }
 
     void SceneLoader::createBoxColliderComponent(Scene* scene, Entity entity, const pugi::xml_node& node) {
-        BoxColliderComponentParams params{
-            stringTupleToVec3(node.attribute("half-size").as_string("0.5 0.5 0.5")),
-            stringTupleToVec3(node.attribute("offset").as_string("0 0 0")),
-            node.attribute("trigger").as_bool(false),
-            node.attribute("material").as_string("default-physics-material"),
-        };
+        BoxColliderComponentParams params;
+        if (!node.attribute("half-size").empty()) params.halfSize = stringTupleToVec3(node.attribute("half-size").as_string());
+        if (!node.attribute("offset").empty()) params.offset = stringTupleToVec3(node.attribute("offset").as_string());
+        if (!node.attribute("trigger").empty()) params.isTrigger = node.attribute("trigger").as_bool();
+        if (!node.attribute("material").empty()) params.material = node.attribute("material").as_string();
+
         scene->attachComponent<BoxColliderComponent>(entity, params);
     }
 
     void SceneLoader::createSphereColliderComponent(Scene* scene, Entity entity, const pugi::xml_node& node) {
-        SphereColliderComponentParams params{
-            node.attribute("radius").as_float(1.0f),
-            stringTupleToVec3(node.attribute("offset").as_string("0 0 0")),
-            node.attribute("trigger").as_bool(false),
-            node.attribute("material").as_string("default-physics-material"),
-        };
+        SphereColliderComponentParams params;
+        if (!node.attribute("radius").empty()) params.radius = node.attribute("radius").as_float();
+        if (!node.attribute("offset").empty()) params.offset = stringTupleToVec3(node.attribute("offset").as_string());
+        if (!node.attribute("trigger").empty()) params.isTrigger = node.attribute("trigger").as_bool();
+        if (!node.attribute("material").empty()) params.material = node.attribute("material").as_string();
+
         scene->attachComponent<SphereColliderComponent>(entity, params);
     }
 
     void SceneLoader::createCapsuleColliderComponent(Scene* scene, Entity entity, const pugi::xml_node& node) {
-        CapsuleColliderComponentParams params{
-            node.attribute("radius").as_float(1.0f),
-            node.attribute("half-height").as_float(0.5f),
-            stringTupleToVec3(node.attribute("offset").as_string("0 0 0")),
-            node.attribute("trigger").as_bool(false),
-            node.attribute("material").as_string("default-physics-material"),
-        };
+        CapsuleColliderComponentParams params;
+        if (!node.attribute("radius").empty()) params.radius = node.attribute("radius").as_float();
+        if (!node.attribute("half-height").empty()) params.halfHeight = node.attribute("half-height").as_float();
+        if (!node.attribute("offset").empty()) params.offset = stringTupleToVec3(node.attribute("offset").as_string());
+        if (!node.attribute("trigger").empty()) params.isTrigger = node.attribute("trigger").as_bool();
+        if (!node.attribute("material").empty()) params.material = node.attribute("material").as_string();
+
         scene->attachComponent<CapsuleColliderComponent>(entity, params);
     }
 
     void SceneLoader::createTriangleColliderComponent(Scene* scene, Entity entity, const pugi::xml_node& node) {
-        TriangleColliderComponentParams params{
-                node.attribute("asset-file").as_string(""),
-                node.attribute("mesh-node").as_string(""),
-                node.attribute("trigger").as_bool(false),
-                node.attribute("material").as_string("default-physics-material"),
-        };
+        TriangleColliderComponentParams params;
+        if (!node.attribute("asset-file").empty()) params.assetFile = node.attribute("asset-file").as_string();
+        if (!node.attribute("mesh-node").empty()) params.meshNode = node.attribute("mesh-node").as_string();
+        if (!node.attribute("trigger").empty()) params.isTrigger = node.attribute("trigger").as_bool();
+        if (!node.attribute("material").empty()) params.material = node.attribute("material").as_string();
+
         scene->attachComponent<TriangleColliderComponent>(entity, params);
     }
 
     void SceneLoader::createConvexColliderComponent(Scene* scene, Entity entity, const pugi::xml_node& node) {
-        ConvexColliderComponentParams params{
-                node.attribute("asset-file").as_string(""),
-                node.attribute("mesh-node").as_string(""),
-                node.attribute("trigger").as_bool(false),
-                node.attribute("material").as_string("default-physics-material"),
-        };
+        ConvexColliderComponentParams params;
+        if (!node.attribute("asset-file").empty()) params.assetFile = node.attribute("asset-file").as_string();
+        if (!node.attribute("mesh-node").empty()) params.meshNode = node.attribute("mesh-node").as_string();
+        if (!node.attribute("trigger").empty()) params.isTrigger = node.attribute("trigger").as_bool();
+        if (!node.attribute("material").empty()) params.material = node.attribute("material").as_string();
+
         scene->attachComponent<ConvexColliderComponent>(entity, params);
     }
 
     void SceneLoader::createCharacterControllerComponent(CgEngine::Scene* scene, CgEngine::Entity entity, const pugi::xml_node& node) {
-        CharacterControllerComponentParams params{
-            node.attribute("has-gravity").as_bool(true),
-            node.attribute("step-offset").as_float(0.0f),
-            node.attribute("step-down-offset").as_float(0.0f),
-            node.attribute("slope-limit").as_float(0.0f)
-        };
+        CharacterControllerComponentParams params;
+        if (!node.attribute("has-gravity").empty()) params.hasGravity = node.attribute("has-gravity").as_bool();
+        if (!node.attribute("step-offset").empty()) params.stepOffset = node.attribute("step-offset").as_float();
+        if (!node.attribute("step-down-offset").empty()) params.stepDownOffset = node.attribute("step-down-offset").as_float();
+        if (!node.attribute("slope-limit").empty()) params.slopeLimit = node.attribute("slope-limit").as_float();
+
         scene->attachComponent<CharacterControllerComponent>(entity, params);
     }
 
     void SceneLoader::createUiCanvasComponent(Scene* scene, Entity entity, const pugi::xml_node& node) {
-        UiCanvasComponentParams params{
-            node.children()
-        };
+        UiCanvasComponentParams params;
+        if (node.first_child()) params.canvasNode = &node;
+
         scene->attachComponent<UiCanvasComponent>(entity, params);
     }
 

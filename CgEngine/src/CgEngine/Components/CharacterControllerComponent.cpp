@@ -2,6 +2,8 @@
 #include "Scene/Scene.h"
 
 namespace CgEngine {
+    void CharacterControllerComponentParams::verifyParams() const {}
+
     void CharacterControllerComponent::onAttach(Scene& scene, CharacterControllerComponentParams& params) {
         physicsController = scene.getPhysicsScene().createController(scene, entity, params.hasGravity, params.stepOffset, params.stepDownOffset, params.slopeLimit);
     }

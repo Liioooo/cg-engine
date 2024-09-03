@@ -48,6 +48,8 @@ namespace CgEngine {
         const std::unordered_set<Entity>& getChildEntities(Entity entity);
         Entity createEntity();
         Entity createEntity(Entity parent);
+        //Entity instantiatePrefab(const std::string& prefabName);
+        //Entity instantiatePrefab(const std::string& prefabName);
         void setEntityTag(Entity entity, const std::string& tag);
         std::string getEntityTag(Entity entity);
 
@@ -77,11 +79,6 @@ namespace CgEngine {
             return owningScene->hasComponent<C>(entity);
         }
 
-        template<typename C>
-        C& attachComponent() {
-            return owningScene->attachComponent<C>(owningEntity);
-        }
-
         template<typename C, typename P>
         C& attachComponent(P componentPrams) {
             return owningScene->attachComponent<C>(owningEntity, componentPrams);
@@ -90,11 +87,6 @@ namespace CgEngine {
         template<typename C, typename P>
         C& attachComponent(Entity entity, P componentPrams) {
             return owningScene->attachComponent<C>(entity, componentPrams);
-        }
-
-        template<typename C>
-        C& attachComponent(Entity entity) {
-            return owningScene->attachComponent<C>(entity);
         }
 
         template<typename C>

@@ -5,10 +5,12 @@
 namespace CgEngine {
 
     struct PointLightComponentParams {
-        glm::vec3 color;
-        float intensity;
-        float radius;
-        float falloff;
+        glm::vec3 color = {1.0f, 1.0f, 1.0f};
+        float intensity = 1.0f;
+        float radius = 5.0f;
+        float falloff = 1.0f;
+
+        void verifyParams() const;
     };
 
     class PointLightComponent : public Component {

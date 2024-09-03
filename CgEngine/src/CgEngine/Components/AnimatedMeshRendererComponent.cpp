@@ -2,6 +2,10 @@
 #include "Application.h"
 
 namespace CgEngine {
+    void AnimatedMeshRendererComponentParams::verifyParams() const {
+        CG_ASSERT(!assetFile.empty(), "AnimatedMeshRendererComponentParams: 'assetFile' is required.")
+    }
+
     void AnimatedMeshRendererComponent::onAttach(Scene& scene, AnimatedMeshRendererComponentParams &params) {
         auto& resourceManager = Application::get().getResourceManager();
 

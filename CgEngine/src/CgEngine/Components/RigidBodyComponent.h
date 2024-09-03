@@ -7,13 +7,15 @@
 namespace CgEngine {
 
     struct RigidBodyComponentParams {
-        bool isDynamic;
-        bool isKinematic;
-        bool disableGravity;
-        float mass;
-        float linearDrag;
-        float angularDrag;
-        PhysicsCollisionDetection collisionDetection;
+        bool isDynamic = false;
+        bool isKinematic = false;
+        bool disableGravity = false;
+        float mass = 1.0f;
+        float linearDrag = 0.0f;
+        float angularDrag = 0.0f;
+        PhysicsCollisionDetection collisionDetection = PhysicsCollisionDetection::Discrete;
+
+        void verifyParams() const;
     };
 
     class RigidBodyComponent : public Component {

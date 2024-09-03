@@ -6,10 +6,12 @@
 namespace CgEngine {
 
     struct SphereColliderComponentParams {
-        float radius;
-        glm::vec3 offset;
-        bool isTrigger;
-        std::string material;
+        float radius = 1.0f;
+        glm::vec3 offset = {0.0f, 0.0f, 0.0f};
+        bool isTrigger = false;
+        std::string material = "default-physics-material";
+
+        void verifyParams() const;
     };
 
     class SphereColliderComponent : public Component {

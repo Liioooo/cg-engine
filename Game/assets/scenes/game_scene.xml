@@ -8,7 +8,6 @@
     </Entity>
     <Entity>
         <Components>
-            <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
             <SkyboxComponent hdri-path="kloppenheim_02_2k.hdr" lod="0.1" intensity="0.05" />
         </Components>
     </Entity>
@@ -20,7 +19,6 @@
     </Entity>
     <Entity>
         <Components>
-            <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
             <MeshRendererComponent asset-file="city_map.fbx" />
         </Components>
     </Entity>
@@ -49,9 +47,7 @@
         </Components>
     </Entity>
     <Entity id="worldColliders">
-        <Components>
-            <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
-        </Components>
+        <Components/>
         <Entity>
             <Components>
                 <TransformComponent position="0 -0.25 7.75" rotation="0 0 0" scale="66 0.5 82.5" />
@@ -279,7 +275,6 @@
     </Entity>
     <Entity id="inGameCanvas">
         <Components>
-            <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
             <UiCanvasComponent>
                 <UiRect id="live0" left="0.5vw" top="0.5vw" width="4vw" height="4vw" texture="pacMan2D.png" line-width="0" y-align="top" x-align="left" />
                 <UiRect id="live1" left="5vw" top="0.5vw" width="4vw" height="4vw" texture="pacMan2D.png" line-width="0" y-align="top" x-align="left" />
@@ -300,7 +295,6 @@
     </Entity>
     <Entity id="ghostsCoins">
         <Components>
-            <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
             <ScriptComponent script-name="ghostsController" />
         </Components>
     </Entity>
@@ -326,8 +320,6 @@
         </Entity>
     </Entity>
     <Entity id="projectiles">
-        <Components>
-            <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
-        </Components>
+        <Components />
     </Entity>
 </Scene>

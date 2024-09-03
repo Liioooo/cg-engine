@@ -6,15 +6,17 @@
 namespace CgEngine {
 
     struct CameraComponentParams {
-        std::string projection;
-        float cnear;
-        float cfar;
-        float cfov;
-        float orthoSize;
-        bool isPrimary;
-        float exposure;
-        float bloomIntensity;
-        float bloomThreshold;
+        std::string projection = "perspective";
+        float cnear = 0.1f;
+        float cfar = 100.0f;
+        float cfov = 60.0f;
+        float orthoSize = 10.0f;
+        bool isPrimary = false;
+        float exposure = 1.0f;
+        float bloomIntensity = 1.0f;
+        float bloomThreshold = 0.2f;
+
+        void verifyParams() const;
     };
 
     class CameraComponent : public Component {

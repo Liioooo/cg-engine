@@ -10,8 +10,10 @@ namespace CgEngine {
         std::string assetFile;
         std::string mesh;
         std::string material;
-        bool castShadows;
+        bool castShadows = true;
         std::vector<std::string> meshNodes;
+
+        void verifyParams() const;
     };
 
     class MeshRendererComponent : public Component {

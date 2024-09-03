@@ -4,9 +4,9 @@
 
 | **Property** | **Description**                    | **Example** | **Default** |
 |--------------|------------------------------------|-------------|-------------|
-| `position`   | Translation of the entity          | `0 0 0`     | -           |
-| `rotation`   | Local rotation of the entity (deg) | `0 0 0`     | -           |
-| `scale`      | Local scale of the entity          | `0 0 0`     | -           |
+| `position`   | Translation of the entity          | `0 0 0`     | `0 0 0`     |
+| `rotation`   | Local rotation of the entity (deg) | `0 0 0`     | `0 0 0`     |
+| `scale`      | Local scale of the entity          | `0 0 0`     | `1 1 1`     |
 
 ## MeshRendererComponent
 
@@ -97,7 +97,7 @@ application->registerNativeScript<Game::CameraScript>("cameraScript");
 
 | **Property**  | **Description**                                | **Example**  | **Default** |
 |---------------|------------------------------------------------|--------------|-------------|
-| `hdri-path`   | Path to the environment map                    | `skybox.hdr` | /           |
+| `hdri-path`   | Path to the environment map                    | `skybox.hdr` | -           |
 | `intensity`   | Intensity of the environment map               | `1`          | `1`         |
 | `lod`         | Level of detail to display                     | `1`          | `1`         |
 

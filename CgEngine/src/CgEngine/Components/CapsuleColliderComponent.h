@@ -6,11 +6,13 @@
 namespace CgEngine {
 
     struct CapsuleColliderComponentParams {
-        float radius;
-        float halfHeight;
-        glm::vec3 offset;
-        bool isTrigger;
-        std::string material;
+        float radius = 1.0f;
+        float halfHeight = 0.5f;
+        glm::vec3 offset = {0.0f, 0.0f, 0.0f};
+        bool isTrigger = false;
+        std::string material = "default-physics-material";
+
+        void verifyParams() const;
     };
 
     class CapsuleColliderComponent : public Component {

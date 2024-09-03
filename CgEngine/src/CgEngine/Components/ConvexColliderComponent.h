@@ -10,8 +10,10 @@ namespace CgEngine {
     struct ConvexColliderComponentParams {
         std::string assetFile;
         std::string meshNode;
-        bool isTrigger;
-        std::string material;
+        bool isTrigger = false;
+        std::string material = "default-physics-material";
+
+        void verifyParams() const;
     };
 
     class ConvexColliderComponent : public Component {

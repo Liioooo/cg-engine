@@ -5,12 +5,14 @@
 namespace CgEngine {
 
     struct SpotLightComponentParams {
-        glm::vec3 color;
-        float intensity;
-        float radius;
-        float falloff;
-        float innerAngle;
-        float outerAngle;
+        glm::vec3 color = {1.0f, 1.0f, 1.0f};
+        float intensity = 1.0f;
+        float radius = 5.0f;
+        float falloff = 1.0f;
+        float innerAngle = 30.0f;
+        float outerAngle = 35.0f;
+
+        void verifyParams() const;
     };
 
     class SpotLightComponent : public Component {

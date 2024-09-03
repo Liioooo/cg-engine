@@ -7,8 +7,10 @@ namespace CgEngine {
 
     struct SkyboxComponentParams {
         std::string hdriPath;
-        float intensity;
-        float lod;
+        float intensity = 1.0f;
+        float lod = 1.0f;
+
+        void verifyParams() const;
     };
 
     class SkyboxComponent : public Component{

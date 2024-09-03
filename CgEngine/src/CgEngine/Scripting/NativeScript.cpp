@@ -48,16 +48,16 @@ namespace CgEngine {
         return owningScene->createEntity(owningEntity);
     }
 
+    Entity NativeScript::createEntity(Entity parent) {
+        return owningScene->createEntity(parent);
+    }
+
     void NativeScript::setEntityTag(CgEngine::Entity entity, const std::string& tag) {
         owningScene->setEntityTag(entity, tag);
     }
 
     std::string NativeScript::getEntityTag(CgEngine::Entity entity) {
         return owningScene->getEntityTag(entity);
-    }
-
-    Entity NativeScript::createEntity(Entity parent) {
-        return owningScene->createEntity(parent);
     }
 
     void NativeScript::setActiveScene(const std::string& name) {

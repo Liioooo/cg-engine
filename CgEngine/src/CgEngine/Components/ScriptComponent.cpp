@@ -2,6 +2,10 @@
 #include "Application.h"
 
 namespace CgEngine {
+    void ScriptComponentParams::verifyParams() const {
+        CG_ASSERT(!scriptName.empty(), "ScriptComponentParams: 'scriptName' is required.")
+    }
+
     void ScriptComponent::onAttach(Scene &scene, ScriptComponentParams &params) {
         script = Application::get().getScriptManager().getScriptInstance(params.scriptName);
         script->setEntity(entity);

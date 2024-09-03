@@ -9,7 +9,9 @@
 namespace CgEngine {
 
     struct UiCanvasComponentParams {
-        const pugi::xml_object_range<pugi::xml_node_iterator>& elements;
+        const pugi::xml_node* canvasNode = nullptr;
+
+        void verifyParams() const;
     };
 
     class UiCanvasComponent : public Component {

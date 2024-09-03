@@ -10,6 +10,8 @@ namespace CgEngine {
 
     struct ScriptComponentParams {
         std::string scriptName;
+
+        void verifyParams() const;
     };
 
     class ScriptComponent : public Component {

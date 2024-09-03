@@ -5,8 +5,14 @@
 #include "Application.h"
 
 namespace CgEngine {
+    void UiCanvasComponentParams::verifyParams() const {}
+
     void UiCanvasComponent::onAttach(Scene& scene, UiCanvasComponentParams& params) {
-        for (const auto& element: params.elements) {
+        if (params.canvasNode == nullptr) {
+            return;
+        }
+
+        for (const auto& element: params.canvasNode->children()) {
             std::string name = element.name();
             if (name == "UiCircle") {
                 createElementCircle(element);

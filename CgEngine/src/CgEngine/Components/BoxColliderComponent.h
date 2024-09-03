@@ -6,10 +6,12 @@
 namespace CgEngine {
 
     struct BoxColliderComponentParams {
-        glm::vec3 halfSize;
-        glm::vec3 offset;
-        bool isTrigger;
-        std::string material;
+        glm::vec3 halfSize = {0.5f, 0.5f, 0.5f};
+        glm::vec3 offset = {0.0f, 0.0f, 0.0f};
+        bool isTrigger = false;
+        std::string material = "default-physics-material";
+
+        void verifyParams() const;
     };
 
     class BoxColliderComponent : public Component {

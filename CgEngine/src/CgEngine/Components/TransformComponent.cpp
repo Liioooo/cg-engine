@@ -2,6 +2,8 @@
 #include "Scene/Scene.h"
 
 namespace CgEngine {
+    void TransformComponentParams::verifyParams() const {}
+
     void TransformComponent::onAttach(Scene& scene, TransformComponentParams &params) {
         localPosition = params.position;
         localRotationVec = params.rotation;

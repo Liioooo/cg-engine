@@ -2,6 +2,8 @@
 #include "Scene/Scene.h"
 
 namespace CgEngine {
+    void RigidBodyComponentParams::verifyParams() const {}
+
     void RigidBodyComponent::onAttach(Scene& scene, RigidBodyComponentParams& params) {
         auto& transform = scene.getComponent<TransformComponent>(entity);
 

@@ -3,6 +3,11 @@
 #include "Application.h"
 
 namespace CgEngine {
+    void TriangleColliderComponentParams::verifyParams() const {
+        CG_ASSERT(!assetFile.empty(), "TriangleColliderComponentParams: 'assetFile' is required.")
+        CG_ASSERT(!meshNode.empty(), "TriangleColliderComponentParams: 'meshNode' is required.")
+    }
+
     void TriangleColliderComponent::onAttach(Scene& scene, TriangleColliderComponentParams& params) {
         isTrigger = params.isTrigger;
         meshNode = params.meshNode;

@@ -3,6 +3,11 @@
 #include "Application.h"
 
 namespace CgEngine {
+    void ConvexColliderComponentParams::verifyParams() const {
+        CG_ASSERT(!assetFile.empty(), "ConvexColliderComponentParams: 'assetFile' is required.")
+        CG_ASSERT(!meshNode.empty(), "ConvexColliderComponentParams: 'meshNode' is required.")
+    }
+
     void ConvexColliderComponent::onAttach(Scene& scene, ConvexColliderComponentParams& params) {
         isTrigger = params.isTrigger;
         meshNode = params.meshNode;

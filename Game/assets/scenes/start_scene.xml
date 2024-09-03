@@ -7,13 +7,11 @@
     </Entity>
     <Entity>
         <Components>
-            <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
             <MeshRendererComponent asset-file="city_map.fbx" />
         </Components>
     </Entity>
     <Entity>
         <Components>
-            <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
             <SkyboxComponent hdri-path="kloppenheim_02_2k.hdr" lod="0.1" intensity="0.3" />
         </Components>
     </Entity>
@@ -25,7 +23,6 @@
     </Entity>
     <Entity id="canvas">
         <Components>
-            <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
             <ScriptComponent script-name="startScript" />
             <UiCanvasComponent>
                 <UiText id="lost" left="50vw" top="25vh" y-align="center" x-align="center" font="SpaceMono-Bold.ttf" size="15vh" text="Pac3D" color="1 1 1 1" />

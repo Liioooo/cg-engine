@@ -3,6 +3,8 @@
 #include "Application.h"
 
 namespace CgEngine {
+    void CapsuleColliderComponentParams::verifyParams() const {}
+
     void CapsuleColliderComponent::onAttach(Scene& scene, CapsuleColliderComponentParams& params) {
         radius = params.radius;
         offset = params.offset;

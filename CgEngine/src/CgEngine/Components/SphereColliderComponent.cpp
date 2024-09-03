@@ -3,6 +3,8 @@
 #include "Application.h"
 
 namespace CgEngine {
+    void SphereColliderComponentParams::verifyParams() const {}
+
     void SphereColliderComponent::onAttach(Scene& scene, SphereColliderComponentParams& params) {
         radius = params.radius;
         offset = params.offset;

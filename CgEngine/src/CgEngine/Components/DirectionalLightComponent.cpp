@@ -1,6 +1,8 @@
 #include "DirectionalLightComponent.h"
 
 namespace CgEngine {
+    void DirectionalLightComponentParams::verifyParams() const {}
+
     void DirectionalLightComponent::onAttach(Scene &scene, DirectionalLightComponentParams &params) {
         color = params.color;
         intensity = params.intensity;

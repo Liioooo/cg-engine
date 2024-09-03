@@ -1,6 +1,8 @@
 #include "PointLightComponent.h"
 
 namespace CgEngine {
+    void PointLightComponentParams::verifyParams() const {}
+
     void PointLightComponent::onAttach(Scene &scene, PointLightComponentParams &params) {
         color = params.color;
         intensity = params.intensity;

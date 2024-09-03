@@ -6,10 +6,12 @@
 namespace CgEngine {
 
     struct CharacterControllerComponentParams {
-        bool hasGravity;
-        float stepOffset;
-        float stepDownOffset;
-        float slopeLimit;
+        bool hasGravity = true;
+        float stepOffset = 0.0f;
+        float stepDownOffset = 0.0f;
+        float slopeLimit = 0.0f;
+
+        void verifyParams() const;
     };
 
     class CharacterControllerComponent : public Component {

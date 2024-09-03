@@ -3,6 +3,8 @@
 #include "Application.h"
 
 namespace CgEngine {
+    void BoxColliderComponentParams::verifyParams() const {}
+
     void BoxColliderComponent::onAttach(Scene& scene, BoxColliderComponentParams& params) {
         halfSize = params.halfSize;
         offset = params.offset;

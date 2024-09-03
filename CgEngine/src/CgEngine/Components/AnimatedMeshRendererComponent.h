@@ -10,12 +10,14 @@ namespace CgEngine {
     struct AnimatedMeshRendererComponentParams {
         std::string assetFile;
         std::string material;
-        bool castShadows;
+        bool castShadows = true;
         std::vector<std::string> meshNodes;
         std::string animation;
-        float animationSpeed;
-        bool autoPlayAnimation;
-        bool loopAnimation;
+        float animationSpeed = 1.0f;
+        bool autoPlayAnimation = true;
+        bool loopAnimation = true;
+
+        void verifyParams() const;
     };
 
     class AnimatedMeshRendererComponent : public Component {

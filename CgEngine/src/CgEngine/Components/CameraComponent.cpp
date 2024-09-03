@@ -2,6 +2,8 @@
 #include "Scene/Scene.h"
 
 namespace CgEngine {
+    void CameraComponentParams::verifyParams() const {}
+
     void CameraComponent::onAttach(Scene& scene, CameraComponentParams &params) {
         camera = Camera();
 

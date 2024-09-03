@@ -75,17 +75,9 @@ namespace CgEngine {
 
         void executeFixedUpdate(TimeStep ts);
 
-        template<typename C>
-        C& attachComponent(Entity entity) {
-            C comp = C(entity);
-            componentManager->attachComponent(comp);
-            C& addedComp = componentManager->getComponent<C>(entity);
-            addedComp.onAttach(*this);
-            return addedComp;
-        }
-
         template<typename C, typename P>
         C& attachComponent(Entity entity, P componentParams) {
+            componentParams.verifyParams();
             C comp = C(entity);
             componentManager->attachComponent(comp);
             C& addedComp = componentManager->getComponent<C>(entity);

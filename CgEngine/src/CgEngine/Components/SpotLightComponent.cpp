@@ -1,6 +1,8 @@
 #include "SpotLightComponent.h"
 
 namespace CgEngine {
+    void SpotLightComponentParams::verifyParams() const {}
+
     void SpotLightComponent::onAttach(Scene &scene, SpotLightComponentParams &params) {
         color = params.color;
         intensity = params.intensity;
