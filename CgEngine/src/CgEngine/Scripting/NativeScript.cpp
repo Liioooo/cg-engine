@@ -2,6 +2,7 @@
 #include "NativeScript.h"
 #include "Scene/Scene.h"
 #include "Rendering/SceneRenderer.h"
+#include "Scene/PrefabManager.h"
 
 namespace CgEngine {
     void NativeScript::setScene(Scene* scene) {
@@ -52,11 +53,19 @@ namespace CgEngine {
         return owningScene->createEntity(parent);
     }
 
-    void NativeScript::setEntityTag(CgEngine::Entity entity, const std::string& tag) {
+    Entity NativeScript::instantiatePrefab(const std::string& prefabName, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, const std::string& tag, const std::string& id) {
+        return PrefabManager::instantiatePrefab(owningScene, prefabName, owningEntity, position, rotation, scale, tag, id);
+    }
+
+    Entity NativeScript::instantiatePrefab(const std::string& prefabName, Entity parent, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, const std::string& tag, const std::string& id) {
+        return PrefabManager::instantiatePrefab(owningScene, prefabName, parent, position, rotation, scale, tag, id);
+    }
+
+    void NativeScript::setEntityTag(Entity entity, const std::string& tag) {
         owningScene->setEntityTag(entity, tag);
     }
 
-    std::string NativeScript::getEntityTag(CgEngine::Entity entity) {
+    std::string NativeScript::getEntityTag(Entity entity) {
         return owningScene->getEntityTag(entity);
     }
 

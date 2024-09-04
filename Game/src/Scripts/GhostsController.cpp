@@ -242,19 +242,9 @@ namespace Game {
     }
 
     void GhostsController::createCoinAtPos(CgEngine::Entity container, glm::vec3 pos) {
-        CgEngine::Entity e = createEntity(container);
-        setEntityTag(e, "coin");
-
         pos.y -= 0.5f;
 
-        CgEngine::RigidBodyComponentParams rigidBodyParams{};
-        rigidBodyParams.isDynamic = false;
-
-        attachComponent<CgEngine::TransformComponent>(e, CgEngine::TransformComponentParams{pos, glm::vec3(0.0f), glm::vec3(0.1f)});
-        attachComponent<CgEngine::MeshRendererComponent>(e, CgEngine::MeshRendererComponentParams{"", "CG_SphereMesh", "Coins", true});
-        attachComponent<CgEngine::SphereColliderComponent>(e, CgEngine::SphereColliderComponentParams{1.4f, glm::vec3(0.0f), true, "default-physics-material"});
-        attachComponent<CgEngine::RigidBodyComponent>(e, rigidBodyParams);
-
+        instantiatePrefab("coin", container, pos, glm::vec3(0.0f), glm::vec3(0.1f), "coin");
         totalCoinAmount++;
     }
 

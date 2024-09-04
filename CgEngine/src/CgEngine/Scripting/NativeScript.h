@@ -48,8 +48,8 @@ namespace CgEngine {
         const std::unordered_set<Entity>& getChildEntities(Entity entity);
         Entity createEntity();
         Entity createEntity(Entity parent);
-        //Entity instantiatePrefab(const std::string& prefabName);
-        //Entity instantiatePrefab(const std::string& prefabName);
+        Entity instantiatePrefab(const std::string& prefabName, glm::vec3 position = {0.0f, 0.0f, 0.0f}, glm::vec3 rotation = {0.0f, 0.0f, 0.0f}, glm::vec3 scale = {1.0f, 1.0f, 1.0f}, const std::string& tag = "", const std::string& id = "");
+        Entity instantiatePrefab(const std::string& prefabName, Entity parent, glm::vec3 position = {0.0f, 0.0f, 0.0f}, glm::vec3 rotation = {0.0f, 0.0f, 0.0f}, glm::vec3 scale = {1.0f, 1.0f, 1.0f}, const std::string& tag = "", const std::string& id = "");
         void setEntityTag(Entity entity, const std::string& tag);
         std::string getEntityTag(Entity entity);
 

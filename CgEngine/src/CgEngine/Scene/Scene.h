@@ -51,8 +51,6 @@ namespace CgEngine {
         Scene(int viewportWidth, int viewportHeight);
         ~Scene();
 
-        Entity createEntity();
-        Entity createEntity(const std::string& id);
         Entity createEntity(Entity parent);
         Entity createEntity(Entity parent, const std::string& id);
         void destroyEntity(Entity entity);

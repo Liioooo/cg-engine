@@ -6,6 +6,7 @@
 namespace CgEngine {
 
     class SceneLoader {
+        friend class PrefabManager;
     public:
         static Scene* loadScene(XMLFile* xmlSceneFile, int viewportWidth, int viewportHeight);
 
@@ -29,11 +30,6 @@ namespace CgEngine {
         static void createConvexColliderComponent(Scene* scene, Entity entity, const pugi::xml_node& node);
         static void createCharacterControllerComponent(Scene* scene, Entity entity, const pugi::xml_node& node);
         static void createUiCanvasComponent(Scene* scene, Entity entity, const pugi::xml_node& node);
-
-        static glm::vec3 stringTupleToVec3(const std::string& s);
-        static glm::vec3 hexStringToColor(const std::string& s);
-        static std::vector<std::string> getListFromString(const std::string& s);
-
     };
 
 }

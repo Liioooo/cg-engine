@@ -1,6 +1,8 @@
 #include "SceneLoader.h"
 #include "pugixml.hpp"
 #include "Timer.h"
+#include "LoaderUtils.h"
+#include "PrefabManager.h"
 
 namespace CgEngine {
     Scene* SceneLoader::loadScene(XMLFile* xmlSceneFile, int viewportWidth, int viewportHeight) {
@@ -9,7 +11,7 @@ namespace CgEngine {
         const pugi::xml_document& xml = xmlSceneFile->getXMLDocument();
         auto* scene = new Scene(viewportWidth, viewportHeight);
         const auto& sceneNode = xml.child("Scene");
-        for (const auto &item: sceneNode.children()) {
+        for (const auto &item: sceneNode.children("Entity")) {
             createEntity(scene, NoEntity, item);
         }
 
@@ -20,12 +22,7 @@ namespace CgEngine {
     void SceneLoader::createEntity(Scene *scene, Entity parent, const pugi::xml_node& node) {
         const auto& idAttr = node.attribute("id");
         const auto& tagAttr = node.attribute("tag");
-        Entity entity;
-        if (parent == NoEntity) {
-            entity = idAttr.empty() ? scene->createEntity() : scene->createEntity(idAttr.as_string());
-        } else {
-            entity = idAttr.empty() ? scene->createEntity(parent) : scene->createEntity(parent, idAttr.as_string());
-        }
+        Entity entity = idAttr.empty() ? scene->createEntity(parent) : scene->createEntity(parent, idAttr.as_string());
         if (!tagAttr.empty()) {
             scene->setEntityTag(entity, tagAttr.as_string());
         }
@@ -44,6 +41,10 @@ namespace CgEngine {
 
         for (const auto &child: node.children("Entity")) {
             createEntity(scene, entity, child);
+        }
+
+        for (const auto &child: node.children("Prefab")) {
+            PrefabManager::instantiatePrefabFromNode(scene, child, entity);
         }
     }
 
@@ -90,9 +91,9 @@ namespace CgEngine {
 
      void SceneLoader::createTransformComponent(Scene *scene, Entity entity, const pugi::xml_node &node) {
         TransformComponentParams params;
-        if (!node.attribute("position").empty()) params.position = stringTupleToVec3(node.attribute("position").as_string());
-        if (!node.attribute("rotation").empty()) params.rotation = glm::radians(stringTupleToVec3(node.attribute("rotation").as_string()));
-        if (!node.attribute("scale").empty()) params.scale = stringTupleToVec3(node.attribute("scale").as_string());
+        if (!node.attribute("position").empty()) params.position = LoaderUtils::stringTupleToVec3(node.attribute("position").as_string());
+        if (!node.attribute("rotation").empty()) params.rotation = glm::radians(LoaderUtils::stringTupleToVec3(node.attribute("rotation").as_string()));
+        if (!node.attribute("scale").empty()) params.scale = LoaderUtils::stringTupleToVec3(node.attribute("scale").as_string());
 
         scene->attachComponent<TransformComponent>(entity, params);
     }
@@ -103,7 +104,7 @@ namespace CgEngine {
         if (!node.attribute("mesh").empty()) params.mesh = node.attribute("mesh").as_string();
         if (!node.attribute("material").empty()) params.material = node.attribute("material").as_string();
         if (!node.attribute("cast-shadows").empty()) params.castShadows = node.attribute("cast-shadows").as_bool();
-        if (!node.attribute("mesh-nodes").empty()) params.meshNodes = getListFromString(node.attribute("mesh-nodes").as_string());
+        if (!node.attribute("mesh-nodes").empty()) params.meshNodes = LoaderUtils::getListFromString(node.attribute("mesh-nodes").as_string());
 
         scene->attachComponent<MeshRendererComponent>(entity, params);
     }
@@ -113,7 +114,7 @@ namespace CgEngine {
         if (!node.attribute("asset-file").empty()) params.assetFile = node.attribute("asset-file").as_string();
         if (!node.attribute("material").empty()) params.material = node.attribute("material").as_string();
         if (!node.attribute("cast-shadows").empty()) params.castShadows = node.attribute("cast-shadows").as_bool();
-        if (!node.attribute("mesh-nodes").empty()) params.meshNodes = getListFromString(node.attribute("mesh-nodes").as_string());
+        if (!node.attribute("mesh-nodes").empty()) params.meshNodes = LoaderUtils::getListFromString(node.attribute("mesh-nodes").as_string());
         if (!node.attribute("animation").empty()) params.animation = node.attribute("animation").as_string("");
         if (!node.attribute("animation-speed").empty()) params.animationSpeed = node.attribute("animation-speed").as_float();
         if (!node.attribute("auto-play").empty()) params.autoPlayAnimation = node.attribute("auto-play").as_bool();
@@ -146,7 +147,7 @@ namespace CgEngine {
 
     void SceneLoader::createDirectionalLightComponent(Scene *scene, Entity entity, const pugi::xml_node &node) {
         DirectionalLightComponentParams params;
-        if (!node.attribute("color").empty()) params.color = hexStringToColor(node.attribute("color").as_string());
+        if (!node.attribute("color").empty()) params.color = LoaderUtils::hexStringToColor(node.attribute("color").as_string());
         if (!node.attribute("intensity").empty()) params.intensity = node.attribute("intensity").as_float();
         if (!node.attribute("cast-shadows").empty()) params.castShadows = node.attribute("cast-shadows").as_bool();
 
@@ -155,7 +156,7 @@ namespace CgEngine {
 
     void SceneLoader::createPointLightComponent(Scene *scene, Entity entity, const pugi::xml_node &node) {
         PointLightComponentParams params;
-        if (!node.attribute("color").empty()) params.color = hexStringToColor(node.attribute("color").as_string());
+        if (!node.attribute("color").empty()) params.color = LoaderUtils::hexStringToColor(node.attribute("color").as_string());
         if (!node.attribute("intensity").empty()) params.intensity = node.attribute("intensity").as_float();
         if (!node.attribute("radius").empty()) params.radius = node.attribute("radius").as_float();
         if (!node.attribute("falloff").empty()) params.falloff = node.attribute("falloff").as_float();
@@ -165,7 +166,7 @@ namespace CgEngine {
 
     void SceneLoader::createSpotLightComponent(Scene *scene, Entity entity, const pugi::xml_node &node) {
         SpotLightComponentParams params;
-        if (!node.attribute("color").empty()) params.color = hexStringToColor(node.attribute("color").as_string("1 1 1"));
+        if (!node.attribute("color").empty()) params.color = LoaderUtils::hexStringToColor(node.attribute("color").as_string("1 1 1"));
         if (!node.attribute("intensity").empty()) params.intensity = node.attribute("intensity").as_float(1.0f);
         if (!node.attribute("radius").empty()) params.radius = node.attribute("radius").as_float(5.0f);
         if (!node.attribute("falloff").empty()) params.falloff = node.attribute("falloff").as_float(1.0f);
@@ -199,8 +200,8 @@ namespace CgEngine {
 
     void SceneLoader::createBoxColliderComponent(Scene* scene, Entity entity, const pugi::xml_node& node) {
         BoxColliderComponentParams params;
-        if (!node.attribute("half-size").empty()) params.halfSize = stringTupleToVec3(node.attribute("half-size").as_string());
-        if (!node.attribute("offset").empty()) params.offset = stringTupleToVec3(node.attribute("offset").as_string());
+        if (!node.attribute("half-size").empty()) params.halfSize = LoaderUtils::stringTupleToVec3(node.attribute("half-size").as_string());
+        if (!node.attribute("offset").empty()) params.offset = LoaderUtils::stringTupleToVec3(node.attribute("offset").as_string());
         if (!node.attribute("trigger").empty()) params.isTrigger = node.attribute("trigger").as_bool();
         if (!node.attribute("material").empty()) params.material = node.attribute("material").as_string();
 
@@ -210,7 +211,7 @@ namespace CgEngine {
     void SceneLoader::createSphereColliderComponent(Scene* scene, Entity entity, const pugi::xml_node& node) {
         SphereColliderComponentParams params;
         if (!node.attribute("radius").empty()) params.radius = node.attribute("radius").as_float();
-        if (!node.attribute("offset").empty()) params.offset = stringTupleToVec3(node.attribute("offset").as_string());
+        if (!node.attribute("offset").empty()) params.offset = LoaderUtils::stringTupleToVec3(node.attribute("offset").as_string());
         if (!node.attribute("trigger").empty()) params.isTrigger = node.attribute("trigger").as_bool();
         if (!node.attribute("material").empty()) params.material = node.attribute("material").as_string();
 
@@ -221,7 +222,7 @@ namespace CgEngine {
         CapsuleColliderComponentParams params;
         if (!node.attribute("radius").empty()) params.radius = node.attribute("radius").as_float();
         if (!node.attribute("half-height").empty()) params.halfHeight = node.attribute("half-height").as_float();
-        if (!node.attribute("offset").empty()) params.offset = stringTupleToVec3(node.attribute("offset").as_string());
+        if (!node.attribute("offset").empty()) params.offset = LoaderUtils::stringTupleToVec3(node.attribute("offset").as_string());
         if (!node.attribute("trigger").empty()) params.isTrigger = node.attribute("trigger").as_bool();
         if (!node.attribute("material").empty()) params.material = node.attribute("material").as_string();
 
@@ -263,37 +264,5 @@ namespace CgEngine {
         if (node.first_child()) params.canvasNode = &node;
 
         scene->attachComponent<UiCanvasComponent>(entity, params);
-    }
-
-    glm::vec3 SceneLoader::stringTupleToVec3(const std::string& s) {
-        size_t p0 = 0;
-        size_t p1 = s.find(' ');
-        float x = std::stof(s.substr(p0, p1));
-        p0 = p1 + 1;
-        p1 = s.find(' ', p0);
-        float y = std::stof(s.substr(p0, p1));
-        float z = std::stof(s.substr(p1 + 1));
-
-        return {x, y, z};
-    }
-
-    glm::vec3 SceneLoader::hexStringToColor(const std::string& s) {
-        uint64_t color = std::stoul(s.substr(1), nullptr, 16);
-        float r = ((color >> 16) & 0xFF) / 255.0f;
-        float g = ((color >> 8) & 0xFF) / 255.0f;
-        float b = (color & 0xFF) / 255.0f;
-        return {r, g, b};
-    }
-
-    std::vector<std::string> SceneLoader::getListFromString(const std::string& s) {
-        std::vector<std::string> result{};
-        std::stringstream ss(s);
-        std::string item;
-
-        while (std::getline(ss, item, ',')) {
-            result.emplace_back(item);
-        }
-
-        return result;
     }
 }

@@ -13,58 +13,49 @@ namespace CgEngine {
         delete physicsScene;
     }
 
-    Entity Scene::createEntity() {
-        entityCount++;
-        Entity entity = nextEntityId++;
-        children[entity] = std::unordered_set<Entity>();
-        return entity;
-    }
-
-    Entity Scene::createEntity(const std::string &id) {
-        if (idToEntity.find(id) != idToEntity.end()) {
-            CG_ASSERT(false, "Entity-Id is already used")
-            return NoEntity;
-        }
-
-        entityCount++;
-        Entity entity = nextEntityId++;
-        children[entity] = std::unordered_set<Entity>();
-        idToEntity[id] = entity;
-        return entity;
-    }
-
     Entity Scene::createEntity(Entity parent) {
-        if (children.find(parent) == children.end()) {
+        if (parent == NoEntity) {
+            entityCount++;
+            Entity entity = nextEntityId++;
+            children[entity] = std::unordered_set<Entity>();
+            return entity;
+        } else if (children.find(parent) == children.end()) {
             CG_ASSERT(false, "Entity parent doesn't exist")
             return NoEntity;
+        } else {
+            entityCount++;
+            Entity entity = nextEntityId++;
+            children[parent].insert(entity);
+            children[entity] = std::unordered_set<Entity>();
+            parents[entity] = parent;
+            return entity;
         }
-
-        entityCount++;
-        Entity entity = nextEntityId++;
-        children[parent].insert(entity);
-        children[entity] = std::unordered_set<Entity>();
-        parents[entity] = parent;
-        return entity;
-
     }
 
-    Entity Scene::createEntity(Entity parent, const std::string &id) {
-        if (children.find(parent) == children.end()) {
-            CG_ASSERT(false, "Entity parent doesn't exist")
-            return NoEntity;
-        }
+    Entity Scene::createEntity(Entity parent, const std::string& id) {
         if (idToEntity.find(id) != idToEntity.end()) {
             CG_ASSERT(false, "Entity-Id is already used")
             return NoEntity;
         }
 
-        entityCount++;
-        Entity entity = nextEntityId++;
-        idToEntity[id] = entity;
-        children[parent].insert(entity);
-        children[entity] = std::unordered_set<Entity>();
-        parents[entity] = parent;
-        return entity;
+        if (parent == NoEntity) {
+            entityCount++;
+            Entity entity = nextEntityId++;
+            idToEntity[id] = entity;
+            children[entity] = std::unordered_set<Entity>();
+            return entity;
+        } else if (children.find(parent) == children.end()) {
+            CG_ASSERT(false, "Entity parent doesn't exist")
+            return NoEntity;
+        } else {
+            entityCount++;
+            Entity entity = nextEntityId++;
+            idToEntity[id] = entity;
+            children[parent].insert(entity);
+            children[entity] = std::unordered_set<Entity>();
+            parents[entity] = parent;
+            return entity;
+        }
     }
 
     void Scene::destroyEntity(Entity entity) {

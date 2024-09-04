@@ -1,0 +1,24 @@
+<Prefabs>
+    <Prefab name="coin">
+        <Components>
+            <MeshRendererComponent mesh="CG_SphereMesh" material="Coins" cast-shadows="true" />
+            <SphereColliderComponent radius="1.4" trigger="true" material="default-physics-material" />
+            <RigidBodyComponent dynamic="false" />
+        </Components>
+        <Entity>
+            <Components>
+                <TransformComponent position="0 10 0" rotation="0 0 0" scale="0.25 0.25 0.25" />
+                <MeshRendererComponent mesh="CG_SphereMesh" material="Coins" cast-shadows="true" />
+            </Components>
+        </Entity>
+    </Prefab>
+    <Prefab name="projectile">
+        <Components>
+            <MeshRendererComponent mesh="CG_SphereMesh" material="Projectiles" cast-shadows="true" />
+            <PointLightComponent color="#0a1757" intensity="1.5" radius="4" falloff="0.8" />
+            <SphereColliderComponent radius="1.0f" trigger="false" material="projectiles" />
+            <RigidBodyComponent dynamic="true" mass="5" angular-drag="0.5" linear-drag="0.25" collision-detection="continuous" />
+            <ScriptComponent script-name="projectileScript" />
+        </Components>
+    </Prefab>
+</Prefabs>

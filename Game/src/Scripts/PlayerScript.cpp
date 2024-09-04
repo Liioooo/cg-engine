@@ -168,25 +168,10 @@ namespace Game {
 
         auto& playerTransform = getComponent<CgEngine::TransformComponent>();
 
-        CgEngine::Entity e = createEntity(findEntityById("projectiles"));
-        setEntityTag(e, "projectile");
-
-        CgEngine::RigidBodyComponentParams rigidBodyParams{};
-        rigidBodyParams.isDynamic = true;
-        rigidBodyParams.mass = 5;
-        rigidBodyParams.angularDrag = 0.5f;
-        rigidBodyParams.linearDrag = 0.25f;
-        rigidBodyParams.collisionDetection = CgEngine::PhysicsCollisionDetection::Continuous;
-
-        attachComponent<CgEngine::TransformComponent>(e, CgEngine::TransformComponentParams{playerTransform.getGlobalPosition() + glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.15f)});
-        attachComponent<CgEngine::MeshRendererComponent>(e, CgEngine::MeshRendererComponentParams{"", "CG_SphereMesh", "Projectiles", true});
-        attachComponent<CgEngine::PointLightComponent>(e, CgEngine::PointLightComponentParams{{10.0f/255, 23.0f/255, 87.0f/255}, 1.5f, 4.0f, 0.8f});
-        attachComponent<CgEngine::SphereColliderComponent>(e, CgEngine::SphereColliderComponentParams{1.0f, glm::vec3(0.0f), false, "projectiles"});
-        attachComponent<CgEngine::ScriptComponent>(e, CgEngine::ScriptComponentParams{"projectileScript"});
-        auto& rigidBody = attachComponent<CgEngine::RigidBodyComponent>(e, rigidBodyParams);
+        CgEngine::Entity e = instantiatePrefab("projectile", findEntityById("projectiles"), playerTransform.getGlobalPosition(), glm::vec3(0.0f), glm::vec3(0.15f), "projectile");
+        auto& rigidBody = getComponent<CgEngine::RigidBodyComponent>(e);
 
         glm::vec3 direction = glm::normalize(glm::quat({glm::max(0.0f, pitch + 0.25f), yaw, 0}) * glm::vec3(0, 0, -1));
-
         rigidBody.addForce(direction * 8000.0f);
 
         event.stopPropagation();
