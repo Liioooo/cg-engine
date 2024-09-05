@@ -54,7 +54,6 @@ namespace CgEngine {
         static Texture2D& getWhiteTexture();
         static Texture2D& getBrdfLUTTexture();
         static TextureCube& getBlackCubeTexture();
-        static Material* getDefaultPBRMaterial();
         static std::pair<TextureCube*, TextureCube*> createEnvironmentMap(const std::string& hdriPath);
 
         static const uint32_t maxUiQuads = 5000;
@@ -88,6 +87,10 @@ namespace CgEngine {
         static inline VertexArrayObject* uiTextVAO;
 
         static inline ShaderStorageBuffer* transformsBuffer;
+
+        static inline ComputeShader* environmentMapSphereToCube;
+        static inline ComputeShader* environmentMapPrefilterMap;
+        static inline ComputeShader* environmentMapIrradianceMap;
     };
 
 }

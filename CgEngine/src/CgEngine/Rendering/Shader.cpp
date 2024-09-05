@@ -117,10 +117,6 @@ namespace CgEngine {
         }
     }
 
-    Shader* Shader::createResource(const std::string& name) {
-        return new Shader(name);
-    }
-
     Shader::Shader(std::string name) : name(std::move(name)) {
         CG_LOGGING_DEBUG("Loading Shader: {0}", this->name)
 
@@ -158,7 +154,6 @@ namespace CgEngine {
         glLinkProgram(programId);
         ShaderUtils::checkErrors(programId, "PROGRAM");
 
-        setLoaded();
         CG_LOGGING_DEBUG("Loaded Shader: {0}", this->name)
     }
 
@@ -170,7 +165,7 @@ namespace CgEngine {
         glUseProgram(programId);
     }
 
-    uint32_t Shader::getProgramId() {
+    uint32_t Shader::getProgramId() const {
         return programId;
     }
 
@@ -210,10 +205,6 @@ namespace CgEngine {
         glBindTextureUnit(textureUnit, textureRendererId);
     }
 
-    ComputeShader *ComputeShader::createResource(const std::string &name) {
-        return new ComputeShader(name);
-    }
-
     ComputeShader::ComputeShader(std::string name) : name(std::move(name)) {
         std::string source = ShaderUtils::loadShaderSourceCodeWithType(this->name, "comp");
 
@@ -228,7 +219,6 @@ namespace CgEngine {
 
         glLinkProgram(programId);
         ShaderUtils::checkErrors(programId, "PROGRAM");
-        setLoaded();
     }
 
     ComputeShader::~ComputeShader() {
@@ -239,7 +229,7 @@ namespace CgEngine {
         glUseProgram(programId);
     }
 
-    uint32_t ComputeShader::getProgramId() {
+    uint32_t ComputeShader::getProgramId() const {
         return programId;
     }
 

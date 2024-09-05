@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Resources/MeshVertices.h"
-#include "Rendering/Material.h"
+#include "Rendering/PBRMaterial.h"
 #include "Component.h"
 
 namespace CgEngine {
@@ -23,14 +23,14 @@ namespace CgEngine {
         void onAttach(Scene& scene, MeshRendererComponentParams& params);
 
         MeshVertices& getMeshVertices();
-        Material* getMaterial();
+        PBRMaterial* getMaterial();
         bool getCastShadows() const;
         void setCastShadows(bool value);
         const std::vector<uint32_t>& getMeshNodes();
 
     private:
         MeshVertices* mesh;
-        Material* material;
+        PBRMaterial* material;
         bool castShadows;
         std::vector<uint32_t> meshNodes;
     };

@@ -41,6 +41,7 @@ namespace CgEngine {
         Shader* shader = nullptr;
         DepthCompareOperator depthCompareOperator = DepthCompareOperator::Less;
         Framebuffer* framebuffer = nullptr;
+        bool usingExistingFramebuffer = false;
         bool clearDepthBuffer = true;
         bool clearColorBuffer = true;
         bool clearStencilBuffer = false;

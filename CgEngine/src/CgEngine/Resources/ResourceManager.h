@@ -2,8 +2,7 @@
 
 #include "Resources/XMLFile.h"
 #include "Resources/MeshVertices.h"
-#include "Rendering/Shader.h"
-#include "Rendering/Material.h"
+#include "Rendering/PBRMaterial.h"
 #include "Rendering/Texture.h"
 #include "Physics/PhysicsMaterial.h"
 #include "Font.h"
@@ -53,9 +52,7 @@ namespace CgEngine {
         ResourceManager() {
             registerResourceType<XMLFile>();
             registerResourceType<MeshVertices>();
-            registerResourceType<Shader>();
-            registerResourceType<ComputeShader>();
-            registerResourceType<Material>();
+            registerResourceType<PBRMaterial>();
             registerResourceType<Texture2D>();
             registerResourceType<TextureCube>();
             registerResourceType<PhysicsMaterial>();

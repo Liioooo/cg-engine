@@ -9,7 +9,7 @@ namespace CgEngine {
     template<typename D>
     class UniformBuffer {
     public:
-        UniformBuffer(const std::string& blockName, uint32_t binding, Shader& shaderForInit) {
+        UniformBuffer(const std::string& blockName, uint32_t binding, const Shader& shaderForInit) {
             uint32_t shaderBlockIndex = glGetUniformBlockIndex(shaderForInit.getProgramId(), blockName.c_str());
             glGetActiveUniformBlockiv(shaderForInit.getProgramId(), shaderBlockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, &bufferSize);
 

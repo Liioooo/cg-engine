@@ -4,10 +4,6 @@
 
 namespace CgEngine {
     SceneRenderer::SceneRenderer(uint32_t viewportWidth, uint32_t viewportHeight) : viewportWidth(viewportWidth), viewportHeight(viewportHeight) {
-        emptyMaterial = new Material("EmptyMaterial");
-
-        auto& resourceManager = Application::get().getResourceManager();
-
         {
             ApplicationOptions& applicationOptions = Application::get().getApplicationOptions();
 
@@ -26,7 +22,7 @@ namespace CgEngine {
             auto* framebuffer = new Framebuffer(shadowMapFramebufferSpec);
 
             RenderPassSpecification shadowMapRenderPassSpec;
-            shadowMapRenderPassSpec.shader = resourceManager.getResource<Shader>("dirShadowMap");
+            shadowMapRenderPassSpec.shader = new Shader("dirShadowMap");
             shadowMapRenderPassSpec.framebuffer = framebuffer;
             shadowMapRenderPassSpec.clearColorBuffer = false;
             shadowMapRenderPassSpec.clearDepthBuffer = true;
@@ -47,7 +43,7 @@ namespace CgEngine {
             auto* framebuffer = new Framebuffer(preDepthFramebufferSpec);
 
             RenderPassSpecification preDepthRenderPassSpec;
-            preDepthRenderPassSpec.shader = resourceManager.getResource<Shader>("preDepth");
+            preDepthRenderPassSpec.shader = new Shader("preDepth");
             preDepthRenderPassSpec.framebuffer = framebuffer;
             preDepthRenderPassSpec.clearColorBuffer = false;
             preDepthRenderPassSpec.clearDepthBuffer = true;
@@ -69,7 +65,7 @@ namespace CgEngine {
             auto* framebuffer = new Framebuffer(geoFramebufferSpec);
 
             RenderPassSpecification geoRenderPassSpec;
-            geoRenderPassSpec.shader = resourceManager.getResource<Shader>("pbr");
+            geoRenderPassSpec.shader = new Shader("pbr");
             geoRenderPassSpec.framebuffer = framebuffer;
             geoRenderPassSpec.depthCompareOperator = DepthCompareOperator::LessOrEqual;
             geoRenderPassSpec.clearDepthBuffer = false;
@@ -79,16 +75,15 @@ namespace CgEngine {
         }
         {
             RenderPassSpecification skyboxRenderPassSpec;
-            skyboxRenderPassSpec.shader = resourceManager.getResource<Shader>("skybox");
+            skyboxRenderPassSpec.shader = new Shader("skybox");
             skyboxRenderPassSpec.framebuffer = geometryRenderPass->getSpecification().framebuffer;
+            skyboxRenderPassSpec.usingExistingFramebuffer = true;
             skyboxRenderPassSpec.depthCompareOperator = DepthCompareOperator::LessOrEqual;
             skyboxRenderPassSpec.clearColorBuffer = false;
             skyboxRenderPassSpec.clearDepthBuffer = false;
             skyboxRenderPassSpec.clearStencilBuffer = false;
 
             skyboxRenderPass = new RenderPass(skyboxRenderPassSpec);
-
-            skyboxMaterial = new Material("skyboxMaterial");
         }
         {
             float bloomWidth = static_cast<float>(viewportWidth) / 2.0f;
@@ -110,7 +105,7 @@ namespace CgEngine {
             auto* framebuffer = new Framebuffer(bloomFramebufferSpec);
 
             RenderPassSpecification bloomDownSamplePassSpec;
-            bloomDownSamplePassSpec.shader = resourceManager.getResource<Shader>("bloomDownSample");
+            bloomDownSamplePassSpec.shader = new Shader("bloomDownSample");
             bloomDownSamplePassSpec.clearColorBuffer = true;
             bloomDownSamplePassSpec.clearDepthBuffer = false;
             bloomDownSamplePassSpec.depthTest = false;
@@ -120,7 +115,7 @@ namespace CgEngine {
             bloomDownSamplePass = new RenderPass(bloomDownSamplePassSpec);
 
             RenderPassSpecification bloomUpSamplePassSpec;
-            bloomUpSamplePassSpec.shader = resourceManager.getResource<Shader>("bloomUpSample");
+            bloomUpSamplePassSpec.shader = new Shader("bloomUpSample");
             bloomUpSamplePassSpec.clearColorBuffer = false;
             bloomUpSamplePassSpec.clearDepthBuffer = false;
             bloomUpSamplePassSpec.depthTest = false;
@@ -130,13 +125,15 @@ namespace CgEngine {
             bloomUpSamplePassSpec.srcBlendingFunction = BlendingFunction::One;
             bloomUpSamplePassSpec.destBlendingFunction = BlendingFunction::One;
             bloomUpSamplePassSpec.framebuffer = framebuffer;
+            bloomUpSamplePassSpec.usingExistingFramebuffer = true;
 
             bloomUpSamplePass = new RenderPass(bloomUpSamplePassSpec);
         }
         {
             RenderPassSpecification physicsCollidersRenderPassSpec;
-            physicsCollidersRenderPassSpec.shader = resourceManager.getResource<Shader>("colliders");
+            physicsCollidersRenderPassSpec.shader = new Shader("colliders");
             physicsCollidersRenderPassSpec.framebuffer = geometryRenderPass->getSpecification().framebuffer;
+            physicsCollidersRenderPassSpec.usingExistingFramebuffer = true;
             physicsCollidersRenderPassSpec.depthTest = false;
             physicsCollidersRenderPassSpec.depthWrite = false;
             physicsCollidersRenderPassSpec.clearColorBuffer = false;
@@ -146,13 +143,13 @@ namespace CgEngine {
 
             physicsCollidersRenderPass = new RenderPass(physicsCollidersRenderPassSpec);
 
-            physicsCollidersMaterial = new Material("PhysicsColliderDebugMaterial");
-            physicsCollidersMaterial->set("u_Color", {0.0f, 1.0f, 0.0f});
+            physicsCollidersMaterial.set("u_Color", {0.0f, 1.0f, 0.0f});
         }
         {
             RenderPassSpecification boundingBoxRenderPassSpec;
-            boundingBoxRenderPassSpec.shader = resourceManager.getResource<Shader>("colliders");
+            boundingBoxRenderPassSpec.shader = new Shader("colliders");
             boundingBoxRenderPassSpec.framebuffer = geometryRenderPass->getSpecification().framebuffer;
+            boundingBoxRenderPassSpec.usingExistingFramebuffer = true;
             boundingBoxRenderPassSpec.depthTest = true;
             boundingBoxRenderPassSpec.depthWrite = false;
             boundingBoxRenderPassSpec.clearColorBuffer = false;
@@ -163,13 +160,13 @@ namespace CgEngine {
 
             boundingBoxRenderPass = new RenderPass(boundingBoxRenderPassSpec);
 
-            boundingBoxMaterial = new Material("BoundingBoxDebugMaterial");
-            boundingBoxMaterial->set("u_Color", {1.0f, 1.0f, 0.0f});
+            boundingBoxMaterial.set("u_Color", {1.0f, 1.0f, 0.0f});
         }
         {
             RenderPassSpecification mormalsDebugRenderPassSpec;
-            mormalsDebugRenderPassSpec.shader = resourceManager.getResource<Shader>("normalsVisualize");
+            mormalsDebugRenderPassSpec.shader = new Shader("normalsVisualize");
             mormalsDebugRenderPassSpec.framebuffer = geometryRenderPass->getSpecification().framebuffer;
+            mormalsDebugRenderPassSpec.usingExistingFramebuffer = true;
             mormalsDebugRenderPassSpec.depthTest = true;
             mormalsDebugRenderPassSpec.depthWrite = false;
             mormalsDebugRenderPassSpec.clearColorBuffer = false;
@@ -178,13 +175,13 @@ namespace CgEngine {
 
             normalsDebugRenderPass = new RenderPass(mormalsDebugRenderPassSpec);
 
-            normalsDebugMaterial = new Material("NormalsDebugMaterial");
-            normalsDebugMaterial->set("u_Color", {1.0f, 0.0f, 0.0f});
+            normalsDebugMaterial.set("u_Color", {1.0f, 0.0f, 0.0f});
         }
         {
             RenderPassSpecification debugLinesRenderPassSpec;
-            debugLinesRenderPassSpec.shader = resourceManager.getResource<Shader>("lines");
+            debugLinesRenderPassSpec.shader = new Shader("lines");
             debugLinesRenderPassSpec.framebuffer = geometryRenderPass->getSpecification().framebuffer;
+            debugLinesRenderPassSpec.usingExistingFramebuffer = true;
             debugLinesRenderPassSpec.depthTest = true;
             debugLinesRenderPassSpec.depthWrite = false;
             debugLinesRenderPassSpec.clearColorBuffer = false;
@@ -204,19 +201,18 @@ namespace CgEngine {
 
             auto* framebuffer = new Framebuffer(screenFramebufferSpec);
             RenderPassSpecification screenRenderPassSpec;
-            screenRenderPassSpec.shader = resourceManager.getResource<Shader>("screen");
+            screenRenderPassSpec.shader = new Shader("screen");
             screenRenderPassSpec.framebuffer = framebuffer;
             screenRenderPassSpec.depthTest = false;
 
             screenRenderPass = new RenderPass(screenRenderPassSpec);
 
-            screenMaterial = new Material("screenMaterial");
-            screenMaterial->setTexture("u_FinalImage", geometryRenderPass->getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
-            screenMaterial->setTexture("u_BloomTexture", bloomTextures[0]->getRendererId(), 1);
+            screenMaterial.setTexture("u_FinalImage", geometryRenderPass->getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
+            screenMaterial.setTexture("u_BloomTexture", bloomTextures[0]->getRendererId(), 1);
         }
         {
             RenderPassSpecification uiCircleRenderPassSpec;
-            uiCircleRenderPassSpec.shader = resourceManager.getResource<Shader>("uiCircle");
+            uiCircleRenderPassSpec.shader = new Shader("uiCircle");
             uiCircleRenderPassSpec.clearColorBuffer = false;
             uiCircleRenderPassSpec.clearDepthBuffer = false;
             uiCircleRenderPassSpec.depthTest = false;
@@ -226,11 +222,12 @@ namespace CgEngine {
             uiCircleRenderPassSpec.srcBlendingFunction = BlendingFunction::SrcAlpha;
             uiCircleRenderPassSpec.destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
             uiCircleRenderPassSpec.framebuffer = screenRenderPass->getSpecification().framebuffer;
+            uiCircleRenderPassSpec.usingExistingFramebuffer = true;
 
             uiCirclePass = new RenderPass(uiCircleRenderPassSpec);
 
             RenderPassSpecification uiRectRenderPassSpec;
-            uiRectRenderPassSpec.shader = resourceManager.getResource<Shader>("uiRect");
+            uiRectRenderPassSpec.shader = new Shader("uiRect");
             uiRectRenderPassSpec.clearColorBuffer = false;
             uiRectRenderPassSpec.clearDepthBuffer = false;
             uiRectRenderPassSpec.depthTest = false;
@@ -240,11 +237,12 @@ namespace CgEngine {
             uiRectRenderPassSpec.srcBlendingFunction = BlendingFunction::SrcAlpha;
             uiRectRenderPassSpec.destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
             uiRectRenderPassSpec.framebuffer = screenRenderPass->getSpecification().framebuffer;
+            uiRectRenderPassSpec.usingExistingFramebuffer = true;
 
             uiRectPass = new RenderPass(uiRectRenderPassSpec);
 
             RenderPassSpecification uiTextRenderPassSpec;
-            uiTextRenderPassSpec.shader = resourceManager.getResource<Shader>("uiText");
+            uiTextRenderPassSpec.shader = new Shader("uiText");
             uiTextRenderPassSpec.clearColorBuffer = false;
             uiTextRenderPassSpec.clearDepthBuffer = false;
             uiTextRenderPassSpec.depthTest = false;
@@ -254,6 +252,7 @@ namespace CgEngine {
             uiTextRenderPassSpec.srcBlendingFunction = BlendingFunction::SrcAlpha;
             uiTextRenderPassSpec.destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
             uiTextRenderPassSpec.framebuffer = screenRenderPass->getSpecification().framebuffer;
+            uiTextRenderPassSpec.usingExistingFramebuffer = true;
 
             uiTextPass = new RenderPass(uiTextRenderPassSpec);
 
@@ -264,12 +263,14 @@ namespace CgEngine {
             Renderer::getWhiteTexture().bind(i);
         }
 
-        ubCameraData = new UniformBuffer<UBCameraData>("CameraData", 0, *resourceManager.getResource<Shader>("pbr"));
-        ubLightData = new UniformBuffer<UBLightData>("LightData", 1, *resourceManager.getResource<Shader>("pbr"));
-        ubDirShadowData = new UniformBuffer<UBDirShadowData>("DirShadowData", 2, *resourceManager.getResource<Shader>("dirShadowMap"));
+        ubCameraData = new UniformBuffer<UBCameraData>("CameraData", 0, *geometryRenderPass->getSpecification().shader);
+        ubLightData = new UniformBuffer<UBLightData>("LightData", 1, *geometryRenderPass->getSpecification().shader);
+        ubDirShadowData = new UniformBuffer<UBDirShadowData>("DirShadowData", 2, *shadowMapRenderPass->getSpecification().shader);
 
         boneTransformsBuffer = new ShaderStorageBuffer();
         boneTransformsBuffer->setData(nullptr, maxBones * maxAnimatedComponents * sizeof(glm::mat4));
+
+        skinningShader = new ComputeShader("skinning");
     }
 
     SceneRenderer::~SceneRenderer() {
@@ -287,13 +288,6 @@ namespace CgEngine {
         delete normalsDebugRenderPass;
         delete debugLinesRenderPass;
         delete screenRenderPass;
-
-        delete skyboxMaterial;
-        delete physicsCollidersMaterial;
-        delete boundingBoxMaterial;
-        delete normalsDebugMaterial;
-        delete screenMaterial;
-        delete emptyMaterial;
 
         delete dirShadowMaps;
 
@@ -350,8 +344,8 @@ namespace CgEngine {
                 bloomHeight /= 2.0f;
             }
 
-            screenMaterial->setTexture("u_FinalImage", geometryRenderPass->getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
-            screenMaterial->setTexture("u_BloomTexture", bloomTextures[0]->getRendererId(), 1);
+            screenMaterial.setTexture("u_FinalImage", geometryRenderPass->getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
+            screenMaterial.setTexture("u_BloomTexture", bloomTextures[0]->getRendererId(), 1);
 
             uiProjectionMatrix = glm::ortho(0.0f, static_cast<float>(viewportWidth), 0.0f, static_cast<float>(viewportHeight));
         }
@@ -402,9 +396,9 @@ namespace CgEngine {
 
         ubLightData->setData(lightData);
 
-        skyboxMaterial->setTextureCube("u_Texture", *sceneEnvironment.prefilterMap, 0);
-        skyboxMaterial->set("u_Intensity", sceneEnvironment.environmentIntensity);
-        skyboxMaterial->set("u_Lod", sceneEnvironment.environmentLod);
+        skyboxMaterial.setTextureCube("u_Texture", *sceneEnvironment.prefilterMap, 0);
+        skyboxMaterial.set("u_Intensity", sceneEnvironment.environmentIntensity);
+        skyboxMaterial.set("u_Lod", sceneEnvironment.environmentLod);
 
         currentSceneEnvironment.environmentIntensity = sceneEnvironment.environmentIntensity;
         currentSceneEnvironment.irradianceMapId = sceneEnvironment.irradianceMap->getRendererId();
@@ -651,13 +645,13 @@ namespace CgEngine {
         for (const auto& meshNode: mesh.getMeshNodes()) {
             for (const auto& submeshIndex: meshNode.submeshIndices) {
                 const Submesh& submesh = submeshes.at(submeshIndex);
-                MeshKey mk = {mesh.getVAO()->getRendererId(), submeshIndex, physicsCollidersMaterial->getUuid().getUuid()};
+                MeshKey mk = {mesh.getVAO()->getRendererId(), submeshIndex, physicsCollidersMaterial.getUuid().getUuid()};
 
                 physicsCollidersMeshTransforms[mk].emplace_back(transform * meshNode.transform);
 
                 DrawCommand& drawCommand = physicsCollidersDrawCommandQueue[mk];
                 drawCommand.vao = mesh.getVAO();
-                drawCommand.material = physicsCollidersMaterial;
+                drawCommand.material = &physicsCollidersMaterial;
                 drawCommand.baseIndex = submesh.baseIndex;
                 drawCommand.baseVertex = submesh.baseVertex;
                 drawCommand.indexCount = submesh.indexCount;
@@ -671,12 +665,12 @@ namespace CgEngine {
             const auto& boundingBox = mesh.getMeshNodes().at(meshNodeIndex).aaBoundingBox;
 
             const auto& boundingBoxSubmesh = boundingBoxMesh.getSubmeshes().at(0);
-            MeshKey mk = {boundingBoxMesh.getVAO()->getRendererId(), 0, boundingBoxMaterial->getUuid().getUuid()};
+            MeshKey mk = {boundingBoxMesh.getVAO()->getRendererId(), 0, boundingBoxMaterial.getUuid().getUuid()};
             boundingBoxMeshTransforms[mk].emplace_back(transform * boundingBox.getTransformForCubeMesh());
 
             DrawCommand& drawCommand = boundingBoxDrawCommandQueue[mk];
             drawCommand.vao = boundingBoxMesh.getVAO();
-            drawCommand.material = boundingBoxMaterial;
+            drawCommand.material = &boundingBoxMaterial;
             drawCommand.baseIndex = boundingBoxSubmesh.baseIndex;
             drawCommand.baseVertex = boundingBoxSubmesh.baseVertex;
             drawCommand.indexCount = boundingBoxSubmesh.indexCount;
@@ -692,10 +686,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::skinMeshes() {
-        auto& resourceManager = Application::get().getResourceManager();
-        auto& skinning = *resourceManager.getResource<ComputeShader>("skinning");
-
-        skinning.bind();
+        skinningShader->bind();
         boneTransformsBuffer->bind(2);
 
         for (uint32_t i = 0; i < skinningQueue.size(); i++) {
@@ -703,9 +694,9 @@ namespace CgEngine {
             skinningQueue[i].skinnedVertexBuffer->bindAsSSBO(4);
             skinningQueue[i].boneInfluencesBuffer->bind(1);
 
-            skinning.setInt("u_ComponentIndex", i);
-            skinning.dispatch((skinningQueue[i].numVertices / 32) + 1, 1, 1);
-            skinning.waitForMemoryBarrier();
+            skinningShader->setInt("u_ComponentIndex", i);
+            skinningShader->dispatch((skinningQueue[i].numVertices / 32) + 1, 1, 1);
+            skinningShader->waitForMemoryBarrier();
         }
     }
 
@@ -719,7 +710,7 @@ namespace CgEngine {
 
         for (const auto [mk, command]: shadowMapDrawCommandQueue) {
             const auto& transforms = shadowMapMeshTransforms[mk];
-            Renderer::executeDrawCommand(*command.vao, *emptyMaterial, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
+            Renderer::executeDrawCommand(*command.vao, emptyMaterial, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
         }
 
         Renderer::endRenderPass();
@@ -730,7 +721,7 @@ namespace CgEngine {
 
         for (const auto [mk, command]: drawCommandQueue) {
             const auto& transforms = meshTransforms[mk];
-            Renderer::executeDrawCommand(*command.vao, *emptyMaterial, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
+            Renderer::executeDrawCommand(*command.vao, emptyMaterial, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
         }
 
         Renderer::endRenderPass();
@@ -755,7 +746,7 @@ namespace CgEngine {
 
     void SceneRenderer::skyboxPass() {
         Renderer::beginRenderPass(*skyboxRenderPass);
-        Renderer::renderUnitCube(*skyboxMaterial);
+        Renderer::renderUnitCube(skyboxMaterial);
         Renderer::endRenderPass();
     }
 
@@ -786,7 +777,7 @@ namespace CgEngine {
 
         for (const auto [mk, command]: drawCommandQueue) {
             const auto& transforms = meshTransforms[mk];
-            Renderer::executeDrawCommand(*command.vao, *normalsDebugMaterial, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
+            Renderer::executeDrawCommand(*command.vao, normalsDebugMaterial, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
         }
 
         Renderer::endRenderPass();
@@ -805,7 +796,7 @@ namespace CgEngine {
         Renderer::beginRenderPass(*bloomDownSamplePass);
         downSampleShader.setTexture(geometryRenderPass->getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
         downSampleShader.setBool("u_UseThreshold", true);
-        Renderer::renderUnitQuad(*emptyMaterial);
+        Renderer::renderUnitQuad(emptyMaterial);
         Renderer::endRenderPass();
 
         downSampleShader.setBool("u_UseThreshold", false);
@@ -813,7 +804,7 @@ namespace CgEngine {
             bloomDownSamplePass->getSpecification().framebuffer->setColorAttachment(bloomTextures[i + 1]->getRendererId(), 0, bloomTextures[i + 1]->getWidth(), bloomTextures[i + 1]->getHeight());
             Renderer::beginRenderPass(*bloomDownSamplePass);
             downSampleShader.setTexture(bloomTextures[i]->getRendererId(), 0);
-            Renderer::renderUnitQuad(*emptyMaterial);
+            Renderer::renderUnitQuad(emptyMaterial);
             Renderer::endRenderPass();
         }
 
@@ -823,14 +814,14 @@ namespace CgEngine {
             bloomUpSamplePass->getSpecification().framebuffer->setColorAttachment(bloomTextures[i - 1]->getRendererId(), 0, bloomTextures[i - 1]->getWidth(), bloomTextures[i - 1]->getHeight());
             Renderer::beginRenderPass(*bloomUpSamplePass);
             upSampleShader.setTexture(bloomTextures[i]->getRendererId(), 0);
-            Renderer::renderUnitQuad(*emptyMaterial);
+            Renderer::renderUnitQuad(emptyMaterial);
             Renderer::endRenderPass();
         }
     }
 
     void SceneRenderer::screenPass() {
         Renderer::beginRenderPass(*screenRenderPass);
-        Renderer::renderUnitQuad(*screenMaterial);
+        Renderer::renderUnitQuad(screenMaterial);
         Renderer::endRenderPass();
     }
 

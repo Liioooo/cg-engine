@@ -70,7 +70,7 @@ namespace CgEngine {
         submesh.indexCount = numIndices;
         submesh.materialIndex = 0;
 
-        mesh->materials.emplace_back(Renderer::getDefaultPBRMaterial());
+        mesh->materials.emplace_back(Application::get().getResourceManager().getResource<PBRMaterial>("default-pbr-material"));
 
         MeshNode& meshNode = mesh->meshNodes.emplace_back();
         meshNode.aiNode = nullptr;
@@ -303,7 +303,7 @@ namespace CgEngine {
         submesh.indexCount = mesh->indexBuffer.size();
         submesh.materialIndex = 0;
 
-        mesh->materials.emplace_back(Renderer::getDefaultPBRMaterial());
+        mesh->materials.emplace_back(Application::get().getResourceManager().getResource<PBRMaterial>("default-pbr-material"));
 
         MeshNode& meshNode = mesh->meshNodes.emplace_back();
         meshNode.aiNode = nullptr;
@@ -402,7 +402,7 @@ namespace CgEngine {
         submesh.indexCount = mesh->indexBuffer.size();
         submesh.materialIndex = 0;
 
-        mesh->materials.emplace_back(Renderer::getDefaultPBRMaterial());
+        mesh->materials.emplace_back(Application::get().getResourceManager().getResource<PBRMaterial>("default-pbr-material"));
 
         MeshNode& meshNode = mesh->meshNodes.emplace_back();
         meshNode.aiNode = nullptr;
@@ -569,7 +569,7 @@ namespace CgEngine {
         submesh.indexCount = mesh->indexBuffer.size();
         submesh.materialIndex = 0;
 
-        mesh->materials.emplace_back(Renderer::getDefaultPBRMaterial());
+        mesh->materials.emplace_back(Application::get().getResourceManager().getResource<PBRMaterial>("default-pbr-material"));
 
         MeshNode& meshNode = mesh->meshNodes.emplace_back();
         meshNode.aiNode = nullptr;
@@ -717,7 +717,7 @@ namespace CgEngine {
             for (uint32_t m = 0; m < scene->mNumMaterials; m++) {
                 aiMaterial *aiMaterial = scene->mMaterials[m];
 
-                auto &material = mesh->materials.emplace_back(new Material(aiMaterial->GetName().C_Str()));
+                auto& material = mesh->materials.emplace_back(std::make_unique<PBRMaterial>());
 
                 float aiEmissionIntensity;
                 bool hasEmissionIntensity = aiMaterial->Get(AI_MATKEY_EMISSIVE_INTENSITY, aiEmissionIntensity) == AI_SUCCESS;
@@ -735,22 +735,15 @@ namespace CgEngine {
                     spec.mipMapFiltering = MipMapFiltering::Trilinear;
                     spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
 
-                    material->setTexture2D("u_Mat_EmissionTexture", *resourceManager.getResource<Texture2D>(texturePath, spec), 4);
+                    material->setEmissionTexture(resourceManager.getResource<Texture2D>(texturePath, spec));
                     if (hasEmissionIntensity) {
-                        material->set("u_Mat_Emission", {aiEmissionIntensity, aiEmissionIntensity, aiEmissionIntensity});
-                    } else {
-                        material->set("u_Mat_Emission", {1.0f, 1.0f, 1.0f});
+                        material->setEmission({aiEmissionIntensity, aiEmissionIntensity, aiEmissionIntensity});
                     }
-                } else {
-                    material->setTexture2D("u_Mat_EmissionTexture", Renderer::getWhiteTexture(), 4);
-                    if (hasEmissionColor) {
-                        if (hasEmissionIntensity) {
-                            material->set("u_Mat_Emission", glm::vec3(aiEmissionColor.r, aiEmissionColor.g, aiEmissionColor.b) * aiEmissionIntensity);
-                        } else {
-                            material->set("u_Mat_Emission", {aiEmissionColor.r, aiEmissionColor.g, aiEmissionColor.b});
-                        }
+                } else if (hasEmissionColor) {
+                    if (hasEmissionIntensity) {
+                        material->setEmission(glm::vec3(aiEmissionColor.r, aiEmissionColor.g, aiEmissionColor.b) * aiEmissionIntensity);
                     } else {
-                        material->set("u_Mat_Emission", {0.0f, 0.0f, 0.0f});
+                        material->setEmission({aiEmissionColor.r, aiEmissionColor.g, aiEmissionColor.b});
                     }
                 }
 
@@ -770,11 +763,9 @@ namespace CgEngine {
                     spec.mipMapFiltering = MipMapFiltering::Trilinear;
                     spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
 
-                    material->setTexture2D("u_Mat_AlbedoTexture", *resourceManager.getResource<Texture2D>(texturePath, spec), 0);
-                    material->set("u_Mat_AlbedoColor", {1.0f, 1.0f, 1.0f});
+                    material->setAlbedoTexture(resourceManager.getResource<Texture2D>(texturePath, spec));
                 } else {
-                    material->setTexture2D("u_Mat_AlbedoTexture", Renderer::getWhiteTexture(), 0);
-                    material->set("u_Mat_AlbedoColor", {aiAlbedo.r, aiAlbedo.g, aiAlbedo.b});
+                    material->setAlbedoColor({aiAlbedo.r, aiAlbedo.g, aiAlbedo.b});
                 }
 
                 float shininess, roughness;
@@ -795,11 +786,9 @@ namespace CgEngine {
                     spec.mipMapFiltering = MipMapFiltering::Trilinear;
                     spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
 
-                    material->setTexture2D("u_Mat_RoughnessTexture", *resourceManager.getResource<Texture2D>(texturePath, spec), 3);
-                    material->set("u_Mat_Roughness", 1.0f);
+                    material->setRoughnessTexture(resourceManager.getResource<Texture2D>(texturePath, spec));
                 } else {
-                    material->setTexture2D("u_Mat_RoughnessTexture", Renderer::getWhiteTexture(), 3);
-                    material->set("u_Mat_Roughness", roughness);
+                    material->setRoughness(roughness);
                 }
 
                 aiString aiNormalTexPath;
@@ -814,11 +803,7 @@ namespace CgEngine {
                     spec.mipMapFiltering = MipMapFiltering::Trilinear;
                     spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
 
-                    material->setTexture2D("u_Mat_NormalTexture", *resourceManager.getResource<Texture2D>(texturePath, spec), 1);
-                    material->set("u_Mat_UseNormals", true);
-                } else {
-                    material->setTexture2D("u_Mat_NormalTexture", Renderer::getWhiteTexture(), 1);
-                    material->set("u_Mat_UseNormals", false);
+                    material->setNormalTexture(resourceManager.getResource<Texture2D>(texturePath, spec));
                 }
 
 
@@ -838,15 +823,13 @@ namespace CgEngine {
                     spec.mipMapFiltering = MipMapFiltering::Trilinear;
                     spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
 
-                    material->setTexture2D("u_Mat_MetalnessTexture", *resourceManager.getResource<Texture2D>(texturePath, spec), 2);
-                    material->set("u_Mat_Metalness", 1.0f);
+                    material->setMetalnessTexture(resourceManager.getResource<Texture2D>(texturePath, spec));
                 } else {
-                    material->setTexture2D("u_Mat_MetalnessTexture", Renderer::getWhiteTexture(), 2);
-                    material->set("u_Mat_Metalness", metalness);
+                    material->setMetalness(metalness);
                 }
             }
         } else {
-            mesh->materials.emplace_back(Renderer::getDefaultPBRMaterial());
+            mesh->materials.emplace_back(Application::get().getResourceManager().getResource<PBRMaterial>("default-pbr-material"));
         }
 
         CG_LOGGING_DEBUG("Loaded Mesh Asset: {0}", path);

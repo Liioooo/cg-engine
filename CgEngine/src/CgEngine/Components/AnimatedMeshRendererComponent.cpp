@@ -32,7 +32,7 @@ namespace CgEngine {
         if (params.material.empty()) {
             material = nullptr;
         } else {
-            material = resourceManager.getResource<Material>(params.material);
+            material = resourceManager.getResource<PBRMaterial>(params.material);
         }
 
         castShadows = params.castShadows;
@@ -68,7 +68,7 @@ namespace CgEngine {
         return *mesh;
     }
 
-    Material* AnimatedMeshRendererComponent::getMaterial() {
+    PBRMaterial* AnimatedMeshRendererComponent::getMaterial() {
         return material;
     }
 

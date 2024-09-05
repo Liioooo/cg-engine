@@ -6,11 +6,11 @@
 
 namespace CgEngine {
     Entity PrefabManager::instantiatePrefab(Scene* scene, const std::string& prefabName, Entity parent, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, const std::string& tag, const std::string& id) {
-        auto& prefabDefinitionNode = getPrefabDefinitionXMLNode(prefabName);
+        auto prefabDefinitionNode = getPrefabDefinitionXMLNode(prefabName);
         return createPrefabEntity(scene, parent, prefabDefinitionNode, position, rotation, scale, tag, id);
     }
 
-    const pugi::xml_node& PrefabManager::getPrefabDefinitionXMLNode(const std::string& prefabName) {
+    const pugi::xml_node PrefabManager::getPrefabDefinitionXMLNode(const std::string& prefabName) {
         const auto& xmlPrefabFile = Application::get().getResourceManager().getResource<XMLFile>(FileSystem::getAsGamePath("prefabs.xml"));
         const pugi::xml_document& xml = xmlPrefabFile->getXMLDocument();
         const auto& prefabNode =  xml.child("Prefabs").find_child_by_attribute("Prefab", "name", prefabName.c_str());

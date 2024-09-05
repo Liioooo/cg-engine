@@ -12,6 +12,8 @@ namespace CgEngine {
     Application::~Application() {
         CG_LOGGING_INFO("Shutting Down!");
 
+        delete sceneRenderer;
+
         Renderer::shutdown();
         delete sceneManager;
         delete window;

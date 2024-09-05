@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Resources/Resource.h>
-
 namespace CgEngine {
 
     class Texture2D;
@@ -28,16 +26,14 @@ namespace CgEngine {
         unsigned int shaderDataTypeToOpenGLBaseType(ShaderDataType type);
     }
 
-    class Shader : public Resource {
+    class Shader {
     public:
-        static Shader* createResource(const std::string& name);
-
         explicit Shader(std::string name);
         ~Shader();
 
         void bind();
 
-        uint32_t getProgramId();
+        uint32_t getProgramId() const;
 
         void setBool(const std::string& name, bool value);
         void setInt(const std::string& name, int value);
@@ -55,16 +51,14 @@ namespace CgEngine {
         std::unordered_map<std::string, int32_t> uniformLocations{};
     };
 
-    class ComputeShader : public Resource {
+    class ComputeShader {
     public:
-        static ComputeShader* createResource(const std::string& name);
-
         explicit ComputeShader(std::string name);
         ~ComputeShader();
 
         void bind();
 
-        uint32_t getProgramId();
+        uint32_t getProgramId() const;
 
         void dispatch(uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ);
         void waitForMemoryBarrier();

@@ -4,7 +4,10 @@ namespace CgEngine {
     RenderPass::RenderPass(RenderPassSpecification spec) : specification(spec) {}
 
     RenderPass::~RenderPass() {
-        delete specification.framebuffer;
+        if (!specification.usingExistingFramebuffer) {
+            delete specification.framebuffer;
+        }
+        delete specification.shader;
     }
 
     const RenderPassSpecification& RenderPass::getSpecification() {

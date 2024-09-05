@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Resources/MeshVertices.h"
-#include "Rendering/Material.h"
+#include "Rendering/PBRMaterial.h"
 #include "TimeStep.h"
 #include "Component.h"
 
@@ -28,7 +28,7 @@ namespace CgEngine {
         void onDetach(Scene& scene) override;
 
         MeshVertices& getMeshVertices();
-        Material* getMaterial();
+        PBRMaterial* getMaterial();
         bool getCastShadows() const;
         void setCastShadows(bool value);
         const std::vector<uint32_t>& getMeshNodes();
@@ -45,7 +45,7 @@ namespace CgEngine {
 
     private:
         MeshVertices* mesh;
-        Material* material;
+        PBRMaterial* material;
         bool castShadows;
         std::vector<uint32_t> meshNodes;
 

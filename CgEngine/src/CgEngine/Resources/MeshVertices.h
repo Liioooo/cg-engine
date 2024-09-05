@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Rendering/VertexArrayObject.h"
-#include "Rendering/Material.h"
+#include "Rendering/PBRMaterial.h"
 #include "Rendering/ShaderStorageBuffer.h"
 #include "Physics/PhysicsTriangleMesh.h"
 #include "Physics/PhysicsConvexMesh.h"
@@ -101,7 +101,7 @@ namespace CgEngine {
         std::vector<Vertex> vertices;
         std::vector<uint32_t> indexBuffer;
         std::vector<Submesh> submeshes;
-        std::vector<std::unique_ptr<Material>> materials;
+        std::vector<std::unique_ptr<PBRMaterial>> materials;
         std::vector<MeshNode> meshNodes{};
         std::unordered_map<std::string, uint32_t> nodeNameToNode{};
         Skeleton* skeleton = nullptr;

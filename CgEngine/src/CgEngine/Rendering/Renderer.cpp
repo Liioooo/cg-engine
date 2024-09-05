@@ -141,6 +141,10 @@ namespace CgEngine {
 
         transformsBuffer = new ShaderStorageBuffer();
         transformsBuffer->bind(0);
+
+        environmentMapSphereToCube = new ComputeShader("sphereToCube");
+        environmentMapPrefilterMap = new ComputeShader("prefilterMap");
+        environmentMapIrradianceMap = new ComputeShader("irradianceMap");
     }
 
     void Renderer::shutdown() {
@@ -151,6 +155,10 @@ namespace CgEngine {
         delete unitCubeVAO;
         delete linesVAO;
         delete transformsBuffer;
+
+        delete environmentMapSphereToCube;
+        delete environmentMapPrefilterMap;
+        delete environmentMapIrradianceMap;
     }
 
     void Renderer::beginRenderPass(RenderPass& renderPass) {
@@ -336,21 +344,6 @@ namespace CgEngine {
         return *blackCubeTexture;
     }
 
-    Material* Renderer::getDefaultPBRMaterial() {
-        auto* defaultPBRMaterial = new Material("defaultPBRMaterial");
-        defaultPBRMaterial->set("u_Mat_AlbedoColor", {1.0f, 1.0f, 1.0f});
-        defaultPBRMaterial->set("u_Mat_Metalness", 0.0f);
-        defaultPBRMaterial->set("u_Mat_Roughness", 1.0f);
-        defaultPBRMaterial->set("u_Mat_Emission", {0.0f, 0.0f, 0.0f});
-        defaultPBRMaterial->setTexture2D("u_Mat_EmissionTexture", Renderer::getWhiteTexture(), 4);
-        defaultPBRMaterial->setTexture2D("u_Mat_AlbedoTexture", Renderer::getWhiteTexture(), 0);
-        defaultPBRMaterial->setTexture2D("u_Mat_MetalnessTexture", Renderer::getWhiteTexture(), 2);
-        defaultPBRMaterial->setTexture2D("u_Mat_RoughnessTexture", Renderer::getWhiteTexture(), 3);
-        defaultPBRMaterial->setTexture2D("u_Mat_NormalTexture", Renderer::getWhiteTexture(), 1);
-        defaultPBRMaterial->set("u_Mat_UseNormals", false);
-        return defaultPBRMaterial;
-    }
-
     std::pair<TextureCube*, TextureCube*> Renderer::createEnvironmentMap(const std::string &hdriPath) {
         auto& resourceManager = Application::get().getResourceManager();
 
@@ -377,12 +370,11 @@ namespace CgEngine {
 
         TextureCube cubeMap(TextureFormat::Float32A, MAP_SIZE, MAP_SIZE, MipMapFiltering::Bilinear);
 
-        auto& sphereToCubeShader = *resourceManager.getResource<ComputeShader>("sphereToCube");
-        sphereToCubeShader.bind();
-        sphereToCubeShader.setTexture2D(sphereMap, 0);
-        sphereToCubeShader.setImageCube(cubeMap, 1, ShaderStorageAccess::WriteOnly, 0);
-        sphereToCubeShader.dispatch(MAP_SIZE / 32, MAP_SIZE / 32, 6);
-        sphereToCubeShader.waitForMemoryBarrier();
+        environmentMapSphereToCube->bind();
+        environmentMapSphereToCube->setTexture2D(sphereMap, 0);
+        environmentMapSphereToCube->setImageCube(cubeMap, 1, ShaderStorageAccess::WriteOnly, 0);
+        environmentMapSphereToCube->dispatch(MAP_SIZE / 32, MAP_SIZE / 32, 6);
+        environmentMapSphereToCube->waitForMemoryBarrier();
 
         cubeMap.generateMipMaps();
         TextureUtils::applyMipMapFiltering(MipMapFiltering::Trilinear, GL_TEXTURE_CUBE_MAP);
@@ -392,27 +384,25 @@ namespace CgEngine {
         prefilterMap = new TextureCube(TextureFormat::Float32A, MAP_SIZE, MAP_SIZE, MipMapFiltering::Trilinear);
         prefilterMap->generateMipMaps();
 
-        auto& prefilterMapShader = *resourceManager.getResource<ComputeShader>("prefilterMap");
-        prefilterMapShader.bind();
-        prefilterMapShader.setTextureCube(cubeMap, 0);
+        environmentMapPrefilterMap->bind();
+        environmentMapPrefilterMap->setTextureCube(cubeMap, 0);
 
         for (uint32_t i = 0, size = MAP_SIZE; i < mipCount; i++, size /= 2) {
             uint32_t numGroups = glm::max(1u, size / 32);
             float roughness = static_cast<float>(i) / static_cast<float>(mipCount - 1);
-            prefilterMapShader.setFloat("u_Roughness", roughness);
-            prefilterMapShader.setImageCube(*prefilterMap, 1, ShaderStorageAccess::WriteOnly, i);
-            prefilterMapShader.dispatch(numGroups, numGroups, 6);
-            prefilterMapShader.waitForMemoryBarrier();
+            environmentMapPrefilterMap->setFloat("u_Roughness", roughness);
+            environmentMapPrefilterMap->setImageCube(*prefilterMap, 1, ShaderStorageAccess::WriteOnly, i);
+            environmentMapPrefilterMap->dispatch(numGroups, numGroups, 6);
+            environmentMapPrefilterMap->waitForMemoryBarrier();
         }
 
         irradianceMap = new TextureCube(TextureFormat::Float32A, 32, 32, MipMapFiltering::Bilinear);
 
-        auto& irradianceMapShader = *resourceManager.getResource<ComputeShader>("irradianceMap");
-        irradianceMapShader.bind();
-        irradianceMapShader.setTextureCube(*prefilterMap, 0);
-        irradianceMapShader.setImageCube(*irradianceMap, 1, ShaderStorageAccess::WriteOnly);
-        irradianceMapShader.dispatch(irradianceMap->getWidth() / 2, irradianceMap->getWidth() / 2, 6);
-        irradianceMapShader.waitForMemoryBarrier();
+        environmentMapIrradianceMap->bind();
+        environmentMapIrradianceMap->setTextureCube(*prefilterMap, 0);
+        environmentMapIrradianceMap->setImageCube(*irradianceMap, 1, ShaderStorageAccess::WriteOnly);
+        environmentMapIrradianceMap->dispatch(irradianceMap->getWidth() / 2, irradianceMap->getWidth() / 2, 6);
+        environmentMapIrradianceMap->waitForMemoryBarrier();
 
         resourceManager.insertResource(hdriPath + "-irradiance", irradianceMap);
         resourceManager.insertResource(hdriPath + "-prefilter", prefilterMap);

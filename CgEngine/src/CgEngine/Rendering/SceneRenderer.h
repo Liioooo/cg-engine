@@ -1,7 +1,7 @@
 #pragma once
 
 #include "RenderPass.h"
-#include "Material.h"
+#include "CustomValMaterial.h"
 #include "Camera.h"
 #include "UniformBuffer.h"
 #include "VertexArrayObject.h"
@@ -53,12 +53,15 @@ namespace CgEngine {
         RenderPass* boundingBoxRenderPass;
         RenderPass* normalsDebugRenderPass;
         RenderPass* debugLinesRenderPass;
-        Material* screenMaterial;
-        Material* skyboxMaterial;
-        Material* physicsCollidersMaterial;
-        Material* boundingBoxMaterial;
-        Material* normalsDebugMaterial;
-        Material* emptyMaterial;
+
+        CustomValMaterial screenMaterial;
+        CustomValMaterial skyboxMaterial;
+        CustomValMaterial physicsCollidersMaterial;
+        CustomValMaterial boundingBoxMaterial;
+        CustomValMaterial normalsDebugMaterial;
+        CustomValMaterial emptyMaterial;
+
+        ComputeShader* skinningShader;
 
         Texture2DArray* dirShadowMaps;
         std::array<Texture2D*, 7> bloomTextures;
