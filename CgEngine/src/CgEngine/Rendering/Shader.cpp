@@ -158,11 +158,36 @@ namespace CgEngine {
     }
 
     Shader::~Shader() {
-        glDeleteProgram(programId);
+        if (programId != ~0) {
+            glDeleteProgram(programId);
+        }
+    }
+
+    Shader::Shader(Shader&& other) noexcept {
+        programId = other.programId;
+        name = std::move(other.name);
+        uniformLocations = std::move(other.uniformLocations);
+
+        other.programId = ~0;
+    }
+
+    Shader& Shader::operator=(Shader&& other) noexcept {
+        if (this != &other) {
+            programId = other.programId;
+            name = std::move(other.name);
+            uniformLocations = std::move(other.uniformLocations);
+
+            other.programId = ~0;
+        }
+        return *this;
     }
 
     void Shader::bind() {
         glUseProgram(programId);
+    }
+
+    bool Shader::isReady() const {
+        return programId != ~0;
     }
 
     uint32_t Shader::getProgramId() const {
@@ -222,11 +247,36 @@ namespace CgEngine {
     }
 
     ComputeShader::~ComputeShader() {
-        glDeleteProgram(programId);
+        if (programId != ~0) {
+            glDeleteProgram(programId);
+        }
+    }
+
+    ComputeShader::ComputeShader(ComputeShader&& other) noexcept {
+        programId = other.programId;
+        name = std::move(name);
+        uniformLocations = std::move(other.uniformLocations);
+
+        other.programId = ~0;
+    }
+
+    ComputeShader& ComputeShader::operator=(ComputeShader&& other) noexcept {
+        if (this != &other) {
+            programId = other.programId;
+            name = std::move(name);
+            uniformLocations = std::move(other.uniformLocations);
+
+            other.programId = ~0;
+        }
+        return *this;
     }
 
     void ComputeShader::bind() {
         glUseProgram(programId);
+    }
+
+    bool ComputeShader::isReady() const {
+        return programId != ~0;
     }
 
     uint32_t ComputeShader::getProgramId() const {

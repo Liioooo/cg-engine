@@ -38,7 +38,7 @@ namespace CgEngine {
     };
 
     struct RenderPassSpecification {
-        Shader* shader = nullptr;
+        Shader shader;
         DepthCompareOperator depthCompareOperator = DepthCompareOperator::Less;
         Framebuffer* framebuffer = nullptr;
         bool usingExistingFramebuffer = false;
@@ -58,10 +58,16 @@ namespace CgEngine {
 
     class RenderPass {
     public:
+        RenderPass() = default;
         explicit RenderPass(RenderPassSpecification spec);
         ~RenderPass();
 
-        const RenderPassSpecification& getSpecification();
+        RenderPass(RenderPass&& other) noexcept;
+        RenderPass& operator= (RenderPass&& other) noexcept;
+
+        RenderPassSpecification& getSpecification();
+
+        bool isReady() const;
 
     private:
         RenderPassSpecification specification;

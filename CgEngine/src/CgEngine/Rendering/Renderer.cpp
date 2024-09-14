@@ -163,11 +163,12 @@ namespace CgEngine {
 
     void Renderer::beginRenderPass(RenderPass& renderPass) {
         CG_ASSERT(currentRenderPass == nullptr, "There already is an active RenderPass!")
+        CG_ASSERT(renderPass.isReady(), "The RenderPass is not ready to use!")
 
         currentRenderPass = &renderPass;
-        const RenderPassSpecification& spec = renderPass.getSpecification();
+        RenderPassSpecification& spec = renderPass.getSpecification();
 
-        spec.shader->bind();
+        spec.shader.bind();
         spec.framebuffer->bind();
 
         if (isWireframe != spec.wireframe) {
@@ -253,7 +254,7 @@ namespace CgEngine {
     void Renderer::renderUnitQuad(const Material &material) {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
 
-        material.uploadToShader(*currentRenderPass->getSpecification().shader);
+        material.uploadToShader(currentRenderPass->getSpecification().shader);
 
         quadVAO->bind();
         glDrawElements(GL_TRIANGLES, quadVAO->getIndexCount(), GL_UNSIGNED_INT, nullptr);
@@ -262,7 +263,7 @@ namespace CgEngine {
     void Renderer::renderUnitCube(const Material &material) {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
 
-        material.uploadToShader(*currentRenderPass->getSpecification().shader);
+        material.uploadToShader(currentRenderPass->getSpecification().shader);
 
         unitCubeVAO->bind();
         glDrawElements(GL_TRIANGLES, unitCubeVAO->getIndexCount(), GL_UNSIGNED_INT, nullptr);
@@ -302,7 +303,7 @@ namespace CgEngine {
     void Renderer::executeDrawCommand(const VertexArrayObject& vao, const Material& material, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, const std::vector<glm::mat4>& transforms, uint32_t instanceCount) {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
 
-        material.uploadToShader(*currentRenderPass->getSpecification().shader);
+        material.uploadToShader(currentRenderPass->getSpecification().shader);
         vao.bind();
         transformsBuffer->setData(transforms.data(), transforms.size() * sizeof(glm::mat4));
         glDrawElementsInstancedBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(baseIndex * sizeof(uint32_t)), instanceCount, baseVertex);

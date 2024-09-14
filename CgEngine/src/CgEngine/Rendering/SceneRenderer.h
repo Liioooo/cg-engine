@@ -39,20 +39,20 @@ namespace CgEngine {
         bool needsResize = true;
         bool activeRendering = false;
 
-        RenderPass* shadowMapRenderPass;
-        RenderPass* preDepthRenderPass;
-        RenderPass* geometryRenderPass;
-        RenderPass* screenRenderPass;
-        RenderPass* skyboxRenderPass;
-        RenderPass* bloomDownSamplePass;
-        RenderPass* bloomUpSamplePass;
-        RenderPass* uiCirclePass;
-        RenderPass* uiRectPass;
-        RenderPass* uiTextPass;
-        RenderPass* physicsCollidersRenderPass;
-        RenderPass* boundingBoxRenderPass;
-        RenderPass* normalsDebugRenderPass;
-        RenderPass* debugLinesRenderPass;
+        RenderPass shadowMapRenderPass;
+        RenderPass preDepthRenderPass;
+        RenderPass geometryRenderPass;
+        RenderPass screenRenderPass;
+        RenderPass skyboxRenderPass;
+        RenderPass bloomDownSamplePass;
+        RenderPass bloomUpSamplePass;
+        RenderPass uiCirclePass;
+        RenderPass uiRectPass;
+        RenderPass uiTextPass;
+        RenderPass physicsCollidersRenderPass;
+        RenderPass boundingBoxRenderPass;
+        RenderPass normalsDebugRenderPass;
+        RenderPass debugLinesRenderPass;
 
         CustomValMaterial screenMaterial;
         CustomValMaterial skyboxMaterial;
@@ -61,7 +61,7 @@ namespace CgEngine {
         CustomValMaterial normalsDebugMaterial;
         CustomValMaterial emptyMaterial;
 
-        ComputeShader* skinningShader;
+        ComputeShader skinningShader;
 
         Texture2DArray* dirShadowMaps;
         std::array<Texture2D*, 7> bloomTextures;

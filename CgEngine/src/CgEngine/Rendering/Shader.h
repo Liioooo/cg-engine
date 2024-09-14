@@ -28,10 +28,15 @@ namespace CgEngine {
 
     class Shader {
     public:
+        Shader() = default;
         explicit Shader(std::string name);
         ~Shader();
 
+        Shader(Shader&& other) noexcept;
+        Shader& operator= (Shader&& other) noexcept;
+
         void bind();
+        bool isReady() const;
 
         uint32_t getProgramId() const;
 
@@ -47,16 +52,21 @@ namespace CgEngine {
 
     private:
         std::string name;
-        uint32_t programId;
+        uint32_t programId = ~0;
         std::unordered_map<std::string, int32_t> uniformLocations{};
     };
 
     class ComputeShader {
     public:
+        ComputeShader() = default;
         explicit ComputeShader(std::string name);
         ~ComputeShader();
 
+        ComputeShader(ComputeShader&& other) noexcept;
+        ComputeShader& operator= (ComputeShader&& other) noexcept;
+
         void bind();
+        bool isReady() const;
 
         uint32_t getProgramId() const;
 
@@ -79,7 +89,7 @@ namespace CgEngine {
 
     private:
         std::string name;
-        uint32_t programId;
+        uint32_t programId = ~0;
         std::unordered_map<std::string, int32_t> uniformLocations{};
     };
 
