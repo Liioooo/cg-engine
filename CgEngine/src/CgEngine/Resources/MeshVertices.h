@@ -13,6 +13,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include "Resources/ResRef.h"
 
 namespace CgEngine {
 
@@ -54,7 +55,7 @@ namespace CgEngine {
 
         static MeshVertices* createFromPhysx(const glm::vec3* vertices, uint32_t numVertices, const uint32_t* indices, uint32_t numIndices);
 
-        ~MeshVertices();
+        ~MeshVertices() override;
 
         VertexArrayObject* getVAO();
         const std::vector<Vertex>& getVertices() const;
@@ -101,7 +102,7 @@ namespace CgEngine {
         std::vector<Vertex> vertices;
         std::vector<uint32_t> indexBuffer;
         std::vector<Submesh> submeshes;
-        std::vector<std::unique_ptr<PBRMaterial>> materials;
+        std::vector<ResRef<PBRMaterial>> materials;
         std::vector<MeshNode> meshNodes{};
         std::unordered_map<std::string, uint32_t> nodeNameToNode{};
         Skeleton* skeleton = nullptr;

@@ -24,8 +24,8 @@ namespace CgEngine {
         }
     }
 
-    PhysicsMaterial& BoxColliderComponent::getPhysicsMaterial() {
-        return *physicsMaterial;
+    ResRef<PhysicsMaterial> BoxColliderComponent::getPhysicsMaterial() {
+        return physicsMaterial;
     }
 
     glm::vec3 BoxColliderComponent::getHalfSize() const {

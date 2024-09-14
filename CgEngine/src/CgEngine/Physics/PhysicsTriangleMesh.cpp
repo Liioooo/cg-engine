@@ -6,12 +6,12 @@ namespace CgEngine {
         return mesh;
     }
 
-    MeshVertices& PhysicsTriangleMesh::getVisualizationMesh() {
+    MeshVertices* PhysicsTriangleMesh::getVisualizationMesh() {
         if (visualizationMesh != nullptr) {
-            return *visualizationMesh;
+            return visualizationMesh;
         }
 
         visualizationMesh = MeshVertices::createFromPhysx((glm::vec3*)(mesh->getVertices()), mesh->getNbVertices(), (uint32_t*)mesh->getTriangles(), mesh->getNbTriangles() * 3);
-        return *visualizationMesh;
+        return visualizationMesh;
     }
 }

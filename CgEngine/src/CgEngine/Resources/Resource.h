@@ -4,6 +4,8 @@ namespace CgEngine {
 
     class Resource {
     public:
+        virtual ~Resource() = default;
+
         virtual void resourceManagerLoadAsync() {};
         virtual bool resourceManagerAsyncLoadingFinished() { return true; }
         virtual void resourceManagerSetAsyncLoadedData() {};

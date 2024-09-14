@@ -344,19 +344,12 @@ namespace CgEngine {
         return *blackCubeTexture;
     }
 
-    std::pair<TextureCube*, TextureCube*> Renderer::createEnvironmentMap(const std::string &hdriPath) {
+    std::pair<ResRef<TextureCube>, ResRef<TextureCube>> Renderer::createEnvironmentMap(const std::string &hdriPath) {
         auto& resourceManager = Application::get().getResourceManager();
 
-        TextureCube* irradianceMap = nullptr;
-        TextureCube* prefilterMap = nullptr;
-        if (resourceManager.hasResource<TextureCube>(hdriPath + "-irradiance")) {
-            irradianceMap = resourceManager.getResource<TextureCube>(hdriPath + "-irradiance");
-        }
-        if (resourceManager.hasResource<TextureCube>(hdriPath + "-prefilter")) {
-            prefilterMap = resourceManager.getResource<TextureCube>(hdriPath + "-prefilter");
-        }
-
-        if (irradianceMap != nullptr && prefilterMap != nullptr) {
+        if (resourceManager.hasResource<TextureCube>(hdriPath + "-irradiance") && resourceManager.hasResource<TextureCube>(hdriPath + "-prefilter")) {
+            auto irradianceMap = resourceManager.getResource<TextureCube>(hdriPath + "-irradiance");
+            auto prefilterMap = resourceManager.getResource<TextureCube>(hdriPath + "-prefilter");
             return {irradianceMap, prefilterMap};
         }
 
@@ -381,7 +374,7 @@ namespace CgEngine {
 
         uint32_t mipCount = TextureUtils::calculateMipCount(MAP_SIZE, MAP_SIZE);
 
-        prefilterMap = new TextureCube(TextureFormat::Float32A, MAP_SIZE, MAP_SIZE, MipMapFiltering::Trilinear);
+        auto* prefilterMap = new TextureCube(TextureFormat::Float32A, MAP_SIZE, MAP_SIZE, MipMapFiltering::Trilinear);
         prefilterMap->generateMipMaps();
 
         environmentMapPrefilterMap->bind();
@@ -396,7 +389,7 @@ namespace CgEngine {
             environmentMapPrefilterMap->waitForMemoryBarrier();
         }
 
-        irradianceMap = new TextureCube(TextureFormat::Float32A, 32, 32, MipMapFiltering::Bilinear);
+        auto* irradianceMap = new TextureCube(TextureFormat::Float32A, 32, 32, MipMapFiltering::Bilinear);
 
         environmentMapIrradianceMap->bind();
         environmentMapIrradianceMap->setTextureCube(*prefilterMap, 0);
@@ -408,6 +401,6 @@ namespace CgEngine {
         resourceManager.insertResource(hdriPath + "-prefilter", prefilterMap);
 
         CG_LOGGING_DEBUG("Created Environment Map from: {0}", hdriPath)
-        return {irradianceMap, prefilterMap};
+        return {resourceManager.getResource<TextureCube>(hdriPath + "-irradiance"), resourceManager.getResource<TextureCube>(hdriPath + "-prefilter")};
     }
 }

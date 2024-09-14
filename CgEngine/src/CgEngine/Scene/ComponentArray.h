@@ -9,7 +9,10 @@ namespace CgEngine {
 
     class IComponentArray {
     public:
+        virtual ~IComponentArray() = default;
+
         virtual void checkedDetachComponent(Entity entity, Scene& scene) = 0;
+        virtual void detachAllComponents(Scene& scene) = 0;
     };
 
     template<typename C>
@@ -19,12 +22,12 @@ namespace CgEngine {
         using Iterator = typename std::vector<C>::iterator;
 
     public:
-        void attachComponent(C& component) {
-            CG_ASSERT(entityToComponentsIndex.find(component.getEntity()) == entityToComponentsIndex.end(), "Component added to same entity more than once.")
+        C& attachComponent(Entity entity) {
+            CG_ASSERT(entityToComponentsIndex.find(entity) == entityToComponentsIndex.end(), "Component added to same entity more than once.")
 
-            entityToComponentsIndex[component.getEntity()] = components.size();
-            componentsIndexToEntity[components.size()] = component.getEntity();
-            components.push_back(component);
+            entityToComponentsIndex[entity] = components.size();
+            componentsIndexToEntity[components.size()] = entity;
+            return components.emplace_back(entity);
         }
 
         void detachComponent(Entity entity) {
@@ -47,6 +50,14 @@ namespace CgEngine {
             if (hasComponent(entity)) {
                 components[entityToComponentsIndex[entity]].onDetach(scene);
                 detachComponent(entity);
+            }
+        }
+
+        void detachAllComponents(Scene& scene) override {
+            entityToComponentsIndex.clear();
+            componentsIndexToEntity.clear();
+            for (auto& item: components) {
+                item.onDetach(scene);
             }
         }
 

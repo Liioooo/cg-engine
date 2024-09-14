@@ -11,8 +11,10 @@ namespace CgEngine {
     }
 
     const pugi::xml_node PrefabManager::getPrefabDefinitionXMLNode(const std::string& prefabName) {
-        const auto& xmlPrefabFile = Application::get().getResourceManager().getResource<XMLFile>(FileSystem::getAsGamePath("prefabs.xml"));
-        const pugi::xml_document& xml = xmlPrefabFile->getXMLDocument();
+        if (!xmlPrefabFile.isLoaded()) {
+            xmlPrefabFile.load(FileSystem::getAsGamePath("prefabs.xml"));
+        }
+        const pugi::xml_document& xml = xmlPrefabFile.getXMLDocument();
         const auto& prefabNode =  xml.child("Prefabs").find_child_by_attribute("Prefab", "name", prefabName.c_str());
 
         CG_ASSERT(!prefabNode.empty(), "No Prefab " + prefabName + " defined.")

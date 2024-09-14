@@ -69,7 +69,9 @@ namespace CgEngine {
             timeStep = time - lastFrameTime;
             lastFrameTime = time;
 
-            if (sceneManager->hadSceneSwitch()) {
+            if (sceneManager->shouldSwapScenes()) {
+                sceneManager->swapScenes();
+                resourceManager.unloadUnusedResources();
                 timeStep = 0.0f;
             }
         }

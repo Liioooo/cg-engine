@@ -76,9 +76,7 @@ namespace CgEngine {
         template<typename C, typename P>
         C& attachComponent(Entity entity, P componentParams) {
             componentParams.verifyParams();
-            C comp = C(entity);
-            componentManager->attachComponent(comp);
-            C& addedComp = componentManager->getComponent<C>(entity);
+            C& addedComp = componentManager->attachComponent<C>(entity);
             addedComp.onAttach(*this, componentParams);
             return addedComp;
         }

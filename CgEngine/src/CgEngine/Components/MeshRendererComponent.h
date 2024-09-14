@@ -3,6 +3,7 @@
 #include "Resources/MeshVertices.h"
 #include "Rendering/PBRMaterial.h"
 #include "Component.h"
+#include "Resources/ResRef.h"
 
 namespace CgEngine {
 
@@ -22,15 +23,15 @@ namespace CgEngine {
 
         void onAttach(Scene& scene, MeshRendererComponentParams& params);
 
-        MeshVertices& getMeshVertices();
-        PBRMaterial* getMaterial();
+        ResRef<MeshVertices> getMeshVertices();
+        ResRef<PBRMaterial> getMaterial();
         bool getCastShadows() const;
         void setCastShadows(bool value);
         const std::vector<uint32_t>& getMeshNodes();
 
     private:
-        MeshVertices* mesh;
-        PBRMaterial* material;
+        ResRef<MeshVertices> mesh;
+        ResRef<PBRMaterial> material;
         bool castShadows;
         std::vector<uint32_t> meshNodes;
     };

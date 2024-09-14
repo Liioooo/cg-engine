@@ -4,6 +4,7 @@
 #include "Material.h"
 #include "VertexArrayObject.h"
 #include "ShaderStorageBuffer.h"
+#include "Resources/ResRef.h"
 
 namespace CgEngine {
 
@@ -54,7 +55,7 @@ namespace CgEngine {
         static Texture2D& getWhiteTexture();
         static Texture2D& getBrdfLUTTexture();
         static TextureCube& getBlackCubeTexture();
-        static std::pair<TextureCube*, TextureCube*> createEnvironmentMap(const std::string& hdriPath);
+        static std::pair<ResRef<TextureCube>, ResRef<TextureCube>> createEnvironmentMap(const std::string& hdriPath);
 
         static const uint32_t maxUiQuads = 5000;
         static const uint32_t maxUiIndices = maxUiQuads * 6;

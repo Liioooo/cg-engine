@@ -50,7 +50,7 @@ namespace CgEngine {
         Texture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear, float anisotropicFiltering = 1.0f);
         Texture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, const void* data, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear, float anisotropicFiltering = 1.0f);
         Texture2D(const std::string& path, bool srgb, TextureWrap wrap = TextureWrap::Repeat, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear, float anisotropicFiltering = 1.0f);
-        ~Texture2D();
+        ~Texture2D() override;
 
         bool operator ==(const Texture2D& other) const {
             return id == other.id;
@@ -123,7 +123,7 @@ namespace CgEngine {
 
         TextureCube(TextureFormat format, uint32_t width, uint32_t height, MipMapFiltering mipMapFiltering = MipMapFiltering::Bilinear);
         TextureCube(TextureFormat format, uint32_t width, uint32_t height, const void* data, MipMapFiltering mipMapFiltering = MipMapFiltering::Bilinear);
-        ~TextureCube();
+        ~TextureCube() override;
 
         bool operator ==(const TextureCube& other) const {
             return id == other.id;

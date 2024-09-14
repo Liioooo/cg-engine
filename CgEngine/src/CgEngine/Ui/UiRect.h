@@ -2,6 +2,7 @@
 
 #include "UiElement.h"
 #include "Rendering/Texture.h"
+#include "Resources/ResRef.h"
 
 namespace CgEngine {
 
@@ -16,13 +17,13 @@ namespace CgEngine {
         void setLineWidth(float lineWidth);
         void setLineColor(const glm::vec4& lineColor);
         void setFillColor(const glm::vec4& fillColor);
-        void setTexture(Texture2D* texture);
-        void setTexture(const std::string& textureName);
+        void setTexture(ResRef<Texture2D> texture);
+        void setTextureByName(const std::string& textureName);
 
         float getLineWidth() const;
         const glm::vec4& getLineColor() const;
         const glm::vec4& getFillColor() const;
-        const Texture2D* getTexture() const;
+        const ResRef<Texture2D> getTexture() const;
 
         const glm::vec2& getSize() const;
 
@@ -42,7 +43,7 @@ namespace CgEngine {
         glm::vec4 lineColor{};
         glm::vec4 fillColor{};
 
-        Texture2D* texture = nullptr;
+        ResRef<Texture2D> texture = nullptr;
 
         bool dirty = true;
 

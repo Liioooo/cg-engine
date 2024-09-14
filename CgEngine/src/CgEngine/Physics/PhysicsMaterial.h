@@ -1,7 +1,7 @@
 #pragma once
 
+#include <XMLFile.h>
 #include "PxPhysicsAPI.h"
-#include "Resources/Resource.h"
 
 namespace CgEngine {
 
@@ -10,6 +10,7 @@ namespace CgEngine {
         static PhysicsMaterial* createResource(const std::string& name);
 
         explicit PhysicsMaterial(float staticFriction, float dynamicFriction, float restitution);
+        ~PhysicsMaterial() override;
 
         float getStaticFriction() const;
         float getDynamicFriction() const;
@@ -23,6 +24,8 @@ namespace CgEngine {
         float restitution;
 
         physx::PxMaterial* physxMaterial;
+
+        static inline XMLFile physicsMaterialsXML;
     };
 
 }

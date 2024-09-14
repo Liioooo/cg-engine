@@ -19,31 +19,31 @@ namespace CgEngine {
 
         if (scene.hasComponent<BoxColliderComponent>(entity)) {
             auto& colliderComp = scene.getComponent<BoxColliderComponent>(entity);
-            uint32_t colliderUuid = addBoxCollider(colliderComp.getPhysicsMaterial(), colliderComp.getHalfSize(), colliderComp.getOffset(), colliderComp.getIsTrigger());
+            uint32_t colliderUuid = addBoxCollider(*colliderComp.getPhysicsMaterial().get(), colliderComp.getHalfSize(), colliderComp.getOffset(), colliderComp.getIsTrigger());
             colliderComp.colliderUuid = colliderUuid;
         }
 
         if (scene.hasComponent<SphereColliderComponent>(entity)) {
             auto& colliderComp = scene.getComponent<SphereColliderComponent>(entity);
-            uint32_t colliderUuid = addSphereCollider(colliderComp.getPhysicsMaterial(), colliderComp.getRadius(), colliderComp.getOffset(), colliderComp.getIsTrigger());
+            uint32_t colliderUuid = addSphereCollider(*colliderComp.getPhysicsMaterial().get(), colliderComp.getRadius(), colliderComp.getOffset(), colliderComp.getIsTrigger());
             colliderComp.colliderUuid = colliderUuid;
         }
 
         if (scene.hasComponent<CapsuleColliderComponent>(entity)) {
             auto& colliderComp = scene.getComponent<CapsuleColliderComponent>(entity);
-            uint32_t colliderUuid = addCapsuleCollider(colliderComp.getPhysicsMaterial(), colliderComp.getRadius(), colliderComp.getHalfHeight(), colliderComp.getOffset(), colliderComp.getIsTrigger());
+            uint32_t colliderUuid = addCapsuleCollider(*colliderComp.getPhysicsMaterial().get(), colliderComp.getRadius(), colliderComp.getHalfHeight(), colliderComp.getOffset(), colliderComp.getIsTrigger());
             colliderComp.colliderUuid = colliderUuid;
         }
 
         if (scene.hasComponent<TriangleColliderComponent>(entity)) {
             auto& colliderComp = scene.getComponent<TriangleColliderComponent>(entity);
-            uint32_t colliderUuid = addTriangleCollider(colliderComp.getPhysicsMaterial(), colliderComp.getPhysicsMesh(), colliderComp.getIsTrigger());
+            uint32_t colliderUuid = addTriangleCollider(*colliderComp.getPhysicsMaterial().get(), colliderComp.getPhysicsMesh(), colliderComp.getIsTrigger());
             colliderComp.colliderUuid = colliderUuid;
         }
 
         if (scene.hasComponent<ConvexColliderComponent>(entity)) {
             auto& colliderComp = scene.getComponent<ConvexColliderComponent>(entity);
-            uint32_t colliderUuid = addConvexCollider(colliderComp.getPhysicsMaterial(), colliderComp.getPhysicsMesh(), colliderComp.getIsTrigger());
+            uint32_t colliderUuid = addConvexCollider(*colliderComp.getPhysicsMaterial().get(), colliderComp.getPhysicsMesh(), colliderComp.getIsTrigger());
             colliderComp.colliderUuid = colliderUuid;
         }
 

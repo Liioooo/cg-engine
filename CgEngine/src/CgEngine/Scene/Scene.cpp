@@ -9,6 +9,7 @@ namespace CgEngine {
     }
 
     Scene::~Scene() {
+        componentManager->destroyAllComponents(*this);
         delete componentManager;
         delete physicsScene;
     }
@@ -216,8 +217,8 @@ namespace CgEngine {
 
         auto skyboxComponentIt = componentManager->cbegin<SkyboxComponent>();
         if (skyboxComponentIt != componentManager->cend<SkyboxComponent>()) {
-            sceneEnvironment.irradianceMap = skyboxComponentIt->getIrradianceMap();
-            sceneEnvironment.prefilterMap = skyboxComponentIt->getPrefilterMap();
+            sceneEnvironment.irradianceMap = skyboxComponentIt->getIrradianceMap().get();
+            sceneEnvironment.prefilterMap = skyboxComponentIt->getPrefilterMap().get();
             sceneEnvironment.environmentIntensity = skyboxComponentIt->getIntensity();
             sceneEnvironment.environmentLod = skyboxComponentIt->getLod();
         } else {
@@ -231,11 +232,11 @@ namespace CgEngine {
         renderer.beginScene(cameraComponent->getCamera(), cameraTransform.getModelMatrix(), lightEnvironment, sceneEnvironment);
 
         for (auto it = componentManager->begin<MeshRendererComponent>(); it != componentManager->end<MeshRendererComponent>(); it++) {
-            renderer.submitMesh(it->getMeshVertices(), it->getMeshNodes(), it->getMaterial(), it->getCastShadows(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix());
+            renderer.submitMesh(it->getMeshVertices().get(), it->getMeshNodes(), it->getMaterial().get(), it->getCastShadows(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix());
         }
 
         for (auto it = componentManager->begin<AnimatedMeshRendererComponent>(); it != componentManager->end<AnimatedMeshRendererComponent>(); it++) {
-            renderer.submitAnimatedMesh(it->getMeshVertices(), it->getMeshNodes(), it->getMaterial(), it->getCastShadows(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getBoneTransforms(), it->getSkinnedVAO());
+            renderer.submitAnimatedMesh(it->getMeshVertices().get(), it->getMeshNodes(), it->getMaterial().get(), it->getCastShadows(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getBoneTransforms(), it->getSkinnedVAO());
         }
 
         for (auto it = componentManager->cbegin<UiCanvasComponent>(); it != componentManager->cend<UiCanvasComponent>(); it++) {
@@ -249,14 +250,14 @@ namespace CgEngine {
         if (applicationOptions.debugShowPhysicsColliders) {
             auto& resourceManager = Application::get().getResourceManager();
 
-            auto& cubeMesh = *resourceManager.getResource<MeshVertices>("CG_CubeMesh");
+            auto* cubeMesh = resourceManager.getResource<MeshVertices>("CG_CubeMesh").get();
             for (auto it = componentManager->begin<BoxColliderComponent>(); it != componentManager->end<BoxColliderComponent>(); it++) {
                 auto modelMatrix = componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix();
                 glm::mat4 colliderTransform = glm::translate(glm::mat4(1.0), it->getOffset()) * modelMatrix * glm::scale(glm::mat4(1.0f), it->getHalfSize() * 2.0f);
                 renderer.submitPhysicsColliderMesh(cubeMesh, colliderTransform);
             }
 
-            auto& sphereMesh = *resourceManager.getResource<MeshVertices>("CG_SphereMesh_16_16");
+            auto* sphereMesh = resourceManager.getResource<MeshVertices>("CG_SphereMesh_16_16").get();
             for (auto it = componentManager->begin<SphereColliderComponent>(); it != componentManager->end<SphereColliderComponent>(); it++) {
                 auto modelMatrix = componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix();
                 glm::mat4 colliderTransform = glm::translate(glm::mat4(1.0), it->getOffset()) * modelMatrix * glm::scale(glm::mat4(1.0f), glm::vec3(it->getRadius()));
@@ -266,7 +267,7 @@ namespace CgEngine {
             for (auto it = componentManager->begin<CapsuleColliderComponent>(); it != componentManager->end<CapsuleColliderComponent>(); it++) {
                 auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
                 float radius = it->getRadius() * glm::max(transform.getGlobalScale().x, transform.getGlobalScale().z);
-                auto& capsuleMesh = *resourceManager.getResource<MeshVertices>("CG_CapsuleMesh_" + std::to_string(radius) + "_" + std::to_string(it->getHalfHeight() * 2.0f * transform.getGlobalScale().y));
+                auto* capsuleMesh = resourceManager.getResource<MeshVertices>("CG_CapsuleMesh_" + std::to_string(radius) + "_" + std::to_string(it->getHalfHeight() * 2.0f * transform.getGlobalScale().y)).get();
                 glm::mat4 colliderTransform = glm::translate(glm::mat4(1.0), transform.getGlobalPosition() + it->getOffset());
                 renderer.submitPhysicsColliderMesh(capsuleMesh, colliderTransform);
             }
@@ -285,10 +286,10 @@ namespace CgEngine {
         if (applicationOptions.debugShowBoundingBoxes) {
             auto& resourceManager = Application::get().getResourceManager();
 
-            auto& cubeMesh = *resourceManager.getResource<MeshVertices>("CG_CubeMesh");
+            auto* cubeMesh = resourceManager.getResource<MeshVertices>("CG_CubeMesh").get();
             for (auto it = componentManager->begin<MeshRendererComponent>(); it != componentManager->end<MeshRendererComponent>(); it++) {
                 auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
-                renderer.submitBoundingBoxMesh(cubeMesh, it->getMeshVertices(), it->getMeshNodes(), transform.getModelMatrix());
+                renderer.submitBoundingBoxMesh(cubeMesh, it->getMeshVertices().get(), it->getMeshNodes(), transform.getModelMatrix());
             }
         }
 #endif

@@ -22,11 +22,11 @@ namespace CgEngine {
         void setViewportSize(uint32_t width, uint32_t height);
         void beginScene(const Camera& camera, glm::mat4 cameraTransform, const SceneLightEnvironment& lightEnvironment, const SceneEnvironment& sceneEnvironment);
         void endScene();
-        void submitMesh(MeshVertices& mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform);
-        void submitAnimatedMesh(MeshVertices& mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms, VertexArrayObject* skinnedVAO);
+        void submitMesh(MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform);
+        void submitAnimatedMesh(MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms, VertexArrayObject* skinnedVAO);
         void submitUiElements(const std::unordered_map<std::string, UiElement*>& uiElements);
-        void submitPhysicsColliderMesh(MeshVertices& mesh, const glm::mat4& transform);
-        void submitBoundingBoxMesh(MeshVertices& boundingBoxMesh, MeshVertices& mesh, const std::vector<uint32_t>& meshNodes, const glm::mat4& transform);
+        void submitPhysicsColliderMesh(MeshVertices* mesh, const glm::mat4& transform);
+        void submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, const glm::mat4& transform);
         void submitDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color);
 
     private:

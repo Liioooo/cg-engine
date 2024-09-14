@@ -77,7 +77,7 @@ namespace CgEngine {
             desc.slopeLimit = glm::max(0.0f, glm::cos(glm::radians(slopeLimit)));
             desc.nonWalkableMode = physx::PxControllerNonWalkableMode::ePREVENT_CLIMBING;
             desc.contactOffset = 0.05f;
-            desc.material = collider.getPhysicsMaterial().getPhysxMaterial();
+            desc.material = collider.getPhysicsMaterial()->getPhysxMaterial();
             desc.reportCallback = &physicsSystem.getControllerHitReportCallback();
 
             physXController = physXControllerManager->createController(desc);
@@ -94,7 +94,7 @@ namespace CgEngine {
             desc.nonWalkableMode = physx::PxControllerNonWalkableMode::ePREVENT_CLIMBING;
             desc.climbingMode = physx::PxCapsuleClimbingMode::eCONSTRAINED;
             desc.contactOffset = 0.05f;
-            desc.material = collider.getPhysicsMaterial().getPhysxMaterial();
+            desc.material = collider.getPhysicsMaterial()->getPhysxMaterial();
             desc.reportCallback = &physicsSystem.getControllerHitReportCallback();
 
             physXController = physXControllerManager->createController(desc);

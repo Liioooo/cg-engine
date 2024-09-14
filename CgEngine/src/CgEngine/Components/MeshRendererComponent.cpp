@@ -40,11 +40,11 @@ namespace CgEngine {
         castShadows = params.castShadows;
     }
 
-    MeshVertices& MeshRendererComponent::getMeshVertices() {
-        return *mesh;
+    ResRef<MeshVertices> MeshRendererComponent::getMeshVertices() {
+        return mesh;
     }
 
-    PBRMaterial* MeshRendererComponent::getMaterial() {
+    ResRef<PBRMaterial> MeshRendererComponent::getMaterial() {
         return material;
     }
 

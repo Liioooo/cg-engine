@@ -717,7 +717,7 @@ namespace CgEngine {
             for (uint32_t m = 0; m < scene->mNumMaterials; m++) {
                 aiMaterial *aiMaterial = scene->mMaterials[m];
 
-                auto& material = mesh->materials.emplace_back(std::make_unique<PBRMaterial>());
+                auto& material = mesh->materials.emplace_back(std::make_shared<PBRMaterial>());
 
                 float aiEmissionIntensity;
                 bool hasEmissionIntensity = aiMaterial->Get(AI_MATKEY_EMISSIVE_INTENSITY, aiEmissionIntensity) == AI_SUCCESS;

@@ -19,6 +19,7 @@ namespace CgEngine {
         using Component::Component;
 
         void onAttach(Scene& scene, UiCanvasComponentParams& params);
+        void onDetach(Scene& scene) override;
 
         void update(uint32_t viewportWidth, uint32_t viewportHeight);
 

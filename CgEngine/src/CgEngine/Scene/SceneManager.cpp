@@ -1,5 +1,4 @@
 #include "SceneManager.h"
-#include "Resources/XMLFile.h"
 #include "SceneLoader.h"
 #include "FileSystem.h"
 #include "Application.h"
@@ -14,18 +13,16 @@ namespace CgEngine {
     }
 
     Scene* SceneManager::getActiveScene() {
-        if (nextScene != nullptr) {
-            delete activeScene;
-            activeScene = nextScene;
-            nextScene = nullptr;
-        }
         return activeScene;
     }
 
     void SceneManager::setActiveScene(const std::string &name) {
-        switchedScenes = true;
-        auto* xmlSceneFile = Application::get().getResourceManager().getResource<XMLFile>(FileSystem::getAsGamePath(name));
-        nextScene = SceneLoader::loadScene(xmlSceneFile, viewportWidth, viewportHeight);
+        if (!activeScene) {
+            activeScene = SceneLoader::loadScene(getXMLFileForScene(name), viewportWidth, viewportHeight);
+        } else {
+            nextScene = SceneLoader::loadScene(getXMLFileForScene(name), viewportWidth, viewportHeight);
+            switchedScenes = true;
+        }
     }
 
     void SceneManager::setViewportSize(uint32_t width, uint32_t height) {
@@ -39,9 +36,22 @@ namespace CgEngine {
         }
     }
 
-    bool SceneManager::hadSceneSwitch() {
-        bool out = switchedScenes;
+    bool SceneManager::shouldSwapScenes() const {
+        return switchedScenes;
+    }
+
+    void SceneManager::swapScenes() {
+        delete activeScene;
+        activeScene = nextScene;
+        nextScene = nullptr;
         switchedScenes = false;
-        return out;
+    }
+
+    XMLFile& SceneManager::getXMLFileForScene(const string& name) {
+        auto& xmlFile = xmlSceneFileCache[name];
+        if (!xmlFile.isLoaded()) {
+            xmlFile.load(FileSystem::getAsGamePath(name));
+        }
+        return xmlFile;
     }
 }

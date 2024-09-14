@@ -24,8 +24,8 @@ namespace CgEngine {
         }
     }
 
-    PhysicsMaterial& SphereColliderComponent::getPhysicsMaterial() {
-        return *physicsMaterial;
+    ResRef<PhysicsMaterial> SphereColliderComponent::getPhysicsMaterial() {
+        return physicsMaterial;
     }
 
     float SphereColliderComponent::getRadius() const {

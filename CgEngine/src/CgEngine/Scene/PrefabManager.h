@@ -2,6 +2,7 @@
 
 #include "Entity.h"
 #include "Scene.h"
+#include "XMLFile.h"
 
 namespace CgEngine {
 
@@ -15,6 +16,8 @@ namespace CgEngine {
         static Entity createPrefabEntity(Scene* scene, Entity parent, const pugi::xml_node& prefabDefinitionNode, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, const std::string& tag, const std::string& id);
 
         static void instantiatePrefabFromNode(Scene* scene, const pugi::xml_node& prefabNode, Entity parent);
+
+        static inline XMLFile xmlPrefabFile;
     };
 
 }

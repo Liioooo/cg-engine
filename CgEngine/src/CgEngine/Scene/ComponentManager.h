@@ -46,8 +46,8 @@ namespace CgEngine {
         }
 
         template<typename C>
-        void attachComponent(C& component) {
-            getComponentArray<C>()->attachComponent(component);
+        C& attachComponent(Entity entity) {
+            return getComponentArray<C>()->attachComponent(entity);
         }
 
         template<typename C>
@@ -94,6 +94,12 @@ namespace CgEngine {
             for (const auto &pair: componentArrays) {
                 auto const& compArray = pair.second;
                 compArray->checkedDetachComponent(entity, scene);
+            }
+        }
+
+        void destroyAllComponents(Scene& scene) {
+            for (const auto &pair: componentArrays) {
+                pair.second->detachAllComponents(scene);
             }
         }
 

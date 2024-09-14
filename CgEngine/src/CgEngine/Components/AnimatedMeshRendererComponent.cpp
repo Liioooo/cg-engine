@@ -64,11 +64,11 @@ namespace CgEngine {
         delete skinnedVAO;
     }
 
-    MeshVertices& AnimatedMeshRendererComponent::getMeshVertices() {
-        return *mesh;
+    ResRef<MeshVertices> AnimatedMeshRendererComponent::getMeshVertices() {
+        return mesh;
     }
 
-    PBRMaterial* AnimatedMeshRendererComponent::getMaterial() {
+    ResRef<PBRMaterial> AnimatedMeshRendererComponent::getMaterial() {
         return material;
     }
 

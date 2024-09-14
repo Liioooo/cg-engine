@@ -8,9 +8,9 @@ namespace CgEngine {
         return mesh;
     }
 
-    MeshVertices& PhysicsConvexMesh::getVisualizationMesh() {
+    MeshVertices* PhysicsConvexMesh::getVisualizationMesh() {
         if (visualizationMesh != nullptr) {
-            return *visualizationMesh;
+            return visualizationMesh;
         }
 
         std::vector<glm::vec3> vertices;
@@ -41,6 +41,6 @@ namespace CgEngine {
         }
 
         visualizationMesh = MeshVertices::createFromPhysx(vertices.data(), vertices.size(), indices.data(), indices.size());
-        return *visualizationMesh;
+        return visualizationMesh;
     }
 }

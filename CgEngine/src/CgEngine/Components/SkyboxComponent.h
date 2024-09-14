@@ -2,6 +2,7 @@
 
 #include "Rendering/Texture.h"
 #include "Component.h"
+#include "Resources/ResRef.h"
 
 namespace CgEngine {
 
@@ -19,14 +20,14 @@ namespace CgEngine {
 
         void onAttach(Scene& scene, SkyboxComponentParams& params);
 
-        const TextureCube* getIrradianceMap() const;
-        const TextureCube* getPrefilterMap() const;
+        const ResRef<TextureCube> getIrradianceMap() const;
+        const ResRef<TextureCube> getPrefilterMap() const;
         float getIntensity() const;
         float getLod() const;
 
     private:
-        TextureCube* irradianceMap;
-        TextureCube* prefilterMap;
+        ResRef<TextureCube> irradianceMap;
+        ResRef<TextureCube> prefilterMap;
         float intensity;
         float lod;
     };

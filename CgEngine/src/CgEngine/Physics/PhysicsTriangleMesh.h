@@ -12,7 +12,7 @@ namespace CgEngine {
 
         physx::PxTriangleMesh* getPhysxMesh();
 
-        MeshVertices& getVisualizationMesh();
+        MeshVertices* getVisualizationMesh();
 
     private:
         physx::PxTriangleMesh* mesh;

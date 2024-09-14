@@ -25,11 +25,11 @@ namespace CgEngine {
         this->fillColor = fillColor;
     }
 
-    void UiRect::setTexture(Texture2D* texture) {
+    void UiRect::setTexture(ResRef<Texture2D> texture) {
         this->texture = texture;
     }
 
-    void UiRect::setTexture(const std::string& textureName) {
+    void UiRect::setTextureByName(const std::string& textureName) {
         auto& resourceManager = Application::get().getResourceManager();
         std::string texturePath = FileSystem::getAsGamePath(textureName);
 
@@ -53,7 +53,7 @@ namespace CgEngine {
         return fillColor;
     }
 
-    const Texture2D* UiRect::getTexture() const {
+    const ResRef<Texture2D> UiRect::getTexture() const {
         return texture;
     }
 

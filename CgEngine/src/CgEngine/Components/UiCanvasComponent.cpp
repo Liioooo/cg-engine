@@ -24,6 +24,12 @@ namespace CgEngine {
         }
     }
 
+    void UiCanvasComponent::onDetach(Scene& scene) {
+        for (const auto& item: uiElements) {
+            delete item.second;
+        }
+    }
+
     void UiCanvasComponent::update(uint32_t viewportWidth, uint32_t viewportHeight) {
         if (viewportWidth == 0 && viewportHeight == 0) {
             return;

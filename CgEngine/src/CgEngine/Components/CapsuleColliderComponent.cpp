@@ -25,8 +25,8 @@ namespace CgEngine {
         }
     }
 
-    PhysicsMaterial& CapsuleColliderComponent::getPhysicsMaterial() {
-        return *physicsMaterial;
+    ResRef<PhysicsMaterial> CapsuleColliderComponent::getPhysicsMaterial() {
+        return physicsMaterial;
     }
 
     float CapsuleColliderComponent::getRadius() const {

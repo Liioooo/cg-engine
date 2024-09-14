@@ -28,8 +28,8 @@ namespace CgEngine {
         }
     }
 
-    PhysicsMaterial& TriangleColliderComponent::getPhysicsMaterial() {
-        return *physicsMaterial;
+    ResRef<PhysicsMaterial> TriangleColliderComponent::getPhysicsMaterial() {
+        return physicsMaterial;
     }
 
     bool TriangleColliderComponent::getIsTrigger() const {

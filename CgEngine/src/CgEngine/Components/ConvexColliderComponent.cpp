@@ -28,8 +28,8 @@ namespace CgEngine {
         }
     }
 
-    PhysicsMaterial& ConvexColliderComponent::getPhysicsMaterial() {
-        return *physicsMaterial;
+    ResRef<PhysicsMaterial> ConvexColliderComponent::getPhysicsMaterial() {
+        return physicsMaterial;
     }
 
     bool ConvexColliderComponent::getIsTrigger() const {

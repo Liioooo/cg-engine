@@ -3,8 +3,6 @@
 #include "FileSystem.h"
 
 namespace CgEngine {
-    FT_Library Font::ftLibrary = nullptr;
-
     Font* Font::createResource(const std::string& name) {
         return new Font(name);
     }
@@ -62,6 +60,7 @@ namespace CgEngine {
 
     Font::~Font() {
         delete fontAtlas;
+        FT_Done_Face(ftFace);
     }
 
     float Font::getKerning(uint32_t leftGlyph, uint32_t rightGlyph) const {

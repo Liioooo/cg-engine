@@ -24,14 +24,14 @@ namespace CgEngine {
         void onAttach(Scene& scene, ConvexColliderComponentParams& params);
         void onDetach(Scene& scene) override;
 
-        PhysicsMaterial& getPhysicsMaterial();
+        ResRef<PhysicsMaterial> getPhysicsMaterial();
         bool getIsTrigger() const;
 
         PhysicsConvexMesh& getPhysicsMesh();
 
     private:
-        MeshVertices* mesh;
-        PhysicsMaterial* physicsMaterial;
+        ResRef<MeshVertices> mesh;
+        ResRef<PhysicsMaterial> physicsMaterial;
         std::string meshNode;
         bool isTrigger;
         uint32_t colliderUuid;

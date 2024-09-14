@@ -5,10 +5,10 @@
 #include "PrefabManager.h"
 
 namespace CgEngine {
-    Scene* SceneLoader::loadScene(XMLFile* xmlSceneFile, int viewportWidth, int viewportHeight) {
+    Scene* SceneLoader::loadScene(XMLFile& xmlSceneFile, int viewportWidth, int viewportHeight) {
         CG_LOGGING_DEBUG("Loading Scene")
 
-        const pugi::xml_document& xml = xmlSceneFile->getXMLDocument();
+        const pugi::xml_document& xml = xmlSceneFile.getXMLDocument();
         auto* scene = new Scene(viewportWidth, viewportHeight);
         const auto& sceneNode = xml.child("Scene");
         for (const auto &item: sceneNode.children("Entity")) {

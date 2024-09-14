@@ -2,6 +2,7 @@
 
 #include "Component.h"
 #include "Physics/PhysicsShape.h"
+#include "Resources/ResRef.h"
 
 namespace CgEngine {
 
@@ -22,13 +23,13 @@ namespace CgEngine {
         void onAttach(Scene& scene, SphereColliderComponentParams& params);
         void onDetach(Scene& scene) override;
 
-        PhysicsMaterial& getPhysicsMaterial();
+        ResRef<PhysicsMaterial> getPhysicsMaterial();
         float getRadius() const;
         glm::vec3 getOffset() const;
         bool getIsTrigger() const;
 
     private:
-        PhysicsMaterial* physicsMaterial;
+        ResRef<PhysicsMaterial> physicsMaterial;
         float radius;
         glm::vec3 offset;
         bool isTrigger;

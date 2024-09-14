@@ -8,9 +8,13 @@ namespace CgEngine {
             return new PBRMaterial();
         }
 
+       if (!xmlMaterialFile.isLoaded()) {
+           xmlMaterialFile.load(FileSystem::getAsGamePath("materials.xml"));
+       }
+
         auto& resourceManager = Application::get().getResourceManager();
 
-        const pugi::xml_document& materialsXML = resourceManager.getResource<XMLFile>(FileSystem::getAsGamePath("materials.xml"))->getXMLDocument();
+        const pugi::xml_document& materialsXML = xmlMaterialFile.getXMLDocument();
         const auto& materials = materialsXML.child("Materials");
         const auto& materialNode = materials.find_child_by_attribute("Material", "name", name.c_str());
         std::string albedo = materialNode.child("Albedo").child_value();
@@ -108,45 +112,55 @@ namespace CgEngine {
         vec3Values["u_Mat_Emission"] = value;
     }
 
-    void PBRMaterial::setEmissionTexture(const Texture2D* texture) {
-        if (texture == nullptr) {
+    void PBRMaterial::setEmissionTexture(ResRef<Texture2D> texture) {
+        if (!texture) {
             texValues["u_Mat_EmissionTexture"] = {Renderer::getWhiteTexture().getRendererId(), 4};
+            emissionTexture = nullptr;
         } else {
             texValues["u_Mat_EmissionTexture"] = {texture->getRendererId(), 4};
+            emissionTexture = texture;
         }
     }
 
-    void PBRMaterial::setAlbedoTexture(const Texture2D* texture) {
-        if (texture == nullptr) {
+    void PBRMaterial::setAlbedoTexture(ResRef<Texture2D> texture) {
+        if (!texture) {
             texValues["u_Mat_AlbedoTexture"] = {Renderer::getWhiteTexture().getRendererId(), 0};
+            albedoTexture = nullptr;
         } else {
             texValues["u_Mat_AlbedoTexture"] = {texture->getRendererId(), 0};
+            albedoTexture = texture;
         }
     }
 
-    void PBRMaterial::setMetalnessTexture(const Texture2D* texture) {
-        if (texture == nullptr) {
+    void PBRMaterial::setMetalnessTexture(ResRef<Texture2D> texture) {
+        if (!texture) {
             texValues["u_Mat_MetalnessTexture"] = {Renderer::getWhiteTexture().getRendererId(), 2};
+            metalnessTexture = nullptr;
         } else {
             texValues["u_Mat_MetalnessTexture"] = {texture->getRendererId(), 2};
+            metalnessTexture = texture;
         }
     }
 
-    void PBRMaterial::setRoughnessTexture(const Texture2D* texture) {
-        if (texture == nullptr) {
+    void PBRMaterial::setRoughnessTexture(ResRef<Texture2D> texture) {
+        if (!texture) {
             texValues["u_Mat_RoughnessTexture"] = {Renderer::getWhiteTexture().getRendererId(), 3};
+            roughnessTexture = nullptr;
         } else {
             texValues["u_Mat_RoughnessTexture"] = {texture->getRendererId(), 3};
+            roughnessTexture = texture;
         }
     }
 
-    void PBRMaterial::setNormalTexture(const Texture2D* texture) {
-        if (texture == nullptr) {
+    void PBRMaterial::setNormalTexture(ResRef<Texture2D> texture) {
+        if (!texture) {
             texValues["u_Mat_NormalTexture"] = {Renderer::getWhiteTexture().getRendererId(), 1};
             boolValues["u_Mat_UseNormals"] = false;
+            normalTexture = nullptr;
         } else {
             texValues["u_Mat_NormalTexture"] = {texture->getRendererId(), 1};
             boolValues["u_Mat_UseNormals"] = true;
+            normalTexture = texture;
         }
     }
 }

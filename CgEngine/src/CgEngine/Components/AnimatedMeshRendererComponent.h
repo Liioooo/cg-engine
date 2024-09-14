@@ -4,6 +4,7 @@
 #include "Rendering/PBRMaterial.h"
 #include "TimeStep.h"
 #include "Component.h"
+#include "Resources/ResRef.h"
 
 namespace CgEngine {
 
@@ -27,8 +28,8 @@ namespace CgEngine {
         void onAttach(Scene& scene, AnimatedMeshRendererComponentParams& params);
         void onDetach(Scene& scene) override;
 
-        MeshVertices& getMeshVertices();
-        PBRMaterial* getMaterial();
+        ResRef<MeshVertices> getMeshVertices();
+        ResRef<PBRMaterial> getMaterial();
         bool getCastShadows() const;
         void setCastShadows(bool value);
         const std::vector<uint32_t>& getMeshNodes();
@@ -44,8 +45,8 @@ namespace CgEngine {
         void update(TimeStep ts);
 
     private:
-        MeshVertices* mesh;
-        PBRMaterial* material;
+        ResRef<MeshVertices> mesh;
+        ResRef<PBRMaterial> material;
         bool castShadows;
         std::vector<uint32_t> meshNodes;
 

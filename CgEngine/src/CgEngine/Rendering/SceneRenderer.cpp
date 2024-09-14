@@ -468,11 +468,11 @@ namespace CgEngine {
         activeRendering = false;
     }
 
-    void SceneRenderer::submitMesh(MeshVertices& mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform) {
-        auto& submeshes = mesh.getSubmeshes();
+    void SceneRenderer::submitMesh(MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform) {
+        auto& submeshes = mesh->getSubmeshes();
 
         for (const auto& meshNodeIndex: meshNodes) {
-            auto& meshNode = mesh.getMeshNodes().at(meshNodeIndex);
+            auto& meshNode = mesh->getMeshNodes().at(meshNodeIndex);
 
 
             bool isInCameraFrustum = cameraFrustum.testAABoundingBoxInFrustum(meshNode.aaBoundingBox, transform);
@@ -486,8 +486,8 @@ namespace CgEngine {
 
             for (const auto& submeshIndex: meshNode.submeshIndices) {
                 const Submesh& submesh = submeshes.at(submeshIndex);
-                const Material* material = overrideMaterial != nullptr ? overrideMaterial : mesh.getMaterial(submesh.materialIndex);
-                MeshKey mk = {mesh.getVAO()->getRendererId(), submeshIndex, material->getUuid().getUuid()};
+                const Material* material = overrideMaterial != nullptr ? overrideMaterial : mesh->getMaterial(submesh.materialIndex);
+                MeshKey mk = {mesh->getVAO()->getRendererId(), submeshIndex, material->getUuid().getUuid()};
 
                 glm::mat4 finalTransform;
 
@@ -499,7 +499,7 @@ namespace CgEngine {
                     meshTransforms[mk].emplace_back(finalTransform);
 
                     DrawCommand& drawCommand = drawCommandQueue[mk];
-                    drawCommand.vao = mesh.getVAO();
+                    drawCommand.vao = mesh->getVAO();
                     drawCommand.material = material;
                     drawCommand.baseIndex = submesh.baseIndex;
                     drawCommand.baseVertex = submesh.baseVertex;
@@ -511,7 +511,7 @@ namespace CgEngine {
                     shadowMapMeshTransforms[mk].emplace_back(finalTransform);
 
                     DrawCommand& shadowMapDrawCommand = shadowMapDrawCommandQueue[mk];
-                    shadowMapDrawCommand.vao = mesh.getVAO();
+                    shadowMapDrawCommand.vao = mesh->getVAO();
                     shadowMapDrawCommand.material = material;
                     shadowMapDrawCommand.baseIndex = submesh.baseIndex;
                     shadowMapDrawCommand.baseVertex = submesh.baseVertex;
@@ -522,7 +522,7 @@ namespace CgEngine {
         }
     }
 
-    void SceneRenderer::submitAnimatedMesh(MeshVertices& mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms, VertexArrayObject* skinnedVAO) {
+    void SceneRenderer::submitAnimatedMesh(MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms, VertexArrayObject* skinnedVAO) {
         CG_ASSERT(boneTransforms.size() <= maxBones, "Mesh contains to many bones")
         CG_ASSERT(skinningQueue.size() < maxAnimatedComponents, "Cannot render that many AnimatedMeshRendererComponents")
 
@@ -530,19 +530,19 @@ namespace CgEngine {
         boneTransformsBuffer->setSubData(boneTransformOffset, boneTransforms.data(), boneTransforms.size() * sizeof(glm::mat4));
 
         SkinningInfo& skinningInfo = skinningQueue.emplace_back();
-        skinningInfo.originalVertexBuffer = mesh.getVAO()->getVertexBuffers()[0].get();
+        skinningInfo.originalVertexBuffer = mesh->getVAO()->getVertexBuffers()[0].get();
         skinningInfo.skinnedVertexBuffer = skinnedVAO->getVertexBuffers()[0].get();
-        skinningInfo.boneInfluencesBuffer = mesh.getBoneInfluencesBuffer();
-        skinningInfo.numVertices = mesh.getVertices().size();
+        skinningInfo.boneInfluencesBuffer = mesh->getBoneInfluencesBuffer();
+        skinningInfo.numVertices = mesh->getVertices().size();
 
-        auto& submeshes = mesh.getSubmeshes();
+        auto& submeshes = mesh->getSubmeshes();
 
         for (const auto& meshNodeIndex: meshNodes) {
-            const auto& meshNode = mesh.getMeshNodes().at(meshNodeIndex);
+            const auto& meshNode = mesh->getMeshNodes().at(meshNodeIndex);
 
             for (const auto& submeshIndex: meshNode.submeshIndices) {
                 const Submesh& submesh = submeshes.at(submeshIndex);
-                const Material* material = overrideMaterial != nullptr ? overrideMaterial : mesh.getMaterial(submesh.materialIndex);
+                const Material* material = overrideMaterial != nullptr ? overrideMaterial : mesh->getMaterial(submesh.materialIndex);
                 MeshKey mk = {skinnedVAO->getRendererId(), submeshIndex, material->getUuid().getUuid()};
 
                 meshTransforms[mk].emplace_back(transform);
@@ -576,7 +576,7 @@ namespace CgEngine {
 
             if (element->getType() == UIElementType::Circle) {
                 auto* circleElement = dynamic_cast<UiCircle*>(element);
-                const auto* texture = circleElement->getTexture();
+                const auto* texture = circleElement->getTexture().get();
                 float textureIndex = findDrawInfoTextureIndex(drawInfo, texture);
 
                 for (const auto& v: element->getVertices()) {
@@ -591,7 +591,7 @@ namespace CgEngine {
                 drawInfo.circleIndexCount += 6;
             } else if (element->getType() == UIElementType::Rect) {
                 auto* rectElement = dynamic_cast<UiRect*>(element);
-                const auto* texture = rectElement->getTexture();
+                const auto* texture = rectElement->getTexture().get();
                 float textureIndex = findDrawInfoTextureIndex(drawInfo, texture);
 
                 for (const auto& v: element->getVertices()) {
@@ -639,18 +639,18 @@ namespace CgEngine {
         }
     }
 
-    void SceneRenderer::submitPhysicsColliderMesh(MeshVertices& mesh, const glm::mat4& transform) {
-        const auto& submeshes = mesh.getSubmeshes();
+    void SceneRenderer::submitPhysicsColliderMesh(MeshVertices* mesh, const glm::mat4& transform) {
+        const auto& submeshes = mesh->getSubmeshes();
 
-        for (const auto& meshNode: mesh.getMeshNodes()) {
+        for (const auto& meshNode: mesh->getMeshNodes()) {
             for (const auto& submeshIndex: meshNode.submeshIndices) {
                 const Submesh& submesh = submeshes.at(submeshIndex);
-                MeshKey mk = {mesh.getVAO()->getRendererId(), submeshIndex, physicsCollidersMaterial.getUuid().getUuid()};
+                MeshKey mk = {mesh->getVAO()->getRendererId(), submeshIndex, physicsCollidersMaterial.getUuid().getUuid()};
 
                 physicsCollidersMeshTransforms[mk].emplace_back(transform * meshNode.transform);
 
                 DrawCommand& drawCommand = physicsCollidersDrawCommandQueue[mk];
-                drawCommand.vao = mesh.getVAO();
+                drawCommand.vao = mesh->getVAO();
                 drawCommand.material = &physicsCollidersMaterial;
                 drawCommand.baseIndex = submesh.baseIndex;
                 drawCommand.baseVertex = submesh.baseVertex;
@@ -660,16 +660,16 @@ namespace CgEngine {
         }
     }
 
-    void SceneRenderer::submitBoundingBoxMesh(MeshVertices& boundingBoxMesh, MeshVertices& mesh, const std::vector<uint32_t>& meshNodes, const glm::mat4& transform) {
+    void SceneRenderer::submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, const glm::mat4& transform) {
         for (const auto& meshNodeIndex: meshNodes) {
-            const auto& boundingBox = mesh.getMeshNodes().at(meshNodeIndex).aaBoundingBox;
+            const auto& boundingBox = mesh->getMeshNodes().at(meshNodeIndex).aaBoundingBox;
 
-            const auto& boundingBoxSubmesh = boundingBoxMesh.getSubmeshes().at(0);
-            MeshKey mk = {boundingBoxMesh.getVAO()->getRendererId(), 0, boundingBoxMaterial.getUuid().getUuid()};
+            const auto& boundingBoxSubmesh = boundingBoxMesh->getSubmeshes().at(0);
+            MeshKey mk = {boundingBoxMesh->getVAO()->getRendererId(), 0, boundingBoxMaterial.getUuid().getUuid()};
             boundingBoxMeshTransforms[mk].emplace_back(transform * boundingBox.getTransformForCubeMesh());
 
             DrawCommand& drawCommand = boundingBoxDrawCommandQueue[mk];
-            drawCommand.vao = boundingBoxMesh.getVAO();
+            drawCommand.vao = boundingBoxMesh->getVAO();
             drawCommand.material = &boundingBoxMaterial;
             drawCommand.baseIndex = boundingBoxSubmesh.baseIndex;
             drawCommand.baseVertex = boundingBoxSubmesh.baseVertex;

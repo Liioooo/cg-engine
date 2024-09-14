@@ -22,7 +22,7 @@ namespace CgEngine {
         this->fillColor = fillColor;
     }
 
-    void UiCircle::setTexture(CgEngine::Texture2D* texture) {
+    void UiCircle::setTexture(ResRef<Texture2D> texture) {
         this->texture = texture;
     }
 
@@ -38,7 +38,7 @@ namespace CgEngine {
         return fillColor;
     }
 
-    const Texture2D* UiCircle::getTexture() const {
+    const ResRef<Texture2D> UiCircle::getTexture() const {
         return texture;
     }
 

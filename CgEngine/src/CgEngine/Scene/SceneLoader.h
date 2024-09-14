@@ -1,14 +1,14 @@
 #pragma once
 
 #include "Scene.h"
-#include "Resources/XMLFile.h"
+#include "XMLFile.h"
 
 namespace CgEngine {
 
     class SceneLoader {
         friend class PrefabManager;
     public:
-        static Scene* loadScene(XMLFile* xmlSceneFile, int viewportWidth, int viewportHeight);
+        static Scene* loadScene(XMLFile& xmlSceneFile, int viewportWidth, int viewportHeight);
 
     private:
         static void createEntity(Scene* scene, Entity parent, const pugi::xml_node& node);

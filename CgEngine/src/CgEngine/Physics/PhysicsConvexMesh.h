@@ -12,7 +12,7 @@ namespace CgEngine {
 
         physx::PxConvexMesh* getPhysxMesh();
 
-        MeshVertices& getVisualizationMesh();
+        MeshVertices* getVisualizationMesh();
 
     private:
         physx::PxConvexMesh* mesh;

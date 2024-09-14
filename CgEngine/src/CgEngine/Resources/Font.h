@@ -23,15 +23,15 @@ namespace CgEngine {
 
         static const uint32_t fontPixelSize = 256;
 
-        Font(const std::string& name);
-        ~Font();
+        explicit Font(const std::string& name);
+        ~Font() override;
 
         float getKerning(uint32_t leftGlyph, uint32_t rightGlyph) const;
         const FontCharacterInfo& getCharacterInfo(char c) const;
         const Texture2D* getFontAtlas() const;
 
     private:
-        static FT_Library ftLibrary;
+        static inline FT_Library ftLibrary;
         static FT_Library getFTLibrary();
 
         FT_Face ftFace;

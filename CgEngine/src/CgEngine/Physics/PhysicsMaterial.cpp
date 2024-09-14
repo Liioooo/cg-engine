@@ -8,9 +8,11 @@ namespace CgEngine {
             return new PhysicsMaterial(0.6f, 0.6f, 0.0f);
         }
 
-        auto& resourceManager = Application::get().getResourceManager();
+        if (!physicsMaterialsXML.isLoaded()) {
+            physicsMaterialsXML.load(FileSystem::getAsGamePath("physics-materials.xml"));
+        }
 
-        const pugi::xml_document& materialsXML = resourceManager.getResource<XMLFile>(FileSystem::getAsGamePath("physics-materials.xml"))->getXMLDocument();
+        const pugi::xml_document& materialsXML = physicsMaterialsXML.getXMLDocument();
         const auto& materials = materialsXML.child("Materials");
         const auto& materialNode = materials.find_child_by_attribute("Material", "name", name.c_str());
         std::string staticFriction = materialNode.child("StaticFriction").child_value();
@@ -26,6 +28,11 @@ namespace CgEngine {
         physxMaterial = physxPhysics.createMaterial(staticFriction, dynamicFriction, restitution);
 
         setLoaded();
+    }
+
+    PhysicsMaterial::~PhysicsMaterial() {
+        physxMaterial->release();
+        physxMaterial = nullptr;
     }
 
     float PhysicsMaterial::getStaticFriction() const {

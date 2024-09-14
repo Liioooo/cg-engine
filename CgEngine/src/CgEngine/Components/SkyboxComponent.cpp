@@ -15,11 +15,11 @@ namespace CgEngine {
         lod = params.lod;
     }
 
-    const TextureCube* SkyboxComponent::getIrradianceMap() const {
+    const ResRef<TextureCube> SkyboxComponent::getIrradianceMap() const {
         return irradianceMap;
     }
 
-    const TextureCube* SkyboxComponent::getPrefilterMap() const {
+    const ResRef<TextureCube> SkyboxComponent::getPrefilterMap() const {
         return prefilterMap;
     }
 

@@ -1,29 +1,29 @@
 #pragma once
 
-#include "Resources/XMLFile.h"
 #include "Resources/MeshVertices.h"
 #include "Rendering/PBRMaterial.h"
 #include "Rendering/Texture.h"
 #include "Physics/PhysicsMaterial.h"
 #include "Font.h"
 #include "Timer.h"
+#include "ResRef.h"
 
 namespace CgEngine {
 
     template<typename R>
     class ResourceMap {
     public:
-        using Iterator = typename std::unordered_map<std::string, std::unique_ptr<R>>::iterator;
+        using Iterator = typename std::unordered_map<std::string, ResRef<R>>::iterator;
 
     public:
         explicit ResourceMap(bool canResLoadAsync) : canResLoadAsync(canResLoadAsync) {};
 
-        R* get(const std::string& name) const {
-            return map.at(name).get();
+        ResRef<R> get(const std::string& name) const {
+            return map.at(name);
         }
 
-        void insert(const std::string& name, R* resource) {
-            map.insert({name, std::unique_ptr<R>(resource)});
+        void insert(const std::string& name, ResRef<R> resource) {
+            map.insert({name, resource});
         }
 
         bool contains(const std::string& name) const {
@@ -42,15 +42,18 @@ namespace CgEngine {
             return map.end();
         }
 
+        void erase(const Iterator& it) {
+            map.erase(it);
+        }
+
     private:
-        std::unordered_map<std::string, std::unique_ptr<R>> map{};
+        std::unordered_map<std::string, ResRef<R>> map{};
         bool canResLoadAsync;
     };
 
     class ResourceManager {
     public:
         ResourceManager() {
-            registerResourceType<XMLFile>();
             registerResourceType<MeshVertices>();
             registerResourceType<PBRMaterial>();
             registerResourceType<Texture2D>();
@@ -60,12 +63,12 @@ namespace CgEngine {
         }
 
         template<typename R>
-        R* getResource(const std::string& name) {
+        ResRef<R> getResource(const std::string& name) {
             auto& resourceMap = getResourceMap<R>();
             if (resourceMap.contains(name)) {
                 return resourceMap.get(name);
             }
-            R* resource = R::createResource(name);
+            ResRef<R> resource = ResRef<R>(R::createResource(name));
 
             if (R::canLoadAsync) {
                 resource->resourceManagerLoadAsync();
@@ -77,12 +80,12 @@ namespace CgEngine {
         }
 
         template<typename R, typename S>
-        R* getResource(const std::string& name, const S& spec) {
+        ResRef<R> getResource(const std::string& name, const S& spec) {
             auto& resourceMap = getResourceMap<R>();
             if (resourceMap.contains(name)) {
                 return resourceMap.get(name);
             }
-            R* resource = R::createResource(name, spec);
+            ResRef<R> resource = ResRef<R>(R::createResource(name, spec));
 
             if (R::canLoadAsync) {
                 resource->resourceManagerLoadAsync();
@@ -104,12 +107,12 @@ namespace CgEngine {
             if (resourceMap.contains(name)) {
                 return false;
             }
-            resourceMap.insert(name, resource);
+            resourceMap.insert(name, ResRef<R>(resource));
             return true;
         }
 
         void updateAsyncResources() {
-            for (const auto& [typeName, rm]: resourceMaps) {
+            for (const auto& [_, rm]: resourceMaps) {
                 const auto& resourceMap = static_cast<ResourceMap<Resource>*>(rm);
 
                 if (!resourceMap->canResourceLoadAsync()) {
@@ -122,6 +125,15 @@ namespace CgEngine {
                     }
                 }
             }
+        }
+
+        void unloadUnusedResources() {
+            unloadUnusedResourceType<MeshVertices>();
+            unloadUnusedResourceType<PBRMaterial>();
+            unloadUnusedResourceType<Texture2D>();
+            unloadUnusedResourceType<TextureCube>();
+            unloadUnusedResourceType<PhysicsMaterial>();
+            unloadUnusedResourceType<Font>();
         }
 
     private:
@@ -137,6 +149,20 @@ namespace CgEngine {
         ResourceMap<R>& getResourceMap() {
             const char* typeName = typeid(R).name();
             return *static_cast<ResourceMap<R>*>(resourceMaps.at(typeName));
+        }
+
+        template<typename R>
+        void unloadUnusedResourceType() {
+            ResourceMap<R>& resourceMap = getResourceMap<R>();
+            for (auto it = resourceMap.begin(); it != resourceMap.end();) {
+                CG_LOGGING_DEBUG("Unload Resource Info: {0} : {1} : UseCount: {2}", typeid(R).name(), it->first, it->second.use_count())
+
+                if (it->second.use_count() == 1) {
+                    resourceMap.erase(it++);
+                } else {
+                    ++it;
+                }
+            }
         }
     };
 

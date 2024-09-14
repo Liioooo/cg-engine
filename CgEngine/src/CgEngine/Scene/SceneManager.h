@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Scene.h"
+#include "XMLFile.h"
 
 namespace CgEngine {
 
@@ -13,9 +14,12 @@ namespace CgEngine {
         void setActiveScene(const std::string& name);
         void setViewportSize(uint32_t width, uint32_t height);
 
-        bool hadSceneSwitch();
+        bool shouldSwapScenes() const;
+        void swapScenes();
 
     private:
+        XMLFile& getXMLFileForScene(const std::string& name);
+
         Scene* activeScene = nullptr;
         Scene* nextScene = nullptr;
 
@@ -23,6 +27,8 @@ namespace CgEngine {
         uint32_t viewportHeight;
 
         bool switchedScenes = false;
+
+        std::unordered_map<std::string, XMLFile> xmlSceneFileCache;
     };
 
 }

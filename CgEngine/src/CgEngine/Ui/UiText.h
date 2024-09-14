@@ -2,6 +2,7 @@
 
 #include "UiElement.h"
 #include "Resources/Font.h"
+#include "Resources/ResRef.h"
 
 namespace CgEngine {
 
@@ -33,7 +34,7 @@ namespace CgEngine {
         std::pair<float, UIPosUnit> size;
         float scaledSize;
 
-        Font* font;
+        ResRef<Font> font;
         bool useKerning = true;
 
         bool textDirty = true;

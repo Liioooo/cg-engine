@@ -35,7 +35,7 @@ namespace Game {
             auto* controls = canvas.addUiRect("controlsImage");
             controls->setWidth(0.65f, CgEngine::UIPosUnit::VWPercent);
             controls->setHeight(0.8f, CgEngine::UIPosUnit::VHPercent);
-            controls->setTexture("controls.png");
+            controls->setTextureByName("controls.png");
             controls->setLeft(0.5f, CgEngine::UIPosUnit::VWPercent);
             controls->setTop(0.5f, CgEngine::UIPosUnit::VHPercent);
             controls->setXAlignment(CgEngine::UIXAlignment::Center);
