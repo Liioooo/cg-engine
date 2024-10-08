@@ -80,6 +80,11 @@ namespace CgEngine {
         yawPitchRoll = {yaw, pitch, roll};
     }
 
+    void TransformComponent::setLocalModalMatrix(const glm::mat4& mat) {
+        localModelMatrix = mat;
+        localModalMatrixDirty = true;
+    }
+
     bool TransformComponent::_calculateTopLevelTransforms() {
         if (isDirty) {
             globalPosition = localPosition;
@@ -96,6 +101,13 @@ namespace CgEngine {
             modelMatrix = localModelMatrix;
             isDirty = false;
             physicsDirty = false;
+            localModalMatrixDirty = false;
+            return true;
+        } else if (localModalMatrixDirty) {
+            modelMatrix = localModelMatrix;
+            decomposeModelToGlobals();
+            physicsDirty = false;
+            localModalMatrixDirty = false;
             return true;
         } else if (physicsDirty) {
             modelMatrix = calculateModelMatrix(globalPosition, globalRotationQuat, globalScale);
@@ -114,8 +126,8 @@ namespace CgEngine {
     }
 
     bool TransformComponent::_calculateChildTransformsWithParent(const glm::mat4& parentModelMatrix, bool parentDirty) {
-        if (isDirty || parentDirty) {
-            if (isDirty) {
+        if (isDirty || parentDirty || localModalMatrixDirty) {
+            if (isDirty && !localModalMatrixDirty) {
                 if (yawPitchRoll.x != 0 || yawPitchRoll.y != 0 || yawPitchRoll.z != 0) {
                     glm::vec3 direction = glm::normalize(glm::quat({yawPitchRoll.y, yawPitchRoll.x, yawPitchRoll.z}) * glm::vec3(0, 0, -1));
                     localModelMatrix = glm::inverse(glm::lookAt(localPosition, localPosition + direction, {0.0f, 1.0f, 0.0f}));
@@ -127,6 +139,7 @@ namespace CgEngine {
             decomposeModelToGlobals();
             isDirty = false;
             physicsDirty = false;
+            localModalMatrixDirty = false;
             return true;
         } else if (physicsDirty) {
             modelMatrix = calculateModelMatrix(globalPosition, globalRotationQuat, globalScale);
@@ -147,11 +160,7 @@ namespace CgEngine {
     }
 
     glm::mat4 TransformComponent::calculateModelMatrix(glm::vec3& pos, glm::quat& rot, glm::vec3& scale) {
-        auto m = glm::mat4(1.0f);
-        m = glm::translate(m, pos);
-        m *= glm::toMat4(rot);
-        m = glm::scale(m, scale);
-        return m;
+        return glm::translate(glm::mat4(1.0f), pos) * glm::toMat4(rot) * glm::scale(glm::mat4(1.0f), scale);
     }
 
     void TransformComponent::decomposeModelToGlobals() {

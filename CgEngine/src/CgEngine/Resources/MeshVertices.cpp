@@ -188,12 +188,16 @@ namespace CgEngine {
         return boneInfos;
     }
 
-    const std::unordered_map<std::string, Animation>& MeshVertices::getAnimations() const {
-        return animations;
+    const std::unordered_map<std::string, SkeletalAnimation>& MeshVertices::getSkeletalAnimations() const {
+        return skeletalAnimations;
     }
 
     const ShaderStorageBuffer* MeshVertices::getBoneInfluencesBuffer() const {
         return boneInfluencesBuffer;
+    }
+
+    const std::unordered_map<std::string, Animation>& MeshVertices::getAnimations() const {
+        return animations;
     }
 
     MeshVertices *MeshVertices::createCubeMesh() {
@@ -660,7 +664,7 @@ namespace CgEngine {
         mesh->vao->setIndexBuffer(mesh->indexBuffer.data(), mesh->indexBuffer.size());
 
         if (mesh->hasSkeleton()) {
-            importAnimations(scene, mesh->skeleton, mesh->animations);
+            mesh->importSkeletalAnimations(scene);
 
             mesh->boneInfluences.resize(mesh->vertices.size());
 
@@ -708,6 +712,8 @@ namespace CgEngine {
             mesh->boneInfluencesBuffer = new ShaderStorageBuffer();
             mesh->boneInfluencesBuffer->setData(mesh->boneInfluences.data(), mesh->boneInfluences.size() * sizeof(BoneInfluence));
         }
+
+        mesh->importAnimations(scene);
 
         auto resourceManager = Application::get().getResourceManager();
 
@@ -919,21 +925,24 @@ namespace CgEngine {
         }
     }
 
-    void MeshVertices::importAnimations(const aiScene* scene, const CgEngine::Skeleton* skeleton, std::unordered_map<std::string, Animation>& animations) {
+    void MeshVertices::importSkeletalAnimations(const aiScene* scene) {
         if (!scene->HasAnimations()) {
             return;
         }
 
         for (uint32_t i = 0; i < scene->mNumAnimations; i++) {
-            const aiAnimation* animation = scene->mAnimations[i];
-            if (animation->mDuration <= 0.0f) {
+            const aiAnimation* aiAnimation = scene->mAnimations[i];
+            if (aiAnimation->mDuration <= 0.0f) {
                 break;
             }
-            animations.insert({animation->mName.C_Str(), std::move(importAnimation(animation, skeleton))});
+            auto animation = importSkeletalAnimation(aiAnimation);
+            if (animation.has_value()) {
+                skeletalAnimations.insert({aiAnimation->mName.C_Str(), std::move(animation.value())});
+            }
         }
     }
 
-    Animation MeshVertices::importAnimation(const aiAnimation* aiAnimation, const CgEngine::Skeleton* skeleton) {
+    std::optional<SkeletalAnimation> MeshVertices::importSkeletalAnimation(const aiAnimation* aiAnimation) {
         std::vector<AnimationChannel> channels;
         channels.resize(skeleton->getNumBones());
 
@@ -947,56 +956,15 @@ namespace CgEngine {
             }
         }
 
+        if (boneToNodeAnimation.empty()) {
+            return std::nullopt;
+        }
+
         for (uint32_t bI = 0; bI < skeleton->getNumBones(); bI++) {
             channels[bI].boneIndex = bI;
             if (auto channel = boneToNodeAnimation.find(bI); channel != boneToNodeAnimation.end()) {
                 auto nodeAnimation = channel->second;
-
-                channels[bI].translations.reserve(nodeAnimation->mNumPositionKeys + 2);
-                channels[bI].scales.reserve(nodeAnimation->mNumScalingKeys + 2);
-                channels[bI].rotations.reserve(nodeAnimation->mNumRotationKeys + 2);
-
-                for (uint32_t i = 0; i < nodeAnimation->mNumPositionKeys; i++) {
-                    auto key = nodeAnimation->mPositionKeys[i];
-                    float timeStamp = glm::clamp(static_cast<float>(key.mTime / aiAnimation->mDuration), 0.0f, 1.0f);
-                    if (i == 0 && timeStamp > 0.0f) {
-                        channels[bI].translations.emplace_back(0.0f, getVec3FromAssimpVec(key.mValue));
-                    }
-                    channels[bI].translations.emplace_back(timeStamp, getVec3FromAssimpVec(key.mValue));
-                }
-                if (channels[bI].translations.empty()) {
-                    channels[bI].translations.emplace_back(0.0f, glm::vec3(0.0f));
-                } else if (channels[bI].translations.back().timeStamp < 1.0f) {
-                    channels[bI].translations.emplace_back(1.0f, channels[bI].translations.back().value);
-                }
-
-                for (uint32_t i = 0; i < nodeAnimation->mNumScalingKeys; i++) {
-                    auto key = nodeAnimation->mScalingKeys[i];
-                    float timeStamp = glm::clamp(static_cast<float>(key.mTime / aiAnimation->mDuration), 0.0f, 1.0f);
-                    if (i == 0 && timeStamp > 0.0f) {
-                        channels[bI].scales.emplace_back(0.0f, getVec3FromAssimpVec(key.mValue));
-                    }
-                    channels[bI].scales.emplace_back(timeStamp, getVec3FromAssimpVec(key.mValue));
-                }
-                if (channels[bI].scales.empty()) {
-                    channels[bI].scales.emplace_back(0.0f, glm::vec3(0.0f));
-                } else if (channels[bI].scales.back().timeStamp < 1.0f) {
-                    channels[bI].scales.emplace_back(1.0f, channels[bI].scales.back().value);
-                }
-
-                for (uint32_t i = 0; i < nodeAnimation->mNumRotationKeys; i++) {
-                    auto key = nodeAnimation->mRotationKeys[i];
-                    float timeStamp = glm::clamp(static_cast<float>(key.mTime / aiAnimation->mDuration), 0.0f, 1.0f);
-                    if (i == 0 && timeStamp > 0.0f) {
-                        channels[bI].rotations.emplace_back(0.0f, getQuatFromAssimpQuat(key.mValue));
-                    }
-                    channels[bI].rotations.emplace_back(timeStamp, getQuatFromAssimpQuat(key.mValue));
-                }
-                if (channels[bI].rotations.empty()) {
-                    channels[bI].rotations.emplace_back(0.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-                } else if (channels[bI].rotations.back().timeStamp < 1.0f) {
-                    channels[bI].rotations.emplace_back(1.0f, channels[bI].rotations.back().value);
-                }
+                importAnimationChannel(channels[bI], nodeAnimation, aiAnimation);
             }
         }
 
@@ -1007,10 +975,99 @@ namespace CgEngine {
 
         const auto animationDuration = static_cast<float>(aiAnimation->mDuration / ticksPerSecond);
 
-        return Animation(std::move(channels), animationDuration);
+        return SkeletalAnimation(std::move(channels), animationDuration);
     }
 
-    void MeshVertices::traverseNodes(aiNode *node, const glm::mat4 &parentTransform, int parentNode) {
+    void MeshVertices::importAnimations(const aiScene* scene) {
+        if (!scene->HasAnimations()) {
+            return;
+        }
+
+        for (uint32_t i = 0; i < scene->mNumAnimations; i++) {
+            const aiAnimation* aiAnimation = scene->mAnimations[i];
+            if (aiAnimation->mDuration <= 0.0f) {
+                break;
+            }
+            auto animation = importAnimation(aiAnimation);
+            if (animation.has_value()) {
+                animations.insert({aiAnimation->mName.C_Str(), std::move(animation.value())});
+            }
+        }
+    }
+
+    std::optional<Animation> MeshVertices::importAnimation(const aiAnimation* aiAnimation) {
+        AnimationChannel channel;
+
+        for (uint32_t i = 0 ; i < aiAnimation->mNumChannels; i++) {
+            const aiNodeAnim* nodeAnimation = aiAnimation->mChannels[i];
+            if (nodeNameToNode.find(nodeAnimation->mNodeName.C_Str()) != nodeNameToNode.end()) {
+                importAnimationChannel(channel, nodeAnimation, aiAnimation);
+
+
+                double ticksPerSecond = aiAnimation->mTicksPerSecond;
+                if (ticksPerSecond < 0.0001) {
+                    ticksPerSecond = 1.0;
+                }
+
+                const auto animationDuration = static_cast<float>(aiAnimation->mDuration / ticksPerSecond);
+                auto& meshNode = meshNodes.at(nodeNameToNode.at(nodeAnimation->mNodeName.C_Str()));
+
+                return Animation(std::move(channel), animationDuration, meshNode.transform);
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    void MeshVertices::importAnimationChannel(AnimationChannel& channel, const aiNodeAnim* nodeAnimation, const aiAnimation* aiAnimation) {
+        channel.translations.reserve(nodeAnimation->mNumPositionKeys + 2);
+        channel.scales.reserve(nodeAnimation->mNumScalingKeys + 2);
+        channel.rotations.reserve(nodeAnimation->mNumRotationKeys + 2);
+
+        for (uint32_t i = 0; i < nodeAnimation->mNumPositionKeys; i++) {
+            auto key = nodeAnimation->mPositionKeys[i];
+            float timeStamp = glm::clamp(static_cast<float>(key.mTime / aiAnimation->mDuration), 0.0f, 1.0f);
+            if (i == 0 && timeStamp > 0.0f) {
+                channel.translations.emplace_back(0.0f, getVec3FromAssimpVec(key.mValue));
+            }
+            channel.translations.emplace_back(timeStamp, getVec3FromAssimpVec(key.mValue));
+        }
+        if (channel.translations.empty()) {
+            channel.translations.emplace_back(0.0f, glm::vec3(0.0f));
+        } else if (channel.translations.back().timeStamp < 1.0f) {
+            channel.translations.emplace_back(1.0f, channel.translations.back().value);
+        }
+
+        for (uint32_t i = 0; i < nodeAnimation->mNumScalingKeys; i++) {
+            auto key = nodeAnimation->mScalingKeys[i];
+            float timeStamp = glm::clamp(static_cast<float>(key.mTime / aiAnimation->mDuration), 0.0f, 1.0f);
+            if (i == 0 && timeStamp > 0.0f) {
+                channel.scales.emplace_back(0.0f, getVec3FromAssimpVec(key.mValue));
+            }
+            channel.scales.emplace_back(timeStamp, getVec3FromAssimpVec(key.mValue));
+        }
+        if (channel.scales.empty()) {
+            channel.scales.emplace_back(0.0f, glm::vec3(0.0f));
+        } else if (channel.scales.back().timeStamp < 1.0f) {
+            channel.scales.emplace_back(1.0f, channel.scales.back().value);
+        }
+
+        for (uint32_t i = 0; i < nodeAnimation->mNumRotationKeys; i++) {
+            auto key = nodeAnimation->mRotationKeys[i];
+            float timeStamp = glm::clamp(static_cast<float>(key.mTime / aiAnimation->mDuration), 0.0f, 1.0f);
+            if (i == 0 && timeStamp > 0.0f) {
+                channel.rotations.emplace_back(0.0f, getQuatFromAssimpQuat(key.mValue));
+            }
+            channel.rotations.emplace_back(timeStamp, getQuatFromAssimpQuat(key.mValue));
+        }
+        if (channel.rotations.empty()) {
+            channel.rotations.emplace_back(0.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+        } else if (channel.rotations.back().timeStamp < 1.0f) {
+            channel.rotations.emplace_back(1.0f, channel.rotations.back().value);
+        }
+    }
+
+    void MeshVertices::traverseNodes(aiNode* node, const glm::mat4& parentTransform, int parentNode) {
         glm::mat4 localTransform = getTransformFromAssimpTransform(node->mTransformation);
         glm::mat4 transform = parentTransform * localTransform;
 

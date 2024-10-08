@@ -1,21 +1,38 @@
 <Scene>
     <Entity id="camera">
         <Components>
-            <TransformComponent position="0 2 5" rotation="-30 0 0" scale="1 1 1" />
+            <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
             <CameraComponent primary="true" projection="perspective" near="0.1" far="500" fov="80" exposure="0.75" bloom-intensity="0.1" />
             <ScriptComponent script-name="flyingCameraScript" />
         </Components>
     </Entity>
     <Entity>
         <Components>
-            <MeshRendererComponent asset-file="CG_CubeMesh" material="cube" />
-            <TransformComponent position="0 1 0" rotation="0 0 0" scale="2 2 2" />
+            <SkyboxComponent hdri-path="kloppenheim_02_2k.hdr" lod="0.1" intensity="0.3" />
         </Components>
     </Entity>
     <Entity>
         <Components>
+            <MeshRendererComponent asset-file="CG_CubeMesh" material="cube" />
+            <TransformComponent position="10 1 0" rotation="0 0 0" scale="10 2 2" />
+        </Components>
+    </Entity>
+    <Entity>
+        <Components>
+            <TransformComponent position="0 5 0" rotation="0 0 0" scale="1 1 1" />
+        </Components>
+        <Entity>
+            <Components>
+                <MeshRendererComponent asset-file="cube_anim.fbx" />
+                <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
+                <AnimationComponent asset-file="cube_anim.fbx" />
+            </Components>
+        </Entity>
+    </Entity>
+    <Entity>
+        <Components>
             <MeshRendererComponent asset-file="CG_CubeMesh" />
-            <TransformComponent position="0 -0.05 0" rotation="0 0 0" scale="100 0.1 100" material="ground" />
+            <TransformComponent position="0 -1.55 0" rotation="0 0 0" scale="100 0.1 100" material="ground" />
         </Components>
     </Entity>
     <Entity>

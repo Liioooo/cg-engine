@@ -11,7 +11,7 @@ namespace CgEngine {
 
         mesh = resourceManager.getResource<MeshVertices>(params.assetFile);
 
-        CG_ASSERT(!mesh->getAnimations().empty(), "Mesh does not contain any Animations")
+        CG_ASSERT(!mesh->getSkeletalAnimations().empty(), "Mesh does not contain any Animations")
 
         if (params.meshNodes.empty()) {
             for (uint32_t i = 0; i < mesh->getMeshNodes().size(); i++) {
@@ -41,9 +41,9 @@ namespace CgEngine {
         animationSpeed = params.animationSpeed;
 
         if (params.animation.empty()) {
-            currentAnimation = &mesh->getAnimations().cbegin()->second;
+            currentAnimation = &mesh->getSkeletalAnimations().cbegin()->second;
         } else {
-            currentAnimation = &mesh->getAnimations().at(params.animation);
+            currentAnimation = &mesh->getSkeletalAnimations().at(params.animation);
         }
 
         skinnedVAO = new VertexArrayObject();
@@ -93,7 +93,7 @@ namespace CgEngine {
     }
 
     void AnimatedMeshRendererComponent::setAnimation(const std::string& name) {
-        currentAnimation = &mesh->getAnimations().at(name);
+        currentAnimation = &mesh->getSkeletalAnimations().at(name);
         animationTime = 0.0f;
     }
 
@@ -135,46 +135,21 @@ namespace CgEngine {
             glm::mat4 localRotation(1.0f);
 
             if (!currentAnimation->getChannels().at(i).translations.empty()) {
-                uint32_t index = getCurrentKeyFrameIndex(currentAnimation->getChannels().at(i).translations);
-                localPosition = glm::translate(localPosition, interpolate<glm::vec3>(index, currentAnimation->getChannels().at(i).translations, [](const glm::vec3& x, const glm::vec3& y, float t) {return glm::mix(x, y, t);}));
+                localPosition = glm::translate(localPosition, currentAnimation->getChannels().at(i).getTranslationForAnimationTime(animationTime));
             }
 
             if (!currentAnimation->getChannels().at(i).scales.empty()) {
-                uint32_t index = getCurrentKeyFrameIndex(currentAnimation->getChannels().at(i).scales);
-                localScale = glm::scale(localScale, interpolate<glm::vec3>(index, currentAnimation->getChannels().at(i).scales, [](const glm::vec3& x, const glm::vec3& y, float t) {return glm::mix(x, y, t);}));
+                localScale = glm::scale(localScale, currentAnimation->getChannels().at(i).getScaleForAnimationTime(animationTime));
             }
 
             if (!currentAnimation->getChannels().at(i).rotations.empty()) {
-                uint32_t index = getCurrentKeyFrameIndex(currentAnimation->getChannels().at(i).rotations);
-                localRotation = glm::toMat4(interpolate<glm::quat>(index, currentAnimation->getChannels().at(i).rotations, [](const glm::quat& x, const glm::quat& y, float t) {return glm::slerp(x, y, t);}));
+                localRotation = glm::toMat4(currentAnimation->getChannels().at(i).getRotationForAnimationTime(animationTime));
             }
 
             localBoneTransforms.emplace_back(localPosition * localRotation * localScale);
         }
 
         calculateBoneTransforms(localBoneTransforms);
-    }
-
-    template<typename T>
-    uint32_t AnimatedMeshRendererComponent::getCurrentKeyFrameIndex(const std::vector<AnimationKeyFrame<T>>& keyFrames) {
-        uint32_t index = 0;
-        while (keyFrames.at(index).timeStamp < animationTime) {
-            index++;
-        }
-        return index;
-    }
-
-    template<typename T>
-    T AnimatedMeshRendererComponent::interpolate(uint32_t frameIndex, const std::vector<AnimationKeyFrame<T>>& keyFrames, const std::function<T(const T&, const T&, float)>& interpolateFn) {
-        frameIndex = glm::min(frameIndex, static_cast<uint32_t>(keyFrames.size() - 1));
-        uint32_t previousIndex = frameIndex == 0 ? 0u : frameIndex - 1;
-
-        float scaleFactor = 0.0f;
-        float midWayLength = animationTime - keyFrames.at(previousIndex).timeStamp;
-        float framesDiff = keyFrames.at(frameIndex).timeStamp - keyFrames.at(previousIndex).timeStamp;
-        scaleFactor = midWayLength / framesDiff;
-
-        return interpolateFn(keyFrames.at(previousIndex).value, keyFrames.at(frameIndex).value, scaleFactor);
     }
 
     void AnimatedMeshRendererComponent::calculateBoneTransforms(const std::vector<glm::mat4>& localBoneTransforms) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Entity.h"
+#include <Components/AnimationComponent.h>
 #include "Components/TransformComponent.h"
 #include "Components/ScriptComponent.h"
 #include "Components/MeshRendererComponent.h"
@@ -43,6 +44,7 @@ namespace CgEngine {
             registerComponentType<CharacterControllerComponent>();
             registerComponentType<CharacterControllerComponent>();
             registerComponentType<UiCanvasComponent>();
+            registerComponentType<AnimationComponent>();
         }
 
         template<typename C>

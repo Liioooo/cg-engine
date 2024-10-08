@@ -154,6 +154,11 @@ namespace CgEngine {
             it->lateUpdate(ts);
         }
         executePostUpdateFunctions();
+
+        for (auto it = componentManager->begin<AnimationComponent>(); it != componentManager->end<AnimationComponent>(); it++) {
+            it->update(ts, componentManager->getComponent<TransformComponent>(it->getEntity()));
+        }
+
         updateTransforms();
 
         for (auto it = componentManager->begin<UiCanvasComponent>(); it != componentManager->end<UiCanvasComponent>(); it++) {

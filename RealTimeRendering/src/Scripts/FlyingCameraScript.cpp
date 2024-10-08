@@ -48,10 +48,5 @@ namespace RTR {
 
         comp.setLocalPosition(pos);
         comp.setYawPitchRoll(yaw, pitch, 0);
-
-        if (i % 100 == 0) {
-            CG_LOGGING_DEBUG("{0}", 1.0f / ts.getSeconds());
-        }
-        i++;
     }
 }

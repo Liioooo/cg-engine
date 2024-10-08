@@ -50,7 +50,7 @@ namespace CgEngine {
         bool castShadows;
         std::vector<uint32_t> meshNodes;
 
-        const Animation* currentAnimation = nullptr;
+        const SkeletalAnimation* currentAnimation = nullptr;
 
         float animationSpeed = 1.0f;
         bool isAnimationPlaying = false;
@@ -60,12 +60,6 @@ namespace CgEngine {
         VertexArrayObject* skinnedVAO;
 
         float animationTime = 0.0f;
-
-        template<typename T>
-        uint32_t getCurrentKeyFrameIndex(const std::vector<AnimationKeyFrame<T>>& keyFrames);
-
-        template<typename T>
-        T interpolate(uint32_t frameIndex, const std::vector<AnimationKeyFrame<T>>& keyFrames, const std::function<T(const T&, const T&, float)>& interpolateFn);
 
         void calculateBoneTransforms(const std::vector<glm::mat4>& localBoneTransforms);
         glm::mat4 calcSingleBoneTransform(uint32_t boneIndex, const std::vector<glm::mat4>& localBoneTransforms);

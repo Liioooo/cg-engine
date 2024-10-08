@@ -30,6 +30,7 @@ namespace CgEngine {
         static void createConvexColliderComponent(Scene* scene, Entity entity, const pugi::xml_node& node);
         static void createCharacterControllerComponent(Scene* scene, Entity entity, const pugi::xml_node& node);
         static void createUiCanvasComponent(Scene* scene, Entity entity, const pugi::xml_node& node);
+        static void createAnimationComponent(Scene* scene, Entity entity, const pugi::xml_node& node);
     };
 
 }

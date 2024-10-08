@@ -71,8 +71,11 @@ namespace CgEngine {
         bool hasSkeleton() const;
         const Skeleton* getSkeleton() const;
         const std::vector<BoneInfo>& getBoneInfos() const;
-        const std::unordered_map<std::string, Animation>& getAnimations() const;
+        const std::unordered_map<std::string, SkeletalAnimation>& getSkeletalAnimations() const;
         const ShaderStorageBuffer* getBoneInfluencesBuffer() const;
+
+        const std::unordered_map<std::string, Animation>& getAnimations() const;
+
 
     private:
         MeshVertices() = default;
@@ -92,8 +95,13 @@ namespace CgEngine {
         static void traverseNodesBone(const aiNode* node, Skeleton* skeleton, const std::unordered_set<std::string_view>& bones);
         static void traverseBone(const aiNode* node, Skeleton* skeleton, uint32_t parentBone);
 
-        static void importAnimations(const aiScene* scene, const Skeleton* skeleton, std::unordered_map<std::string, Animation>& animations);
-        static Animation importAnimation(const aiAnimation* aiAnimation, const Skeleton* skeleton);
+        void importSkeletalAnimations(const aiScene* scene);
+        std::optional<SkeletalAnimation> importSkeletalAnimation(const aiAnimation* aiAnimation);
+
+        void importAnimations(const aiScene* scene);
+        std::optional<Animation> importAnimation(const aiAnimation* aiAnimation);
+
+        static void importAnimationChannel(AnimationChannel& channel, const aiNodeAnim* nodeAnimation, const aiAnimation* aiAnimation);
 
         void traverseNodes(aiNode* node, const glm::mat4& parentTransform, int parentNode);
         const MeshNode* findNodeUsingSubmesh(uint32_t submeshIndex) const;
@@ -109,6 +117,7 @@ namespace CgEngine {
         std::vector<BoneInfluence> boneInfluences{};
         ShaderStorageBuffer* boneInfluencesBuffer = nullptr;
         std::vector<BoneInfo> boneInfos{};
+        std::unordered_map<std::string, SkeletalAnimation> skeletalAnimations;
         std::unordered_map<std::string, Animation> animations;
     };
 

@@ -17,8 +17,6 @@ namespace RTR {
         std::pair<float, float> prevMousePos;
         float pitch = 0;
         float yaw = 0;
-
-        uint32_t i = 0;
     };
 
 }

@@ -86,6 +86,8 @@ namespace CgEngine {
             createCharacterControllerComponent(scene, entity, node);
         } else if (name == "UiCanvasComponent") {
             createUiCanvasComponent(scene, entity, node);
+        } else if (name == "AnimationComponent") {
+            createAnimationComponent(scene, entity, node);
         }
     }
 
@@ -264,5 +266,16 @@ namespace CgEngine {
         if (node.first_child()) params.canvasNode = &node;
 
         scene->attachComponent<UiCanvasComponent>(entity, params);
+    }
+
+    void SceneLoader::createAnimationComponent(Scene* scene, Entity entity, const pugi::xml_node& node) {
+        AnimationComponentParams params;
+        if (!node.attribute("asset-file").empty()) params.assetFile = node.attribute("asset-file").as_string();
+        if (!node.attribute("animation").empty()) params.animation = node.attribute("animation").as_string("");
+        if (!node.attribute("animation-speed").empty()) params.animationSpeed = node.attribute("animation-speed").as_float();
+        if (!node.attribute("auto-play").empty()) params.autoPlayAnimation = node.attribute("auto-play").as_bool();
+        if (!node.attribute("loop").empty()) params.loopAnimation = node.attribute("loop").as_bool();
+
+        scene->attachComponent<AnimationComponent>(entity, params);
     }
 }

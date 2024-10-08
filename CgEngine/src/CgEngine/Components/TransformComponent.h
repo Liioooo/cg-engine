@@ -35,6 +35,7 @@ namespace CgEngine {
         void setLocalRotationQuat(glm::quat rotation);
         void setLocalScale(glm::vec3 scale);
         void setYawPitchRoll(float yaw, float pitch, float roll);
+        void setLocalModalMatrix(const glm::mat4& mat);
 
         void _physicsUpdate(glm::vec3 pos, glm::quat rot);
         bool _calculateTopLevelTransforms();
@@ -57,6 +58,7 @@ namespace CgEngine {
 
         bool isDirty = true;
         bool physicsDirty = false;
+        bool localModalMatrixDirty = false;
 
         glm::mat4 calculateModelMatrix(glm::vec3& pos, glm::vec3& rot, glm::vec3& scale);
         glm::mat4 calculateModelMatrix(glm::vec3& pos, glm::quat& rot, glm::vec3& scale);
