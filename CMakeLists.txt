@@ -4,3 +4,4 @@ project(Main)
 
 add_subdirectory(CgEngine)
 add_subdirectory(Game)
+add_subdirectory(RealTimeRendering)

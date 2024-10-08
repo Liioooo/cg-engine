@@ -1,0 +1,27 @@
+<Scene>
+    <Entity id="camera">
+        <Components>
+            <TransformComponent position="0 2 5" rotation="-30 0 0" scale="1 1 1" />
+            <CameraComponent primary="true" projection="perspective" near="0.1" far="500" fov="80" exposure="0.75" bloom-intensity="0.1" />
+            <ScriptComponent script-name="flyingCameraScript" />
+        </Components>
+    </Entity>
+    <Entity>
+        <Components>
+            <MeshRendererComponent asset-file="CG_CubeMesh" material="cube" />
+            <TransformComponent position="0 1 0" rotation="0 0 0" scale="2 2 2" />
+        </Components>
+    </Entity>
+    <Entity>
+        <Components>
+            <MeshRendererComponent asset-file="CG_CubeMesh" />
+            <TransformComponent position="0 -0.05 0" rotation="0 0 0" scale="100 0.1 100" material="ground" />
+        </Components>
+    </Entity>
+    <Entity>
+        <Components>
+            <TransformComponent position="0 0 0" rotation="25 0 -35" scale="1 1 1" />
+            <DirectionalLightComponent color="#ffffff" intensity="0.6" />
+        </Components>
+    </Entity>
+</Scene>
