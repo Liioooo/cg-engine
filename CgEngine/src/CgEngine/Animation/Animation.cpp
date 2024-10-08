@@ -14,8 +14,7 @@ namespace CgEngine {
 
     glm::quat AnimationChannel::getRotationForAnimationTime(float animationTime) const {
         uint32_t index = getCurrentKeyFrameIndex(rotations, animationTime);
-        return rotations.at(index).value;
-//        return interpolate<glm::quat>(index, animationTime, rotations, [](const glm::quat& x, const glm::quat& y, float t) {return glm::slerp(x, y, t);});
+        return interpolate<glm::quat>(index, animationTime, rotations, [](const glm::quat& x, const glm::quat& y, float t) {return glm::slerp(x, y, t);});
     }
 
     template<typename T>
