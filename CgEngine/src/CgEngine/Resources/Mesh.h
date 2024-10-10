@@ -1,0 +1,72 @@
+#pragma once
+
+#include <assimp/scene.h>
+#include "Physics/PhysicsTriangleMesh.h"
+#include "Physics/PhysicsConvexMesh.h"
+#include "Rendering/AABoundingBox.h"
+#include "Rendering/Material.h"
+#include "Rendering/VertexArrayObject.h"
+
+namespace CgEngine {
+
+    namespace MeshProps {
+        static inline const std::vector<VertexBufferElement> DEFAULT_VERT_BUFF_LAYOUT = {
+                VertexBufferElement(ShaderDataType::Float4, true),
+                VertexBufferElement(ShaderDataType::Float4, true),
+                VertexBufferElement(ShaderDataType::Float4, true),
+                VertexBufferElement(ShaderDataType::Float4, true),
+                VertexBufferElement(ShaderDataType::Float4, true)
+        };
+
+        struct Vertex {
+            glm::vec4 position;
+            glm::vec4 normal;
+            glm::vec4 tangent;
+            glm::vec4 bitangent;
+            glm::vec4 uv;
+
+            Vertex() {};
+            Vertex(float pX, float pY, float pZ, float nX, float nY, float nZ, float tU, float tV) : position{pX, pY, pZ, 1.0f}, normal{nX, nY, nZ, 0.0f}, uv{tU, tV, 0.0f, 0.0f} {};
+            Vertex(float pX, float pY, float pZ, float nX, float nY, float nZ) : position{pX, pY, pZ, 1.0f}, normal{nX, nY, nZ, 0.0f} {};
+            Vertex(float pX, float pY, float pZ) : position{pX, pY, pZ, 1.0f} {};
+        };
+    }
+
+    struct Submesh {
+        uint32_t baseVertex;
+        uint32_t baseIndex;
+        uint32_t indexCount;
+        uint32_t vertexCount;
+        uint32_t materialIndex;
+    };
+
+    struct MeshNode {
+        aiNode* aiNode;
+        PhysicsTriangleMesh* physicsTriangleMesh = nullptr;
+        PhysicsConvexMesh* physicsConvexMesh = nullptr;
+        AABoundingBox aaBoundingBox;
+        int parentNode;
+        std::vector<uint32_t> submeshIndices;
+        glm::mat4 localTransform{1.0f};
+        glm::mat4 transform{1.0f};
+    };
+
+    class Mesh {
+    public:
+        virtual ~Mesh();
+
+        virtual VertexArrayObject* getVAO();
+        virtual const std::vector<Submesh>& getSubmeshes() const;
+        virtual std::vector<MeshNode>& getMeshNodes();
+        virtual uint32_t getMeshNodeIndex(const std::string& nodeName) const;
+        virtual const Material* getMaterial(size_t index) const = 0;
+        virtual const uint32_t getMaterialCount() const = 0;
+
+    protected:
+        VertexArrayObject* vao;
+        std::vector<Submesh> submeshes;
+        std::vector<MeshNode> meshNodes{};
+        std::unordered_map<std::string, uint32_t> nodeNameToNode{};
+    };
+
+}

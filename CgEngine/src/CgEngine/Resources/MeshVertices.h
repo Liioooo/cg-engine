@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Mesh.h"
 #include "Rendering/VertexArrayObject.h"
 #include "Rendering/PBRMaterial.h"
 #include "Rendering/ShaderStorageBuffer.h"
@@ -17,39 +18,7 @@
 
 namespace CgEngine {
 
-    struct Vertex {
-        glm::vec4 position;
-        glm::vec4 normal;
-        glm::vec4 tangent;
-        glm::vec4 bitangent;
-        glm::vec4 uv;
-
-        Vertex() {};
-        Vertex(float pX, float pY, float pZ, float nX, float nY, float nZ, float tU, float tV) : position{pX, pY, pZ, 1.0f}, normal{nX, nY, nZ, 0.0f}, uv{tU, tV, 0.0f, 0.0f} {};
-        Vertex(float pX, float pY, float pZ, float nX, float nY, float nZ) : position{pX, pY, pZ, 1.0f}, normal{nX, nY, nZ, 0.0f} {};
-        Vertex(float pX, float pY, float pZ) : position{pX, pY, pZ, 1.0f} {};
-    };
-
-    struct Submesh {
-        uint32_t baseVertex;
-        uint32_t baseIndex;
-        uint32_t indexCount;
-        uint32_t vertexCount;
-        uint32_t materialIndex;
-    };
-
-    struct MeshNode {
-        aiNode* aiNode;
-        PhysicsTriangleMesh* physicsTriangleMesh = nullptr;
-        PhysicsConvexMesh* physicsConvexMesh = nullptr;
-        AABoundingBox aaBoundingBox;
-        int parentNode;
-        std::vector<uint32_t> submeshIndices;
-        glm::mat4 localTransform{1.0f};
-        glm::mat4 transform{1.0f};
-    };
-
-    class MeshVertices : public Resource {
+    class MeshVertices : public Resource, public Mesh {
     public:
         static MeshVertices* createResource(const std::string& name);
 
@@ -57,13 +26,11 @@ namespace CgEngine {
 
         ~MeshVertices() override;
 
-        VertexArrayObject* getVAO();
-        const std::vector<Vertex>& getVertices() const;
+        const std::vector<MeshProps::Vertex>& getVertices() const;
         const std::vector<uint32_t>& getIndexBuffer() const;
-        const std::vector<Submesh>& getSubmeshes() const;
-        std::vector<MeshNode>& getMeshNodes();
-        uint32_t getMeshNodeIndex(const std::string& nodeName) const;
-        const Material* getMaterial(size_t index) const;
+
+        virtual const Material* getMaterial(size_t index) const override;
+        virtual const uint32_t getMaterialCount() const override;
 
         PhysicsTriangleMesh& getPhysicsTriangleMeshForNode(const std::string& nodeName);
         PhysicsConvexMesh& getPhysicsConvexMeshForNode(const std::string& nodeName);
@@ -106,13 +73,9 @@ namespace CgEngine {
         void traverseNodes(aiNode* node, const glm::mat4& parentTransform, int parentNode);
         const MeshNode* findNodeUsingSubmesh(uint32_t submeshIndex) const;
 
-        VertexArrayObject* vao;
-        std::vector<Vertex> vertices;
+        std::vector<MeshProps::Vertex> vertices;
         std::vector<uint32_t> indexBuffer;
-        std::vector<Submesh> submeshes;
         std::vector<ResRef<PBRMaterial>> materials;
-        std::vector<MeshNode> meshNodes{};
-        std::unordered_map<std::string, uint32_t> nodeNameToNode{};
         Skeleton* skeleton = nullptr;
         std::vector<BoneInfluence> boneInfluences{};
         ShaderStorageBuffer* boneInfluencesBuffer = nullptr;

@@ -237,7 +237,7 @@ namespace CgEngine {
         renderer.beginScene(cameraComponent->getCamera(), cameraTransform.getModelMatrix(), lightEnvironment, sceneEnvironment);
 
         for (auto it = componentManager->begin<MeshRendererComponent>(); it != componentManager->end<MeshRendererComponent>(); it++) {
-            renderer.submitMesh(it->getMeshVertices().get(), it->getMeshNodes(), it->getMaterial().get(), it->getCastShadows(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix());
+            renderer.submitMesh(it->getRenderMesh(), it->getMeshNodes(), it->getMaterial().get(), it->getCastShadows(), it->getCullingEnabled(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix());
         }
 
         for (auto it = componentManager->begin<AnimatedMeshRendererComponent>(); it != componentManager->end<AnimatedMeshRendererComponent>(); it++) {
@@ -294,7 +294,7 @@ namespace CgEngine {
             auto* cubeMesh = resourceManager.getResource<MeshVertices>("CG_CubeMesh").get();
             for (auto it = componentManager->begin<MeshRendererComponent>(); it != componentManager->end<MeshRendererComponent>(); it++) {
                 auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
-                renderer.submitBoundingBoxMesh(cubeMesh, it->getMeshVertices().get(), it->getMeshNodes(), transform.getModelMatrix());
+                renderer.submitBoundingBoxMesh(cubeMesh, it->getRenderMesh(), it->getMeshNodes(), transform.getModelMatrix());
             }
         }
 #endif

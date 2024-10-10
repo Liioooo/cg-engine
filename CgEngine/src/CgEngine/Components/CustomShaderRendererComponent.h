@@ -1,49 +1,43 @@
 #pragma once
 
-#include "Resources/Mesh.h"
-#include "Resources/CustomMesh.h"
+#include "Resources/MeshVertices.h"
 #include "Rendering/PBRMaterial.h"
 #include "Component.h"
 #include "Resources/ResRef.h"
 
 namespace CgEngine {
 
-    struct MeshRendererComponentParams {
+    struct CustomShaderRendererComponentParams {
         std::string assetFile;
         std::string mesh;
-        CustomMesh* customMesh = nullptr;
         std::string material;
+        Material* customMaterial;
         bool castShadows = true;
-        bool enableCulling = true;
         std::vector<std::string> meshNodes;
+        uint32_t instanceCount;
+        std::string shader;
+
+        // some custom mesh
 
         void verifyParams() const;
     };
 
-    class MeshRendererComponent : public Component {
+    class CustomShaderRendererComponent : public Component {
     public:
         using Component::Component;
 
-        void onAttach(Scene& scene, MeshRendererComponentParams& params);
+        void onAttach(Scene& scene, CustomShaderRendererComponentParams& params);
 
         ResRef<MeshVertices> getMeshVertices();
-        CustomMesh* getCustomMesh();
-        Mesh* getRenderMesh();
         ResRef<PBRMaterial> getMaterial();
         bool getCastShadows() const;
         void setCastShadows(bool value);
-        bool getCullingEnabled() const;
-        void setCullingEnabled(bool value);
         const std::vector<uint32_t>& getMeshNodes();
-
-        void setCustomMesh(CustomMesh* mesh);
 
     private:
         ResRef<MeshVertices> mesh;
-        CustomMesh* customMesh = nullptr;
         ResRef<PBRMaterial> material;
         bool castShadows;
-        bool enableCulling;
         std::vector<uint32_t> meshNodes;
     };
 

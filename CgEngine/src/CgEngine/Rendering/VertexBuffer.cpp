@@ -2,7 +2,7 @@
 #include "glad/glad.h"
 
 namespace CgEngine {
-    static unsigned int openGLUsage(VertexBufferUsage usage) {
+    unsigned int VertexBufferUtils::openGLUsage(VertexBufferUsage usage) {
         switch (usage) {
             case VertexBufferUsage::Static:    return GL_STATIC_DRAW;
             case VertexBufferUsage::Dynamic:   return GL_DYNAMIC_DRAW;
@@ -13,13 +13,13 @@ namespace CgEngine {
     VertexBuffer::VertexBuffer(uint32_t size, VertexBufferUsage usage) {
         glGenBuffers(1, &vbo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, size, nullptr, openGLUsage(usage));
+        glBufferData(GL_ARRAY_BUFFER, size, nullptr, VertexBufferUtils::openGLUsage(usage));
     }
 
-    VertexBuffer::VertexBuffer(void* data, uint32_t size, VertexBufferUsage usage) {
+    VertexBuffer::VertexBuffer(const void* data, uint32_t size, VertexBufferUsage usage) {
         glGenBuffers(1, &vbo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, size, data, openGLUsage(usage));
+        glBufferData(GL_ARRAY_BUFFER, size, data, VertexBufferUtils::openGLUsage(usage));
     }
 
     VertexBuffer::~VertexBuffer() {
@@ -40,7 +40,7 @@ namespace CgEngine {
 
     void VertexBuffer::setData(const void *data, uint32_t size, VertexBufferUsage usage) {
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, size, data, openGLUsage(usage));
+        glBufferData(GL_ARRAY_BUFFER, size, data, VertexBufferUtils::openGLUsage(usage));
     }
 
     void VertexBuffer::setLayout(std::vector<VertexBufferElement> elements) {

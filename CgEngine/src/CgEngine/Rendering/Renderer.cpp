@@ -32,7 +32,7 @@ namespace CgEngine {
         quadVertexData[3].uv = {0.0f, 1.0f};
 
         quadVAO = new VertexArrayObject();
-        auto quadVertexBuffer = std::make_shared<VertexBuffer>(quadVertexData, 4 * sizeof(QuadVertex));
+        auto* quadVertexBuffer = new VertexBuffer(quadVertexData, 4 * sizeof(QuadVertex));
         quadVertexBuffer->setLayout({{ShaderDataType::Float3, true}, {ShaderDataType::Float2, true}});
         quadVAO->addVertexBuffer(quadVertexBuffer);
         uint32_t quadIndices[6] = {0, 1, 2, 2, 3, 0 };
@@ -65,13 +65,13 @@ namespace CgEngine {
         };
 
         unitCubeVAO = new VertexArrayObject();
-        auto unitCubeVertexBuffer = std::make_shared<VertexBuffer>(unitCubeVertices, sizeof(unitCubeVertices));
+        auto* unitCubeVertexBuffer = new VertexBuffer(unitCubeVertices, sizeof(unitCubeVertices));
         unitCubeVertexBuffer->setLayout({{ShaderDataType::Float3, false}});
         unitCubeVAO->addVertexBuffer(unitCubeVertexBuffer);
         unitCubeVAO->setIndexBuffer(unitCubeIndices, 36);
 
         linesVAO = new VertexArrayObject();
-        auto linesVertexBuffer = std::make_shared<VertexBuffer>(0, VertexBufferUsage::Dynamic);
+        auto* linesVertexBuffer = new VertexBuffer(0, VertexBufferUsage::Dynamic);
         linesVertexBuffer->setLayout({{ShaderDataType::Float3, false}, {ShaderDataType::Float3, false}});
         linesVAO->addVertexBuffer(linesVertexBuffer);
 
@@ -91,19 +91,19 @@ namespace CgEngine {
         }
 
         uiCircleVAO = new VertexArrayObject();
-        auto uiCircleVertexBuffer = std::make_shared<VertexBuffer>(0, VertexBufferUsage::Dynamic);
+        auto* uiCircleVertexBuffer = new VertexBuffer(0, VertexBufferUsage::Dynamic);
         uiCircleVertexBuffer->setLayout({{ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float, false}, {ShaderDataType::Float, false}, {ShaderDataType::Float, false}});
         uiCircleVAO->addVertexBuffer(uiCircleVertexBuffer);
         uiCircleVAO->setIndexBuffer(uiIndices, maxUiIndices);
 
         uiRectVAO = new VertexArrayObject();
-        auto uiRectVertexBuffer = std::make_shared<VertexBuffer>(0, VertexBufferUsage::Dynamic);
+        auto* uiRectVertexBuffer = new VertexBuffer(0, VertexBufferUsage::Dynamic);
         uiCircleVertexBuffer->setLayout({{ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float2, false}, {ShaderDataType::Float, false}, {ShaderDataType::Float, false}});
         uiRectVAO->addVertexBuffer(uiCircleVertexBuffer);
         uiRectVAO->setIndexBuffer(uiIndices, maxUiIndices);
 
         uiTextVAO = new VertexArrayObject();
-        auto uiTextVertexBuffer = std::make_shared<VertexBuffer>(0, VertexBufferUsage::Dynamic);
+        auto* uiTextVertexBuffer = new VertexBuffer(0, VertexBufferUsage::Dynamic);
         uiTextVertexBuffer->setLayout({{ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float, false}});
         uiTextVAO->addVertexBuffer(uiTextVertexBuffer);
         uiTextVAO->setIndexBuffer(uiIndices, maxUiIndices);

@@ -14,6 +14,7 @@ namespace CgEngine {
     class Material {
     public:
         explicit Material();
+        virtual ~Material() = default;
 
         const Uuid& getUuid() const;
 

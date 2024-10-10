@@ -453,14 +453,14 @@ namespace CgEngine {
         activeRendering = false;
     }
 
-    void SceneRenderer::submitMesh(MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform) {
+    void SceneRenderer::submitMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, bool enableCulling, const glm::mat4& transform) {
         auto& submeshes = mesh->getSubmeshes();
 
         for (const auto& meshNodeIndex: meshNodes) {
             auto& meshNode = mesh->getMeshNodes().at(meshNodeIndex);
 
 
-            bool isInCameraFrustum = cameraFrustum.testAABoundingBoxInFrustum(meshNode.aaBoundingBox, transform);
+            bool isInCameraFrustum = !enableCulling || cameraFrustum.testAABoundingBoxInFrustum(meshNode.aaBoundingBox, transform);
 
 #ifdef CG_ENABLE_DEBUG_FEATURES
             submittedMeshes++;
@@ -471,8 +471,6 @@ namespace CgEngine {
 
             for (const auto& submeshIndex: meshNode.submeshIndices) {
                 const Submesh& submesh = submeshes.at(submeshIndex);
-                const Material* material = overrideMaterial != nullptr ? overrideMaterial : mesh->getMaterial(submesh.materialIndex);
-                MeshKey mk = {mesh->getVAO()->getRendererId(), submeshIndex, material->getUuid().getUuid()};
 
                 glm::mat4 finalTransform;
 
@@ -481,6 +479,9 @@ namespace CgEngine {
                 }
 
                 if (isInCameraFrustum) {
+                    const Material* material = overrideMaterial != nullptr ? overrideMaterial : mesh->getMaterial(submesh.materialIndex);
+                    MeshKey mk = {mesh->getVAO()->getRendererId(), submeshIndex, material->getUuid().getUuid()};
+
                     meshTransforms[mk].emplace_back(finalTransform);
 
                     DrawCommand& drawCommand = drawCommandQueue[mk];
@@ -493,11 +494,13 @@ namespace CgEngine {
                 }
 
                 if (castShadows) {
+                    MeshKey mk = {mesh->getVAO()->getRendererId(), submeshIndex, 0};
+
                     shadowMapMeshTransforms[mk].emplace_back(finalTransform);
 
                     DrawCommand& shadowMapDrawCommand = shadowMapDrawCommandQueue[mk];
                     shadowMapDrawCommand.vao = mesh->getVAO();
-                    shadowMapDrawCommand.material = material;
+                    shadowMapDrawCommand.material = nullptr;
                     shadowMapDrawCommand.baseIndex = submesh.baseIndex;
                     shadowMapDrawCommand.baseVertex = submesh.baseVertex;
                     shadowMapDrawCommand.indexCount = submesh.indexCount;
@@ -515,8 +518,8 @@ namespace CgEngine {
         boneTransformsBuffer->setSubData(boneTransformOffset, boneTransforms.data(), boneTransforms.size() * sizeof(glm::mat4));
 
         SkinningInfo& skinningInfo = skinningQueue.emplace_back();
-        skinningInfo.originalVertexBuffer = mesh->getVAO()->getVertexBuffers()[0].get();
-        skinningInfo.skinnedVertexBuffer = skinnedVAO->getVertexBuffers()[0].get();
+        skinningInfo.originalVertexBuffer = mesh->getVAO()->getVertexBuffers()[0];
+        skinningInfo.skinnedVertexBuffer = skinnedVAO->getVertexBuffers()[0];
         skinningInfo.boneInfluencesBuffer = mesh->getBoneInfluencesBuffer();
         skinningInfo.numVertices = mesh->getVertices().size();
 
@@ -645,7 +648,7 @@ namespace CgEngine {
         }
     }
 
-    void SceneRenderer::submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, const glm::mat4& transform) {
+    void SceneRenderer::submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, Mesh* mesh, const std::vector<uint32_t>& meshNodes, const glm::mat4& transform) {
         for (const auto& meshNodeIndex: meshNodes) {
             const auto& boundingBox = mesh->getMeshNodes().at(meshNodeIndex).aaBoundingBox;
 

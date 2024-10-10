@@ -106,6 +106,8 @@ namespace CgEngine {
         if (!node.attribute("mesh").empty()) params.mesh = node.attribute("mesh").as_string();
         if (!node.attribute("material").empty()) params.material = node.attribute("material").as_string();
         if (!node.attribute("cast-shadows").empty()) params.castShadows = node.attribute("cast-shadows").as_bool();
+        if (!node.attribute("enable-culling").empty()) params.enableCulling = node.attribute("enable-culling").as_bool();
+        if (!node.attribute("mesh-nodes").empty()) params.meshNodes = LoaderUtils::getListFromString(node.attribute("mesh-nodes").as_string());
         if (!node.attribute("mesh-nodes").empty()) params.meshNodes = LoaderUtils::getListFromString(node.attribute("mesh-nodes").as_string());
 
         scene->attachComponent<MeshRendererComponent>(entity, params);

@@ -52,13 +52,8 @@ namespace CgEngine {
 
         mesh->vao = new VertexArrayObject();
 
-        auto vertexBuffer = std::make_shared<VertexBuffer>(mesh->vertices.data(),
-                                                           mesh->vertices.size() * sizeof(Vertex));
-        vertexBuffer->setLayout({VertexBufferElement(ShaderDataType::Float4, true),
-                                 VertexBufferElement(ShaderDataType::Float4, true),
-                                 VertexBufferElement(ShaderDataType::Float4, true),
-                                 VertexBufferElement(ShaderDataType::Float4, true),
-                                 VertexBufferElement(ShaderDataType::Float4, true)});
+        auto* vertexBuffer = new VertexBuffer(mesh->vertices.data(), mesh->vertices.size() * sizeof(MeshProps::Vertex));
+        vertexBuffer->setLayout(MeshProps::DEFAULT_VERT_BUFF_LAYOUT);
 
         mesh->vao->addVertexBuffer(vertexBuffer);
         mesh->vao->setIndexBuffer(indices, numIndices);
@@ -82,17 +77,11 @@ namespace CgEngine {
     }
 
     MeshVertices::~MeshVertices() {
-        delete vao;
         delete skeleton;
         delete boneInfluencesBuffer;
-
     }
 
-    VertexArrayObject* MeshVertices::getVAO() {
-        return vao;
-    }
-
-    const std::vector<Vertex>& MeshVertices::getVertices() const {
+    const std::vector<MeshProps::Vertex>& MeshVertices::getVertices() const {
         return vertices;
     }
 
@@ -100,20 +89,12 @@ namespace CgEngine {
         return indexBuffer;
     }
 
-    const std::vector<Submesh>& MeshVertices::getSubmeshes() const {
-        return submeshes;
-    }
-
-    std::vector<MeshNode>& MeshVertices::getMeshNodes() {
-        return meshNodes;
-    }
-
-    uint32_t MeshVertices::getMeshNodeIndex(const std::string& nodeName) const {
-        return nodeNameToNode.at(nodeName);
-    }
-
     const Material* MeshVertices::getMaterial(size_t index) const {
         return materials.at(index).get();
+    }
+
+    const uint32_t MeshVertices::getMaterialCount() const {
+        return materials.size();
     }
 
     PhysicsTriangleMesh& MeshVertices::getPhysicsTriangleMeshForNode(const std::string& nodeName) {
@@ -289,13 +270,9 @@ namespace CgEngine {
 
         mesh->vao = new VertexArrayObject();
 
-        auto vertexBuffer = std::make_shared<VertexBuffer>(mesh->vertices.data(),
-                                                           mesh->vertices.size() * sizeof(Vertex));
-        vertexBuffer->setLayout({VertexBufferElement(ShaderDataType::Float4, true),
-                                 VertexBufferElement(ShaderDataType::Float4, true),
-                                 VertexBufferElement(ShaderDataType::Float4, true),
-                                 VertexBufferElement(ShaderDataType::Float4, true),
-                                 VertexBufferElement(ShaderDataType::Float4, true)});
+        auto* vertexBuffer = new VertexBuffer(mesh->vertices.data(),
+                                                           mesh->vertices.size() * sizeof(MeshProps::Vertex));
+        vertexBuffer->setLayout(MeshProps::DEFAULT_VERT_BUFF_LAYOUT);
 
         mesh->vao->addVertexBuffer(vertexBuffer);
         mesh->vao->setIndexBuffer(mesh->indexBuffer.data(), mesh->indexBuffer.size());
@@ -388,13 +365,8 @@ namespace CgEngine {
 
         mesh->vao = new VertexArrayObject();
 
-        auto vertexBuffer = std::make_shared<VertexBuffer>(mesh->vertices.data(),
-                                                           mesh->vertices.size() * sizeof(Vertex));
-        vertexBuffer->setLayout({VertexBufferElement(ShaderDataType::Float4, true),
-                                 VertexBufferElement(ShaderDataType::Float4, true),
-                                 VertexBufferElement(ShaderDataType::Float4, true),
-                                 VertexBufferElement(ShaderDataType::Float4, true),
-                                 VertexBufferElement(ShaderDataType::Float4, true)});
+        auto* vertexBuffer = new VertexBuffer(mesh->vertices.data(),mesh->vertices.size() * sizeof(MeshProps::Vertex));
+        vertexBuffer->setLayout(MeshProps::DEFAULT_VERT_BUFF_LAYOUT);
 
         mesh->vao->addVertexBuffer(vertexBuffer);
         mesh->vao->setIndexBuffer(mesh->indexBuffer.data(), mesh->indexBuffer.size());
@@ -555,13 +527,8 @@ namespace CgEngine {
 
         mesh->vao = new VertexArrayObject();
 
-        auto vertexBuffer = std::make_shared<VertexBuffer>(mesh->vertices.data(),
-                                                           mesh->vertices.size() * sizeof(Vertex));
-        vertexBuffer->setLayout({VertexBufferElement(ShaderDataType::Float4, true),
-                                 VertexBufferElement(ShaderDataType::Float4, true),
-                                 VertexBufferElement(ShaderDataType::Float4, true),
-                                 VertexBufferElement(ShaderDataType::Float4, true),
-                                 VertexBufferElement(ShaderDataType::Float4, true)});
+        auto* vertexBuffer = new VertexBuffer(mesh->vertices.data(), mesh->vertices.size() * sizeof(MeshProps::Vertex));
+        vertexBuffer->setLayout(MeshProps::DEFAULT_VERT_BUFF_LAYOUT);
 
         mesh->vao->addVertexBuffer(vertexBuffer);
         mesh->vao->setIndexBuffer(mesh->indexBuffer.data(), mesh->indexBuffer.size());
@@ -618,7 +585,7 @@ namespace CgEngine {
             indexCount += submesh.indexCount;
 
             for (size_t v = 0; v < aiMesh->mNumVertices; v++) {
-                Vertex& vertex = mesh->vertices.emplace_back();
+                MeshProps::Vertex& vertex = mesh->vertices.emplace_back();
                 vertex.position = {aiMesh->mVertices[v].x, aiMesh->mVertices[v].y, aiMesh->mVertices[v].z, 1.0f};
                 vertex.normal = {aiMesh->mNormals[v].x, aiMesh->mNormals[v].y, aiMesh->mNormals[v].z, 0.0f};
 
@@ -653,12 +620,8 @@ namespace CgEngine {
 
         mesh->vao = new VertexArrayObject();
 
-        auto vertexBuffer = std::make_shared<VertexBuffer>(mesh->vertices.data(), mesh->vertices.size() * sizeof(Vertex));
-        vertexBuffer->setLayout({VertexBufferElement(ShaderDataType::Float4, false),
-                                 VertexBufferElement(ShaderDataType::Float4, false),
-                                 VertexBufferElement(ShaderDataType::Float4, false),
-                                 VertexBufferElement(ShaderDataType::Float4, false),
-                                 VertexBufferElement(ShaderDataType::Float4, false)});
+        auto* vertexBuffer = new VertexBuffer(mesh->vertices.data(), mesh->vertices.size() * sizeof(MeshProps::Vertex));
+        vertexBuffer->setLayout(MeshProps::DEFAULT_VERT_BUFF_LAYOUT);
 
         mesh->vao->addVertexBuffer(vertexBuffer);
         mesh->vao->setIndexBuffer(mesh->indexBuffer.data(), mesh->indexBuffer.size());

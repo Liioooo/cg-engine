@@ -8,7 +8,10 @@ namespace CgEngine {
         Static, Dynamic
     };
 
-    static unsigned int openGLUsage(VertexBufferUsage usage);
+    namespace VertexBufferUtils {
+        unsigned int openGLUsage(VertexBufferUsage usage);
+    }
+
 
     struct VertexBufferElement {
         ShaderDataType dataType;
@@ -17,6 +20,10 @@ namespace CgEngine {
         bool normalized;
 
         VertexBufferElement(ShaderDataType dataType, bool normalized) : dataType(dataType), normalized(normalized), size(ShaderUtils::getSizeForShaderDataType(dataType)) {};
+
+        bool operator ==(const VertexBufferElement& other) const {
+            return dataType == other.dataType && normalized == other.normalized;
+        }
 
         int getComponentCount() const {
             switch (dataType) {
@@ -40,7 +47,7 @@ namespace CgEngine {
     class VertexBuffer {
     public:
         explicit VertexBuffer(uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Dynamic);
-        VertexBuffer(void* data, uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Static);
+        VertexBuffer(const void* data, uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Static);
         ~VertexBuffer();
 
         void bind() const;

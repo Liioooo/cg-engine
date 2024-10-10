@@ -13,8 +13,8 @@ namespace CgEngine {
         const glm::vec3& getVertex(uint32_t index);
 
     private:
-        glm::vec3 min;
-        glm::vec3 max;
+        glm::vec3 min = {0.0f, 0.0f, 0.0f};
+        glm::vec3 max = {0.0f, 0.0f, 0.0f};
 
         bool addedCoords = false;
 

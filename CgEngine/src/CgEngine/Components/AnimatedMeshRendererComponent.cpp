@@ -48,7 +48,7 @@ namespace CgEngine {
 
         skinnedVAO = new VertexArrayObject();
 
-        auto vertexBuffer = std::make_shared<VertexBuffer>(mesh->getVertices().size() * sizeof(Vertex), VertexBufferUsage::Dynamic);
+        auto* vertexBuffer = new VertexBuffer(mesh->getVertices().size() * sizeof(MeshProps::Vertex), VertexBufferUsage::Dynamic);
         vertexBuffer->setLayout(mesh->getVAO()->getVertexBuffers()[0]->getLayout());
         skinnedVAO->addVertexBuffer(vertexBuffer);
         skinnedVAO->useExistingIndexBuffer(mesh->getVAO()->getIndexBufferRendererId(), mesh->getVAO()->getIndexCount());

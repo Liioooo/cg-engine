@@ -12,6 +12,10 @@ namespace CgEngine {
         if (!usingExistingIndexBuffer) {
             glDeleteBuffers(1, &ebo);
         }
+
+        for (auto* item: vertexBuffers) {
+            delete item;
+        }
     }
 
     void VertexArrayObject::bind() const {
@@ -22,7 +26,7 @@ namespace CgEngine {
         glBindVertexArray(0);
     }
 
-    void VertexArrayObject::addVertexBuffer(std::shared_ptr<VertexBuffer> buffer) {
+    void VertexArrayObject::addVertexBuffer(VertexBuffer* buffer) {
         bind();
         buffer->bind();
         vertexBuffers.push_back(buffer);
@@ -95,7 +99,7 @@ namespace CgEngine {
         usingExistingIndexBuffer = true;
     }
 
-    std::vector<std::shared_ptr<VertexBuffer>> &VertexArrayObject::getVertexBuffers() {
+    std::vector<VertexBuffer*>& VertexArrayObject::getVertexBuffers() {
         return vertexBuffers;
     }
 
