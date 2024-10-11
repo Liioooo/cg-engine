@@ -443,7 +443,7 @@ namespace CgEngine {
         boundingBoxDrawCommandQueue.clear();
         boundingBoxMeshTransforms.clear();
 
-        if (sceneIndex % 600 == 0) {
+        if (sceneIndex % 100 == 0) {
             CG_LOGGING_INFO("CULLING: (Submitted Meshes / Rendered Meshes): {0} / {1}", submittedMeshes, renderedMeshes);
         }
 #endif
@@ -460,7 +460,7 @@ namespace CgEngine {
             auto& meshNode = mesh->getMeshNodes().at(meshNodeIndex);
 
 
-            bool isInCameraFrustum = !enableCulling || cameraFrustum.testAABoundingBoxInFrustum(meshNode.aaBoundingBox, transform);
+            bool isInCameraFrustum = !enableCulling || cameraFrustum.testAABoundingBoxInFrustum(meshNode.aaBoundingBox, transform * meshNode.transform);
 
 #ifdef CG_ENABLE_DEBUG_FEATURES
             submittedMeshes++;
@@ -650,11 +650,12 @@ namespace CgEngine {
 
     void SceneRenderer::submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, Mesh* mesh, const std::vector<uint32_t>& meshNodes, const glm::mat4& transform) {
         for (const auto& meshNodeIndex: meshNodes) {
-            const auto& boundingBox = mesh->getMeshNodes().at(meshNodeIndex).aaBoundingBox;
-
+            const auto& meshNode = mesh->getMeshNodes().at(meshNodeIndex);
+            auto [center, extents] = meshNode.aaBoundingBox.getTransformedAdjustedCenterAndExtents(transform * meshNode.transform);
             const auto& boundingBoxSubmesh = boundingBoxMesh->getSubmeshes().at(0);
+
             MeshKey mk = {boundingBoxMesh->getVAO()->getRendererId(), 0, boundingBoxMaterial.getUuid().getUuid()};
-            boundingBoxMeshTransforms[mk].emplace_back(transform * boundingBox.getTransformForCubeMesh());
+            boundingBoxMeshTransforms[mk].emplace_back(glm::translate(glm::mat4(1.0f), center) * glm::scale(glm::mat4(1.0f), extents * 2.0f));
 
             DrawCommand& drawCommand = boundingBoxDrawCommandQueue[mk];
             drawCommand.vao = boundingBoxMesh->getVAO();

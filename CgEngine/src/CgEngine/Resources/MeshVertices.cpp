@@ -613,7 +613,6 @@ namespace CgEngine {
                 const auto aiBoundingBox = scene->mMeshes[submeshIndex]->mAABB;
                 mN.aaBoundingBox.addBoxCoordinates(getVec3FromAssimpVec(aiBoundingBox.mMin), getVec3FromAssimpVec(aiBoundingBox.mMax));
             }
-            mN.aaBoundingBox.applyTransform(mN.transform);
         }
 
         mesh->skeleton = importSkeleton(scene, mesh);

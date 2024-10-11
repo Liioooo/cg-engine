@@ -21,41 +21,38 @@ namespace CgEngine {
             this->max = corrMax;
             addedCoords = true;
         }
-        verticesDirty = true;
     }
 
-    void AABoundingBox::applyTransform(const glm::mat4& transform) {
-        min = glm::vec3(transform * glm::vec4(min, 1.0f));
-        max = glm::vec3(transform * glm::vec4(max, 1.0f));
-        verticesDirty = true;
+    glm::vec3 AABoundingBox::getCenterPoint() const {
+        return (min + max) / 2.0f;
     }
 
-    glm::mat4 AABoundingBox::getTransformForCubeMesh() const {
-        glm::vec3 size = {
-            glm::abs(max.x - min.x),
-            glm::abs(max.y - min.y),
-            glm::abs(max.z - min.z)
-        };
-
-        glm::vec3 midPoint = (min + max) / 2.0f;
-
-        return glm::translate(glm::mat4(1.0f), midPoint) * glm::scale(glm::mat4(1.0f), size);
+    glm::vec3 AABoundingBox::getExtents() const {
+        glm::vec3 center = getCenterPoint();
+        return {max.x - center.x, max.y - center.y, max.z - center.z};
     }
 
-    const glm::vec3& AABoundingBox::getVertex(uint32_t index) {
-        if (verticesDirty) {
-            vertices[0] = {min.x, min.y, min.z};
-            vertices[1] = {max.x, min.y, min.z};
-            vertices[2] = {min.x, max.y, min.z};
-            vertices[3] = {min.x, min.y, max.z};
+    std::pair<glm::vec3, glm::vec3> AABoundingBox::getTransformedAdjustedCenterAndExtents(const glm::mat4& transform) const {
+        glm::vec3 boxCenter = getCenterPoint();
+        glm::vec3 adjustedCenter(transform * glm::vec4(boxCenter, 1.f));
+        glm::vec3 extents = getExtents();
 
-            vertices[4] = {max.x, max.y, min.z};
-            vertices[5] = {max.x, min.y, max.z};
-            vertices[6] = {min.x, max.y, max.z};
-            vertices[7] = {max.x, max.y, max.z};
+        const glm::vec3 right = transform[0] * extents.x;
+        const glm::vec3 up = transform[1] * extents.y;
+        const glm::vec3 forward = -transform[2] * extents.z;
 
-            verticesDirty = false;
-        }
-        return vertices[index];
+        const float ix = glm::abs(glm::dot(glm::vec3{ 1.f, 0.f, 0.f }, right)) +
+                glm::abs(glm::dot(glm::vec3{ 1.f, 0.f, 0.f }, up)) +
+                glm::abs(glm::dot(glm::vec3{ 1.f, 0.f, 0.f }, forward));
+
+        const float iy = glm::abs(glm::dot(glm::vec3{ 0.f, 1.f, 0.f }, right)) +
+                glm::abs(glm::dot(glm::vec3{ 0.f, 1.f, 0.f }, up)) +
+                glm::abs(glm::dot(glm::vec3{ 0.f, 1.f, 0.f }, forward));
+
+        const float iz = glm::abs(glm::dot(glm::vec3{ 0.f, 0.f, 1.f }, right)) +
+                glm::abs(glm::dot(glm::vec3{ 0.f, 0.f, 1.f }, up)) +
+                glm::abs(glm::dot(glm::vec3{ 0.f, 0.f, 1.f }, forward));
+
+        return {adjustedCenter, {ix, iy, iz}};
     }
 }

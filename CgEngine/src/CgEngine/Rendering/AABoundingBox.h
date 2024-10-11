@@ -7,19 +7,16 @@ namespace CgEngine {
         AABoundingBox() = default;
 
         void addBoxCoordinates(glm::vec3 max, glm::vec3 min);
-        void applyTransform(const glm::mat4& transform);
 
-        glm::mat4 getTransformForCubeMesh() const;
-        const glm::vec3& getVertex(uint32_t index);
+        glm::vec3 getCenterPoint() const;
+        glm::vec3 getExtents() const;
+        std::pair<glm::vec3, glm::vec3> getTransformedAdjustedCenterAndExtents(const glm::mat4& transform) const;
 
     private:
         glm::vec3 min = {0.0f, 0.0f, 0.0f};
         glm::vec3 max = {0.0f, 0.0f, 0.0f};
 
         bool addedCoords = false;
-
-        std::array<glm::vec3, 8> vertices{};
-        bool verticesDirty = true;
     };
 
 }

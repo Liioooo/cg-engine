@@ -29,8 +29,19 @@ namespace RTR {
         indices.push_back(2);
         indices.push_back(4);
 
+        indices.push_back(0);
+        indices.push_back(2);
+        indices.push_back(1);
+        indices.push_back(2);
+        indices.push_back(3);
+        indices.push_back(1);
+
+        indices.push_back(0);
+        indices.push_back(4);
+        indices.push_back(2);
+
         mesh->setVertexData(vertices, indices, CgEngine::MeshProps::DEFAULT_VERT_BUFF_LAYOUT);
-        mesh->setBoundingBox({-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f, 1.0f});
+        mesh->setBoundingBox({-0.25f, -0.25f, -0.25f}, {0.25f, 0.25f, 0.25f});
 
         getComponent<CgEngine::MeshRendererComponent>().setCustomMesh(mesh);
     }
