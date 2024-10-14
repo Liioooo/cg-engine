@@ -39,36 +39,12 @@ namespace CgEngine {
     }
 
     bool CameraFrustum::testAABoundingBoxInFrustum(AABoundingBox& boundingBox, const glm::mat4& boxTransform) const {
-        std::array<glm::vec3, 8> boxVertices{};
         auto [boxCenter, boxExtents] = boundingBox.getTransformedAdjustedCenterAndExtents(boxTransform);
 
-        boxVertices[0] = {boxCenter.x - boxExtents.x, boxCenter.y - boxExtents.y, boxCenter.z - boxExtents.z};
-        boxVertices[1] = {boxCenter.x - boxExtents.x, boxCenter.y - boxExtents.y, boxCenter.z + boxExtents.z};
-        boxVertices[2] = {boxCenter.x - boxExtents.x, boxCenter.y + boxExtents.y, boxCenter.z - boxExtents.z};
-        boxVertices[3] = {boxCenter.x - boxExtents.x, boxCenter.y + boxExtents.y, boxCenter.z + boxExtents.z};
-        boxVertices[4] = {boxCenter.x + boxExtents.x, boxCenter.y - boxExtents.y, boxCenter.z - boxExtents.z};
-        boxVertices[5] = {boxCenter.x + boxExtents.x, boxCenter.y - boxExtents.y, boxCenter.z + boxExtents.z};
-        boxVertices[6] = {boxCenter.x + boxExtents.x, boxCenter.y + boxExtents.y, boxCenter.z - boxExtents.z};
-        boxVertices[7] = {boxCenter.x + boxExtents.x, boxCenter.y + boxExtents.y, boxCenter.z + boxExtents.z};
-
-        uint32_t in, out;
-
-        for (uint32_t i = 0; i < 6; i++) {
-            in = 0;
-            out = 0;
-
-            for (uint32_t j = 0; j < 8 && (in == 0 || out == 0); j++) {
-                if (frustumPlanes[i].getSignedDistanceToPlane(boxVertices[j]) < 0) {
-                    out++;
-                } else {
-                    in++;
-                }
-            }
-
-            if (in == 0) {
+        for (const auto& plane: frustumPlanes) {
+            const float r = glm::dot(boxExtents, glm::abs(plane.normal));
+            if (-r > plane.getSignedDistanceToPlane(boxCenter)) {
                 return false;
-            } else if (out != 0) {
-                return true;
             }
         }
 
