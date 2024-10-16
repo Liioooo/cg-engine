@@ -15,10 +15,14 @@ namespace CgEngine {
         Float, Float2, Float3, Float4, Mat3, Mat4, Int, Int2, Int3, Int4, Bool
     };
 
+    enum class ShaderEnv {
+        Engine, Custom
+    };
+
     namespace ShaderUtils {
-        std::string loadShaderSourceCodeWithType(const std::string& name, const std::string& type);
-        std::string loadShaderSourceCode(const std::string& name, bool useCache);
-        std::string preprocessShaderCode(std::string code);
+        std::string loadShaderSourceCodeWithType(const std::string& name, const std::string& type, ShaderEnv env);
+        std::string loadShaderSourceCode(const std::string& name, ShaderEnv env);
+        std::string preprocessShaderCode(std::string code, const std::vector<std::string>& alreadyImported = {});
         void checkErrors(uint32_t id, const std::string &type);
         int32_t getUniformLocation(uint32_t programId, std::unordered_map<std::string, int32_t>& uniformLocations, const std::string& name);
 
@@ -30,7 +34,7 @@ namespace CgEngine {
     public:
         Shader() = default;
         explicit Shader(std::string name);
-        ~Shader();
+        virtual ~Shader();
 
         Shader(Shader&& other) noexcept;
         Shader& operator= (Shader&& other) noexcept;
@@ -50,9 +54,13 @@ namespace CgEngine {
         void setMat4(const std::string& name, const glm::mat4& mat);
         void setTexture(uint32_t textureRendererId, uint32_t textureUnit);
 
-    private:
+    protected:
+        void createShaderType(unsigned int type, const std::string& sType, const std::string& source);
+
         std::string name;
         uint32_t programId = ~0;
+
+    private:
         std::unordered_map<std::string, int32_t> uniformLocations{};
     };
 

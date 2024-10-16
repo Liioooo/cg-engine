@@ -244,6 +244,10 @@ namespace CgEngine {
             renderer.submitAnimatedMesh(it->getMeshVertices().get(), it->getMeshNodes(), it->getMaterial().get(), it->getCastShadows(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getBoneTransforms(), it->getSkinnedVAO());
         }
 
+        for (auto it = componentManager->begin<CustomShaderRendererComponent>(); it != componentManager->end<CustomShaderRendererComponent>(); it++) {
+            renderer.submitCustomShaderMesh(it->getRenderMesh(), it->getMeshNodes(), it->getRenderMaterial(), it->getCullingEnabled(), it->getBoundingBox(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getShader().get(), it->getInstanceCount(), it->getRenderPassOptions());
+        }
+
         for (auto it = componentManager->cbegin<UiCanvasComponent>(); it != componentManager->cend<UiCanvasComponent>(); it++) {
             renderer.submitUiElements(it->getUiElements());
         }
@@ -295,6 +299,10 @@ namespace CgEngine {
             for (auto it = componentManager->begin<MeshRendererComponent>(); it != componentManager->end<MeshRendererComponent>(); it++) {
                 auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
                 renderer.submitBoundingBoxMesh(cubeMesh, it->getRenderMesh(), it->getMeshNodes(), transform.getModelMatrix());
+            }
+            for (auto it = componentManager->begin<CustomShaderRendererComponent>(); it != componentManager->end<CustomShaderRendererComponent>(); it++) {
+                auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
+                renderer.submitBoundingBoxMesh(cubeMesh, it->getBoundingBox(), transform.getModelMatrix());
             }
         }
 #endif

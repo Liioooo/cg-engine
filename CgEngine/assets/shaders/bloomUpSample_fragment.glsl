@@ -1,6 +1,6 @@
 #version 450 core
 
-#include "common/Bloom.glsl"
+#include "private_common/Bloom.glsl"
 
 in VS_OUT {
     vec2 TexCoord;

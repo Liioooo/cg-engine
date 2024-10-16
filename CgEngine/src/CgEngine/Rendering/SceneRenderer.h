@@ -24,9 +24,11 @@ namespace CgEngine {
         void endScene();
         void submitMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, bool enableCulling, const glm::mat4& transform);
         void submitAnimatedMesh(MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms, VertexArrayObject* skinnedVAO);
+        void submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, AABoundingBox& boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions);
         void submitUiElements(const std::unordered_map<std::string, UiElement*>& uiElements);
         void submitPhysicsColliderMesh(MeshVertices* mesh, const glm::mat4& transform);
         void submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, Mesh* mesh, const std::vector<uint32_t>& meshNodes, const glm::mat4& transform);
+        void submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, AABoundingBox& boundingBox, const glm::mat4& transform);
         void submitDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color);
 
     private:
@@ -53,6 +55,7 @@ namespace CgEngine {
         RenderPass boundingBoxRenderPass;
         RenderPass normalsDebugRenderPass;
         RenderPass debugLinesRenderPass;
+        RenderPass customShaderRenderPass;
 
         CustomValMaterial screenMaterial;
         CustomValMaterial skyboxMaterial;
@@ -72,6 +75,7 @@ namespace CgEngine {
         void shadowMapPass();
         void preDepthPass();
         void geometryPass();
+        void customShaderPass();
         void skyboxPass();
         void physicsCollidersPass();
         void boundingBoxPass();
@@ -207,6 +211,19 @@ namespace CgEngine {
         glm::mat4 uiProjectionMatrix;
 
         ShaderStorageBuffer* boneTransformsBuffer;
+
+        struct CustomShaderDrawCommand {
+            uint32_t instanceCount;
+            VertexArrayObject* vao;
+            const Material* material;
+            uint32_t baseIndex;
+            uint32_t baseVertex;
+            uint32_t indexCount;
+            glm::mat4 transform;
+            CustomShaderRendererComponentRenderPassOptions renderPassOptions;
+        };
+
+        std::unordered_map<CustomShader*, std::vector<CustomShaderDrawCommand>> customShaderDrawCommandQueue;
 
         float findDrawInfoTextureIndex(UiDrawInfo& drawInfo, const Texture2D* texture) const;
 

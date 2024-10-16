@@ -1,0 +1,10 @@
+<Shaders>
+    <Shader name="custom-shader-test">
+        <Vertex>shaders/custom-test_vertex.glsl</Vertex>
+        <Fragment>shaders/custom-test_fragment.glsl</Fragment>
+    </Shader>
+    <Shader name="custom-shader-test2">
+        <Vertex>shaders/custom-test2_vertex.glsl</Vertex>
+        <Fragment>shaders/custom-test2_fragment.glsl</Fragment>
+    </Shader>
+</Shaders>

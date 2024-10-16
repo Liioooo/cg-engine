@@ -14,13 +14,31 @@
     <Entity>
         <Components>
             <MeshRendererComponent asset-file="CG_CubeMesh" material="cube" />
-            <TransformComponent position="10 1 0" rotation="0 0 0" scale="10 2 2" />
+            <TransformComponent position="10 1 0" rotation="20 20 0" scale="10 2 2" />
+        </Components>
+    </Entity>
+    <Entity>
+        <Components>
+            <TransformComponent position="-5 0 -4" rotation="0 0 0" scale="1 1 1" />
+            <CustomShaderRendererComponent shader="custom-shader-test" asset-file="CG_CubeMesh" enable-culling="false" instance-count="10" />
+        </Components>
+    </Entity>
+    <Entity id="customShaderTest2">
+        <Components>
+            <TransformComponent position="-5 0 5" rotation="0 0 0" scale="1 1 1" />
+            <CustomShaderRendererComponent shader="custom-shader-test2" asset-file="CG_CubeMesh" enable-culling="false" />
+        </Components>
+    </Entity>
+    <Entity>
+        <Components>
+            <TransformComponent position="-8 0 -4" rotation="10 40 0" scale="2 1 1" />
+            <CustomShaderRendererComponent shader="custom-shader-test" asset-file="CG_CubeMesh" bounding-min="-0.5 -0.5 -0.5" bounding-max="0.5 0.5 0.5" />
         </Components>
     </Entity>
     <Entity>
         <Components>
             <MeshRendererComponent asset-file="CG_CubeMesh" material="cube" enable-culling="true" />
-            <TransformComponent position="-10 1 0" rotation="0 0 0" scale="1 1 1" />
+            <TransformComponent position="-10 1 0" rotation="30 0 0" scale="1 1 1" />
             <ScriptComponent script-name="customMeshTestScript" />
         </Components>
     </Entity>
@@ -46,6 +64,12 @@
         <Components>
             <TransformComponent position="0 0 0" rotation="25 0 -35" scale="1 1 1" />
             <DirectionalLightComponent color="#ffffff" intensity="0.6" />
+        </Components>
+    </Entity>
+    <Entity id="canvas">
+        <Components>
+            <UiCanvasComponent />
+            <ScriptComponent script-name="fpsCounter" />
         </Components>
     </Entity>
 </Scene>

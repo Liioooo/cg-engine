@@ -161,14 +161,17 @@ namespace CgEngine {
         delete environmentMapIrradianceMap;
     }
 
-    void Renderer::beginRenderPass(RenderPass& renderPass) {
+    void Renderer::beginRenderPass(RenderPass& renderPass, bool omitShaderBinding) {
         CG_ASSERT(currentRenderPass == nullptr, "There already is an active RenderPass!")
-        CG_ASSERT(renderPass.isReady(), "The RenderPass is not ready to use!")
+        CG_ASSERT(omitShaderBinding || renderPass.isReady(), "The RenderPass is not ready to use!")
 
         currentRenderPass = &renderPass;
         RenderPassSpecification& spec = renderPass.getSpecification();
 
-        spec.shader.bind();
+        if (!omitShaderBinding) {
+            spec.shader.bind();
+        }
+
         spec.framebuffer->bind();
 
         if (isWireframe != spec.wireframe) {
@@ -251,6 +254,44 @@ namespace CgEngine {
         currentRenderPass = nullptr;
     }
 
+    void Renderer::setFaceCulling(bool backFaceCulling, bool frontFaceCulling) {
+        if (isBackFaceCulling != backFaceCulling || isFrontFaceCulling != frontFaceCulling) {
+            isBackFaceCulling = backFaceCulling;
+            isFrontFaceCulling = frontFaceCulling;
+            if (isBackFaceCulling || isFrontFaceCulling) {
+                glEnable(GL_CULL_FACE);
+            } else {
+                glDisable(GL_CULL_FACE);
+            }
+            if (isBackFaceCulling) {
+                glCullFace(GL_BACK);
+            }
+            if (isFrontFaceCulling) {
+                glCullFace(GL_FRONT);
+            }
+        }
+    }
+
+    void Renderer::setBlending(bool enable, CgEngine::BlendingEquation blendingEq, CgEngine::BlendingFunction srcBlendingFn, CgEngine::BlendingFunction destBlendingFn) {
+        if (useBlending != enable) {
+            useBlending = enable;
+            if (useBlending) {
+                glEnable(GL_BLEND);
+            } else {
+                glDisable(GL_BLEND);
+            }
+        }
+        if (blendingEquation != blendingEq) {
+            blendingEquation = blendingEq;
+            glBlendEquation(static_cast<GLint>(blendingEquation));
+        }
+        if (srcBlendingFunction != srcBlendingFn || destBlendingFunction != destBlendingFn) {
+            srcBlendingFunction = srcBlendingFn;
+            destBlendingFunction = destBlendingFn;
+            glBlendFunc(static_cast<GLint>(srcBlendingFunction), static_cast<GLint>(destBlendingFunction));
+        }
+    }
+
     void Renderer::renderUnitQuad(const Material &material) {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
 
@@ -306,6 +347,16 @@ namespace CgEngine {
         material.uploadToShader(currentRenderPass->getSpecification().shader);
         vao.bind();
         transformsBuffer->setData(transforms.data(), transforms.size() * sizeof(glm::mat4));
+        glDrawElementsInstancedBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(baseIndex * sizeof(uint32_t)), instanceCount, baseVertex);
+    }
+
+    void Renderer::executeCustomShaderDrawCommand(const CgEngine::VertexArrayObject& vao, const CgEngine::Material& material, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, uint32_t instanceCount, CustomShader& shader, bool needsMaterialUpload)  {
+        CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
+
+        if (needsMaterialUpload) {
+            material.uploadToShader(shader);
+        }
+        vao.bind();
         glDrawElementsInstancedBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(baseIndex * sizeof(uint32_t)), instanceCount, baseVertex);
     }
 

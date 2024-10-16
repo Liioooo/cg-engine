@@ -44,6 +44,18 @@ namespace RTR {
         mesh->setBoundingBox({-0.25f, -0.25f, -0.25f}, {0.25f, 0.25f, 0.25f});
 
         getComponent<CgEngine::MeshRendererComponent>().setCustomMesh(mesh);
+
+//        CgEngine::Entity t = findEntityById("customShaderTest");
+//
+//        auto* mat = new CgEngine::CustomValMaterial();
+//
+//        CgEngine::CustomShaderRendererComponentParams params;
+//        params.shader = "custom-shader-test";
+//        params.assetFile = "CG_CubeMesh";
+//        params.instanceCount = 1;
+//        params.customMaterial = mat;
+
+//        attachComponent<CgEngine::CustomShaderRendererComponent>(t, params);
     }
 
     void CustomMeshTestScript::onDetach() {

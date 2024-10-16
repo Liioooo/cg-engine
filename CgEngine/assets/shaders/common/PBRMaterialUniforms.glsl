@@ -1,0 +1,10 @@
+uniform vec3 u_Mat_AlbedoColor;
+uniform float u_Mat_Metalness;
+uniform float u_Mat_Roughness;
+uniform vec3 u_Mat_Emission;
+uniform bool u_Mat_UseNormals;
+layout(binding = 0) uniform sampler2D u_Mat_AlbedoTexture;
+layout(binding = 1) uniform sampler2D u_Mat_NormalTexture;
+layout(binding = 2) uniform sampler2D u_Mat_MetalnessTexture;
+layout(binding = 3) uniform sampler2D u_Mat_RoughnessTexture;
+layout(binding = 4) uniform sampler2D u_Mat_EmissionTexture;

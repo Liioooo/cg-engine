@@ -74,6 +74,19 @@ namespace CgEngine {
             geometryRenderPass = RenderPass(std::move(geoRenderPassSpec));
         }
         {
+            RenderPassSpecification customShaderRenderPassSpec;
+            customShaderRenderPassSpec.framebuffer = geometryRenderPass.getSpecification().framebuffer;
+            customShaderRenderPassSpec.usingExistingFramebuffer = true;
+            customShaderRenderPassSpec.depthCompareOperator = DepthCompareOperator::LessOrEqual;
+            customShaderRenderPassSpec.depthWrite = true;
+            customShaderRenderPassSpec.depthTest = true;
+            customShaderRenderPassSpec.clearColorBuffer = false;
+            customShaderRenderPassSpec.clearDepthBuffer = false;
+            customShaderRenderPassSpec.clearStencilBuffer = false;
+
+            customShaderRenderPass = RenderPass(std::move(customShaderRenderPassSpec));
+        }
+        {
             RenderPassSpecification skyboxRenderPassSpec;
             skyboxRenderPassSpec.shader = Shader("skybox");
             skyboxRenderPassSpec.framebuffer = geometryRenderPass.getSpecification().framebuffer;
@@ -402,6 +415,7 @@ namespace CgEngine {
         shadowMapPass();
         preDepthPass();
         geometryPass();
+        customShaderPass();
         skyboxPass();
 
 #ifdef CG_ENABLE_DEBUG_FEATURES
@@ -431,6 +445,8 @@ namespace CgEngine {
         drawCommandQueue.clear();
         meshTransforms.clear();
 
+        customShaderDrawCommandQueue.clear();
+
         shadowMapDrawCommandQueue.clear();
         shadowMapMeshTransforms.clear();
 
@@ -442,10 +458,6 @@ namespace CgEngine {
 
         boundingBoxDrawCommandQueue.clear();
         boundingBoxMeshTransforms.clear();
-
-        if (sceneIndex % 100 == 0) {
-            CG_LOGGING_INFO("CULLING: (Submitted Meshes / Rendered Meshes): {0} / {1}", submittedMeshes, renderedMeshes);
-        }
 #endif
 
         debugLinesDrawInfoQueue.clear();
@@ -461,13 +473,6 @@ namespace CgEngine {
 
 
             bool isInCameraFrustum = !enableCulling || cameraFrustum.testAABoundingBoxInFrustum(meshNode.aaBoundingBox, transform * meshNode.transform);
-
-#ifdef CG_ENABLE_DEBUG_FEATURES
-            submittedMeshes++;
-            if (isInCameraFrustum) {
-                renderedMeshes++;
-            }
-#endif
 
             for (const auto& submeshIndex: meshNode.submeshIndices) {
                 const Submesh& submesh = submeshes.at(submeshIndex);
@@ -554,6 +559,32 @@ namespace CgEngine {
                     shadowMapDrawCommand.indexCount = submesh.indexCount;
                     shadowMapDrawCommand.instanceCount++;
                 }
+            }
+        }
+    }
+
+    void SceneRenderer::submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, AABoundingBox& boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions) {
+        if (enableCulling && !cameraFrustum.testAABoundingBoxInFrustum(boundingBox, transform)) {
+            return;
+        }
+
+        auto& submeshes = mesh->getSubmeshes();
+
+        for (const auto& meshNodeIndex: meshNodes) {
+            auto& meshNode = mesh->getMeshNodes().at(meshNodeIndex);
+
+            for (const auto& submeshIndex: meshNode.submeshIndices) {
+                const Submesh& submesh = submeshes.at(submeshIndex);
+
+                CustomShaderDrawCommand& drawCommand = customShaderDrawCommandQueue[shader].emplace_back();
+                drawCommand.instanceCount = instanceCount;
+                drawCommand.vao = mesh->getVAO();
+                drawCommand.material = material;
+                drawCommand.baseIndex = submesh.baseIndex;
+                drawCommand.baseVertex = submesh.baseVertex;
+                drawCommand.indexCount = submesh.indexCount;
+                drawCommand.transform = transform * meshNode.transform;
+                drawCommand.renderPassOptions = renderPassOptions;
             }
         }
     }
@@ -667,6 +698,23 @@ namespace CgEngine {
         }
     }
 
+    void SceneRenderer::submitBoundingBoxMesh(CgEngine::MeshVertices* boundingBoxMesh, CgEngine::AABoundingBox& boundingBox, const glm::mat4& transform) {
+        auto [center, extents] = boundingBox.getTransformedAdjustedCenterAndExtents(transform);
+
+        const auto& boundingBoxSubmesh = boundingBoxMesh->getSubmeshes().at(0);
+
+        MeshKey mk = {boundingBoxMesh->getVAO()->getRendererId(), 0, boundingBoxMaterial.getUuid().getUuid()};
+        boundingBoxMeshTransforms[mk].emplace_back(glm::translate(glm::mat4(1.0f), center) * glm::scale(glm::mat4(1.0f), extents * 2.0f));
+
+        DrawCommand& drawCommand = boundingBoxDrawCommandQueue[mk];
+        drawCommand.vao = boundingBoxMesh->getVAO();
+        drawCommand.material = &boundingBoxMaterial;
+        drawCommand.baseIndex = boundingBoxSubmesh.baseIndex;
+        drawCommand.baseVertex = boundingBoxSubmesh.baseVertex;
+        drawCommand.indexCount = boundingBoxSubmesh.indexCount;
+        drawCommand.instanceCount++;
+    }
+
     void SceneRenderer::submitDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color) {
         auto& lineInfo = debugLinesDrawInfoQueue.emplace_back();
         lineInfo.from = from;
@@ -728,6 +776,46 @@ namespace CgEngine {
         for (const auto [mk, command]: drawCommandQueue) {
             const auto& transforms = meshTransforms[mk];
             Renderer::executeDrawCommand(*command.vao, *command.material, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
+        }
+
+        Renderer::endRenderPass();
+    }
+
+    void SceneRenderer::customShaderPass() {
+        Renderer::beginRenderPass(customShaderRenderPass, true);
+
+        bool lastCommandUseDirShadowMappingData = false;
+        bool lastCommandUseEnvironmentMappingData = false;
+        const Material* lastUsedMaterial = nullptr;
+
+        for (const auto& [shader, commands]: customShaderDrawCommandQueue) {
+            shader->bind();
+
+            for (const auto& command: commands) {
+                shader->setMat4("u_Transform", command.transform);
+
+                if (command.renderPassOptions.useDirShadowMappingData && !lastCommandUseDirShadowMappingData) {
+                    shader->setTexture(dirShadowMaps->getRendererId(), 8);
+                }
+                lastCommandUseDirShadowMappingData = command.renderPassOptions.useDirShadowMappingData;
+
+                if (command.renderPassOptions.useEnvironmentMappingData && !lastCommandUseEnvironmentMappingData) {
+                    shader->setTexture(currentSceneEnvironment.irradianceMapId, 5);
+                    shader->setTexture(currentSceneEnvironment.prefilterMapId, 6);
+                    shader->setTexture(Renderer::getBrdfLUTTexture().getRendererId(), 7);
+                    shader->setFloat("u_EnvironmentIntensity", currentSceneEnvironment.environmentIntensity);
+                    shader->setTexture(dirShadowMaps->getRendererId(), 8);
+                }
+                lastCommandUseEnvironmentMappingData = command.renderPassOptions.useEnvironmentMappingData;
+
+                const Material* material = command.material != nullptr ? command.material : &emptyMaterial;
+
+                Renderer::setFaceCulling(command.renderPassOptions.backfaceCulling, command.renderPassOptions.backfaceCulling);
+                Renderer::setBlending(command.renderPassOptions.useBlending, command.renderPassOptions.blendingEquation, command.renderPassOptions.srcBlendingFunction, command.renderPassOptions.destBlendingFunction);
+                Renderer::executeCustomShaderDrawCommand(*command.vao, *material, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount, *shader, material != lastUsedMaterial);
+
+                lastUsedMaterial = material;
+            }
         }
 
         Renderer::endRenderPass();

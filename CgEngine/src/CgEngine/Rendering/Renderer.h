@@ -5,6 +5,7 @@
 #include "VertexArrayObject.h"
 #include "ShaderStorageBuffer.h"
 #include "Resources/ResRef.h"
+#include "CustomShader.h"
 
 namespace CgEngine {
 
@@ -42,12 +43,15 @@ namespace CgEngine {
     public:
         static void init();
         static void shutdown();
-        static void beginRenderPass(RenderPass& renderPass);
+        static void beginRenderPass(RenderPass& renderPass, bool omitShaderBinding = false);
         static void endRenderPass();
+        static void setFaceCulling(bool backfaceCulling, bool frontFaceCulling);
+        static void setBlending(bool enable, BlendingEquation blendingEq, BlendingFunction srcBlendingFn, BlendingFunction destBlendingFn);
         static void renderUnitQuad(const Material& material);
         static void renderUnitCube(const Material& material);
         static void renderLines(const std::vector<LineDrawInfo>& lines);
         static void executeDrawCommand(const VertexArrayObject& vao, const Material& material, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, const std::vector<glm::mat4>& transforms, uint32_t instanceCount);
+        static void executeCustomShaderDrawCommand(const VertexArrayObject& vao, const Material& material, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, uint32_t instanceCount, CustomShader& shader, bool needsMaterialUpload);
         static void renderUiCircles(const std::vector<UiCircleVertex>& vertices, uint32_t indexCount);
         static void renderUiRects(const std::vector<UiRectVertex>& vertices, uint32_t indexCount);
         static void renderUiText(const std::vector<UiTextVertex>& vertices, uint32_t indexCount);

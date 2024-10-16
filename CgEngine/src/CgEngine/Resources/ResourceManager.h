@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rendering/CustomShader.h"
 #include "Resources/MeshVertices.h"
 #include "Rendering/PBRMaterial.h"
 #include "Rendering/Texture.h"
@@ -60,6 +61,7 @@ namespace CgEngine {
             registerResourceType<TextureCube>();
             registerResourceType<PhysicsMaterial>();
             registerResourceType<Font>();
+            registerResourceType<CustomShader>();
         }
 
         template<typename R>

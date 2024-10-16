@@ -1,0 +1,35 @@
+UniformBuffers:
+0: CameraData
+1: LightData
+2: DirShadowData
+
+SSBO:
+0: Transforms
+1: BoneInfluences
+2: BoneTransforms
+3: OriginalVertexBuffer
+4: SkinnedVertexBuffer
+
+1 - 4: Used for Vertex Skinning pass
+
+
+instanceBuffer: binding: 5
+bind before every render
+
+upload material data before every render
+
+Textures:
+0 - 4: pbrMaterial Textures
+5 - 7: IBL Textures
+8    : dir Shadow maps
+
+configure which of these should be used (depends on material used)
+
+
+Bindless Textures:
+PBRMaterial, IBL Textures (use UBO)
+
+shadowMaps not
+
+
+TODO: remove async resource loading in favor of bindless textures
