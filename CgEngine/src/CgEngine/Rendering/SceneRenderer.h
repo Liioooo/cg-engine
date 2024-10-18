@@ -24,7 +24,7 @@ namespace CgEngine {
         void endScene();
         void submitMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, bool enableCulling, const glm::mat4& transform);
         void submitAnimatedMesh(MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms, VertexArrayObject* skinnedVAO);
-        void submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, AABoundingBox& boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions);
+        void submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, AABoundingBox& boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions, ShaderStorageBuffer* instanceBuffer);
         void submitUiElements(const std::unordered_map<std::string, UiElement*>& uiElements);
         void submitPhysicsColliderMesh(MeshVertices* mesh, const glm::mat4& transform);
         void submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, Mesh* mesh, const std::vector<uint32_t>& meshNodes, const glm::mat4& transform);
@@ -221,6 +221,7 @@ namespace CgEngine {
             uint32_t indexCount;
             glm::mat4 transform;
             CustomShaderRendererComponentRenderPassOptions renderPassOptions;
+            ShaderStorageBuffer* instanceBuffer;
         };
 
         std::unordered_map<CustomShader*, std::vector<CustomShaderDrawCommand>> customShaderDrawCommandQueue;
@@ -228,8 +229,6 @@ namespace CgEngine {
         float findDrawInfoTextureIndex(UiDrawInfo& drawInfo, const Texture2D* texture) const;
 
 #ifdef CG_ENABLE_DEBUG_FEATURES
-        uint32_t submittedMeshes;
-        uint32_t renderedMeshes;
         uint64_t sceneIndex = 0;
 #endif
 

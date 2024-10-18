@@ -26,7 +26,6 @@
     <Entity id="customShaderTest2">
         <Components>
             <TransformComponent position="-5 0 5" rotation="0 0 0" scale="1 1 1" />
-            <CustomShaderRendererComponent shader="custom-shader-test2" asset-file="CG_CubeMesh" enable-culling="false" />
         </Components>
     </Entity>
     <Entity>

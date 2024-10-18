@@ -45,17 +45,26 @@ namespace RTR {
 
         getComponent<CgEngine::MeshRendererComponent>().setCustomMesh(mesh);
 
-//        CgEngine::Entity t = findEntityById("customShaderTest");
-//
-//        auto* mat = new CgEngine::CustomValMaterial();
-//
-//        CgEngine::CustomShaderRendererComponentParams params;
-//        params.shader = "custom-shader-test";
-//        params.assetFile = "CG_CubeMesh";
-//        params.instanceCount = 1;
-//        params.customMaterial = mat;
+        CgEngine::Entity t = findEntityById("customShaderTest2");
 
-//        attachComponent<CgEngine::CustomShaderRendererComponent>(t, params);
+        auto* mat = new CgEngine::CustomValMaterial();
+        mat->set("u_Color", glm::vec3(0.0f, 0.6f, 0.1f));
+
+        CgEngine::CustomShaderRendererComponentParams params;
+        params.shader = "custom-shader-test2";
+        params.assetFile = "CG_CubeMesh";
+        params.instanceCount = 10;
+        params.customMaterial = mat;
+        params.enableCulling = false;
+
+        std::array<glm::mat4, 10> transforms{};
+
+        for (size_t i = 0; i < transforms.size(); i++) {
+            transforms[i] = glm::rotate(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f * i, 0.0f)), i * glm::pi<float>() / 4.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+        }
+
+        auto& c = attachComponent<CgEngine::CustomShaderRendererComponent>(t, params);
+        c.setInstanceBufferData(transforms.data(), transforms.size() * sizeof(glm::mat4));
     }
 
     void CustomMeshTestScript::onDetach() {

@@ -66,6 +66,10 @@ namespace CgEngine {
         boundingBox.addBoxCoordinates(params.boundingMax, params.boundingMin);
     }
 
+    void CustomShaderRendererComponent::onDetach(Scene& scene) {
+        delete instanceBuffer;
+    }
+
     ResRef<MeshVertices> CustomShaderRendererComponent::getMeshVertices() {
         return mesh;
     }
@@ -143,5 +147,16 @@ namespace CgEngine {
 
     AABoundingBox& CustomShaderRendererComponent::getBoundingBox() {
         return boundingBox;
+    }
+
+    void CustomShaderRendererComponent::setInstanceBufferData(const void* data, size_t size) {
+        if (instanceBuffer == nullptr) {
+            instanceBuffer = new ShaderStorageBuffer();
+        }
+        instanceBuffer->setData(data, size);
+    }
+
+    ShaderStorageBuffer* CustomShaderRendererComponent::getInstanceBuffer() {
+        return instanceBuffer;
     }
 }

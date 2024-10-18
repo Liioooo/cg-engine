@@ -8,6 +8,7 @@
 #include "Rendering/PBRMaterial.h"
 #include "Component.h"
 #include "Resources/ResRef.h"
+#include "Rendering/ShaderStorageBuffer.h"
 
 namespace CgEngine {
 
@@ -44,6 +45,7 @@ namespace CgEngine {
         using Component::Component;
 
         void onAttach(Scene& scene, CustomShaderRendererComponentParams& params);
+        void onDetach(Scene& scene) override;
 
         ResRef<MeshVertices> getMeshVertices();
         CustomMesh* getCustomMesh();
@@ -63,6 +65,9 @@ namespace CgEngine {
         CustomShaderRendererComponentRenderPassOptions& getRenderPassOptions();
         AABoundingBox& getBoundingBox();
 
+        void setInstanceBufferData(const void* data, size_t size);
+        ShaderStorageBuffer* getInstanceBuffer();
+
     private:
         ResRef<MeshVertices> mesh;
         CustomMesh* customMesh = nullptr;
@@ -74,6 +79,8 @@ namespace CgEngine {
         ResRef<CustomShader> shader;
         CustomShaderRendererComponentRenderPassOptions renderPassOptions;
         AABoundingBox boundingBox;
+
+        ShaderStorageBuffer* instanceBuffer = nullptr;
     };
 
 }

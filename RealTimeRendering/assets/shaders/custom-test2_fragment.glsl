@@ -9,8 +9,10 @@ in VS_OUT {
     vec3 Normal;
 } fs_in;
 
+uniform vec3 u_Color;
+
 out vec4 o_FragColor;
 
 void main() {
-    o_FragColor = vec4(0.0f, 1.0f, 0.f, 1.0f) * (1.0f - calcDirShadow(fs_in.Normal, normalize(vec3(1.0f, 0.0f, 0.0f)), u_CameraData.view, fs_in.WorldPosition, fs_in.DirShadowMapPosition));
+    o_FragColor = vec4(u_Color, 1.0f) * (1.0f - calcDirShadow(fs_in.Normal, normalize(vec3(1.0f, 0.0f, 0.0f)), u_CameraData.view, fs_in.WorldPosition, fs_in.DirShadowMapPosition));
 }

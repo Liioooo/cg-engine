@@ -9,6 +9,10 @@ layout (location = 2) in vec4 a_Tangent;
 layout (location = 3) in vec4 a_Bitangent;
 layout (location = 4) in vec4 a_TexCoord;
 
+layout(binding = 5, std430) buffer InstanceBuffer {
+    mat4 transforms[];
+} b_InstanceBuffer;
+
 uniform mat4 u_Transform;
 
 out VS_OUT {
@@ -18,7 +22,7 @@ out VS_OUT {
 } vs_out;
 
 void main() {
-    vec4 worldPosition = u_Transform * a_Pos;
+    vec4 worldPosition = u_Transform * b_InstanceBuffer.transforms[gl_InstanceID] * a_Pos;
 
     vs_out.DirShadowMapPosition = calcDirShadowMapPostion(worldPosition.xyz);
     vs_out.Normal = mat3(transpose(inverse(u_Transform))) * a_Normal.xyz;

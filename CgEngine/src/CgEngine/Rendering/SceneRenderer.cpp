@@ -319,8 +319,6 @@ namespace CgEngine {
 
 #ifdef CG_ENABLE_DEBUG_FEATURES
         sceneIndex++;
-        submittedMeshes = 0;
-        renderedMeshes = 0;
 #endif
 
         activeRendering = true;
@@ -563,7 +561,7 @@ namespace CgEngine {
         }
     }
 
-    void SceneRenderer::submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, AABoundingBox& boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions) {
+    void SceneRenderer::submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, AABoundingBox& boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions, ShaderStorageBuffer* instanceBuffer) {
         if (enableCulling && !cameraFrustum.testAABoundingBoxInFrustum(boundingBox, transform)) {
             return;
         }
@@ -585,6 +583,7 @@ namespace CgEngine {
                 drawCommand.indexCount = submesh.indexCount;
                 drawCommand.transform = transform * meshNode.transform;
                 drawCommand.renderPassOptions = renderPassOptions;
+                drawCommand.instanceBuffer = instanceBuffer;
             }
         }
     }
@@ -793,6 +792,10 @@ namespace CgEngine {
 
             for (const auto& command: commands) {
                 shader->setMat4("u_Transform", command.transform);
+
+                if (command.instanceBuffer != nullptr) {
+                    command.instanceBuffer->bind(5);
+                }
 
                 if (command.renderPassOptions.useDirShadowMappingData && !lastCommandUseDirShadowMappingData) {
                     shader->setTexture(dirShadowMaps->getRendererId(), 8);

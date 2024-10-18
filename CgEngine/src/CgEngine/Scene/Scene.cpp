@@ -245,7 +245,7 @@ namespace CgEngine {
         }
 
         for (auto it = componentManager->begin<CustomShaderRendererComponent>(); it != componentManager->end<CustomShaderRendererComponent>(); it++) {
-            renderer.submitCustomShaderMesh(it->getRenderMesh(), it->getMeshNodes(), it->getRenderMaterial(), it->getCullingEnabled(), it->getBoundingBox(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getShader().get(), it->getInstanceCount(), it->getRenderPassOptions());
+            renderer.submitCustomShaderMesh(it->getRenderMesh(), it->getMeshNodes(), it->getRenderMaterial(), it->getCullingEnabled(), it->getBoundingBox(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getShader().get(), it->getInstanceCount(), it->getRenderPassOptions(), it->getInstanceBuffer());
         }
 
         for (auto it = componentManager->cbegin<UiCanvasComponent>(); it != componentManager->cend<UiCanvasComponent>(); it++) {
