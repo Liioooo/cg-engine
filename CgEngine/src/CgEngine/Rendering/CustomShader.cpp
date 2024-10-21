@@ -45,7 +45,5 @@ namespace CgEngine {
         ShaderUtils::checkErrors(programId, "PROGRAM");
 
         CG_LOGGING_DEBUG("Loaded CustomShader: {0}", this->name)
-
-        setLoaded();
     }
 }

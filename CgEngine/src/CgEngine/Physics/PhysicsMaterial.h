@@ -5,12 +5,12 @@
 
 namespace CgEngine {
 
-    class PhysicsMaterial : public Resource {
+    class PhysicsMaterial {
     public:
         static PhysicsMaterial* createResource(const std::string& name);
 
         explicit PhysicsMaterial(float staticFriction, float dynamicFriction, float restitution);
-        ~PhysicsMaterial() override;
+        ~PhysicsMaterial();
 
         float getStaticFriction() const;
         float getDynamicFriction() const;

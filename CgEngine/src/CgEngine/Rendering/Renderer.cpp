@@ -411,8 +411,6 @@ namespace CgEngine {
 
         Texture2D sphereMap("assets/game/" + hdriPath, false);
 
-        CG_ASSERT(sphereMap.isLoaded(), "HDRI could not be loaded!")
-
         TextureCube cubeMap(TextureFormat::Float32A, MAP_SIZE, MAP_SIZE, MipMapFiltering::Bilinear);
 
         environmentMapSphereToCube->bind();

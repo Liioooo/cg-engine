@@ -293,7 +293,6 @@ namespace CgEngine {
         meshNode.localTransform = glm::mat4(1.0f);
         meshNode.aaBoundingBox.addBoxCoordinates({-0.5f, -0.5f, -0.5f}, {0.5f, 0.5f, 0.5f});
 
-        mesh->setLoaded();
         return mesh;
     }
 
@@ -387,7 +386,6 @@ namespace CgEngine {
         meshNode.localTransform = glm::mat4(1.0f);
         meshNode.aaBoundingBox.addBoxCoordinates({-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f, 1.0f});
 
-        mesh->setLoaded();
         return mesh;
     }
 
@@ -549,7 +547,6 @@ namespace CgEngine {
         meshNode.localTransform = glm::mat4(1.0f);
         meshNode.aaBoundingBox.addBoxCoordinates({-radius, -(height / 2 + radius), -radius}, {radius, height / 2 + radius, radius});
 
-        mesh->setLoaded();
         return mesh;
     }
 
@@ -802,7 +799,6 @@ namespace CgEngine {
 
         CG_LOGGING_DEBUG("Loaded Mesh Asset: {0}", path);
 
-        mesh->setLoaded();
         return mesh;
     }
 

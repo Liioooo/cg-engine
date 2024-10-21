@@ -103,71 +103,7 @@ namespace CgEngine {
     }
 
     Texture2D* Texture2D::createResource(const std::string& name, const Texture2DResourceSpecification& spec) {
-        auto* texture = new Texture2D(TextureFormat::RGB, 1, 1, spec.wrap, spec.mipMapFiltering, spec.anisotropicFiltering);
-        texture->asyncLoadInfo.spec = spec;
-        texture->asyncLoadInfo.name = name;
-        return texture;
-    }
-
-    void Texture2D::resourceManagerLoadAsync() {
-        auto name = asyncLoadInfo.name;
-
-        asyncLoadFuture = std::async(std::launch::async, [name]{
-            AsyncLoadData data;
-
-            if (stbi_is_hdr(name.c_str())) {
-                stbi_info(name.c_str(), &data.width, &data.height, &data.channels);
-                if (data.channels <= 3) {
-                    data.data = (unsigned char*)(stbi_loadf(name.c_str(), &data.width, &data.height, &data.channels, STBI_rgb));
-                    data.format = TextureFormat::Float32;
-                } else {
-                    data.data = (unsigned char*)(stbi_loadf(name.c_str(), &data.width, &data.height, &data.channels, STBI_rgb_alpha));
-                    data.format = TextureFormat::Float32A;
-                }
-            } else {
-                stbi_info(name.c_str(), &data.width, &data.height, &data.channels);
-                if (data.channels <= 3) {
-                    data.data = stbi_load(name.c_str(), &data.width, &data.height, &data.channels, STBI_rgb);
-                    data.format = TextureFormat::RGB;
-                } else {
-                    data.data = stbi_load(name.c_str(), &data.width, &data.height, &data.channels, STBI_rgb_alpha);
-                    data.format = TextureFormat::RGBA;
-                }
-            }
-
-            return data;
-        });
-
-    }
-
-    bool Texture2D::resourceManagerAsyncLoadingFinished() {
-        return isLoaded() || asyncLoadFuture.wait_for(std::chrono::microseconds(0)) == std::future_status::ready;
-    }
-
-    void Texture2D::resourceManagerSetAsyncLoadedData() {
-        const auto& data = asyncLoadFuture.get();
-
-        width = data.width;
-        height = data.height;
-        format = data.format;
-
-        glBindTexture(GL_TEXTURE_2D, id);
-
-        if (asyncLoadInfo.spec.srgb) {
-            GLint glFormat = TextureUtils::getOpenGLTextureFormat(format);
-            GLenum type = TextureUtils::getOpenGLTextureType(format);
-            glTexImage2D(GL_TEXTURE_2D, 0, data.channels == 3 ? GL_SRGB8 : GL_SRGB8_ALPHA8, width, height, 0, glFormat, type, data.data);
-        } else {
-            GLint internalFormat = TextureUtils::getOpenGLTextureInternalFormat(format);
-            GLint glFormat = TextureUtils::getOpenGLTextureFormat(format);
-            GLenum type = TextureUtils::getOpenGLTextureType(format);
-            glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, glFormat, type, data.data);
-        }
-
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        stbi_image_free(data.data);
-        setLoaded();
+        return new Texture2D(name, spec.srgb, spec.wrap, spec.mipMapFiltering, spec.anisotropicFiltering);
     }
 
     Texture2D::Texture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, MipMapFiltering mipMapFiltering, float anisotropicFiltering) : format(format), width(width), height(height) {
@@ -202,8 +138,6 @@ namespace CgEngine {
         glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, glFormat, type, data);
 
         glGenerateMipmap(GL_TEXTURE_2D);
-
-        setLoaded();
     }
 
     Texture2D::Texture2D(const std::string &path, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering, float anisotropicFiltering) {
@@ -233,9 +167,7 @@ namespace CgEngine {
             }
         }
 
-        if (data) {
-            setLoaded();
-        } else {
+        if (!data) {
             return;
         }
 
@@ -412,8 +344,6 @@ namespace CgEngine {
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-        setLoaded();
     }
 
     TextureCube::TextureCube(TextureFormat format, uint32_t width, uint32_t height, const void* data, MipMapFiltering mipMapFiltering) {
@@ -435,8 +365,6 @@ namespace CgEngine {
 
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, internalFormat, width, height, 0, glFormat, type, data);
         glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, width, height, 0, glFormat, type, data);
-
-        setLoaded();
     }
 
     TextureCube::~TextureCube() {

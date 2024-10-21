@@ -1,7 +1,6 @@
 #pragma once
 
 #include "pugixml.hpp"
-#include "Resources/Resource.h"
 
 namespace CgEngine {
 

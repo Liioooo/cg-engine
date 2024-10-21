@@ -1,12 +1,11 @@
 #pragma once
 
-#include "Resources/Resource.h"
 #include "Shader.h"
 #include "XMLFile.h"
 
 namespace CgEngine {
 
-    class CustomShader : public Shader, public Resource {
+    class CustomShader : public Shader {
     public:
         static CustomShader* createResource(const std::string& name);
 

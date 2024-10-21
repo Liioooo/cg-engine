@@ -6,7 +6,7 @@
 
 namespace CgEngine {
 
-    class PBRMaterial : public Material, public Resource {
+    class PBRMaterial : public Material {
     public:
         static PBRMaterial* createResource(const std::string& name);
 

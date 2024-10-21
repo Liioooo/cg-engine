@@ -17,14 +17,14 @@ namespace CgEngine {
         float textureCoord;
     };
 
-    class Font : public Resource {
+    class Font {
     public:
         static Font* createResource(const std::string& name);
 
         static const uint32_t fontPixelSize = 256;
 
         explicit Font(const std::string& name);
-        ~Font() override;
+        ~Font();
 
         float getKerning(uint32_t leftGlyph, uint32_t rightGlyph) const;
         const FontCharacterInfo& getCharacterInfo(char c) const;

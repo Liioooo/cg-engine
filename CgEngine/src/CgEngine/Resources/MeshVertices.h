@@ -18,7 +18,7 @@
 
 namespace CgEngine {
 
-    class MeshVertices : public Resource, public Mesh {
+    class MeshVertices : public Mesh {
     public:
         static MeshVertices* createResource(const std::string& name);
 

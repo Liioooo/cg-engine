@@ -17,7 +17,7 @@ namespace CgEngine {
         using Iterator = typename std::unordered_map<std::string, ResRef<R>>::iterator;
 
     public:
-        explicit ResourceMap(bool canResLoadAsync) : canResLoadAsync(canResLoadAsync) {};
+        explicit ResourceMap() {};
 
         ResRef<R> get(const std::string& name) const {
             return map.at(name);
@@ -29,10 +29,6 @@ namespace CgEngine {
 
         bool contains(const std::string& name) const {
             return map.find(name) != map.end();
-        }
-
-        bool canResourceLoadAsync() const {
-            return canResLoadAsync;
         }
 
         Iterator begin() {
@@ -49,7 +45,6 @@ namespace CgEngine {
 
     private:
         std::unordered_map<std::string, ResRef<R>> map{};
-        bool canResLoadAsync;
     };
 
     class ResourceManager {
@@ -71,13 +66,7 @@ namespace CgEngine {
                 return resourceMap.get(name);
             }
             ResRef<R> resource = ResRef<R>(R::createResource(name));
-
-            if (R::canLoadAsync) {
-                resource->resourceManagerLoadAsync();
-            }
-
             resourceMap.insert(name, resource);
-
             return resource;
         }
 
@@ -88,11 +77,6 @@ namespace CgEngine {
                 return resourceMap.get(name);
             }
             ResRef<R> resource = ResRef<R>(R::createResource(name, spec));
-
-            if (R::canLoadAsync) {
-                resource->resourceManagerLoadAsync();
-            }
-
             resourceMap.insert(name, resource);
             return resource;
         }
@@ -113,22 +97,6 @@ namespace CgEngine {
             return true;
         }
 
-        void updateAsyncResources() {
-            for (const auto& [_, rm]: resourceMaps) {
-                const auto& resourceMap = static_cast<ResourceMap<Resource>*>(rm);
-
-                if (!resourceMap->canResourceLoadAsync()) {
-                    continue;
-                }
-
-                for (const auto& [rn, resource]: *resourceMap) {
-                    if (!resource->isLoaded() && resource->resourceManagerAsyncLoadingFinished()) {
-                        resource->resourceManagerSetAsyncLoadedData();
-                    }
-                }
-            }
-        }
-
         void unloadUnusedResources() {
             unloadUnusedResourceType<MeshVertices>();
             unloadUnusedResourceType<PBRMaterial>();
@@ -136,6 +104,7 @@ namespace CgEngine {
             unloadUnusedResourceType<TextureCube>();
             unloadUnusedResourceType<PhysicsMaterial>();
             unloadUnusedResourceType<Font>();
+            unloadUnusedResourceType<CustomShader>();
         }
 
     private:
@@ -144,7 +113,7 @@ namespace CgEngine {
         template<typename R>
         void registerResourceType() {
             const char* typeName = typeid(R).name();
-            resourceMaps.insert({typeName, new ResourceMap<R>(R::canLoadAsync)});
+            resourceMaps.insert({typeName, new ResourceMap<R>()});
         }
 
         template<typename R>

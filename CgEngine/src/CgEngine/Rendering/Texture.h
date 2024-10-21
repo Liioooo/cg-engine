@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Resources/Resource.h>
-
 namespace CgEngine {
 
     enum class TextureFormat {
@@ -36,21 +34,15 @@ namespace CgEngine {
         float anisotropicFiltering = 1.0f;
     };
 
-    class Texture2D : public Resource {
+    class Texture2D {
     public:
         static Texture2D* createResource(const std::string& name);
         static Texture2D* createResource(const std::string& name, const Texture2DResourceSpecification& spec);
 
-        void resourceManagerLoadAsync() override;
-        bool resourceManagerAsyncLoadingFinished() override;
-        void resourceManagerSetAsyncLoadedData() override;
-
-        static inline bool canLoadAsync = true;
-
         Texture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear, float anisotropicFiltering = 1.0f);
         Texture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, const void* data, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear, float anisotropicFiltering = 1.0f);
         Texture2D(const std::string& path, bool srgb, TextureWrap wrap = TextureWrap::Repeat, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear, float anisotropicFiltering = 1.0f);
-        ~Texture2D() override;
+        ~Texture2D();
 
         bool operator ==(const Texture2D& other) const {
             return id == other.id;
@@ -73,22 +65,6 @@ namespace CgEngine {
         uint32_t width;
         uint32_t height;
         TextureFormat format;
-
-        struct AsyncLoadData {
-            int width;
-            int height;
-            TextureFormat format;
-            int channels;
-            unsigned char* data = nullptr;
-        };
-
-        struct AsyncLoadInfo {
-            Texture2DResourceSpecification spec;
-            std::string name;
-        };
-        AsyncLoadInfo asyncLoadInfo;
-
-        std::future<AsyncLoadData> asyncLoadFuture;
     };
 
     class Texture2DArray {
@@ -117,13 +93,13 @@ namespace CgEngine {
         TextureFormat format;
     };
 
-    class TextureCube : public Resource {
+    class TextureCube {
     public:
         static TextureCube* createResource(const std::string& name);
 
         TextureCube(TextureFormat format, uint32_t width, uint32_t height, MipMapFiltering mipMapFiltering = MipMapFiltering::Bilinear);
         TextureCube(TextureFormat format, uint32_t width, uint32_t height, const void* data, MipMapFiltering mipMapFiltering = MipMapFiltering::Bilinear);
-        ~TextureCube() override;
+        ~TextureCube();
 
         bool operator ==(const TextureCube& other) const {
             return id == other.id;

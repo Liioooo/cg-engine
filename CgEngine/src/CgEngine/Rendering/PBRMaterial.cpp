@@ -92,8 +92,6 @@ namespace CgEngine {
         setMetalnessTexture(nullptr);
         setRoughnessTexture(nullptr);
         setNormalTexture(nullptr);
-
-        setLoaded();
     }
 
     void PBRMaterial::setAlbedoColor(glm::vec3 value) {
