@@ -19,6 +19,8 @@ namespace RTR {
 
     private:
         CgEngine::CustomMesh* mesh;
+        CgEngine::CustomValMaterial* mat;
+        CgEngine::ShaderStorageBuffer* instanceBuffer;
     };
 
 }

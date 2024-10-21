@@ -45,7 +45,6 @@ namespace CgEngine {
         using Component::Component;
 
         void onAttach(Scene& scene, CustomShaderRendererComponentParams& params);
-        void onDetach(Scene& scene) override;
 
         ResRef<MeshVertices> getMeshVertices();
         CustomMesh* getCustomMesh();
@@ -65,7 +64,7 @@ namespace CgEngine {
         CustomShaderRendererComponentRenderPassOptions& getRenderPassOptions();
         AABoundingBox& getBoundingBox();
 
-        void setInstanceBufferData(const void* data, size_t size);
+        void setInstanceBuffer(ShaderStorageBuffer* instanceBuffer);
         ShaderStorageBuffer* getInstanceBuffer();
 
     private:
@@ -79,7 +78,6 @@ namespace CgEngine {
         ResRef<CustomShader> shader;
         CustomShaderRendererComponentRenderPassOptions renderPassOptions;
         AABoundingBox boundingBox;
-
         ShaderStorageBuffer* instanceBuffer = nullptr;
     };
 

@@ -47,7 +47,7 @@ namespace RTR {
 
         CgEngine::Entity t = findEntityById("customShaderTest2");
 
-        auto* mat = new CgEngine::CustomValMaterial();
+        mat = new CgEngine::CustomValMaterial();
         mat->set("u_Color", glm::vec3(0.0f, 0.6f, 0.1f));
 
         CgEngine::CustomShaderRendererComponentParams params;
@@ -63,11 +63,16 @@ namespace RTR {
             transforms[i] = glm::rotate(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f * i, 0.0f)), i * glm::pi<float>() / 4.0f, glm::vec3(1.0f, 0.0f, 0.0f));
         }
 
+        instanceBuffer = new CgEngine::ShaderStorageBuffer();
+        instanceBuffer->setData(transforms.data(), transforms.size() * sizeof(glm::mat4));
+
         auto& c = attachComponent<CgEngine::CustomShaderRendererComponent>(t, params);
-        c.setInstanceBufferData(transforms.data(), transforms.size() * sizeof(glm::mat4));
+        c.setInstanceBuffer(instanceBuffer);
     }
 
     void CustomMeshTestScript::onDetach() {
         delete mesh;
+        delete instanceBuffer;
+        delete mat;
     }
 }
