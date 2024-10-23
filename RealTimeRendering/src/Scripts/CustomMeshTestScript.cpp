@@ -56,6 +56,7 @@ namespace RTR {
         params.instanceCount = 10;
         params.customMaterial = mat;
         params.enableCulling = false;
+        params.renderPassOptions.useDirShadowMappingData = true;
 
         std::array<glm::mat4, 10> transforms{};
 
@@ -68,6 +69,39 @@ namespace RTR {
 
         auto& c = attachComponent<CgEngine::CustomShaderRendererComponent>(t, params);
         c.setInstanceBuffer(instanceBuffer);
+
+
+        auto* tessMesh = new CgEngine::CustomMesh();
+
+        std::vector<glm::vec2> tessVertices;
+        std::vector<uint32_t> tessIndices;
+
+        tessVertices.emplace_back(-1.0f, 1.0f);
+        tessVertices.emplace_back(-1.0f, -1.0f);
+        tessVertices.emplace_back(1.0f, 1.0f);
+        tessVertices.emplace_back(1.0f, -1.0f);
+
+        tessIndices.push_back(0);
+        tessIndices.push_back(1);
+        tessIndices.push_back(2);
+        tessIndices.push_back(3);
+
+        tessMesh->setVertexData(tessVertices, tessIndices, {{CgEngine::ShaderDataType::Float2, false}});
+
+        CgEngine::CustomShaderRendererComponentParams tessParams;
+        tessParams.shader = "tess-test";
+        tessParams.instanceCount = 10;
+        tessParams.customMaterial = nullptr;
+        tessParams.enableCulling = false;
+        tessParams.customMesh = tessMesh;
+        tessParams.renderPassOptions.useDirShadowMappingData = false;
+        tessParams.renderPassOptions.useEnvironmentMappingData = false;
+        tessParams.renderPassOptions.wireframe = true;
+        tessParams.renderPassOptions.tesselationPatchSize = 4;
+
+        CgEngine::Entity tessE = findEntityById("tess-test");
+        auto& c2 = attachComponent<CgEngine::CustomShaderRendererComponent>(tessE, tessParams);
+        c2.setInstanceBuffer(instanceBuffer);
     }
 
     void CustomMeshTestScript::onDetach() {

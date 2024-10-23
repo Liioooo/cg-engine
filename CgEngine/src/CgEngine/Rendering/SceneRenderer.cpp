@@ -783,8 +783,10 @@ namespace CgEngine {
     void SceneRenderer::customShaderPass() {
         Renderer::beginRenderPass(customShaderRenderPass, true);
 
-        bool lastCommandUseDirShadowMappingData = false;
-        bool lastCommandUseEnvironmentMappingData = false;
+        // can be true at the start, because the values are already bound from the previous geometryPass
+        bool lastCommandUseDirShadowMappingData = true;
+        bool lastCommandUseEnvironmentMappingData = true;
+
         const Material* lastUsedMaterial = nullptr;
 
         for (const auto& [shader, commands]: customShaderDrawCommandQueue) {
@@ -815,9 +817,15 @@ namespace CgEngine {
 
                 Renderer::setFaceCulling(command.renderPassOptions.backfaceCulling, command.renderPassOptions.backfaceCulling);
                 Renderer::setBlending(command.renderPassOptions.useBlending, command.renderPassOptions.blendingEquation, command.renderPassOptions.srcBlendingFunction, command.renderPassOptions.destBlendingFunction);
-                Renderer::executeCustomShaderDrawCommand(*command.vao, *material, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount, *shader, material != lastUsedMaterial);
+                Renderer::setWireframe(command.renderPassOptions.wireframe);
+                Renderer::setTesselationPatchSize(command.renderPassOptions.tesselationPatchSize);
 
+                if (material != lastUsedMaterial) {
+                    material->uploadToShader(*shader);
+                }
                 lastUsedMaterial = material;
+
+                Renderer::executeCustomShaderDrawCommand(*command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount, command.renderPassOptions.tesselationPatchSize);
             }
         }
 

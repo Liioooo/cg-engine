@@ -143,6 +143,8 @@ namespace CgEngine {
         std::string vertexSource = ShaderUtils::loadShaderSourceCodeWithType(this->name, "vertex", ShaderEnv::Engine);
         std::string fragmentSource = ShaderUtils::loadShaderSourceCodeWithType(this->name, "fragment", ShaderEnv::Engine);
         std::string geometrySource = ShaderUtils::loadShaderSourceCodeWithType(this->name, "geometry", ShaderEnv::Engine);
+        std::string tcsSource = ShaderUtils::loadShaderSourceCodeWithType(this->name, "tcs", ShaderEnv::Engine);
+        std::string tesSource = ShaderUtils::loadShaderSourceCodeWithType(this->name, "tes", ShaderEnv::Engine);
 
         programId = glCreateProgram();
 
@@ -150,10 +152,16 @@ namespace CgEngine {
             createShaderType(GL_VERTEX_SHADER, "VERTEX", vertexSource);
         }
         if (!fragmentSource.empty()) {
-            createShaderType(GL_FRAGMENT_SHADER, "FRAGMENT",fragmentSource);
+            createShaderType(GL_FRAGMENT_SHADER, "FRAGMENT", fragmentSource);
         }
         if (!geometrySource.empty()) {
-            createShaderType(GL_GEOMETRY_SHADER, "GEOMETRY",geometrySource);
+            createShaderType(GL_GEOMETRY_SHADER, "GEOMETRY", geometrySource);
+        }
+        if (!tcsSource.empty()) {
+            createShaderType(GL_TESS_CONTROL_SHADER, "TCS", tcsSource);
+        }
+        if (!tesSource.empty()) {
+            createShaderType(GL_TESS_EVALUATION_SHADER, "TES", tesSource);
         }
 
         glLinkProgram(programId);

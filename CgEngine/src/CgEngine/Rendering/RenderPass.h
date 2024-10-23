@@ -54,6 +54,7 @@ namespace CgEngine {
         BlendingEquation blendingEquation = BlendingEquation::Add;
         BlendingFunction srcBlendingFunction = BlendingFunction::SrcAlpha;
         BlendingFunction destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
+        int tesselationPatchSize = ~0;
     };
 
     class RenderPass {
@@ -68,6 +69,7 @@ namespace CgEngine {
         RenderPassSpecification& getSpecification();
 
         bool isReady() const;
+        unsigned int getDrawMode() const;
 
     private:
         RenderPassSpecification specification;

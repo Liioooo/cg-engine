@@ -47,11 +47,13 @@ namespace CgEngine {
         static void endRenderPass();
         static void setFaceCulling(bool backfaceCulling, bool frontFaceCulling);
         static void setBlending(bool enable, BlendingEquation blendingEq, BlendingFunction srcBlendingFn, BlendingFunction destBlendingFn);
+        static void setWireframe(bool enable);
+        static void setTesselationPatchSize(int patchSize);
         static void renderUnitQuad(const Material& material);
         static void renderUnitCube(const Material& material);
         static void renderLines(const std::vector<LineDrawInfo>& lines);
         static void executeDrawCommand(const VertexArrayObject& vao, const Material& material, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, const std::vector<glm::mat4>& transforms, uint32_t instanceCount);
-        static void executeCustomShaderDrawCommand(const VertexArrayObject& vao, const Material& material, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, uint32_t instanceCount, CustomShader& shader, bool needsMaterialUpload);
+        static void executeCustomShaderDrawCommand(const VertexArrayObject& vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, uint32_t instanceCount, int tessellationPatchSize);
         static void renderUiCircles(const std::vector<UiCircleVertex>& vertices, uint32_t indexCount);
         static void renderUiRects(const std::vector<UiRectVertex>& vertices, uint32_t indexCount);
         static void renderUiText(const std::vector<UiTextVertex>& vertices, uint32_t indexCount);
@@ -78,6 +80,7 @@ namespace CgEngine {
         static inline BlendingEquation blendingEquation;
         static inline BlendingFunction srcBlendingFunction;
         static inline BlendingFunction destBlendingFunction;
+        static inline int tessellationPatchSize;
 
         static inline Texture2D* whiteTexture;
         static inline Texture2D* brdfLUT;

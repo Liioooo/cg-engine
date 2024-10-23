@@ -129,6 +129,9 @@ namespace CgEngine {
         destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
         glBlendFunc(static_cast<GLint>(srcBlendingFunction), static_cast<GLint>(destBlendingFunction));
 
+        tessellationPatchSize = 4;
+        glPatchParameteri(GL_PATCH_VERTICES, tessellationPatchSize);
+
         glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
         uint32_t whiteTextureData = 0xffffffff;
@@ -246,6 +249,11 @@ namespace CgEngine {
         if (spec.clearStencilBuffer) {
             glClear(GL_STENCIL_BUFFER_BIT);
         }
+
+        if (spec.tesselationPatchSize != ~0 && spec.tesselationPatchSize != tessellationPatchSize) {
+            tessellationPatchSize = spec.tesselationPatchSize;
+            glPatchParameteri(GL_PATCH_VERTICES, tessellationPatchSize);
+        }
     }
 
     void Renderer::endRenderPass() {
@@ -289,6 +297,24 @@ namespace CgEngine {
             srcBlendingFunction = srcBlendingFn;
             destBlendingFunction = destBlendingFn;
             glBlendFunc(static_cast<GLint>(srcBlendingFunction), static_cast<GLint>(destBlendingFunction));
+        }
+    }
+
+    void Renderer::setWireframe(bool enable) {
+        if (isWireframe != enable) {
+            isWireframe = enable;
+            if (isWireframe) {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            } else {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            }
+        }
+    }
+
+    void Renderer::setTesselationPatchSize(int patchSize) {
+        if (patchSize != ~0 && patchSize != tessellationPatchSize) {
+            tessellationPatchSize = patchSize;
+            glPatchParameteri(GL_PATCH_VERTICES, tessellationPatchSize);
         }
     }
 
@@ -347,17 +373,14 @@ namespace CgEngine {
         material.uploadToShader(currentRenderPass->getSpecification().shader);
         vao.bind();
         transformsBuffer->setData(transforms.data(), transforms.size() * sizeof(glm::mat4));
-        glDrawElementsInstancedBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(baseIndex * sizeof(uint32_t)), instanceCount, baseVertex);
+        glDrawElementsInstancedBaseVertex(currentRenderPass->getDrawMode(), indexCount, GL_UNSIGNED_INT, (void*)(baseIndex * sizeof(uint32_t)), instanceCount, baseVertex);
     }
 
-    void Renderer::executeCustomShaderDrawCommand(const CgEngine::VertexArrayObject& vao, const CgEngine::Material& material, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, uint32_t instanceCount, CustomShader& shader, bool needsMaterialUpload)  {
+    void Renderer::executeCustomShaderDrawCommand(const VertexArrayObject& vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, uint32_t instanceCount, int tesselationPatchSize)  {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
 
-        if (needsMaterialUpload) {
-            material.uploadToShader(shader);
-        }
         vao.bind();
-        glDrawElementsInstancedBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (void*)(baseIndex * sizeof(uint32_t)), instanceCount, baseVertex);
+        glDrawElementsInstancedBaseVertex(tesselationPatchSize == ~0 ? GL_TRIANGLES : GL_PATCHES, indexCount, GL_UNSIGNED_INT, (void*)(baseIndex * sizeof(uint32_t)), instanceCount, baseVertex);
     }
 
     void Renderer::renderUiCircles(const std::vector<UiCircleVertex>& vertices, uint32_t indexCount) {

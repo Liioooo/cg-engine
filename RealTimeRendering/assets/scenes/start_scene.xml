@@ -20,7 +20,7 @@
     <Entity>
         <Components>
             <TransformComponent position="-5 0 -4" rotation="0 0 0" scale="1 1 1" />
-            <CustomShaderRendererComponent shader="custom-shader-test" asset-file="CG_CubeMesh" enable-culling="false" instance-count="10" />
+            <CustomShaderRendererComponent shader="custom-shader-test" asset-file="CG_CubeMesh" enable-culling="false" instance-count="10" use-dir-shadow-mapping-data="true" />
         </Components>
     </Entity>
     <Entity id="customShaderTest2">
@@ -31,7 +31,12 @@
     <Entity>
         <Components>
             <TransformComponent position="-8 0 -4" rotation="10 40 0" scale="2 1 1" />
-            <CustomShaderRendererComponent shader="custom-shader-test" asset-file="CG_CubeMesh" bounding-min="-0.5 -0.5 -0.5" bounding-max="0.5 0.5 0.5" />
+            <CustomShaderRendererComponent shader="custom-shader-test" asset-file="CG_CubeMesh" bounding-min="-0.5 -0.5 -0.5" bounding-max="0.5 0.5 0.5" use-dir-shadow-mapping-data="true" />
+        </Components>
+    </Entity>
+    <Entity id="tess-test">
+        <Components>
+            <TransformComponent position="0 5 20" rotation="0 0 0" scale="2 2 2" />
         </Components>
     </Entity>
     <Entity>

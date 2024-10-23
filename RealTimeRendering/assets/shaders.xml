@@ -7,4 +7,10 @@
         <Vertex>shaders/custom-test2_vertex.glsl</Vertex>
         <Fragment>shaders/custom-test2_fragment.glsl</Fragment>
     </Shader>
+    <Shader name="tess-test">
+        <Vertex>shaders/tess-test_vertex.glsl</Vertex>
+        <Fragment>shaders/tess-test_fragment.glsl</Fragment>
+        <Tcs>shaders/tess-test_tcs.glsl</Tcs>
+        <Tes>shaders/tess-test_tes.glsl</Tes>
+    </Shader>
 </Shaders>

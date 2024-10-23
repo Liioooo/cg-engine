@@ -1,4 +1,5 @@
 #include "RenderPass.h"
+#include "glad/glad.h"
 
 namespace CgEngine {
     RenderPass::RenderPass(RenderPassSpecification spec) : specification(std::move(spec)) {}
@@ -29,5 +30,9 @@ namespace CgEngine {
 
     bool RenderPass::isReady() const {
         return specification.shader.isReady() && specification.framebuffer != nullptr;
+    }
+
+    unsigned int RenderPass::getDrawMode() const {
+        return specification.tesselationPatchSize == ~0 ? GL_TRIANGLES : GL_PATCHES;
     }
 }

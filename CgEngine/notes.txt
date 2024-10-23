@@ -17,20 +17,14 @@ SSBO:
 instanceBuffer: binding: 5
 bind before every render
 
-upload material data before every render
-
 Textures:
 0 - 4: pbrMaterial Textures
 5 - 7: IBL Textures
 8    : dir Shadow maps
 
-configure which of these should be used (depends on material used)
 
-
-Bindless Textures:
+Bindless Textures: TODO maybe
 PBRMaterial, IBL Textures (use UBO)
-
 shadowMaps not
 
-
-TODO: remove async resource loading in favor of bindless textures
+TODO: expose FrustumCulling Api to scripts

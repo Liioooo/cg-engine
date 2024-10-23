@@ -18,9 +18,11 @@ namespace CgEngine {
         bool backfaceCulling = true;
         bool frontfaceCulling = false;
         bool useBlending = false;
+        bool wireframe = false;
         BlendingEquation blendingEquation = BlendingEquation::Add;
         BlendingFunction srcBlendingFunction = BlendingFunction::SrcAlpha;
         BlendingFunction destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
+        int tesselationPatchSize = ~0;
     };
 
     struct CustomShaderRendererComponentParams {
