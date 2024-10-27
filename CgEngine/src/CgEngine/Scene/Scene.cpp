@@ -138,8 +138,24 @@ namespace CgEngine {
         postUpdateFunctions.emplace_back(function);
     }
 
-    void Scene::submitOnRenderFunction(std::function<void(SceneRenderer&)>&& function) {
-        onRenderFunctions.emplace_back(function);
+    Uuid Scene::submitOnPreRenderFunction(const std::function<void(const CameraFrustum& camaraFrustum)>& function, bool once) {
+        return onPreRenderFunctions.emplace_back(function, once).uuid;
+    }
+
+    void Scene::removeOnPreRenderFunction(Uuid uuid) {
+        onPreRenderFunctions.erase(std::remove_if(onPreRenderFunctions.begin(), onPreRenderFunctions.end(), [uuid](const auto& fc) {
+            return uuid == fc.uuid;
+        }), onPreRenderFunctions.end());
+    }
+
+    Uuid Scene::submitOnRenderFunction(const std::function<void(SceneRenderer&)>& function, bool once) {
+        return onRenderFunctions.emplace_back(function, once).uuid;
+    }
+
+    void Scene::removeOnRenderFunction(Uuid uuid) {
+        onRenderFunctions.erase(std::remove_if(onRenderFunctions.begin(), onRenderFunctions.end(), [uuid](const auto& fc) {
+            return uuid == fc.uuid;
+        }), onRenderFunctions.end());
     }
 
     void Scene::onUpdate(TimeStep ts) {
@@ -149,15 +165,17 @@ namespace CgEngine {
             it->update(ts);
         }
         executePostUpdateFunctions();
-        updateTransforms();
-        for (auto it = componentManager->begin<ScriptComponent>(); it != componentManager->end<ScriptComponent>(); it++) {
-            it->lateUpdate(ts);
-        }
-        executePostUpdateFunctions();
 
         for (auto it = componentManager->begin<AnimationComponent>(); it != componentManager->end<AnimationComponent>(); it++) {
             it->update(ts, componentManager->getComponent<TransformComponent>(it->getEntity()));
         }
+
+        updateTransforms();
+
+        for (auto it = componentManager->begin<ScriptComponent>(); it != componentManager->end<ScriptComponent>(); it++) {
+            it->lateUpdate(ts);
+        }
+        executePostUpdateFunctions();
 
         updateTransforms();
 
@@ -177,6 +195,7 @@ namespace CgEngine {
                 return;
             }
         }
+        executePostUpdateFunctions();
     }
 
     void Scene::onRender(SceneRenderer& renderer) {
@@ -236,6 +255,8 @@ namespace CgEngine {
         renderer.setActiveScene(this);
         renderer.beginScene(cameraComponent->getCamera(), cameraTransform.getModelMatrix(), lightEnvironment, sceneEnvironment);
 
+        executeOnPreRenderFunctions(renderer);
+
         for (auto it = componentManager->begin<MeshRendererComponent>(); it != componentManager->end<MeshRendererComponent>(); it++) {
             renderer.submitMesh(it->getRenderMesh(), it->getMeshNodes(), it->getMaterial().get(), it->getCastShadows(), it->getCullingEnabled(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix());
         }
@@ -245,7 +266,7 @@ namespace CgEngine {
         }
 
         for (auto it = componentManager->begin<CustomShaderRendererComponent>(); it != componentManager->end<CustomShaderRendererComponent>(); it++) {
-            renderer.submitCustomShaderMesh(it->getRenderMesh(), it->getMeshNodes(), it->getRenderMaterial(), it->getCullingEnabled(), it->getBoundingBox(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getShader().get(), it->getInstanceCount(), it->getRenderPassOptions(), it->getInstanceBuffer());
+            renderer.submitCustomShaderMesh(it->getRenderMesh(), it->getMeshNodes(), it->getRenderMaterial(), it->getCullingEnabled(), it->getBoundingBox(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getShader().get(), it->getInstanceCount(), it->getRenderPassOptions(), it->getInstanceBuffers());
         }
 
         for (auto it = componentManager->cbegin<UiCanvasComponent>(); it != componentManager->cend<UiCanvasComponent>(); it++) {
@@ -363,10 +384,27 @@ namespace CgEngine {
         postUpdateFunctions.clear();
     }
 
-    void Scene::executeOnRenderFunctions(SceneRenderer& renderer) {
-        for (const auto &fn: onRenderFunctions) {
-            fn(renderer);
+    void Scene::executeOnPreRenderFunctions(SceneRenderer& renderer) {
+        for (auto it = onPreRenderFunctions.begin(); it != onPreRenderFunctions.end();) {
+            it->function(renderer.getCamaraFrustum());
+
+            if (it->once) {
+                it = onPreRenderFunctions.erase(it);
+            } else {
+                ++it;
+            }
         }
-        onRenderFunctions.clear();
+    }
+
+    void Scene::executeOnRenderFunctions(SceneRenderer& renderer) {
+        for (auto it = onRenderFunctions.begin(); it != onRenderFunctions.end();) {
+            it->function(renderer);
+
+            if (it->once) {
+                it = onRenderFunctions.erase(it);
+            } else {
+                ++it;
+            }
+        }
     }
 }

@@ -21,6 +21,8 @@ namespace RTR {
         CgEngine::CustomMesh* mesh;
         CgEngine::CustomValMaterial* mat;
         CgEngine::ShaderStorageBuffer* instanceBuffer;
+
+        CgEngine::Uuid onPreRenderCbUuid;
     };
 
 }

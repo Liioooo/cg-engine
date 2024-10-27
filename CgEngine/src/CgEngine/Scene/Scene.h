@@ -6,6 +6,7 @@
 #include "TimeStep.h"
 #include "Rendering/Texture.h"
 #include "Physics/PhysicsScene.h"
+#include "Rendering/CameraFrustum.h"
 
 namespace CgEngine {
 
@@ -66,7 +67,10 @@ namespace CgEngine {
         int getViewportWidth() const;
         int getViewportHeight() const;
         void submitPostUpdateFunction(std::function<void()>&& function);
-        void submitOnRenderFunction(std::function<void(SceneRenderer& renderer)>&& function);
+        Uuid submitOnPreRenderFunction(const std::function<void(const CameraFrustum& camaraFrustum)>& function, bool once = false);
+        void removeOnPreRenderFunction(Uuid uuid);
+        Uuid submitOnRenderFunction(const std::function<void(SceneRenderer& renderer)>& function, bool once = false);
+        void removeOnRenderFunction(Uuid uuid);
         void onUpdate(TimeStep ts);
         void onEvent(Event& event);
         void onRender(SceneRenderer& renderer);
@@ -146,7 +150,19 @@ namespace CgEngine {
         std::unordered_map<Entity, std::unordered_set<Entity>> children{};
         std::unordered_map<Entity, Entity> parents{};
         std::vector<std::function<void()>> postUpdateFunctions{};
-        std::vector<std::function<void(SceneRenderer& renderer)>> onRenderFunctions{};
+
+        template<typename T>
+        struct FunctionCallback {
+            Uuid uuid;
+            bool once = false;
+            T function;
+
+            explicit FunctionCallback(const T& function, bool once = false) : function(function), once(once) {}
+        };
+
+        std::vector<FunctionCallback<std::function<void(const CameraFrustum& camaraFrustum)>>> onPreRenderFunctions{};
+        std::vector<FunctionCallback<std::function<void(SceneRenderer& renderer)>>> onRenderFunctions{};
+
         ComponentManager* componentManager = new ComponentManager();
         int viewportWidth;
         int viewportHeight;
@@ -156,6 +172,7 @@ namespace CgEngine {
         void recursiveDestroyEntity(Entity entity);
         void recursiveUpdateChildTransforms(Entity entity, const glm::mat4& parentModelMatrix, bool parentDirty);
         void executePostUpdateFunctions();
+        void executeOnPreRenderFunctions(SceneRenderer& renderer);
         void executeOnRenderFunctions(SceneRenderer& renderer);
     };
 

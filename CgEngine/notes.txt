@@ -28,3 +28,17 @@ PBRMaterial, IBL Textures (use UBO)
 shadowMaps not
 
 TODO: expose FrustumCulling Api to scripts
+Difficult: When do we have a consistent camera state?
+Animations must be updated between update an lateUpdate.
+
+Idea: Add Callback: addOnPreRenderCallback(cb), they are called before
+called after renderer.beginScene() in Scene.onRender(), just before meshes are submitted for rendering.
+usefull for culling CustomShaderRendererComponent objects manually
+
+should use a second buffer
+1: transforms (stays fixed)
+2: indices into transforms (gets updated)
+
+-> need more than one instanceBuffer
+maximum of 2 instanceBuffers
+buffer1, buffer2

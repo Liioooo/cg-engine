@@ -145,11 +145,15 @@ namespace CgEngine {
         return boundingBox;
     }
 
-    void CustomShaderRendererComponent::setInstanceBuffer(ShaderStorageBuffer* instanceBuffer) {
-        this->instanceBuffer = instanceBuffer;
+    void CustomShaderRendererComponent::setInstanceBuffer1(ShaderStorageBuffer* instanceBuffer) {
+        instanceBuffers.first = instanceBuffer;
     }
 
-    ShaderStorageBuffer* CustomShaderRendererComponent::getInstanceBuffer() {
-        return instanceBuffer;
+    void CustomShaderRendererComponent::setInstanceBuffer2(ShaderStorageBuffer* instanceBuffer) {
+        instanceBuffers.second = instanceBuffer;
+    }
+
+    std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> CustomShaderRendererComponent::getInstanceBuffers() {
+        return instanceBuffers;
     }
 }

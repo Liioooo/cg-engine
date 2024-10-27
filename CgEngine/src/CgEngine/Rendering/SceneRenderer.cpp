@@ -561,7 +561,7 @@ namespace CgEngine {
         }
     }
 
-    void SceneRenderer::submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, AABoundingBox& boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions, ShaderStorageBuffer* instanceBuffer) {
+    void SceneRenderer::submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, AABoundingBox& boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions, std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers) {
         if (enableCulling && !cameraFrustum.testAABoundingBoxInFrustum(boundingBox, transform)) {
             return;
         }
@@ -583,7 +583,7 @@ namespace CgEngine {
                 drawCommand.indexCount = submesh.indexCount;
                 drawCommand.transform = transform * meshNode.transform;
                 drawCommand.renderPassOptions = renderPassOptions;
-                drawCommand.instanceBuffer = instanceBuffer;
+                drawCommand.instanceBuffers = instanceBuffers;
             }
         }
     }
@@ -721,6 +721,10 @@ namespace CgEngine {
         lineInfo.color = color;
     }
 
+    const CameraFrustum& SceneRenderer::getCamaraFrustum() const {
+        return cameraFrustum;
+    }
+
     void SceneRenderer::skinMeshes() {
         skinningShader.bind();
         boneTransformsBuffer->bind(2);
@@ -795,8 +799,11 @@ namespace CgEngine {
             for (const auto& command: commands) {
                 shader->setMat4("u_Transform", command.transform);
 
-                if (command.instanceBuffer != nullptr) {
-                    command.instanceBuffer->bind(5);
+                if (command.instanceBuffers.first != nullptr) {
+                    command.instanceBuffers.first->bind(5);
+                }
+                if (command.instanceBuffers.second != nullptr) {
+                    command.instanceBuffers.second->bind(6);
                 }
 
                 if (command.renderPassOptions.useDirShadowMappingData && !lastCommandUseDirShadowMappingData) {

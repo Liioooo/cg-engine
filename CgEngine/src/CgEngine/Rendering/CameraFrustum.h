@@ -16,13 +16,15 @@ namespace CgEngine {
     };
 
     class CameraFrustum {
+        friend class SceneRenderer;
     public:
         CameraFrustum() = default;
 
-        void updateCameraFrustum(const Camera& camera, const glm::vec3 cameraPos, const glm::vec3& cameraFront);
         bool testAABoundingBoxInFrustum(AABoundingBox& boundingBox, const glm::mat4& boxTransform) const;
 
     private:
+        void updateCameraFrustum(const Camera& camera, const glm::vec3 cameraPos, const glm::vec3& cameraFront);
+
         std::array<FrustumPlane, 6> frustumPlanes{};
     };
 

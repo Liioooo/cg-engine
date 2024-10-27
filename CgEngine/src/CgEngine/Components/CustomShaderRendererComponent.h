@@ -66,8 +66,9 @@ namespace CgEngine {
         CustomShaderRendererComponentRenderPassOptions& getRenderPassOptions();
         AABoundingBox& getBoundingBox();
 
-        void setInstanceBuffer(ShaderStorageBuffer* instanceBuffer);
-        ShaderStorageBuffer* getInstanceBuffer();
+        void setInstanceBuffer1(ShaderStorageBuffer* instanceBuffer);
+        void setInstanceBuffer2(ShaderStorageBuffer* instanceBuffer);
+        std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> getInstanceBuffers();
 
     private:
         ResRef<MeshVertices> mesh;
@@ -80,7 +81,7 @@ namespace CgEngine {
         ResRef<CustomShader> shader;
         CustomShaderRendererComponentRenderPassOptions renderPassOptions;
         AABoundingBox boundingBox;
-        ShaderStorageBuffer* instanceBuffer = nullptr;
+        std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers = {nullptr, nullptr};
     };
 
 }

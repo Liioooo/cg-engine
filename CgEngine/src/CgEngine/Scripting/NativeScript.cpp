@@ -17,6 +17,15 @@ namespace CgEngine {
         return owningEntity;
     }
 
+    void NativeScript::destroyEntity() {
+        auto& scene = owningScene;
+        auto entity = owningEntity;
+
+        scene->submitPostUpdateFunction([entity, scene]() {
+            scene->destroyEntity(entity);
+        });
+    }
+
     void NativeScript::destroyEntity(Entity entity) {
         auto& scene = owningScene;
 
@@ -69,6 +78,22 @@ namespace CgEngine {
         return owningScene->getEntityTag(entity);
     }
 
+    Uuid NativeScript::addOnPreRenderCallback(const std::function<void(const CameraFrustum& camaraFrustum)>& cb, bool once) {
+        return owningScene->submitOnPreRenderFunction(cb, once);
+    }
+
+    void NativeScript::removeOnPreRenderCallback(Uuid uuid) {
+        owningScene->removeOnPreRenderFunction(uuid);
+    }
+
+    Uuid NativeScript::addOnRenderCallback(const std::function<void(SceneRenderer& renderer)>& cb, bool once) {
+        return owningScene->submitOnRenderFunction(cb, once);
+    }
+
+    void NativeScript::removeRenderCallback(Uuid uuid) {
+        owningScene->removeOnRenderFunction(uuid);
+    }
+
     void NativeScript::setActiveScene(const std::string& name) {
         Application::get().getSceneManager().setActiveScene(name);
     }
@@ -78,8 +103,8 @@ namespace CgEngine {
     }
 
     void NativeScript::drawDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color) {
-        owningScene->submitOnRenderFunction([from, to, color](SceneRenderer& renderer) {
+        addOnRenderCallback([from, to, color](SceneRenderer& renderer) {
             renderer.submitDebugLine(from, to, color);
-        });
+        }, true);
     }
 }

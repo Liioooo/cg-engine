@@ -40,6 +40,7 @@ namespace CgEngine {
         virtual void onKeyPressed(KeyPressedEvent& event) {}
 
         Entity getOwingEntity();
+        void destroyEntity();
         void destroyEntity(Entity entity);
         Entity findEntityById(const std::string& id);
         Entity getParentEntity();
@@ -52,6 +53,20 @@ namespace CgEngine {
         Entity instantiatePrefab(const std::string& prefabName, Entity parent, glm::vec3 position = {0.0f, 0.0f, 0.0f}, glm::vec3 rotation = {0.0f, 0.0f, 0.0f}, glm::vec3 scale = {1.0f, 1.0f, 1.0f}, const std::string& tag = "", const std::string& id = "");
         void setEntityTag(Entity entity, const std::string& tag);
         std::string getEntityTag(Entity entity);
+
+        /*
+         * Called just before Meshes are submitted for rendering
+         * Please make sure to call removeOnPreRenderCallback(uuid) when the Script is detached to avoid memory leaks!
+         */
+        Uuid addOnPreRenderCallback(const std::function<void(const CameraFrustum& camaraFrustum)>& cb, bool once = false);
+        void removeOnPreRenderCallback(Uuid uuid);
+
+        /*
+         * Called after Meshes were submitted for rendering
+         * Please make sure to call removeOnPreRenderCallback(uuid) when the Script is detached to avoid memory leaks!
+        */
+        Uuid addOnRenderCallback(const std::function<void(SceneRenderer& renderer)>& cb, bool once = false);
+        void removeRenderCallback(Uuid uuid);
 
         void setActiveScene(const std::string& name);
 

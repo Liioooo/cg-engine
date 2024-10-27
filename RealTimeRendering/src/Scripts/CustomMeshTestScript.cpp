@@ -68,7 +68,7 @@ namespace RTR {
         instanceBuffer->setData(transforms.data(), transforms.size() * sizeof(glm::mat4));
 
         auto& c = attachComponent<CgEngine::CustomShaderRendererComponent>(t, params);
-        c.setInstanceBuffer(instanceBuffer);
+        c.setInstanceBuffer1(instanceBuffer);
 
 
         auto* tessMesh = new CgEngine::CustomMesh();
@@ -101,10 +101,16 @@ namespace RTR {
 
         CgEngine::Entity tessE = findEntityById("tess-test");
         auto& c2 = attachComponent<CgEngine::CustomShaderRendererComponent>(tessE, tessParams);
-        c2.setInstanceBuffer(instanceBuffer);
+        c2.setInstanceBuffer1(instanceBuffer);
+
+        onPreRenderCbUuid = addOnPreRenderCallback([](const CgEngine::CameraFrustum& camaraFrustum) {
+            CG_LOGGING_DEBUG("On PreRender")
+        }, true);
     }
 
     void CustomMeshTestScript::onDetach() {
+        removeOnPreRenderCallback(onPreRenderCbUuid);
+
         delete mesh;
         delete instanceBuffer;
         delete mat;

@@ -6,6 +6,19 @@ namespace CgEngine {
         return glm::dot(normal, point) - distance;
     }
 
+    bool CameraFrustum::testAABoundingBoxInFrustum(AABoundingBox& boundingBox, const glm::mat4& boxTransform) const {
+        auto [boxCenter, boxExtents] = boundingBox.getTransformedAdjustedCenterAndExtents(boxTransform);
+
+        for (const auto& plane: frustumPlanes) {
+            const float r = glm::dot(boxExtents, glm::abs(plane.normal));
+            if (-r > plane.getSignedDistanceToPlane(boxCenter)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     void CameraFrustum::updateCameraFrustum(const Camera& camera, const glm::vec3 cameraPos, const glm::vec3& cameraFront) {
         if (camera.getProjectionType() == CameraProjectionType::Perspective) {
             float farH = camera.getPerspectiveFar() * glm::tan(glm::radians(camera.getPerspectiveFov()) * 0.5f);
@@ -36,18 +49,5 @@ namespace CgEngine {
             // RIGHT
             frustumPlanes[5] = {cameraPos, glm::cross(ZFar + X * farW, Y)};
         }
-    }
-
-    bool CameraFrustum::testAABoundingBoxInFrustum(AABoundingBox& boundingBox, const glm::mat4& boxTransform) const {
-        auto [boxCenter, boxExtents] = boundingBox.getTransformedAdjustedCenterAndExtents(boxTransform);
-
-        for (const auto& plane: frustumPlanes) {
-            const float r = glm::dot(boxExtents, glm::abs(plane.normal));
-            if (-r > plane.getSignedDistanceToPlane(boxCenter)) {
-                return false;
-            }
-        }
-
-        return true;
     }
 }
