@@ -10,13 +10,15 @@
 
 ## MeshRendererComponent
 
-| **Property**   | **Description**                                                 | **Example**           | **Default** |
-|----------------|-----------------------------------------------------------------|-----------------------|-------------|
-| `asset-file`   | File to load 3D-Asset                                           | `model.fbx`           | -           |
-| `mesh`         | Built in mesh                                                   | `CG_SphereMesh_16_16` | -           |
-| `material`     | Material for this mesh. Overrides materials from asset files.   | `MyMaterial`          | -           |
-| `cast-shadows` | Defines if this object casts shadows.                           | `true`                | `true`      |
-| `mesh-nodes`   | List of Nodes to render. Nothing means: everything is rendered. | `RootNode, Node1`     | -           |
+| **Property**     | **Description**                                                 | **Example**           | **Default** |
+|------------------|-----------------------------------------------------------------|-----------------------|-------------|
+| `asset-file`     | File to load 3D-Asset                                           | `model.fbx`           | -           |
+| `mesh`           | Built in mesh                                                   | `CG_SphereMesh_16_16` | -           |
+| `customMesh`     | Instance of `CgEngine::CustomMesh*` (can only be set from code) | -                     | -           |
+| `material`       | Material for this mesh. Overrides materials from asset files.   | `MyMaterial`          | -           |
+| `cast-shadows`   | Defines if this object casts shadows.                           | `true`                | `true`      |
+| `enable-culling` | Defines if this object is culled using it's AABoundingBoxes.    | `true`                | `true`      |
+| `mesh-nodes`     | List of Nodes to render. Nothing means: everything is rendered. | `RootNode, Node1`     | -           |
 
 **Built in Meshes:**
 
@@ -43,16 +45,53 @@
 | `auto-play`       | Auto play the animation.                                        | `true`                | `true`      |
 | `loop`            | Should the animation loop?                                      | `true`                | `true`      |
 
+## CustomShaderRendererComponent
+| **Property**                   | **Description**                                                          | **Example**           | **Default** |
+|--------------------------------|--------------------------------------------------------------------------|-----------------------|-------------|
+| `asset-file`                   | File to load 3D-Asset                                                    | `model.fbx`           | -           |
+| `mesh`                         | Built in mesh                                                            | `CG_SphereMesh_16_16` | -           |
+| `material`                     | Material for this mesh. Overrides materials from asset files.            | `MyMaterial`          | -           |
+| `enable-culling`               | Defines if this object is culled using it's AABoundingBoxes.             | `true`                | `true`      |
+| `bouding-min`                  | Defines the max extent of a AABB.                                        | `-1 -1 -1`            | `0 0 0`     |
+| `bounding-max`                 | Defines the min extent of a AABB.                                        | `1 1 1`               | `0 0 0`     |
+| `mesh-nodes`                   | List of Nodes to render. Nothing means: everything is rendered.          | `RootNode, Node1`     | -           |
+| `instance-count`               | Amount of instances that will be rendered.                               | `10`                  | `1`         |
+| `shader`                       | Shader that will be used to render.                                      | `MyShader`            | -           |
+| `use-environment-mapping-data` | Specify if, environment mapping data should be bound to the shader.      | `true`                | `false`     |
+| `use-dir-shadow-mapping-data`  | Specify if, direction shadow mapping data should be bound to the shader. | `true`                | `false`     |
+| `customMesh`                   | Instance of `CgEngine::CustomMesh*` (can only be set from code)          | -                     | -           |
+
+Additional properties can be set in scripts using `CgEngine::CustomShaderRendererComponentParams`.
+
+It is also possible to set up to 2 `instanceBuffers`. This buffers will be bound to binding points `5` and `6` respectively, in the shader.
+
+When using `use-environment-mapping-data` or `use-dir-shadow-mapping-data` the shader can use `#include "common/IBLCalculationsFragment.glsl"` and `#include "common/DirShadowMapping{Vertex|Fragment}.glsl"` to make use of this data.
+
+Generally everything located at `CgEngine/assets/shaders/common` can be imported into custom shaders to make use of the functionality exposed there.
+
 ## CameraComponent
 
-| **Property** | **Description**                           | **Example**   | **Default**   |
-|--------------|-------------------------------------------|---------------|---------------|
-| `projection` | Projection: `perspective` or `orthogonal` | `perspective` | `perspective` |
-| `near`       | Near plane                                | `0.1`         | `0.1`         |
-| `far`        | Far plane                                 | `100`         | `100`         |
-| `fov`        | Field of View (deg)                       | `60`          | `60`          |
-| `ortho-size` | Size of orthographic projection           | `10`          | `10`          |
-| `primary`    | Is this camera the primary?               | `true`        | `false`       |
+| **Property**      | **Description**                                                          | **Example**   | **Default**   |
+|-------------------|--------------------------------------------------------------------------|---------------|---------------|
+| `projection`      | Projection: `perspective` or `orthogonal`                                | `perspective` | `perspective` |
+| `near`            | Near plane                                                               | `0.1`         | `0.1`         |
+| `far`             | Far plane                                                                | `100`         | `100`         |
+| `fov`             | Field of View (deg)                                                      | `60`          | `60`          |
+| `ortho-size`      | Size of orthographic projection                                          | `10`          | `10`          |
+| `primary`         | Is this camera the primary?                                              | `true`        | `false`       |
+| `exposure`        | Controls the camara exposure                                             | `1.0`         | `1.0`         |
+| `bloom-intensity` | Controls the intensity of the Light Bloom                                | `1.0`         | `1.0`         |
+| `bloom-threshold` | Controls the threshold for pixels, that should contribute to Light Bloom | `0.2`         | `0.2`         |
+
+## AnimationComponent
+
+| **Property**      | **Description**                                                                          | **Example**           | **Default** |
+|-------------------|------------------------------------------------------------------------------------------|-----------------------|-------------|
+| `asset-file`      | File to load Animation from (should match the asset-file used in the Renderer Component) | `model.fbx`           | -           |
+| `animation`       | Animation to use. (Must be included in the Asset-File)                                   | `Armature\|Animation` | -           |
+| `animation-speed` | Animation speed. (Can also be negative)                                                  | `1.0`                 | `1.0`       |
+| `auto-play`       | Auto play the animation.                                                                 | `true`                | `true`      |
+| `loop`            | Should the animation loop?                                                               | `true`                | `true`      |
 
 ## ScriptComponent
 
@@ -175,11 +214,12 @@ application->registerNativeScript<Game::CameraScript>("cameraScript");
 
 ## CharacterControllerComponent
 
-| **Property**  | **Description**                | **Example** | **Default** |
-|---------------|--------------------------------|-------------|-------------|
-| `has-gravity` | Radius of the collider         | `true`      | `true`      |
-| `step-offset` | Step offset for the Controller | `0.1`       | `0.0`       |
-| `slope-limit` | Slope limit for the Controller | `30`        | `0.0`       |
+| **Property**       | **Description**                     | **Example** | **Default** |
+|--------------------|-------------------------------------|-------------|-------------|
+| `has-gravity`      | Radius of the collider              | `true`      | `true`      |
+| `step-offset`      | Step offset for the Controller      | `0.1`       | `0.0`       |
+| `step-down-offset` | Step-down offset for the Controller | `0.1`       | `0.0`       |
+| `slope-limit`      | Slope limit for the Controller      | `30`        | `0.0`       |
 
 [PhysX CharacterController Docs](https://nvidia-omniverse.github.io/PhysX/physx/5.1.3/docs/CharacterControllers.html)
 
