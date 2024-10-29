@@ -10,14 +10,18 @@ namespace CgEngine {
     namespace TextureUtils {
         int getOpenGLTextureInternalFormat(TextureFormat format) {
             switch (format) {
-                case TextureFormat::R:          return GL_RED;
-                case TextureFormat::RGB:        return GL_RGB;
-                case TextureFormat::RGBA:       return GL_RGBA;
-                case TextureFormat::Float16A:   return GL_RGBA16F;
-                case TextureFormat::Float32A:   return GL_RGBA32F;
-                case TextureFormat::Float16:    return GL_RGB16F;
-                case TextureFormat::Float32:    return GL_RGB32F;
-                case TextureFormat::Depth:      return GL_DEPTH_COMPONENT32F;
+                case TextureFormat::R:               return GL_RED;
+                case TextureFormat::RedFloat16:      return GL_R16F;
+                case TextureFormat::RedFloat32:      return GL_R32F;
+                case TextureFormat::RedGreenFloat16: return GL_RG16F;
+                case TextureFormat::RedGreenFloat32: return GL_RG32F;
+                case TextureFormat::RGB:             return GL_RGB;
+                case TextureFormat::RGBA:            return GL_RGBA;
+                case TextureFormat::Float16A:        return GL_RGBA16F;
+                case TextureFormat::Float32A:        return GL_RGBA32F;
+                case TextureFormat::Float16:         return GL_RGB16F;
+                case TextureFormat::Float32:         return GL_RGB32F;
+                case TextureFormat::Depth:           return GL_DEPTH_COMPONENT32F;
             }
             return 0;
         }
@@ -28,6 +32,18 @@ namespace CgEngine {
             }
             if (format == TextureFormat::Float16 || format == TextureFormat::Float16A) {
                 return GL_RGBA16F;
+            }
+            if (format == TextureFormat::RedFloat16) {
+                return GL_R16F;
+            }
+            if (format == TextureFormat::RedFloat32) {
+                return GL_R32F;
+            }
+            if (format == TextureFormat::RedGreenFloat16) {
+                return GL_RG16F;
+            }
+            if (format == TextureFormat::RedGreenFloat32) {
+                return GL_RG32F;
             }
             return GL_RGBA8;
         }
@@ -44,8 +60,10 @@ namespace CgEngine {
                 return GL_RGBA;
             } else if (format == TextureFormat::Depth) {
                 return GL_DEPTH_COMPONENT;
-            } else if (format == TextureFormat::R) {
+            } else if (format == TextureFormat::R || format == TextureFormat::RedFloat16 || format == TextureFormat::RedFloat32) {
                 return GL_RED;
+            } else if (format == TextureFormat::RedGreenFloat16 || format == TextureFormat::RedGreenFloat32) {
+                return GL_RG;
             }
             return GL_RGB;
         }
@@ -394,5 +412,35 @@ namespace CgEngine {
     void TextureCube::generateMipMaps() {
         glBindTexture(GL_TEXTURE_CUBE_MAP, id);
         glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+    }
+
+    Texture2DView::Texture2DView(uint32_t originalTexture, TextureFormat format, TextureWrap wrap, uint32_t minLevel, uint32_t numLevels, uint32_t minLayer, uint32_t numLayers, MipMapFiltering mipMapFiltering) : format(format) {
+        glGenTextures(1, &id);
+
+        GLint internalFormat = TextureUtils::getOpenGLTextureInternalFormat(format);
+
+        glTextureView(id, GL_TEXTURE_2D, originalTexture, internalFormat, minLevel, numLevels, minLayer, numLayers);
+        glBindTexture(GL_TEXTURE_2D, id);
+
+        TextureUtils::applyMipMapFiltering(mipMapFiltering, GL_TEXTURE_2D);
+        GLint textureWrap = TextureUtils::getTextureWrap(wrap);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, textureWrap);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, textureWrap);
+    }
+
+    Texture2DView::~Texture2DView() {
+        glDeleteTextures(1, &id);
+    }
+
+    TextureFormat Texture2DView::getFormat() const {
+        return format;
+    }
+
+    uint32_t Texture2DView::getRendererId() const {
+        return id;
+    }
+
+    void Texture2DView::bind(uint32_t slot) const {
+        glBindTextureUnit(slot, id);
     }
 }

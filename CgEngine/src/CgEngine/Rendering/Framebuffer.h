@@ -3,8 +3,12 @@
 namespace CgEngine {
 
     enum class FramebufferFormat {
-        RGBA8, RGBA16F
+        RGBA8, RGBA16F, RGB8, RGB16F
     };
+
+    namespace FramebufferUtils {
+        int getOpenGLFramebufferInternalFormat(FramebufferFormat format);
+    }
 
     struct FramebufferSpecification {
         uint32_t width;
@@ -18,7 +22,7 @@ namespace CgEngine {
         uint32_t existingDepthAttachmentLevel = 0;
         std::vector<FramebufferFormat> colorAttachments; // creates new Textures and attaches them
         bool useExistingColorAttachment = false; // attaches 'existingColorAttachment' as ColorAttachment0
-        uint32_t existingColorAttachment;
+        std::vector<uint32_t> existingColorAttachments;
         uint32_t existingColorAttachmentLevel = 0;
         uint32_t samples = 1;
         bool screenTarget = false;
@@ -32,7 +36,7 @@ namespace CgEngine {
         void bind();
         void unbind();
         void resize(uint32_t width, uint32_t height, bool forceRecreate);
-        void setColorAttachment(uint32_t attachment, uint32_t level, uint32_t width, uint32_t height);
+        void setColorAttachments(const std::vector<uint32_t>& attachments, uint32_t level, uint32_t width, uint32_t height);
         void setDepthAttachment(uint32_t attachment, uint32_t level, uint32_t width, uint32_t height);
         void setDepthStencilAttachment(uint32_t attachment, uint32_t level, uint32_t width, uint32_t height);
         uint32_t getRendererId() const;

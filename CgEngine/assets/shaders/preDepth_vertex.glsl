@@ -12,7 +12,12 @@ layout (location = 2) in vec4 a_Tangent;
 layout (location = 3) in vec4 a_Bitangent;
 layout (location = 4) in vec4 a_TexCoord;
 
+out VS_OUT {
+    vec3 Normal;
+} vs_out;
+
 void main() {
     mat4 model = b_Transforms.transforms[gl_InstanceID];
+    vs_out.Normal = mat3(transpose(inverse(model))) * a_Normal.xyz;
     gl_Position = u_CameraData.viewProjection * model * a_Pos;
 }

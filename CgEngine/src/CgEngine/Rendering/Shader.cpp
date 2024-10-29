@@ -365,4 +365,8 @@ namespace CgEngine {
     void ComputeShader::setImageCube(TextureCube& texture, uint32_t textureUnit, ShaderStorageAccess storageAccess, uint32_t level) {
         glBindImageTexture(textureUnit, texture.getRendererId(), level, GL_TRUE, 0, static_cast<GLuint>(storageAccess), TextureUtils::getOpenGLTextureFormatForImageBind(texture.getFormat()));
     }
+
+    void ComputeShader::setImageArray(CgEngine::Texture2DArray& texture, uint32_t textureUnit, CgEngine::ShaderStorageAccess storageAccess) {
+        glBindImageTexture(textureUnit, texture.getRendererId(), 0, GL_TRUE, 0, static_cast<GLuint>(storageAccess), TextureUtils::getOpenGLTextureFormatForImageBind(texture.getFormat()));
+    }
 }

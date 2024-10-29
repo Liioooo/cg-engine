@@ -2,6 +2,7 @@ UniformBuffers:
 0: CameraData
 1: LightData
 2: DirShadowData
+3: ScreenData
 
 SSBO:
 0: Transforms
@@ -42,3 +43,17 @@ should use a second buffer
 -> need more than one instanceBuffer
 maximum of 2 instanceBuffers
 buffer1, buffer2
+
+
+SSAO:
+https://learnopengl.com/Advanced-Lighting/SSAO
+https://ogldev.org/www/tutorial45/tutorial45.html
+
+HBAO: -> Will use this one
+https://github.com/scanberg/hbao/blob/master/resources/shaders/hbao_frag.glsl
+https://developer.download.nvidia.com/presentations/2008/SIGGRAPH/HBAO_SIG08b.pdf
+Hazel Shader
+
+GTAO:
+https://blog.selfshadow.com/publications/s2016-shading-course/
+https://blog.selfshadow.com/publications/s2016-shading-course/activision/s2016_pbs_activision_occlusion.pdf

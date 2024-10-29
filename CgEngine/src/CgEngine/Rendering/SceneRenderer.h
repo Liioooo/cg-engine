@@ -39,6 +39,8 @@ namespace CgEngine {
         Scene* activeScene;
         uint32_t viewportWidth;
         uint32_t viewportHeight;
+        float invViewportWidth;
+        float invViewportHeight;
         bool needsResize = true;
         bool activeRendering = false;
 
@@ -58,6 +60,8 @@ namespace CgEngine {
         RenderPass debugLinesRenderPass;
         RenderPass customShaderRenderPass;
 
+        RenderPass hbaoDeinterleavingRenderPass;
+
         CustomValMaterial screenMaterial;
         CustomValMaterial skyboxMaterial;
         CustomValMaterial physicsCollidersMaterial;
@@ -70,11 +74,16 @@ namespace CgEngine {
         Texture2DArray* dirShadowMaps;
         std::array<Texture2D*, 7> bloomTextures;
 
+        Texture2DArray* hbaoDeinterleavingDepthTexture;
+        std::array<Texture2DView*, 16> hbaoDeinterleavingDepthTextureViews;
+        std::array<Framebuffer*, 2> hbaoDeinterleavingFramebuffers;
+
         CameraFrustum cameraFrustum;
 
         void skinMeshes();
         void shadowMapPass();
         void preDepthPass();
+        void hbaoDeinterleavingPass();
         void geometryPass();
         void customShaderPass();
         void skyboxPass();
@@ -95,6 +104,7 @@ namespace CgEngine {
             glm::mat4 view;
             glm::mat4 uiProjectionMatrix;
             glm::vec4 position;
+            glm::vec4 clipInfo;
             float exposure;
             float bloomIntensity;
             float bloomThreshold;
@@ -140,6 +150,14 @@ namespace CgEngine {
             glm::vec4 cascadeSplits;
         };
         UniformBuffer<UBDirShadowData>* ubDirShadowData;
+
+        struct UBScreenData {
+            glm::vec2 invFullResolution;
+            glm::vec2 fullResolution;
+            glm::vec2 invHalfResolution;
+            glm::vec2 halfResolution;
+        };
+        UniformBuffer<UBScreenData>* ubScreenData;
 
         struct MeshKey {
             const uint32_t voaId;

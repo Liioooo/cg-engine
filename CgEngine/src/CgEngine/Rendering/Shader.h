@@ -4,6 +4,7 @@ namespace CgEngine {
 
     class Texture2D;
     class TextureCube;
+    class Texture2DArray;
 
     enum class ShaderStorageAccess {
         WriteOnly = 0x88B9, // GL_WRITE_ONLY
@@ -94,6 +95,7 @@ namespace CgEngine {
         void setImage2D(Texture2D& texture, uint32_t textureUnit, ShaderStorageAccess storageAccess, uint32_t level = 0);
         void setTextureCube(TextureCube& texture, uint32_t textureUnit);
         void setImageCube(TextureCube& texture, uint32_t textureUnit, ShaderStorageAccess storageAccess, uint32_t level = 0);
+        void setImageArray(Texture2DArray& texture, uint32_t textureUnit, ShaderStorageAccess storageAccess);
 
     private:
         std::string name;

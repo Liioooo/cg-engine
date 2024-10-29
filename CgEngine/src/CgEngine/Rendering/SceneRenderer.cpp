@@ -3,7 +3,7 @@
 #include "Application.h"
 
 namespace CgEngine {
-    SceneRenderer::SceneRenderer(uint32_t viewportWidth, uint32_t viewportHeight) : viewportWidth(viewportWidth), viewportHeight(viewportHeight) {
+    SceneRenderer::SceneRenderer(uint32_t viewportWidth, uint32_t viewportHeight) : viewportWidth(viewportWidth), viewportHeight(viewportHeight), invViewportWidth(1.0f / static_cast<float>(viewportWidth)), invViewportHeight(1.0f / static_cast<float>(viewportHeight)) {
         {
             ApplicationOptions& applicationOptions = Application::get().getApplicationOptions();
 
@@ -38,6 +38,7 @@ namespace CgEngine {
             preDepthFramebufferSpec.width = viewportWidth;
             preDepthFramebufferSpec.clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
             preDepthFramebufferSpec.hasDepthStencilAttachment = false;
+            preDepthFramebufferSpec.colorAttachments = {FramebufferFormat::RGB16F};
             preDepthFramebufferSpec.hasDepthAttachment = true;
 
             auto* framebuffer = new Framebuffer(preDepthFramebufferSpec);
@@ -45,11 +46,75 @@ namespace CgEngine {
             RenderPassSpecification preDepthRenderPassSpec;
             preDepthRenderPassSpec.shader = Shader("preDepth");
             preDepthRenderPassSpec.framebuffer = framebuffer;
-            preDepthRenderPassSpec.clearColorBuffer = false;
+            preDepthRenderPassSpec.clearColorBuffer = true;
             preDepthRenderPassSpec.clearDepthBuffer = true;
             preDepthRenderPassSpec.depthCompareOperator = DepthCompareOperator::Less;
 
             preDepthRenderPass = RenderPass(std::move(preDepthRenderPassSpec));
+        }
+        {
+            glm::uvec2 quarterSize = (glm::uvec2(viewportWidth, viewportHeight) + 3u) / 4u;
+
+            hbaoDeinterleavingDepthTexture = new Texture2DArray(TextureFormat::RedFloat32, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
+
+            for (uint32_t i = 0; i < hbaoDeinterleavingDepthTextureViews.size(); i++) {
+                hbaoDeinterleavingDepthTextureViews[i] = new Texture2DView(
+                        hbaoDeinterleavingDepthTexture->getRendererId(),
+                        hbaoDeinterleavingDepthTexture->getFormat(),
+                        TextureWrap::Clamp,
+                        0, 1, i, 1,
+                        MipMapFiltering::Nearest
+                );
+            }
+
+            FramebufferSpecification hbaoDeinterleavingFramebufferSpec0;
+            hbaoDeinterleavingFramebufferSpec0.width = quarterSize.x;
+            hbaoDeinterleavingFramebufferSpec0.height = quarterSize.y;
+            hbaoDeinterleavingFramebufferSpec0.clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
+            hbaoDeinterleavingFramebufferSpec0.hasDepthStencilAttachment = false;
+            hbaoDeinterleavingFramebufferSpec0.hasDepthAttachment = false;
+            hbaoDeinterleavingFramebufferSpec0.useExistingColorAttachment = true;
+            hbaoDeinterleavingFramebufferSpec0.existingColorAttachments = {
+                    hbaoDeinterleavingDepthTextureViews[0]->getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[1]->getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[2]->getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[3]->getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[4]->getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[5]->getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[6]->getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[7]->getRendererId()
+            };
+            hbaoDeinterleavingFramebuffers[0] = new Framebuffer(hbaoDeinterleavingFramebufferSpec0);
+
+            FramebufferSpecification hbaoDeinterleavingFramebufferSpec1;
+            hbaoDeinterleavingFramebufferSpec1.width = quarterSize.x;
+            hbaoDeinterleavingFramebufferSpec1.height = quarterSize.y;
+            hbaoDeinterleavingFramebufferSpec1.clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
+            hbaoDeinterleavingFramebufferSpec1.hasDepthStencilAttachment = false;
+            hbaoDeinterleavingFramebufferSpec1.hasDepthAttachment = false;
+            hbaoDeinterleavingFramebufferSpec1.useExistingColorAttachment = true;
+            hbaoDeinterleavingFramebufferSpec1.existingColorAttachments = {
+                    hbaoDeinterleavingDepthTextureViews[8]->getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[9]->getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[10]->getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[11]->getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[12]->getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[13]->getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[14]->getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[15]->getRendererId()
+            };
+            hbaoDeinterleavingFramebuffers[1] = new Framebuffer(hbaoDeinterleavingFramebufferSpec1);
+
+            RenderPassSpecification hbaoDeinterleavingRenderPassSpec;
+            hbaoDeinterleavingRenderPassSpec.shader = Shader("hbaoDeinterleaving");
+            hbaoDeinterleavingRenderPassSpec.framebuffer = hbaoDeinterleavingFramebuffers[0];
+            hbaoDeinterleavingRenderPassSpec.usingExistingFramebuffer = true;
+            hbaoDeinterleavingRenderPassSpec.clearDepthBuffer = false;
+            hbaoDeinterleavingRenderPassSpec.clearColorBuffer = true;
+            hbaoDeinterleavingRenderPassSpec.depthWrite = false;
+            hbaoDeinterleavingRenderPassSpec.depthTest = false;
+
+            hbaoDeinterleavingRenderPass = RenderPass(std::move(hbaoDeinterleavingRenderPassSpec));
         }
         {
             FramebufferSpecification geoFramebufferSpec;
@@ -113,7 +178,7 @@ namespace CgEngine {
             bloomFramebufferSpec.clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
             bloomFramebufferSpec.hasDepthStencilAttachment = false;
             bloomFramebufferSpec.useExistingColorAttachment = true;
-            bloomFramebufferSpec.existingColorAttachment = bloomTextures[0]->getRendererId();
+            bloomFramebufferSpec.existingColorAttachments = { bloomTextures[0]->getRendererId() };
 
             auto* framebuffer = new Framebuffer(bloomFramebufferSpec);
 
@@ -279,6 +344,7 @@ namespace CgEngine {
         ubCameraData = new UniformBuffer<UBCameraData>("CameraData", 0, geometryRenderPass.getSpecification().shader);
         ubLightData = new UniformBuffer<UBLightData>("LightData", 1, geometryRenderPass.getSpecification().shader);
         ubDirShadowData = new UniformBuffer<UBDirShadowData>("DirShadowData", 2, shadowMapRenderPass.getSpecification().shader);
+        ubScreenData = new UniformBuffer<UBScreenData>("ScreenData", 3, hbaoDeinterleavingRenderPass.getSpecification().shader);
 
         boneTransformsBuffer = new ShaderStorageBuffer();
         boneTransformsBuffer->setData(nullptr, maxBones * maxAnimatedComponents * sizeof(glm::mat4));
@@ -293,9 +359,17 @@ namespace CgEngine {
             delete bloomTextures[i];
         }
 
+        for (int i = 0; i < hbaoDeinterleavingDepthTextureViews.size(); i++) {
+            delete hbaoDeinterleavingDepthTextureViews[i];
+        }
+        delete hbaoDeinterleavingDepthTexture;
+        delete hbaoDeinterleavingFramebuffers[0];
+        delete hbaoDeinterleavingFramebuffers[1];
+
         delete ubCameraData;
         delete ubLightData;
         delete ubDirShadowData;
+        delete ubScreenData;
 
         delete boneTransformsBuffer;
     }
@@ -310,6 +384,8 @@ namespace CgEngine {
 
             viewportWidth = width;
             viewportHeight = height;
+            invViewportWidth = 1.0f / static_cast<float>(viewportWidth);
+            invViewportHeight = 1.0f / static_cast<float>(viewportHeight);
         }
     }
 
@@ -326,10 +402,57 @@ namespace CgEngine {
         if (needsResize && viewportWidth != 0 && viewportHeight != 0) {
             needsResize = false;
 
+            UBScreenData screenData{};
+            screenData.fullResolution = { viewportWidth, viewportHeight };
+            screenData.invFullResolution = { invViewportWidth, invViewportHeight};
+            screenData.halfResolution = glm::ivec2{ viewportWidth,  viewportHeight } / 2;
+            screenData.invHalfResolution = { invViewportWidth * 2.0f,  invViewportHeight * 2.0f };
+            ubScreenData->setData(screenData);
+
             preDepthRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
             geometryRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
             geometryRenderPass.getSpecification().framebuffer->setDepthAttachment(preDepthRenderPass.getSpecification().framebuffer->getDepthAttachmentRendererId(), 0, viewportWidth, viewportHeight);
             screenRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
+
+            glm::uvec2 quarterSize = (glm::uvec2(viewportWidth, viewportHeight) + 3u) / 4u;
+
+            delete hbaoDeinterleavingDepthTexture;
+            hbaoDeinterleavingDepthTexture = new Texture2DArray(TextureFormat::RedFloat32, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
+
+            for (int i = 0; i < hbaoDeinterleavingDepthTextureViews.size(); i++) {
+                delete hbaoDeinterleavingDepthTextureViews[i];
+                hbaoDeinterleavingDepthTextureViews[i] = new Texture2DView(
+                        hbaoDeinterleavingDepthTexture->getRendererId(),
+                        hbaoDeinterleavingDepthTexture->getFormat(),
+                        TextureWrap::Clamp,
+                        0, 1, i, 1,
+                        MipMapFiltering::Nearest
+                );
+            }
+
+            hbaoDeinterleavingFramebuffers[0]->resize(quarterSize.x, quarterSize.y, false);
+            hbaoDeinterleavingFramebuffers[0]->setColorAttachments({
+                hbaoDeinterleavingDepthTextureViews[0]->getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[1]->getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[2]->getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[3]->getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[4]->getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[5]->getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[6]->getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[7]->getRendererId()
+            }, 0, quarterSize.x, quarterSize.y);
+
+            hbaoDeinterleavingFramebuffers[1]->resize(quarterSize.x, quarterSize.y, false);
+            hbaoDeinterleavingFramebuffers[1]->setColorAttachments({
+                hbaoDeinterleavingDepthTextureViews[8]->getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[9]->getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[10]->getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[11]->getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[12]->getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[13]->getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[14]->getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[15]->getRendererId()
+            }, 0, quarterSize.x, quarterSize.y);
 
             float bloomWidth = static_cast<float>(viewportWidth) / 2.0f;
             float bloomHeight = static_cast<float>(viewportHeight) / 2.0f;
@@ -352,6 +475,12 @@ namespace CgEngine {
         cameraData.viewProjection = cameraData.projection * cameraData.view;
         cameraData.uiProjectionMatrix = uiProjectionMatrix;
         cameraData.position = cameraTransform[3];
+        cameraData.clipInfo = {
+                camera.getProjectionType() == CameraProjectionType::Perspective ? camera.getPerspectiveFar() * camera.getPerspectiveNear() : camera.getOrthographicFar() * camera.getOrthographicNear(),
+                camera.getProjectionType() == CameraProjectionType::Perspective ? camera.getPerspectiveNear() - camera.getPerspectiveFar() : camera.getOrthographicNear() - camera.getOrthographicFar(),
+                camera.getProjectionType() == CameraProjectionType::Perspective ? camera.getPerspectiveFar() : camera.getOrthographicFar(),
+                camera.getProjectionType() == CameraProjectionType::Perspective ? 1.0f : 0.0f
+        };
         cameraData.exposure = camera.getExposure();
         cameraData.bloomIntensity = camera.getBloomIntensity();
         cameraData.bloomThreshold = camera.getBloomThreshold();
@@ -412,6 +541,7 @@ namespace CgEngine {
         skinMeshes();
         shadowMapPass();
         preDepthPass();
+        hbaoDeinterleavingPass();
         geometryPass();
         customShaderPass();
         skyboxPass();
@@ -767,6 +897,23 @@ namespace CgEngine {
         Renderer::endRenderPass();
     }
 
+    void SceneRenderer::hbaoDeinterleavingPass() {
+        auto& deinterleavingShader = hbaoDeinterleavingRenderPass.getSpecification().shader;
+
+        hbaoDeinterleavingRenderPass.getSpecification().framebuffer = hbaoDeinterleavingFramebuffers[0];
+        Renderer::beginRenderPass(hbaoDeinterleavingRenderPass);
+        deinterleavingShader.setTexture(preDepthRenderPass.getSpecification().framebuffer->getDepthAttachmentRendererId(), 0);
+        deinterleavingShader.setInt("u_UVOffsetIndex", 0);
+        Renderer::renderUnitQuad(emptyMaterial);
+        Renderer::endRenderPass();
+
+        hbaoDeinterleavingRenderPass.getSpecification().framebuffer = hbaoDeinterleavingFramebuffers[1];
+        Renderer::beginRenderPass(hbaoDeinterleavingRenderPass);
+        deinterleavingShader.setInt("u_UVOffsetIndex", 1);
+        Renderer::renderUnitQuad(emptyMaterial);
+        Renderer::endRenderPass();
+    }
+
     void SceneRenderer::geometryPass() {
         Renderer::beginRenderPass(geometryRenderPass);
 
@@ -887,7 +1034,7 @@ namespace CgEngine {
     void SceneRenderer::bloomPass() {
         auto& downSampleShader = bloomDownSamplePass.getSpecification().shader;
 
-        bloomDownSamplePass.getSpecification().framebuffer->setColorAttachment(bloomTextures[0]->getRendererId(), 0, viewportWidth / 2, viewportHeight / 2);
+        bloomDownSamplePass.getSpecification().framebuffer->setColorAttachments({bloomTextures[0]->getRendererId()}, 0, viewportWidth / 2, viewportHeight / 2);
         Renderer::beginRenderPass(bloomDownSamplePass);
         downSampleShader.setTexture(geometryRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
         downSampleShader.setBool("u_UseThreshold", true);
@@ -896,7 +1043,7 @@ namespace CgEngine {
 
         downSampleShader.setBool("u_UseThreshold", false);
         for (uint32_t i = 0; i < bloomTextures.size() - 1; ++i) {
-            bloomDownSamplePass.getSpecification().framebuffer->setColorAttachment(bloomTextures[i + 1]->getRendererId(), 0, bloomTextures[i + 1]->getWidth(), bloomTextures[i + 1]->getHeight());
+            bloomDownSamplePass.getSpecification().framebuffer->setColorAttachments({bloomTextures[i + 1]->getRendererId()}, 0, bloomTextures[i + 1]->getWidth(), bloomTextures[i + 1]->getHeight());
             Renderer::beginRenderPass(bloomDownSamplePass);
             downSampleShader.setTexture(bloomTextures[i]->getRendererId(), 0);
             Renderer::renderUnitQuad(emptyMaterial);
@@ -906,7 +1053,7 @@ namespace CgEngine {
         auto& upSampleShader = bloomUpSamplePass.getSpecification().shader;
 
         for (uint32_t i = bloomTextures.size() - 1; i > 0; i--) {
-            bloomUpSamplePass.getSpecification().framebuffer->setColorAttachment(bloomTextures[i - 1]->getRendererId(), 0, bloomTextures[i - 1]->getWidth(), bloomTextures[i - 1]->getHeight());
+            bloomUpSamplePass.getSpecification().framebuffer->setColorAttachments({bloomTextures[i - 1]->getRendererId()}, 0, bloomTextures[i - 1]->getWidth(), bloomTextures[i - 1]->getHeight());
             Renderer::beginRenderPass(bloomUpSamplePass);
             upSampleShader.setTexture(bloomTextures[i]->getRendererId(), 0);
             Renderer::renderUnitQuad(emptyMaterial);

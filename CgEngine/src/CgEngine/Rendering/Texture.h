@@ -3,7 +3,7 @@
 namespace CgEngine {
 
     enum class TextureFormat {
-        R, RGB, RGBA, Float16A, Float32A, Float16, Float32, Depth
+        R, RedFloat16, RedFloat32, RedGreenFloat16, RedGreenFloat32, RGB, RGBA, Float16A, Float32A, Float16, Float32, Depth
     };
 
     enum class TextureWrap {
@@ -117,6 +117,21 @@ namespace CgEngine {
         uint32_t width;
         uint32_t height;
         TextureFormat format;
+    };
+
+    class Texture2DView {
+    public:
+        Texture2DView(uint32_t originalTexture, TextureFormat format, TextureWrap wrap, uint32_t minLevel, uint32_t numLevels, uint32_t minLayer, uint32_t numLayers, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear);
+        ~Texture2DView();
+
+        TextureFormat getFormat() const;
+        uint32_t getRendererId() const;
+        void bind(uint32_t slot) const;
+
+    private:
+        uint32_t id;
+        TextureFormat format;
+
     };
 
 }
