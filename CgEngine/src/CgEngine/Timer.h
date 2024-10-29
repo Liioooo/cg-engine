@@ -22,6 +22,12 @@ namespace CgEngine {
         }
     };
 }
-#define CG_TIME_FN() Timer __cg_timer__("Timer: " + std::string(__FUNCTION__));
-#define CG_TIME_FN_INFO(label) Timer __cg_timer__("Timer: " + std::string(__FUNCTION__) + ", INFO: " + label);
+
+#ifdef CG_ENABLE_DEBUG_FEATURES
+    #define CG_TIME_FN() Timer __cg_timer__("Timer: " + std::string(__FUNCTION__));
+    #define CG_TIME_FN_INFO(label) Timer __cg_timer__("Timer: " + std::string(__FUNCTION__) + ", INFO: " + label);
+#else
+    #define CG_TIME_FN()
+    #define CG_TIME_FN_INFO(label)
+#endif
 

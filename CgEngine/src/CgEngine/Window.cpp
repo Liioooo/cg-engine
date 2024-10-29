@@ -176,7 +176,7 @@ namespace CgEngine {
     }
 
     void Window::debugCallback(unsigned int source, unsigned int type, unsigned int id, unsigned int severity, int length, const char *message, const void* userParam) {
-        if (id == 131185 || id == 131218) {
+        if (id == 131185 || id == 131218 || (source == GL_DEBUG_SOURCE_APPLICATION && id == 0)) {
             return; // ignore performance warnings (buffer uses GPU memory, shader recompilation) from nvidia
         }
 

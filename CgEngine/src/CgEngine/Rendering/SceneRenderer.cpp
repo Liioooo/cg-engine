@@ -1,6 +1,7 @@
 #include "SceneRenderer.h"
 #include "Asserts.h"
 #include "Application.h"
+#include "OpeGLTimer.h"
 
 namespace CgEngine {
     SceneRenderer::SceneRenderer(uint32_t viewportWidth, uint32_t viewportHeight) : viewportWidth(viewportWidth), viewportHeight(viewportHeight), invViewportWidth(1.0f / static_cast<float>(viewportWidth)), invViewportHeight(1.0f / static_cast<float>(viewportHeight)) {
@@ -534,6 +535,8 @@ namespace CgEngine {
     }
 
     void SceneRenderer::endScene() {
+        CG_GPU_TIME_FN(true, true)
+
         CG_ASSERT(activeRendering, "Not actively rendering!")
 
         ApplicationOptions& applicationOptions = Application::get().getApplicationOptions();
@@ -856,6 +859,8 @@ namespace CgEngine {
     }
 
     void SceneRenderer::skinMeshes() {
+        CG_GPU_TIME_FN(true, true)
+
         skinningShader.bind();
         boneTransformsBuffer->bind(2);
 
@@ -871,6 +876,8 @@ namespace CgEngine {
     }
 
     void SceneRenderer::shadowMapPass() {
+        CG_GPU_TIME_FN(true, true)
+
         if (!currentSceneEnvironment.dirLightCastShadows) {
             clearPass(shadowMapRenderPass);
             return;
@@ -887,6 +894,8 @@ namespace CgEngine {
     }
 
     void SceneRenderer::preDepthPass() {
+        CG_GPU_TIME_FN(true, true)
+
         Renderer::beginRenderPass(preDepthRenderPass);
 
         for (const auto [mk, command]: drawCommandQueue) {
@@ -898,6 +907,8 @@ namespace CgEngine {
     }
 
     void SceneRenderer::hbaoDeinterleavingPass() {
+        CG_GPU_TIME_FN(true, true)
+
         auto& deinterleavingShader = hbaoDeinterleavingRenderPass.getSpecification().shader;
 
         hbaoDeinterleavingRenderPass.getSpecification().framebuffer = hbaoDeinterleavingFramebuffers[0];
@@ -915,6 +926,8 @@ namespace CgEngine {
     }
 
     void SceneRenderer::geometryPass() {
+        CG_GPU_TIME_FN(true, true)
+
         Renderer::beginRenderPass(geometryRenderPass);
 
         geometryRenderPass.getSpecification().shader.setTexture(currentSceneEnvironment.irradianceMapId, 5);
@@ -932,6 +945,8 @@ namespace CgEngine {
     }
 
     void SceneRenderer::customShaderPass() {
+        CG_GPU_TIME_FN(true, true)
+
         Renderer::beginRenderPass(customShaderRenderPass, true);
 
         // can be true at the start, because the values are already bound from the previous geometryPass
@@ -987,6 +1002,8 @@ namespace CgEngine {
     }
 
     void SceneRenderer::skyboxPass() {
+        CG_GPU_TIME_FN(true, true)
+
         Renderer::beginRenderPass(skyboxRenderPass);
         Renderer::renderUnitCube(skyboxMaterial);
         Renderer::endRenderPass();
@@ -1032,6 +1049,8 @@ namespace CgEngine {
     }
 
     void SceneRenderer::bloomPass() {
+        CG_GPU_TIME_FN(true, true)
+
         auto& downSampleShader = bloomDownSamplePass.getSpecification().shader;
 
         bloomDownSamplePass.getSpecification().framebuffer->setColorAttachments({bloomTextures[0]->getRendererId()}, 0, viewportWidth / 2, viewportHeight / 2);
@@ -1062,12 +1081,16 @@ namespace CgEngine {
     }
 
     void SceneRenderer::screenPass() {
+        CG_GPU_TIME_FN(true, true)
+
         Renderer::beginRenderPass(screenRenderPass);
         Renderer::renderUnitQuad(screenMaterial);
         Renderer::endRenderPass();
     }
 
     void SceneRenderer::uiPass() {
+        CG_GPU_TIME_FN(true, true)
+
         for (const auto& [zIndex, drawInfo]: uiDrawInfoQueue) {
 
             for (uint32_t i = 0; i < drawInfo.filledTextureSlots; i++) {
