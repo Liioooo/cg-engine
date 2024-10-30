@@ -23,6 +23,7 @@ void main() {
 
     vs_out.DirShadowMapPosition = calcDirShadowMapPostion(worldPosition.xyz);
     vs_out.Normal = mat3(transpose(inverse(u_Transform))) * a_Normal.xyz;
+    vs_out.WorldPosition = worldPosition.xyz;
 
     gl_Position = u_CameraData.viewProjection * worldPosition;
 }

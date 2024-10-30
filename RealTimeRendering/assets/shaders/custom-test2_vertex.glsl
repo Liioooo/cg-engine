@@ -22,10 +22,13 @@ out VS_OUT {
 } vs_out;
 
 void main() {
-    vec4 worldPosition = u_Transform * b_InstanceBuffer.transforms[gl_InstanceID] * a_Pos;
+    mat4 transfrom = u_Transform * b_InstanceBuffer.transforms[gl_InstanceID];
+
+    vec4 worldPosition = transfrom * a_Pos;
 
     vs_out.DirShadowMapPosition = calcDirShadowMapPostion(worldPosition.xyz);
-    vs_out.Normal = mat3(transpose(inverse(u_Transform))) * a_Normal.xyz;
+    vs_out.Normal = mat3(transpose(inverse(transfrom))) * a_Normal.xyz;
+    vs_out.WorldPosition = worldPosition.xyz;
 
     gl_Position = u_CameraData.viewProjection * worldPosition;
 }

@@ -984,7 +984,7 @@ namespace CgEngine {
 
                 const Material* material = command.material != nullptr ? command.material : &emptyMaterial;
 
-                Renderer::setFaceCulling(command.renderPassOptions.backfaceCulling, command.renderPassOptions.backfaceCulling);
+                Renderer::setFaceCulling(command.renderPassOptions.backfaceCulling, command.renderPassOptions.frontfaceCulling);
                 Renderer::setBlending(command.renderPassOptions.useBlending, command.renderPassOptions.blendingEquation, command.renderPassOptions.srcBlendingFunction, command.renderPassOptions.destBlendingFunction);
                 Renderer::setWireframe(command.renderPassOptions.wireframe);
                 Renderer::setTesselationPatchSize(command.renderPassOptions.tesselationPatchSize);
