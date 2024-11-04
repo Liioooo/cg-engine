@@ -1,16 +1,19 @@
 <Shaders>
-    <Shader name="custom-shader-test">
+    <Shader name="custom-shader-test" type="render">
         <Vertex>shaders/custom-test_vertex.glsl</Vertex>
         <Fragment>shaders/custom-test_fragment.glsl</Fragment>
     </Shader>
-    <Shader name="custom-shader-test2">
+    <Shader name="custom-shader-test2" type="render">
         <Vertex>shaders/custom-test2_vertex.glsl</Vertex>
         <Fragment>shaders/custom-test2_fragment.glsl</Fragment>
     </Shader>
-    <Shader name="tess-test">
+    <Shader name="tess-test" type="render">
         <Vertex>shaders/tess-test_vertex.glsl</Vertex>
         <Fragment>shaders/tess-test_fragment.glsl</Fragment>
         <Tcs>shaders/tess-test_tcs.glsl</Tcs>
         <Tes>shaders/tess-test_tes.glsl</Tes>
+    </Shader>
+    <Shader name="custom-compute" type="compute">
+        <Path>shaders/custom-compute.glsl</Path>
     </Shader>
 </Shaders>

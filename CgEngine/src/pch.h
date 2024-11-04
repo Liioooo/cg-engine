@@ -5,6 +5,7 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 
+#include <initializer_list>
 #include <array>
 #include <algorithm>
 #include <cstdint>

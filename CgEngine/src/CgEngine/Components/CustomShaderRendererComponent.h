@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Rendering/RenderPass.h"
-#include "Rendering/CustomShader.h"
+#include "Rendering/CustomShaders.h"
 #include "Rendering/CustomValMaterial.h"
 #include "Resources/Mesh.h"
 #include "Resources/CustomMesh.h"

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "MemoryBarrierBit.h"
+
 namespace CgEngine {
 
     class Texture2D;
@@ -80,7 +82,7 @@ namespace CgEngine {
         uint32_t getProgramId() const;
 
         void dispatch(uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ);
-        void waitForMemoryBarrier();
+        void waitForMemoryBarrier(std::initializer_list<MemoryBarrierBit> barriers);
 
         void setBool(const std::string& name, bool value);
         void setInt(const std::string& name, int value);
@@ -97,9 +99,11 @@ namespace CgEngine {
         void setImageCube(TextureCube& texture, uint32_t textureUnit, ShaderStorageAccess storageAccess, uint32_t level = 0);
         void setImageArray(Texture2DArray& texture, uint32_t textureUnit, ShaderStorageAccess storageAccess);
 
-    private:
+    protected:
         std::string name;
         uint32_t programId = ~0;
+
+    private:
         std::unordered_map<std::string, int32_t> uniformLocations{};
     };
 

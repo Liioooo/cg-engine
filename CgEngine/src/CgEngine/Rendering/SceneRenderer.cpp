@@ -871,7 +871,7 @@ namespace CgEngine {
 
             skinningShader.setInt("u_ComponentIndex", i);
             skinningShader.dispatch((skinningQueue[i].numVertices / 32) + 1, 1, 1);
-            skinningShader.waitForMemoryBarrier();
+            skinningShader.waitForMemoryBarrier({MemoryBarrierBit::All});
         }
     }
 

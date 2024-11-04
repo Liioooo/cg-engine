@@ -440,7 +440,7 @@ namespace CgEngine {
         environmentMapSphereToCube->setTexture2D(sphereMap, 0);
         environmentMapSphereToCube->setImageCube(cubeMap, 1, ShaderStorageAccess::WriteOnly, 0);
         environmentMapSphereToCube->dispatch(MAP_SIZE / 32, MAP_SIZE / 32, 6);
-        environmentMapSphereToCube->waitForMemoryBarrier();
+        environmentMapSphereToCube->waitForMemoryBarrier({MemoryBarrierBit::All});
 
         cubeMap.generateMipMaps();
         TextureUtils::applyMipMapFiltering(MipMapFiltering::Trilinear, GL_TEXTURE_CUBE_MAP);
@@ -459,7 +459,7 @@ namespace CgEngine {
             environmentMapPrefilterMap->setFloat("u_Roughness", roughness);
             environmentMapPrefilterMap->setImageCube(*prefilterMap, 1, ShaderStorageAccess::WriteOnly, i);
             environmentMapPrefilterMap->dispatch(numGroups, numGroups, 6);
-            environmentMapPrefilterMap->waitForMemoryBarrier();
+            environmentMapPrefilterMap->waitForMemoryBarrier({MemoryBarrierBit::All});
         }
 
         auto* irradianceMap = new TextureCube(TextureFormat::Float32A, 32, 32, MipMapFiltering::Bilinear);
@@ -468,7 +468,7 @@ namespace CgEngine {
         environmentMapIrradianceMap->setTextureCube(*prefilterMap, 0);
         environmentMapIrradianceMap->setImageCube(*irradianceMap, 1, ShaderStorageAccess::WriteOnly);
         environmentMapIrradianceMap->dispatch(irradianceMap->getWidth() / 2, irradianceMap->getWidth() / 2, 6);
-        environmentMapIrradianceMap->waitForMemoryBarrier();
+        environmentMapIrradianceMap->waitForMemoryBarrier({MemoryBarrierBit::All});
 
         resourceManager.insertResource(hdriPath + "-irradiance", irradianceMap);
         resourceManager.insertResource(hdriPath + "-prefilter", prefilterMap);

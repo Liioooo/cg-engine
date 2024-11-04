@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Rendering/CustomShader.h"
+#include "Rendering/CustomShaders.h"
 #include "Resources/MeshVertices.h"
 #include "Rendering/PBRMaterial.h"
 #include "Rendering/Texture.h"
@@ -57,6 +57,7 @@ namespace CgEngine {
             registerResourceType<PhysicsMaterial>();
             registerResourceType<Font>();
             registerResourceType<CustomShader>();
+            registerResourceType<CustomComputeShader>();
         }
 
         template<typename R>
@@ -105,6 +106,7 @@ namespace CgEngine {
             unloadUnusedResourceType<PhysicsMaterial>();
             unloadUnusedResourceType<Font>();
             unloadUnusedResourceType<CustomShader>();
+            unloadUnusedResourceType<CustomComputeShader>();
         }
 
     private:

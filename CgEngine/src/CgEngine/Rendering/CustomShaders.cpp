@@ -3,17 +3,24 @@
 #include <Logging.h>
 #include <pugixml.hpp>
 #include <Asserts.h>
-#include "CustomShader.h"
+#include "CustomShaders.h"
 
 namespace CgEngine {
-    CustomShader* CustomShader::createResource(const std::string& name) {
-        if (!shadersXMLFile.isLoaded()) {
-            shadersXMLFile.load(FileSystem::getAsGamePath("shaders.xml"));
+    const pugi::xml_document& CustomShadersData::getShadersXMLFile() {
+        if (!CustomShadersData::shadersXMLFile.isLoaded()) {
+            CustomShadersData::shadersXMLFile.load(FileSystem::getAsGamePath("shaders.xml"));
         }
 
-        const pugi::xml_document& shadersXML = shadersXMLFile.getXMLDocument();
+        return CustomShadersData::shadersXMLFile.getXMLDocument();
+    }
+
+    CustomShader* CustomShader::createResource(const std::string& name) {
+        const auto& shadersXML = CustomShadersData::getShadersXMLFile();
+
         const auto& shaders = shadersXML.child("Shaders");
-        const auto& shaderNode = shaders.find_child_by_attribute("Shader", "name", name.c_str());
+        const auto& shaderNode = shaders.find_child([&name](pugi::xml_node node) {
+            return std::string_view(node.name()) == "Shader" && std::string_view(node.attribute("type").as_string()) == "render" && std::string_view(node.attribute("name").as_string()) == name;
+        });
         std::string vertexPath = shaderNode.child("Vertex").child_value();
         std::string fragmentPath = shaderNode.child("Fragment").child_value();
         std::string geometryPath = shaderNode.child("Geometry").child_value();
@@ -59,5 +66,40 @@ namespace CgEngine {
         ShaderUtils::checkErrors(programId, "PROGRAM");
 
         CG_LOGGING_DEBUG("Loaded CustomShader: {0}", this->name)
+    }
+
+    CustomComputeShader* CustomComputeShader::createResource(const std::string& name) {
+        const auto& shadersXML = CustomShadersData::getShadersXMLFile();
+
+        const auto& shaders = shadersXML.child("Shaders");
+        const auto& shaderNode = shaders.find_child([&name](pugi::xml_node node) {
+            return std::string_view(node.name()) == "Shader" && std::string_view(node.attribute("type").as_string()) == "compute" && std::string_view(node.attribute("name").as_string()) == name;
+        });
+        std::string path = shaderNode.child("Path").child_value();
+        return new CustomComputeShader(name, path);
+    }
+
+    CustomComputeShader::CustomComputeShader(std::string name, const std::string& path) : ComputeShader() {
+        CG_LOGGING_DEBUG("Loading CustomComputeShader: {0}", this->name)
+
+        this->name = std::move(name);
+
+        std::string source = ShaderUtils::preprocessShaderCode(ShaderUtils::loadShaderSourceCode(path, ShaderEnv::Custom));
+
+        CG_ASSERT(!source.empty(), "CustomComputeShader, Shader Source is required")
+
+        programId = glCreateProgram();
+
+        const char* cString = source.c_str();
+        uint32_t shaderId = glCreateShader(GL_COMPUTE_SHADER);
+        glShaderSource(shaderId, 1, &cString, nullptr);
+        glCompileShader(shaderId);
+        ShaderUtils::checkErrors(shaderId, "COMPUTE");
+        glAttachShader(programId, shaderId);
+
+        glLinkProgram(programId);
+        ShaderUtils::checkErrors(programId, "PROGRAM");
+
+        CG_LOGGING_DEBUG("Loaded CustomComputeShader: {0}", this->name)
     }
 }

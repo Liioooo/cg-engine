@@ -196,6 +196,7 @@ namespace CgEngine {
     }
 
     void Shader::bind() {
+        CG_ASSERT(isReady(), "Shader is not ready!")
         glUseProgram(programId);
     }
 
@@ -294,6 +295,7 @@ namespace CgEngine {
     }
 
     void ComputeShader::bind() {
+        CG_ASSERT(isReady(), "ComputeShader is not ready!")
         glUseProgram(programId);
     }
 
@@ -309,8 +311,8 @@ namespace CgEngine {
         glDispatchCompute(groupsX, groupsY, groupsZ);
     }
 
-    void ComputeShader::waitForMemoryBarrier() {
-        glMemoryBarrier(GL_ALL_BARRIER_BITS);
+    void ComputeShader::waitForMemoryBarrier(std::initializer_list<MemoryBarrierBit> barriers) {
+        glMemoryBarrier(MemoryBarrierUtils::convertToBitfield(barriers));
     }
 
     void ComputeShader::setBool(const std::string &name, bool value) {

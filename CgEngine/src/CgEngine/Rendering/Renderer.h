@@ -5,7 +5,7 @@
 #include "VertexArrayObject.h"
 #include "ShaderStorageBuffer.h"
 #include "Resources/ResRef.h"
-#include "CustomShader.h"
+#include "CustomShaders.h"
 
 namespace CgEngine {
 
