@@ -13,6 +13,11 @@ namespace CgEngine {
         camera.setBloomIntensity(params.bloomIntensity);
         camera.setBloomThreshold(params.bloomThreshold);
 
+        camera.setHbaoBias(params.hbaoBias);
+        camera.setHbaoIntensity(params.hbaoIntensity);
+        camera.setHbaoRadius(params.hbaoRadius);
+        camera.setHbaoSharpness(params.hbaoSharpness);
+
         if (params.projection == "perspective") {
             camera.setProjectionType(CameraProjectionType::Perspective);
             camera.setPerspectiveFar(params.cfar);

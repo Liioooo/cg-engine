@@ -32,6 +32,18 @@ namespace CgEngine {
         float getBloomThreshold() const;
         void setBloomThreshold(float threshold);
 
+        float getHbaoBias() const;
+        void setHbaoBias(float hbaoBias);
+
+        float getHbaoIntensity() const;
+        void setHbaoIntensity(float hbaoIntensity);
+
+        float getHbaoRadius() const;
+        void setHbaoRadius(float hbaoRadius);
+
+        float getHbaoSharpness() const;
+        void setHbaoSharpness(float hbaoSharpness);
+
         float getAspectRatio() const;
 
         const glm::mat4& getProjectionMatrix() const;
@@ -53,6 +65,11 @@ namespace CgEngine {
 
         float bloomIntensity = 1.0f;
         float bloomThreshold = 0.0f;
+
+        float hbaoRadius = 1.0f;
+        float hbaoIntensity = 1.5f;
+        float hbaoBias = 0.35f;
+        float hbaoSharpness = 1.0f;
 
         float aspectRatio = 1;
 

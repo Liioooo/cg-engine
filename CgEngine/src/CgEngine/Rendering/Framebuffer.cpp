@@ -9,6 +9,8 @@ namespace CgEngine {
             case FramebufferFormat::RGBA8:       return GL_RGBA8;
             case FramebufferFormat::RGBA16F:     return GL_RGBA16F;
             case FramebufferFormat::RGB16F:      return GL_RGB16F;
+            case FramebufferFormat::RG8:         return GL_RG8;
+            case FramebufferFormat::RG16F:       return GL_RG16F;
         }
         return 0;
     }

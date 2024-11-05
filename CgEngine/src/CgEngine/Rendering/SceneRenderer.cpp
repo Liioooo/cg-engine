@@ -116,6 +116,63 @@ namespace CgEngine {
             hbaoDeinterleavingRenderPassSpec.depthTest = false;
 
             hbaoDeinterleavingRenderPass = RenderPass(std::move(hbaoDeinterleavingRenderPassSpec));
+
+            hbaoShader = ComputeShader("hbao");
+
+            for (int i = 0; i < 16; i++) {
+                hbaoData.float2Offsets[i] = glm::vec4((float)(i % 4) + 0.5f, (float)(i / 4.0f) + 0.5f, 0.0f, 1.f);
+            }
+            std::memcpy(hbaoData.jitters, generateHBAOJitterNoise().data(), sizeof(glm::vec4) * 16);
+
+            hbaoResultTexture = new Texture2DArray(TextureFormat::RedGreenFloat16, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
+
+            FramebufferSpecification hbaoReinterleavingFramebufferSpec;
+            hbaoReinterleavingFramebufferSpec.width = viewportWidth;
+            hbaoReinterleavingFramebufferSpec.height = viewportHeight;
+            hbaoReinterleavingFramebufferSpec.clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
+            hbaoReinterleavingFramebufferSpec.hasDepthStencilAttachment = false;
+            hbaoReinterleavingFramebufferSpec.hasDepthAttachment = false;
+            hbaoReinterleavingFramebufferSpec.useExistingColorAttachment = false;
+            hbaoReinterleavingFramebufferSpec.colorAttachments = {FramebufferFormat::RG16F};
+
+            auto* hbaoReinterleavingFramebuffer = new Framebuffer(hbaoReinterleavingFramebufferSpec);
+
+            RenderPassSpecification hbaoReinterleavingRenderPassSpec;
+            hbaoReinterleavingRenderPassSpec.shader = Shader("hbaoReinterleaving");
+            hbaoReinterleavingRenderPassSpec.framebuffer = hbaoReinterleavingFramebuffer;
+            hbaoReinterleavingRenderPassSpec.clearColorBuffer = true;
+            hbaoReinterleavingRenderPassSpec.clearDepthBuffer = false;
+            hbaoReinterleavingRenderPassSpec.clearStencilBuffer = false;
+            hbaoReinterleavingRenderPassSpec.frontfaceCulling = false;
+            hbaoReinterleavingRenderPassSpec.backfaceCulling = false;
+            hbaoReinterleavingRenderPassSpec.depthTest = false;
+            hbaoReinterleavingRenderPassSpec.depthWrite = false;
+
+            hbaoReinterleavingRenderPass = RenderPass(std::move(hbaoReinterleavingRenderPassSpec));
+
+            FramebufferSpecification hbaoBlurFramebufferSpec;
+            hbaoBlurFramebufferSpec.width = viewportWidth;
+            hbaoBlurFramebufferSpec.height = viewportHeight;
+            hbaoBlurFramebufferSpec.clearColor = {1.0f, 1.0f, 1.0f, 0.0f};
+            hbaoBlurFramebufferSpec.hasDepthStencilAttachment = false;
+            hbaoBlurFramebufferSpec.hasDepthAttachment = false;
+            hbaoBlurFramebufferSpec.useExistingColorAttachment = false;
+            hbaoBlurFramebufferSpec.colorAttachments = {FramebufferFormat::RG16F};
+
+            auto* hbaoBlurFramebuffer = new Framebuffer(hbaoBlurFramebufferSpec);
+
+            RenderPassSpecification hbaoBlurRenderPassSpec;
+            hbaoBlurRenderPassSpec.shader = Shader("hbaoBlur");
+            hbaoBlurRenderPassSpec.framebuffer = hbaoBlurFramebuffer;
+            hbaoBlurRenderPassSpec.clearColorBuffer = true;
+            hbaoBlurRenderPassSpec.clearDepthBuffer = false;
+            hbaoBlurRenderPassSpec.clearStencilBuffer = false;
+            hbaoBlurRenderPassSpec.frontfaceCulling = false;
+            hbaoBlurRenderPassSpec.backfaceCulling = false;
+            hbaoBlurRenderPassSpec.depthTest = false;
+            hbaoBlurRenderPassSpec.depthWrite = false;
+
+            hbaoBlurRenderPass = RenderPass(std::move(hbaoBlurRenderPassSpec));
         }
         {
             FramebufferSpecification geoFramebufferSpec;
@@ -346,6 +403,7 @@ namespace CgEngine {
         ubLightData = new UniformBuffer<UBLightData>("LightData", 1, geometryRenderPass.getSpecification().shader);
         ubDirShadowData = new UniformBuffer<UBDirShadowData>("DirShadowData", 2, shadowMapRenderPass.getSpecification().shader);
         ubScreenData = new UniformBuffer<UBScreenData>("ScreenData", 3, hbaoDeinterleavingRenderPass.getSpecification().shader);
+        ubHBAOData = new UniformBuffer<UBHBAOData>("HBAOData", 4, hbaoShader);
 
         boneTransformsBuffer = new ShaderStorageBuffer();
         boneTransformsBuffer->setData(nullptr, maxBones * maxAnimatedComponents * sizeof(glm::mat4));
@@ -366,6 +424,7 @@ namespace CgEngine {
         delete hbaoDeinterleavingDepthTexture;
         delete hbaoDeinterleavingFramebuffers[0];
         delete hbaoDeinterleavingFramebuffers[1];
+        delete hbaoResultTexture;
 
         delete ubCameraData;
         delete ubLightData;
@@ -393,6 +452,8 @@ namespace CgEngine {
     void SceneRenderer::beginScene(const Camera& camera, glm::mat4 cameraTransform, const SceneLightEnvironment& lightEnvironment, const SceneEnvironment& sceneEnvironment) {
         CG_ASSERT(!activeRendering, "Already Rendering Scene!")
         CG_ASSERT(activeScene, "No active Scene!")
+
+        ApplicationOptions& applicationOptions = Application::get().getApplicationOptions();
 
 #ifdef CG_ENABLE_DEBUG_FEATURES
         sceneIndex++;
@@ -454,6 +515,17 @@ namespace CgEngine {
                 hbaoDeinterleavingDepthTextureViews[14]->getRendererId(),
                 hbaoDeinterleavingDepthTextureViews[15]->getRendererId()
             }, 0, quarterSize.x, quarterSize.y);
+
+            constexpr uint32_t HBAO_WORK_GROUP_SIZE = 16u;
+            glm::uvec2 quarterSizeWorkGroups = quarterSize + (HBAO_WORK_GROUP_SIZE - quarterSize % HBAO_WORK_GROUP_SIZE);
+            hbaoWorkGroupSize.x = quarterSizeWorkGroups.x / 16u;
+            hbaoWorkGroupSize.y = quarterSizeWorkGroups.y / 16u;
+            hbaoWorkGroupSize.z = 16u;
+
+            delete hbaoResultTexture;
+            hbaoResultTexture = new Texture2DArray(TextureFormat::RedGreenFloat16, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
+
+            hbaoBlurRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
 
             float bloomWidth = static_cast<float>(viewportWidth) / 2.0f;
             float bloomHeight = static_cast<float>(viewportHeight) / 2.0f;
@@ -532,6 +604,11 @@ namespace CgEngine {
         currentSceneEnvironment.dirLightCastShadows = lightEnvironment.dirLightCastShadows && lightEnvironment.dirLightIntensity != 0.0f;
 
         setupShadowMapData(lightEnvironment.dirLightDirection, cameraData.viewProjection, camera);
+
+        if (applicationOptions.enableHBAO) {
+            setupHBAOData(cameraData.projection, camera);
+            hbaoSharpness = camera.getHbaoSharpness();
+        }
     }
 
     void SceneRenderer::endScene() {
@@ -544,7 +621,16 @@ namespace CgEngine {
         skinMeshes();
         shadowMapPass();
         preDepthPass();
-        hbaoDeinterleavingPass();
+
+        if (applicationOptions.enableHBAO) {
+            hbaoDeinterleavingPass();
+            hbaoComputePass();
+            hbaoReinterleavingPass();
+            hbaoBlurPass();
+        } else {
+            clearPass(hbaoBlurRenderPass);
+        }
+
         geometryPass();
         customShaderPass();
         skyboxPass();
@@ -925,6 +1011,48 @@ namespace CgEngine {
         Renderer::endRenderPass();
     }
 
+    void SceneRenderer::hbaoComputePass() {
+        CG_GPU_TIME_FN(true, true)
+
+        hbaoShader.bind();
+
+        hbaoShader.setTexture2D(hbaoDeinterleavingDepthTexture->getRendererId(), 0);
+        hbaoShader.setTexture2D(preDepthRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 1);
+        hbaoShader.setImageArray(*hbaoResultTexture, 2, ShaderStorageAccess::WriteOnly);
+
+        hbaoShader.dispatch(hbaoWorkGroupSize.x, hbaoWorkGroupSize.y, hbaoWorkGroupSize.z);
+        hbaoShader.waitForMemoryBarrier({MemoryBarrierBit::TextureFetch, MemoryBarrierBit::ShaderImageAccess});
+    }
+
+    void SceneRenderer::hbaoReinterleavingPass() {
+        CG_GPU_TIME_FN(true, true)
+
+        Renderer::beginRenderPass(hbaoReinterleavingRenderPass);
+        hbaoReinterleavingRenderPass.getSpecification().shader.setTexture(hbaoResultTexture->getRendererId(), 0);
+        Renderer::renderUnitQuad(emptyMaterial);
+        Renderer::endRenderPass();
+    }
+
+    void SceneRenderer::hbaoBlurPass() {
+        CG_GPU_TIME_FN(true, true)
+
+        auto& shader = hbaoBlurRenderPass.getSpecification().shader;
+
+        Renderer::beginRenderPass(hbaoBlurRenderPass);
+
+        shader.setFloat("u_Sharpness", hbaoSharpness);
+
+        shader.setTexture(hbaoReinterleavingRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
+        shader.setVec2("u_InvResolutionDirection", glm::vec2(invViewportWidth, 0.0f));
+        Renderer::renderUnitQuad(emptyMaterial);
+
+        shader.setTexture(hbaoBlurRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
+        shader.setVec2("u_InvResolutionDirection", glm::vec2(0.0f, invViewportHeight));
+        Renderer::renderUnitQuad(emptyMaterial);
+
+        Renderer::endRenderPass();
+    }
+
     void SceneRenderer::geometryPass() {
         CG_GPU_TIME_FN(true, true)
 
@@ -935,6 +1063,7 @@ namespace CgEngine {
         geometryRenderPass.getSpecification().shader.setTexture(Renderer::getBrdfLUTTexture().getRendererId(), 7);
         geometryRenderPass.getSpecification().shader.setFloat("u_EnvironmentIntensity", currentSceneEnvironment.environmentIntensity);
         geometryRenderPass.getSpecification().shader.setTexture(dirShadowMaps->getRendererId(), 8);
+        geometryRenderPass.getSpecification().shader.setTexture(hbaoBlurRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 9);
 
         for (const auto [mk, command]: drawCommandQueue) {
             const auto& transforms = meshTransforms[mk];
@@ -1200,6 +1329,43 @@ namespace CgEngine {
         ubDirShadowData->setData(dirShadowData);
     }
 
+    void SceneRenderer::setupHBAOData(const glm::mat4& cameraProjection, const Camera& camera) {
+        // From: https://github.com/nvpro-samples/gl_ssao/blob/master/ssao.cpp#L701
+
+        const float* P = glm::value_ptr(cameraProjection);
+
+        const glm::vec4 projInfoPerspective = {
+            2.0f / (P[4 * 0 + 0]),                  // (x) * (R - L)/N
+            2.0f / (P[4 * 1 + 1]),                  // (y) * (T - B)/N
+            -(1.0f - P[4 * 2 + 0]) / P[4 * 0 + 0],  // L/N
+            -(1.0f + P[4 * 2 + 1]) / P[4 * 1 + 1],  // B/N
+        };
+
+        const glm::vec4 projInfoOrtho = {
+            2.0f / (P[4 * 0 + 0]),                  // ((x) * R - L)
+            2.0f / (P[4 * 1 + 1]),                  // ((y) * T - B)
+            -(1.0f + P[4 * 3 + 0]) / P[4 * 0 + 0],  // L
+            -(1.0f - P[4 * 3 + 1]) / P[4 * 1 + 1],  // B
+        };
+
+        hbaoData.isOrtho = camera.getProjectionType() == CameraProjectionType::Orthographic;
+        hbaoData.perspectiveInfo = camera.getProjectionType() == CameraProjectionType::Orthographic ? projInfoOrtho : projInfoPerspective;
+
+        const float meters2viewSpace = 1.0f;
+        const float R = camera.getHbaoRadius() * meters2viewSpace;
+        const float R2 = R * R;
+        hbaoData.negInvR2 = -1.0f / R2;
+        hbaoData.radiusToScreen = R * 0.5f * (camera.getProjectionType() == CameraProjectionType::Orthographic ? (static_cast<float>(viewportHeight) / projInfoOrtho[1]) : (static_cast<float>(viewportHeight) / (glm::tan(glm::radians(camera.getPerspectiveFov())) * 0.5f) * 2.0f));
+
+        hbaoData.powExponent = glm::max(camera.getHbaoIntensity(), 0.0f);
+        hbaoData.nDotVBias = glm::min(std::max(0.f, camera.getHbaoBias()), 1.0f);
+        hbaoData.aoMultiplier = 1.0f / (1.0f - hbaoData.nDotVBias);
+
+        hbaoData.invQuarterResolution = 1.0f / glm::vec2{ static_cast<float>(viewportWidth) / 4, static_cast<float>(viewportHeight) / 4 };
+
+        ubHBAOData->setData(hbaoData);
+    }
+
     float SceneRenderer::findDrawInfoTextureIndex(UiDrawInfo& drawInfo, const Texture2D* texture) const {
         float textureIndex = -1;
         if (texture != nullptr) {
@@ -1216,5 +1382,28 @@ namespace CgEngine {
             }
         }
         return textureIndex;
+    }
+
+    std::array<glm::vec4, 16> SceneRenderer::generateHBAOJitterNoise() const {
+        // From: https://github.com/nvpro-samples/gl_ssao/blob/master/ssao.cpp#L325
+
+        std::mt19937 rmt;
+        float numDir = 8;  // keep in sync to glsl
+
+        std::array<glm::vec4, 16> result {};
+
+        for (int i = 0; i < 16; i++) {
+            float Rand1 = static_cast<float>(rmt()) / 4294967296.0f;
+            float Rand2 = static_cast<float>(rmt()) / 4294967296.0f;
+
+            // Use random rotation angles in [0,2PI/NUM_DIRECTIONS)
+            const float Angle = glm::two_pi<float>() * Rand1 / numDir;
+            result[i].x = glm::cos(Angle);
+            result[i].y = glm::sin(Angle);
+            result[i].z = Rand2;
+            result[i].w = 0;
+        }
+
+        return result;
     }
 }

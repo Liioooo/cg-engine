@@ -16,6 +16,11 @@ namespace CgEngine {
         float bloomIntensity = 1.0f;
         float bloomThreshold = 0.2f;
 
+        float hbaoRadius = 1.0f;
+        float hbaoIntensity = 1.5f;
+        float hbaoBias = 0.35f;
+        float hbaoSharpness = 1.0f;
+
         void verifyParams() const;
     };
 

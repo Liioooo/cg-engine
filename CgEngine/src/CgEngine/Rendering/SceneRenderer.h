@@ -61,6 +61,10 @@ namespace CgEngine {
         RenderPass customShaderRenderPass;
 
         RenderPass hbaoDeinterleavingRenderPass;
+        RenderPass hbaoReinterleavingRenderPass;
+        RenderPass hbaoBlurRenderPass;
+
+        ComputeShader hbaoShader;
 
         CustomValMaterial screenMaterial;
         CustomValMaterial skyboxMaterial;
@@ -77,6 +81,8 @@ namespace CgEngine {
         Texture2DArray* hbaoDeinterleavingDepthTexture;
         std::array<Texture2DView*, 16> hbaoDeinterleavingDepthTextureViews;
         std::array<Framebuffer*, 2> hbaoDeinterleavingFramebuffers;
+        glm::uvec3 hbaoWorkGroupSize;
+        Texture2DArray* hbaoResultTexture;
 
         CameraFrustum cameraFrustum;
 
@@ -84,6 +90,9 @@ namespace CgEngine {
         void shadowMapPass();
         void preDepthPass();
         void hbaoDeinterleavingPass();
+        void hbaoComputePass();
+        void hbaoReinterleavingPass();
+        void hbaoBlurPass();
         void geometryPass();
         void customShaderPass();
         void skyboxPass();
@@ -97,6 +106,7 @@ namespace CgEngine {
         void clearPass(RenderPass& renderPass);
 
         void setupShadowMapData(glm::vec3 dirLightDirection, const glm::mat4& cameraViewProjection, const Camera& camera);
+        void setupHBAOData(const glm::mat4& cameraProjection, const Camera& camera);
 
         struct UBCameraData {
             glm::mat4 viewProjection;
@@ -158,6 +168,24 @@ namespace CgEngine {
             glm::vec2 halfResolution;
         };
         UniformBuffer<UBScreenData>* ubScreenData;
+
+        struct UBHBAOData {
+            glm::vec4 perspectiveInfo;
+            glm::vec2 invQuarterResolution;
+            float radiusToScreen;
+            float negInvR2;
+
+            float nDotVBias;
+            float aoMultiplier;
+            float powExponent;
+            bool isOrtho;
+
+            glm::vec4 float2Offsets[16];
+            glm::vec4 jitters[16];
+        } hbaoData;
+        UniformBuffer<UBHBAOData>* ubHBAOData;
+
+        float hbaoSharpness = 1.0f;
 
         struct MeshKey {
             const uint32_t voaId;
@@ -246,6 +274,7 @@ namespace CgEngine {
         std::unordered_map<CustomShader*, std::vector<CustomShaderDrawCommand>> customShaderDrawCommandQueue;
 
         float findDrawInfoTextureIndex(UiDrawInfo& drawInfo, const Texture2D* texture) const;
+        std::array<glm::vec4, 16> generateHBAOJitterNoise() const;
 
 #ifdef CG_ENABLE_DEBUG_FEATURES
         uint64_t sceneIndex = 0;

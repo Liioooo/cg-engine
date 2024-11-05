@@ -6,6 +6,8 @@
 #include "common/DirShadowMappingFragment.glsl"
 #include "common/IBLCalculationsFragment.glsl"
 #include "common/LightCalculationsHelperFragment.glsl"
+#include "common/HBAOSampling.glsl"
+#include "common/ScreenDataBuffer.glsl"
 
 layout(early_fragment_tests) in;
 
@@ -123,7 +125,7 @@ void main() {
     light += calcSpotLights(F0, mat_AlbedoColor, mat_Metalness, mat_Roughness, fs_in.WorldPosition, mat_Normal, V, NdotV);
     light += mat_Emission;
 
-    vec3 ibl = calcIBL(F0, mat_AlbedoColor, mat_Metalness, mat_Roughness, mat_Normal, V, NdotV) * u_EnvironmentIntensity;
+    vec3 ibl = calcIBL(F0, mat_AlbedoColor, mat_Metalness, mat_Roughness, mat_Normal, V, NdotV) * u_EnvironmentIntensity * texture(u_HBAO_Tex, gl_FragCoord.xy * u_ScreenData.invFullResolution).r;
 
     o_FragColor = vec4(light + ibl, 1.0f);
 

@@ -137,8 +137,14 @@ namespace CgEngine {
         if (!node.attribute("ortho-size").empty()) params.orthoSize = node.attribute("ortho-size").as_float();
         if (!node.attribute("primary").empty()) params.isPrimary = node.attribute("primary").as_bool();
         if (!node.attribute("exposure").empty()) params.exposure = node.attribute("exposure").as_float();
+
         if (!node.attribute("bloom-intensity").empty()) params.bloomIntensity = node.attribute("bloom-intensity").as_float();
         if (!node.attribute("bloom-threshold").empty()) params.bloomThreshold = node.attribute("bloom-threshold").as_float();
+
+        if (!node.attribute("hbao-radius").empty()) params.hbaoRadius = node.attribute("hbao-radius").as_float();
+        if (!node.attribute("hbao-intensity").empty()) params.hbaoIntensity = node.attribute("hbao-intensity").as_float();
+        if (!node.attribute("hbao-bias").empty()) params.hbaoBias = node.attribute("hbao-bias").as_float();
+        if (!node.attribute("hbao-sharpness").empty()) params.hbaoSharpness = node.attribute("hbao-sharpness").as_float();
 
         scene->attachComponent<CameraComponent>(entity, params);
     }

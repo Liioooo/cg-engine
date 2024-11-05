@@ -88,6 +88,38 @@ namespace CgEngine {
         this->bloomThreshold = threshold;
     }
 
+    float Camera::getHbaoBias() const {
+        return hbaoBias;
+    }
+
+    void Camera::setHbaoBias(float hbaoBias) {
+        Camera::hbaoBias = hbaoBias;
+    }
+
+    float Camera::getHbaoIntensity() const {
+        return hbaoIntensity;
+    }
+
+    void Camera::setHbaoIntensity(float hbaoIntensity) {
+        Camera::hbaoIntensity = hbaoIntensity;
+    }
+
+    float Camera::getHbaoRadius() const {
+        return hbaoRadius;
+    }
+
+    void Camera::setHbaoRadius(float hbaoRadius) {
+        Camera::hbaoRadius = hbaoRadius;
+    }
+
+    float Camera::getHbaoSharpness() const {
+        return hbaoSharpness;
+    }
+
+    void Camera::setHbaoSharpness(float hbaoSharpness) {
+        Camera::hbaoSharpness = hbaoSharpness;
+    }
+
     float Camera::getAspectRatio() const {
         return aspectRatio;
     }

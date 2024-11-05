@@ -10,12 +10,11 @@ namespace CgEngine {
     class UniformBuffer {
     public:
         UniformBuffer(const std::string& blockName, uint32_t binding, const Shader& shaderForInit) {
-            uint32_t shaderBlockIndex = glGetUniformBlockIndex(shaderForInit.getProgramId(), blockName.c_str());
-            glGetActiveUniformBlockiv(shaderForInit.getProgramId(), shaderBlockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, &bufferSize);
+            init(blockName, binding, shaderForInit.getProgramId());
+        }
 
-            glGenBuffers(1, &bufferId);
-            glBindBufferBase(GL_UNIFORM_BUFFER, binding, bufferId);
-            glNamedBufferData(bufferId, bufferSize, nullptr, GL_DYNAMIC_DRAW);
+        UniformBuffer(const std::string& blockName, uint32_t binding, const ComputeShader& shaderForInit) {
+            init(blockName, binding, shaderForInit.getProgramId());
         }
 
         ~UniformBuffer() {
@@ -31,6 +30,15 @@ namespace CgEngine {
     private:
         uint32_t bufferId;
         int bufferSize;
+
+        void init(const std::string& blockName, uint32_t binding, uint32_t shaderForInitRendererId) {
+            uint32_t shaderBlockIndex = glGetUniformBlockIndex(shaderForInitRendererId, blockName.c_str());
+            glGetActiveUniformBlockiv(shaderForInitRendererId, shaderBlockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, &bufferSize);
+
+            glGenBuffers(1, &bufferId);
+            glBindBufferBase(GL_UNIFORM_BUFFER, binding, bufferId);
+            glNamedBufferData(bufferId, bufferSize, nullptr, GL_DYNAMIC_DRAW);
+        }
     };
 
 }

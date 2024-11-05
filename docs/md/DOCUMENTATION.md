@@ -41,6 +41,7 @@ debug_render_lines = true
 anisotropic_filtering = 16.0
 shadow_map_resolution = 4096
 enable_bloom = true
+enable_hbao = true
 
 [game]
 startScene = scenes/start_scene.xml
@@ -115,15 +116,18 @@ To use a Prefab in another Prefab or a Scene file you can do this:
 It can also be instantiated using scripts: `instantiatePrefab("coin", CgEngine::NoEntity);`
 
 ### `assets/shaders.xml`
-Here you can define custom shaders that can be used in `CustomShaderRendererComponent`.
+Here you can define custom shaders that can be used in `CustomShaderRendererComponent` or in scripts.
 
 ```xml
 <Shaders>
-    <Shader name="my-shader">
+    <Shader name="my-shader" type="render">
         <Vertex>shaders/my-shader_vertex.glsl</Vertex>
         <Fragment>shaders/my-shader_fragment.glsl</Fragment>
         <Tcs>shaders/my-shader_tcs.glsl</Tcs>
         <Tes>shaders/my-shader_tes.glsl</Tes>
+    </Shader>
+    <Shader name="my-compute-shader" type="compute">
+        <Path>shaders/my-compute-shader.glsl</Path>
     </Shader>
 </Shaders>
 ```

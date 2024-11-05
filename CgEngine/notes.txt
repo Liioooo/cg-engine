@@ -3,6 +3,7 @@ UniformBuffers:
 1: LightData
 2: DirShadowData
 3: ScreenData
+4: HBAOData
 
 SSBO:
 0: Transforms
@@ -10,7 +11,8 @@ SSBO:
 2: BoneTransforms
 3: OriginalVertexBuffer
 4: SkinnedVertexBuffer
-5: CustomShaderRenderer (InstanceBuffer)
+5: CustomShaderRenderer (InstanceBuffer0)
+6: CustomShaderRenderer (InstanceBuffer1)
 
 1 - 4: Used for Vertex Skinning pass
 
@@ -22,6 +24,7 @@ Textures:
 0 - 4: pbrMaterial Textures
 5 - 7: IBL Textures
 8    : dir Shadow maps
+9    : HBAOTexture
 
 
 Bindless Textures: TODO maybe

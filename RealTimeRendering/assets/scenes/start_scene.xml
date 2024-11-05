@@ -14,7 +14,7 @@
     <Entity>
         <Components>
             <MeshRendererComponent asset-file="CG_CubeMesh" material="cube" />
-            <TransformComponent position="10 1 0" rotation="20 20 0" scale="10 2 2" />
+            <TransformComponent position="10 1 0" rotation="20 20 0" scale="10 2 20" />
         </Components>
     </Entity>
     <Entity>

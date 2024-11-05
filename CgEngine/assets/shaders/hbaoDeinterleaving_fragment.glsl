@@ -1,3 +1,7 @@
+/*
+From https://github.com/nvpro-samples/gl_ssao/blob/master/hbao_deinterleave.frag.glsl
+*/
+
 #version 450 core
 
 #include "common/CameraDataBuffer.glsl"
@@ -11,6 +15,7 @@ layout(location = 0) out float out_Color[8];
 
 const vec2 UV_OFFSETS[2] = { vec2(0.5f, 0.5f), vec2(0.5f, 2.5f) };
 
+// From: https://github.com/nvpro-samples/gl_ssao/blob/master/depthlinearize.frag.glsl
 float linearizeDepth(const float screenDepth) {
     if (u_CameraData.clipInfo[3] != 0) {
         return (u_CameraData.clipInfo[0] / (u_CameraData.clipInfo[1] * screenDepth + u_CameraData.clipInfo[2]));

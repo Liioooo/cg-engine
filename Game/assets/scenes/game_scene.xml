@@ -308,7 +308,7 @@
         <Entity>
             <Components>
                 <TransformComponent position="0 0 5" rotation="0 0 0" scale="1 1 1" />
-                <CameraComponent primary="true" projection="perspective" near="0.1" far="500" fov="80" exposure="1.0" bloom-threshold="0.6" bloom-intensity="0.6" />
+                <CameraComponent primary="true" projection="perspective" near="0.1" far="500" fov="80" exposure="1.0" bloom-threshold="0.6" bloom-intensity="0.6" hbao-intensity="2.5" hbao-bias="0.1" hbao-radius="2" />
             </Components>
         </Entity>
         <Entity id="playerMesh">

@@ -3,7 +3,7 @@
 namespace CgEngine {
 
     enum class FramebufferFormat {
-        RGBA8, RGBA16F, RGB8, RGB16F
+        RGBA8, RGBA16F, RGB8, RGB16F, RG8, RG16F
     };
 
     namespace FramebufferUtils {

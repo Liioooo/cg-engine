@@ -81,7 +81,12 @@ Generally everything located at `CgEngine/assets/shaders/common` can be imported
 | `primary`         | Is this camera the primary?                                              | `true`        | `false`       |
 | `exposure`        | Controls the camara exposure                                             | `1.0`         | `1.0`         |
 | `bloom-intensity` | Controls the intensity of the Light Bloom                                | `1.0`         | `1.0`         |
-| `bloom-threshold` | Controls the threshold for pixels, that should contribute to Light Bloom | `0.2`         | `0.2`         |
+| `hbao-radius`     | Controls the radius in which samples are taken (defined in eye space)    | `1.5`         | `1.0`         |
+| `hbao-intensity`  | Controls the intensity of HBAO                                           | `2.0`         | `1.5`         |
+| `hbao-bias`       | Controls the angle bias, to avoid occlusion near the tangent plane (0-1) | `0.2`         | `0.35`        |
+| `hbao-sharpness`  | Controls the sharpness of the HBAO Blurring                              | `1.0`         | `1.0`         |
+
+More info about HBAO: https://developer.download.nvidia.com/presentations/2008/SIGGRAPH/HBAO_SIG08b.pdf and https://github.com/nvpro-samples/gl_ssao
 
 ## AnimationComponent
 
