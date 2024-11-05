@@ -8,6 +8,8 @@ From: https://github.com/nvpro-samples/gl_ssao/blob/master/hbao.frag.glsl and Th
 #include "common/ScreenDataBuffer.glsl"
 #include "common/PI.glsl"
 
+#pragma optionNV(unroll all)
+
 layout(binding = 0) uniform sampler2DArray u_LinearDepth;
 layout(binding = 1) uniform sampler2D u_ViewNormals;
 layout(binding = 2, rg16f) restrict writeonly uniform image2DArray o_Output;
@@ -21,7 +23,7 @@ vec3 getQuarterCoord(vec2 UV) {
 }
 
 vec3 uvToView(vec2 uv, float eye_z) {
-    return vec3((uv * u_HBAO.perspectiveInfo.xy + u_HBAO.perspectiveInfo.zw) * (u_HBAO.isOrtho ? 1.0f : eye_z), eye_z);
+    return vec3(fma(uv, u_HBAO.perspectiveInfo.xy, u_HBAO.perspectiveInfo.zw) * (u_HBAO.isOrtho ? 1.0f : eye_z), eye_z);
 }
 
 vec3 FetchQuarterResViewPos(vec2 UV) {
@@ -31,7 +33,7 @@ vec3 FetchQuarterResViewPos(vec2 UV) {
 
 float Falloff(float DistanceSquare) {
     // 1 scalar mad instruction
-    return DistanceSquare * u_HBAO.negInvR2 + 1.0f;
+    return fma(DistanceSquare, u_HBAO.negInvR2, 1.0f);
 }
 
 // P = view-space position at the kernel center
@@ -68,10 +70,10 @@ float ComputeCoarseAO(vec2 fullResUV, float radiusPixels, vec4 rand, vec3 viewPo
         vec2 Direction = RotateDirection(vec2(cos(Angle), sin(Angle)), rand.xy);
 
         // Jitter starting sample within the first step
-        float RayPixels = (rand.z * stepSizePixels + 1.0);
+        float RayPixels = fma(rand.z, stepSizePixels, 1.0f);
 
         for (float StepIndex = 0; StepIndex < NUM_STEPS; ++StepIndex) {
-            vec2 snappedUV = round(RayPixels * Direction) * u_HBAO.invQuarterResolution + fullResUV;
+            vec2 snappedUV = fma(round(RayPixels * Direction), u_HBAO.invQuarterResolution, fullResUV);
             vec3 S = FetchQuarterResViewPos(snappedUV);
             RayPixels += stepSizePixels;
 
@@ -87,7 +89,7 @@ layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 void main() {
     vec2 float2Offset = u_HBAO.float2Offsets[gl_GlobalInvocationID.z].xy;
     vec2 base = gl_GlobalInvocationID.xy * 4.0f + float2Offset;
-    vec2 uv = base * (u_HBAO.invQuarterResolution / 4.0f);
+    vec2 uv = base * (u_HBAO.invQuarterResolution * 0.25f);
 
     vec3 viewPosition = FetchQuarterResViewPos(uv);
     vec3 normal = texelFetch(u_ViewNormals, ivec2(base), 0).xyz;

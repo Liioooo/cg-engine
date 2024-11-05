@@ -4,6 +4,8 @@ From https://github.com/nvpro-samples/gl_ssao/blob/master/hbao_blur.frag.glsl
 
 #version 450 core
 
+#pragma optionNV(unroll all)
+
 in VS_OUT {
     vec2 TexCoord;
 } fs_in;
