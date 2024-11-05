@@ -525,6 +525,7 @@ namespace CgEngine {
             delete hbaoResultTexture;
             hbaoResultTexture = new Texture2DArray(TextureFormat::RedGreenFloat16, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
 
+            hbaoReinterleavingRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
             hbaoBlurRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
 
             float bloomWidth = static_cast<float>(viewportWidth) / 2.0f;
