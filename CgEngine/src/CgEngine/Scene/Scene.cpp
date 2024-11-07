@@ -186,6 +186,23 @@ namespace CgEngine {
         for (auto it = componentManager->begin<AnimatedMeshRendererComponent>(); it != componentManager->end<AnimatedMeshRendererComponent>(); it++) {
             it->update(ts);
         }
+
+        for (auto it = componentManager->begin<AudioListenerComponent>(); it != componentManager->end<AudioListenerComponent>(); it++) {
+            if (it->isActive()) {
+                auto& audioSystem = AudioSystem::get();
+
+                auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
+                audioSystem.updateListenerPosition({transform.getGlobalRotationQuat(), transform.getGlobalPosition()});
+                audioSystem.updateListenerVolume(it->getVolume());
+                if (componentManager->hasComponent<RigidBodyComponent>(it->getEntity())) {
+                    auto& rigidBody = componentManager->getComponent<RigidBodyComponent>(it->getEntity());
+                    if (rigidBody.isDynamic()) {
+                        audioSystem.updateListenerVelocity(rigidBody.getLinearVelocity());
+                    }
+                }
+                break;
+            }
+        }
     }
 
     void Scene::onEvent(Event& event) {

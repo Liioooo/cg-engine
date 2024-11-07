@@ -103,6 +103,10 @@ namespace CgEngine {
         return actor->getGlobalPosePosition();
     }
 
+    glm::vec3 RigidBodyComponent::getLinearVelocity() const {
+        return actor->getLinearVelocity();
+    }
+
     void RigidBodyComponent::setMaxLinearVelocity(float velocity) {
         actor->setMaxLinearVelocity(velocity);
     }

@@ -95,6 +95,9 @@ namespace CgEngine {
             if (yawPitchRoll.x != 0 || yawPitchRoll.y != 0 || yawPitchRoll.z != 0) {
                 glm::vec3 direction = glm::normalize(glm::quat({yawPitchRoll.y, yawPitchRoll.x, yawPitchRoll.z}) * glm::vec3(0, 0, -1));
                 localModelMatrix = glm::inverse(glm::lookAt(localPosition, localPosition + direction, {0.0f, 1.0f, 0.0f}));
+                decomposeModelToGlobals();
+                localRotationVec = globalRotationVec;
+                localRotationQuat = globalRotationQuat;
             } else {
                 localModelMatrix = calculateModelMatrix(localPosition, localRotationVec, localScale);
             }

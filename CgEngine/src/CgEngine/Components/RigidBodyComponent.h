@@ -45,6 +45,7 @@ namespace CgEngine {
         void setKinematicTarget(glm::vec3 target, glm::quat rotation);
         void setGlobalPose(glm::vec3 target, glm::quat rotation);
         glm::vec3 getGlobalPosePosition();
+        glm::vec3 getLinearVelocity() const;
 
         void setMaxLinearVelocity(float velocity);
         void setMaxAngularVelocity(float velocity);

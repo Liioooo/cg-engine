@@ -20,6 +20,7 @@
 #include "Components/RigidBodyComponent.h"
 #include "Components/CharacterControllerComponent.h"
 #include "Components/UiCanvasComponent.h"
+#include "Components/AudioListenerComponent.h"
 #include "ComponentArray.h"
 
 namespace CgEngine {
@@ -47,6 +48,7 @@ namespace CgEngine {
             registerComponentType<UiCanvasComponent>();
             registerComponentType<AnimationComponent>();
             registerComponentType<CustomShaderRendererComponent>();
+            registerComponentType<AudioListenerComponent>();
         }
 
         template<typename C>

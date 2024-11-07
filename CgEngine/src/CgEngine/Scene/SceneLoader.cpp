@@ -90,6 +90,8 @@ namespace CgEngine {
             createAnimationComponent(scene, entity, node);
         } else if (name == "CustomShaderRendererComponent") {
             createCustomShaderRendererComponent(scene, entity, node);
+        } else if (name == "AudioListenerComponent") {
+            createAudioListenerComponent(scene, entity, node);
         }
     }
 
@@ -303,5 +305,13 @@ namespace CgEngine {
         if (!node.attribute("use-environment-mapping-data").empty()) params.renderPassOptions.useEnvironmentMappingData = node.attribute("use-environment-mapping-data").as_bool();
 
         scene->attachComponent<CustomShaderRendererComponent>(entity, params);
+    }
+
+    void SceneLoader::createAudioListenerComponent(Scene* scene, Entity entity, const pugi::xml_node& node) {
+        AudioListenerComponentParams params;
+        if (!node.attribute("active").empty()) params.active = node.attribute("active").as_bool();
+        if (!node.attribute("volume").empty()) params.volume = node.attribute("volume").as_float();
+
+        scene->attachComponent<AudioListenerComponent>(entity, params);
     }
 }

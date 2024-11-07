@@ -148,6 +148,14 @@ namespace CgEngine {
         return PhysXUtils::phsXToGlmVec(physxActor->getGlobalPose().p);
     }
 
+    glm::vec3 PhysicsActor::getLinearVelocity() const {
+        if (!dynamic) {
+            return glm::vec3(0.0f);
+        }
+
+        return PhysXUtils::phsXToGlmVec(physxActor->is<physx::PxRigidDynamic>()->getLinearVelocity());
+    }
+
     void PhysicsActor::setMaxLinearVelocity(float velocity) {
         if (!dynamic) {
             return;

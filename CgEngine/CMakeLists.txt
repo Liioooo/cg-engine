@@ -140,6 +140,14 @@ target_link_libraries(${PROJECT_NAME} PRIVATE optimized "${CMAKE_CURRENT_LIST_DI
 target_link_libraries(${PROJECT_NAME} PRIVATE optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/release/PhysXCharacterKinematic_static_64.lib")
 ################################################################################
 
+# OpenAL #######################################################################
+set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(ALSOFT_INSTALL_EXAMPLES OFF CACHE BOOL "" FORCE)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/vendor/openal-soft)
+list(APPEND ADDITIONAL_LIBRARY_DEPENDENCIES OpenAL)
+list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/vendor/openal-soft/include")
+################################################################################
+
 target_include_directories(${PROJECT_NAME} PUBLIC
         "${CMAKE_CURRENT_LIST_DIR}/src/CgEngine"
         "${ADDITIONAL_INCLUDE_DIRECTORIES}"

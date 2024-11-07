@@ -3,6 +3,7 @@
 #include <INIReader.h>
 #include <Scripting/ScriptManager.h>
 #include <Resources/ResourceManager.h>
+#include <Audio/AudioSystem.h>
 #include "Rendering/SceneRenderer.h"
 #include "Window.h"
 #include "Events/WindowCloseEvent.h"
@@ -54,6 +55,7 @@ namespace CgEngine {
         ScriptManager scriptManager;
         SceneManager* sceneManager;
         PhysicsSystem physicsSystem;
+        AudioSystem audioSystem;
         ResourceManager resourceManager;
         SceneRenderer* sceneRenderer;
         Window* window;
