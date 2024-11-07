@@ -22,3 +22,7 @@
 	path = CgEngine/vendor/freetype
 	url = https://gitlab.freedesktop.org/freetype/freetype.git
 	branch = master
+[submodule "CgEngine/vendor/openal-soft"]
+	path = CgEngine/vendor/openal-soft
+	url = git@github.com:kcat/openal-soft.git
+	branch = master
