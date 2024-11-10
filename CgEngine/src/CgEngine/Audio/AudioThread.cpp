@@ -11,7 +11,6 @@ namespace CgEngine {
         threadActive = true;
         thread = new std::thread([] {
             while (threadActive) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 onUpdate();
             }
             onShutdownCallback();
@@ -68,5 +67,7 @@ namespace CgEngine {
         }
 
         onUpdateCallback();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }
