@@ -79,16 +79,12 @@ namespace CgEngine {
 
         template<typename C, typename P>
         C& attachComponent(Entity entity, P componentParams) {
-            componentParams.verifyParams();
-            C& addedComp = componentManager->attachComponent<C>(entity);
-            addedComp.onAttach(*this, componentParams);
-            return addedComp;
+            return componentManager->attachComponent<C>(entity, *this, componentParams);
         }
 
         template<typename C>
         void detachComponent(Entity entity) {
-            componentManager->getComponent<C>(entity).onDetach(*this);
-            componentManager->detachComponent<C>(entity);
+            componentManager->detachComponent<C>(entity, *this);
         }
 
         /**
@@ -168,6 +164,7 @@ namespace CgEngine {
         int viewportHeight;
         PhysicsScene* physicsScene;
 
+        CameraComponent& getPrimaryCamaraComponent();
 
         void recursiveDestroyEntity(Entity entity);
         void recursiveUpdateChildTransforms(Entity entity, const glm::mat4& parentModelMatrix, bool parentDirty);

@@ -35,7 +35,7 @@ namespace CgEngine {
 
             size_t indexRemovedEntity = entityToComponentsIndex[entity];
 
-            components[indexRemovedEntity] = components.back();
+            components[indexRemovedEntity] = std::move(components.back());
             components.pop_back();
 
             Entity entityLastElement = componentsIndexToEntity[components.size()];

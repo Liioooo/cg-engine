@@ -11,6 +11,7 @@ namespace CgEngine {
         threadActive = true;
         thread = new std::thread([] {
             while (threadActive) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 onUpdate();
             }
             onShutdownCallback();
@@ -52,8 +53,6 @@ namespace CgEngine {
     }
 
     void AudioThread::onUpdate() {
-        onUpdateCallback();
-
         auto& tasks = audioThreadTasksLocal;
         {
             std::scoped_lock lock(audioThreadTasksLock);
@@ -67,5 +66,7 @@ namespace CgEngine {
                 tasks.pop();
             }
         }
+
+        onUpdateCallback();
     }
 }

@@ -40,7 +40,7 @@ namespace CgEngine {
         virtual ~Shader();
 
         Shader(Shader&& other) noexcept;
-        Shader& operator= (Shader&& other) noexcept;
+        Shader& operator=(Shader&& other) noexcept;
 
         void bind();
         bool isReady() const;

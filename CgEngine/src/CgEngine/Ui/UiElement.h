@@ -52,10 +52,10 @@ namespace CgEngine {
     private:
         const UIElementType type;
 
-        std::pair<float, UIPosUnit> top = {-1, UIPosUnit::Pixel};
-        std::pair<float, UIPosUnit> right = {-1, UIPosUnit::Pixel};
-        std::pair<float, UIPosUnit> bottom = {-1, UIPosUnit::Pixel};
-        std::pair<float, UIPosUnit> left = {-1, UIPosUnit::Pixel};
+        std::pair<float, UIPosUnit> top = {-1.0f, UIPosUnit::Pixel};
+        std::pair<float, UIPosUnit> right = {-1.0f, UIPosUnit::Pixel};
+        std::pair<float, UIPosUnit> bottom = {-1.0f, UIPosUnit::Pixel};
+        std::pair<float, UIPosUnit> left = {-1.0f, UIPosUnit::Pixel};
 
         uint32_t zIndex = 0;
         bool dirty = true;

@@ -17,6 +17,8 @@ namespace RTR {
 
         void update(CgEngine::TimeStep ts) override;
 
+        void onKeyPressed(CgEngine::KeyPressedEvent& event) override;
+
     private:
         CgEngine::CustomMesh* mesh;
         CgEngine::CustomValMaterial* mat;

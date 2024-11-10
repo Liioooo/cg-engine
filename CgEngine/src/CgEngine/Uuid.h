@@ -21,3 +21,14 @@ namespace CgEngine {
     };
 
 }
+
+namespace std {
+
+    template<>
+    struct hash<CgEngine::Uuid> {
+        std::size_t operator()(const CgEngine::Uuid& uuid) const {
+            return uuid.getUuid();
+        }
+    };
+
+}

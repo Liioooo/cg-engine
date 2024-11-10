@@ -41,7 +41,7 @@
                 "CMAKE_C_COMPILER": "cl.exe",
                 "CMAKE_CXX_COMPILER": "cl.exe",
                 "CMAKE_C_FLAGS_INIT": "/GL /O2 /W3",
-                "CMAKE_CXX_FLAGS_INIT": "/GL /O2/W3 /sdl"
+                "CMAKE_CXX_FLAGS_INIT": "/GL /O2 /W3 /sdl"
             }
         },
         {

@@ -2,6 +2,7 @@
 
 #include "Rendering/CustomShaders.h"
 #include "Resources/MeshVertices.h"
+#include "Resources/AudioFile.h"
 #include "Rendering/PBRMaterial.h"
 #include "Rendering/Texture.h"
 #include "Physics/PhysicsMaterial.h"
@@ -58,6 +59,7 @@ namespace CgEngine {
             registerResourceType<Font>();
             registerResourceType<CustomShader>();
             registerResourceType<CustomComputeShader>();
+            registerResourceType<AudioFile>();
         }
 
         template<typename R>
@@ -107,6 +109,7 @@ namespace CgEngine {
             unloadUnusedResourceType<Font>();
             unloadUnusedResourceType<CustomShader>();
             unloadUnusedResourceType<CustomComputeShader>();
+            unloadUnusedResourceType<AudioFile>();
         }
 
     private:

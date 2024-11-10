@@ -2,6 +2,7 @@
 #include "Asserts.h"
 #include "Rendering/SceneRenderer.h"
 #include "Application.h"
+#include "Audio/AudioComponentUpdateData.h"
 
 namespace CgEngine {
     Scene::Scene(int viewportWidth, int viewportHeight) : viewportWidth(viewportWidth), viewportHeight(viewportHeight) {
@@ -187,21 +188,69 @@ namespace CgEngine {
             it->update(ts);
         }
 
-        for (auto it = componentManager->begin<AudioListenerComponent>(); it != componentManager->end<AudioListenerComponent>(); it++) {
-            if (it->isActive()) {
-                auto& audioSystem = AudioSystem::get();
+        if (!componentManager->getEntitiesWithComponent<AudioListenerComponent>().empty()) {
+            for (auto it = componentManager->begin<AudioListenerComponent>(); it != componentManager->end<AudioListenerComponent>(); it++) {
+                if (it->isActive()) {
+                    auto& audioSystem = AudioSystem::get();
 
-                auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
-                audioSystem.updateListenerPosition({transform.getGlobalRotationQuat(), transform.getGlobalPosition()});
-                audioSystem.updateListenerVolume(it->getVolume());
-                if (componentManager->hasComponent<RigidBodyComponent>(it->getEntity())) {
-                    auto& rigidBody = componentManager->getComponent<RigidBodyComponent>(it->getEntity());
-                    if (rigidBody.isDynamic()) {
-                        audioSystem.updateListenerVelocity(rigidBody.getLinearVelocity());
+                    auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
+                    audioSystem.updateListenerPosition({transform.getGlobalRotationQuat(), transform.getGlobalPosition()});
+                    audioSystem.updateListenerVolume(it->getVolume());
+                    if (componentManager->hasComponent<RigidBodyComponent>(it->getEntity())) {
+                        auto& rigidBody = componentManager->getComponent<RigidBodyComponent>(it->getEntity());
+                        if (rigidBody.isDynamic()) {
+                            audioSystem.updateListenerVelocity(rigidBody.getLinearVelocity());
+                        }
                     }
+                    break;
                 }
-                break;
             }
+        } else {
+            auto& primaryCamera = getPrimaryCamaraComponent();
+            auto& audioSystem = AudioSystem::get();
+
+            auto& transform = componentManager->getComponent<TransformComponent>(primaryCamera.getEntity());
+            audioSystem.updateListenerPosition({transform.getGlobalRotationQuat(), transform.getGlobalPosition()});
+            audioSystem.updateListenerVolume(1.0f);
+            if (componentManager->hasComponent<RigidBodyComponent>(primaryCamera.getEntity())) {
+                auto& rigidBody = componentManager->getComponent<RigidBodyComponent>(primaryCamera.getEntity());
+                if (rigidBody.isDynamic()) {
+                    audioSystem.updateListenerVelocity(rigidBody.getLinearVelocity());
+                }
+            }
+        }
+
+        const auto audioComponentsMarkedForDestroy = AudioSystem::get().getComponentsMarkedForDestroy();
+        std::vector<Entity> audioComponentsToDestroy;
+        audioComponentsToDestroy.reserve(audioComponentsMarkedForDestroy.size());
+
+        std::vector<AudioComponentUpdateData> audioComponentUpdateData;
+        for (auto it = componentManager->begin<AudioComponent>(); it != componentManager->end<AudioComponent>(); it++) {
+            if (audioComponentsMarkedForDestroy.find(it->getUuid()) != audioComponentsMarkedForDestroy.end()) {
+                audioComponentsToDestroy.emplace_back(it->getEntity());
+                continue;
+            }
+
+            auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
+
+            auto& updateData = audioComponentUpdateData.emplace_back();
+            updateData.uuid = it->getUuid();
+            updateData.looping = it->isLooping();
+            updateData.volume = it->getVolume();
+            updateData.pitch = it->getPitch();
+            updateData.transform = {transform.getGlobalRotationQuat(), transform.getGlobalPosition()};
+
+            if (componentManager->hasComponent<RigidBodyComponent>(it->getEntity())) {
+                auto& rigidBody = componentManager->getComponent<RigidBodyComponent>(it->getEntity());
+                if (rigidBody.isDynamic()) {
+                    updateData.velocity = rigidBody.getLinearVelocity();
+                }
+            }
+        }
+        AudioSystem::get().updateAudioComponents(std::move(audioComponentUpdateData));
+
+        for (const auto& entity: audioComponentsToDestroy) {
+            detachComponent<AudioComponent>(entity);
         }
     }
 
@@ -216,10 +265,9 @@ namespace CgEngine {
     }
 
     void Scene::onRender(SceneRenderer& renderer) {
-        auto cameraComponent = std::find_if(componentManager->begin<CameraComponent>(), componentManager->end<CameraComponent>(), [](auto&& c) { return c.isPrimary();});
-        CG_ASSERT(cameraComponent != componentManager->end<CameraComponent>(), "Scene must have a Primary Camera")
+        auto& cameraComponent = getPrimaryCamaraComponent();
 
-        auto cameraTransform = componentManager->getComponent<TransformComponent>(cameraComponent->getEntity());
+        auto cameraTransform = componentManager->getComponent<TransformComponent>(cameraComponent.getEntity());
 
         SceneLightEnvironment lightEnvironment{};
 
@@ -270,7 +318,7 @@ namespace CgEngine {
         }
 
         renderer.setActiveScene(this);
-        renderer.beginScene(cameraComponent->getCamera(), cameraTransform.getModelMatrix(), lightEnvironment, sceneEnvironment);
+        renderer.beginScene(cameraComponent.getCamera(), cameraTransform.getModelMatrix(), lightEnvironment, sceneEnvironment);
 
         executeOnPreRenderFunctions(renderer);
 
@@ -361,6 +409,13 @@ namespace CgEngine {
 
     int Scene::getViewportHeight() const {
         return viewportHeight;
+    }
+
+    CameraComponent& Scene::getPrimaryCamaraComponent() {
+        auto cameraComponent = std::find_if(componentManager->begin<CameraComponent>(), componentManager->end<CameraComponent>(), [](auto&& c) { return c.isPrimary();});
+        CG_ASSERT(cameraComponent != componentManager->end<CameraComponent>(), "Scene must have a Primary Camera")
+
+        return *cameraComponent;
     }
 
     void Scene::recursiveDestroyEntity(Entity entity) {

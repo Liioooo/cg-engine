@@ -21,6 +21,7 @@
 #include "Components/CharacterControllerComponent.h"
 #include "Components/UiCanvasComponent.h"
 #include "Components/AudioListenerComponent.h"
+#include "Components/AudioComponent.h"
 #include "ComponentArray.h"
 
 namespace CgEngine {
@@ -49,15 +50,20 @@ namespace CgEngine {
             registerComponentType<AnimationComponent>();
             registerComponentType<CustomShaderRendererComponent>();
             registerComponentType<AudioListenerComponent>();
+            registerComponentType<AudioComponent>();
+        }
+
+        template<typename C, typename P>
+        C& attachComponent(Entity entity, Scene& scene, P componentParams) {
+            componentParams.verifyParams();
+            C& comp =  getComponentArray<C>()->attachComponent(entity);
+            comp.onAttach(scene, componentParams);
+            return comp;
         }
 
         template<typename C>
-        C& attachComponent(Entity entity) {
-            return getComponentArray<C>()->attachComponent(entity);
-        }
-
-        template<typename C>
-        void detachComponent(Entity entity) {
+        void detachComponent(Entity entity, Scene& scene) {
+            getComponentArray<C>()->getComponent(entity).onDetach(scene);
             getComponentArray<C>()->detachComponent(entity);
         }
 

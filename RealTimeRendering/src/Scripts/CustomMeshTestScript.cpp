@@ -1,7 +1,14 @@
 #include "CustomMeshTestScript.h"
 
 namespace RTR {
-    void CustomMeshTestScript::update(CgEngine::TimeStep ts) {}
+    void CustomMeshTestScript::update(CgEngine::TimeStep ts) {
+        CgEngine::Entity e = findEntityById("audio");
+        if (hasEntityComponent<CgEngine::AudioComponent>(e)) {
+            auto& c = getComponent<CgEngine::AudioComponent>(e);
+//            CG_LOGGING_INFO("Playing: {}", c.isPlaying())
+//            CG_LOGGING_INFO("Paused: {}", c.isPaused())
+        }
+    }
 
     void CustomMeshTestScript::onAttach() {
         mesh = new CgEngine::CustomMesh();
@@ -114,5 +121,46 @@ namespace RTR {
         delete mesh;
         delete instanceBuffer;
         delete mat;
+    }
+
+    void CustomMeshTestScript::onKeyPressed(CgEngine::KeyPressedEvent& event) {
+        if (event.getKeyCode() == CgEngine::KeyCode::M) {
+            detachComponent<CgEngine::AudioComponent>();
+        }
+        if (event.getKeyCode() == CgEngine::KeyCode::N) {
+            CgEngine::AudioComponentParams p;
+            p.assetFile = "sound.wav";
+            p.playOnAttach = true;
+            p.looping = true;
+
+            attachComponent<CgEngine::AudioComponent>(p);
+        }
+        if (event.getKeyCode() == CgEngine::KeyCode::P) {
+            CgEngine::Entity e = findEntityById("audio");
+            if (hasEntityComponent<CgEngine::AudioComponent>(e)) {
+                auto& c = getComponent<CgEngine::AudioComponent>(e);
+                if (c.isPaused()) {
+                    c.play();
+                }
+                if (c.isPlaying()) {
+                    c.pause();
+                }
+            }
+        }
+
+        if (event.getKeyCode() == CgEngine::KeyCode::KPAdd) {
+            CgEngine::Entity e = findEntityById("audio");
+            if (hasEntityComponent<CgEngine::AudioComponent>(e)) {
+                auto& c = getComponent<CgEngine::AudioComponent>(e);
+                c.setVolume(c.getVolume() + 0.1f);
+            }
+        }
+        if (event.getKeyCode() == CgEngine::KeyCode::KPSubtract) {
+            CgEngine::Entity e = findEntityById("audio");
+            if (hasEntityComponent<CgEngine::AudioComponent>(e)) {
+                auto& c = getComponent<CgEngine::AudioComponent>(e);
+                c.setVolume(c.getVolume() - 0.1f);
+            }
+        }
     }
 }

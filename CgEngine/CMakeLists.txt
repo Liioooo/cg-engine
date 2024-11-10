@@ -148,6 +148,10 @@ list(APPEND ADDITIONAL_LIBRARY_DEPENDENCIES OpenAL)
 list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/vendor/openal-soft/include")
 ################################################################################
 
+# DR_LIBS ######################################################################
+list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/vendor/dr_libs")
+################################################################################
+
 target_include_directories(${PROJECT_NAME} PUBLIC
         "${CMAKE_CURRENT_LIST_DIR}/src/CgEngine"
         "${ADDITIONAL_INCLUDE_DIRECTORIES}"
