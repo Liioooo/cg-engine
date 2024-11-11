@@ -14,6 +14,6 @@
         <Tes>shaders/tess-test_tes.glsl</Tes>
     </Shader>
     <Shader name="custom-compute" type="compute">
-        <Path>shaders/custom-compute.glsl</Path>
+        <Path>shaders/custom-compute-test.glsl</Path>
     </Shader>
 </Shaders>

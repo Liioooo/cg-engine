@@ -1,5 +1,6 @@
 #include "ScriptComponent.h"
 #include "Application.h"
+#include "Scripting/NativeScript.h"
 
 namespace CgEngine {
     void ScriptComponentParams::verifyParams() const {

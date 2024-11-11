@@ -1,8 +1,8 @@
-#include <Application.h>
 #include "NativeScript.h"
 #include "Scene/Scene.h"
 #include "Rendering/SceneRenderer.h"
 #include "Scene/PrefabManager.h"
+#include "Application.h"
 
 namespace CgEngine {
     void NativeScript::setScene(Scene* scene) {

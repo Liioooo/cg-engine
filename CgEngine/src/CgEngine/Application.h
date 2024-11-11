@@ -1,9 +1,9 @@
 #pragma once
 
 #include <INIReader.h>
-#include <Scripting/ScriptManager.h>
-#include <Resources/ResourceManager.h>
-#include <Audio/AudioSystem.h>
+#include "Scripting/ScriptManager.h"
+#include "Resources/ResourceManager.h"
+#include "Audio/AudioSystem.h"
 #include "Rendering/SceneRenderer.h"
 #include "Window.h"
 #include "Events/WindowCloseEvent.h"

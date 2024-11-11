@@ -1,5 +1,6 @@
 #include <Scripts/FlyingCameraScript.h>
 #include <Scripts/CustomMeshTestScript.h>
+#include <Scripts/PropertyTestScript.h>
 #include <Scripts/FPSCounter.h>
 #include "CgEngine/Application.h"
 
@@ -9,6 +10,7 @@ int main(int argc, char **argv) {
     application->registerNativeScript<RTR::FlyingCameraScript>("flyingCameraScript");
     application->registerNativeScript<RTR::CustomMeshTestScript>("customMeshTestScript");
     application->registerNativeScript<RTR::FPSCounter>("fpsCounter");
+    application->registerNativeScript<RTR::PropertyTestScript>("propertyTest");
 
     application->init();
     application->run();

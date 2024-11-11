@@ -1,8 +1,8 @@
 #pragma once
 
-#include "NativeScript.h"
-
 namespace CgEngine {
+
+    class NativeScript;
 
     class ScriptManager {
     public:
