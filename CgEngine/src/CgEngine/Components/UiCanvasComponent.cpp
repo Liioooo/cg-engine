@@ -132,7 +132,7 @@ namespace CgEngine {
         element->setSize(size.first, size.second);
 
         element->setText(elementNode.attribute("text").as_string(""));
-        element->setColor(stringTupleToVec4(elementNode.attribute("color").as_string("0 0 0 1")));
+        element->setColor(Utils::LoaderUtils::stringTupleToVec4(elementNode.attribute("color").as_string("0 0 0 1")));
         element->setUseKerning(elementNode.attribute("kerning").as_bool(true));
 
         std::string font = elementNode.attribute("font").as_string("");
