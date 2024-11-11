@@ -52,7 +52,6 @@ namespace CgEngine {
         std::pair<float, UIPosUnit> stringToPosAndUnit(const std::string& s);
         UIXAlignment stringToXAlignment(const std::string& s);
         UIYAlignment stringToYAlignment(const std::string& s);
-        glm::vec4 stringTupleToVec4(const std::string& s);
 
     };
 

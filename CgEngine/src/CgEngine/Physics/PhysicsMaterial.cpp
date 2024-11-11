@@ -1,6 +1,7 @@
 #include "PhysicsMaterial.h"
 #include "FileSystem.h"
 #include "Application.h"
+#include "Utils/StringUtils.h"
 
 namespace CgEngine {
     PhysicsMaterial* PhysicsMaterial::createResource(const std::string& name) {
@@ -19,7 +20,7 @@ namespace CgEngine {
         std::string dynamicFriction = materialNode.child("DynamicFriction").child_value();
         std::string restitution = materialNode.child("Restitution").child_value();
 
-        return new PhysicsMaterial(staticFriction.empty() ? 0.0f : std::stof(staticFriction), dynamicFriction.empty() ? 0.0f : std::stof(dynamicFriction), restitution.empty() ? 0.0f : std::stof(restitution));
+        return new PhysicsMaterial(staticFriction.empty() ? 0.0f : Utils::String::toFloat(staticFriction).value_or(0.0f), dynamicFriction.empty() ? 0.0f : Utils::String::toFloat(dynamicFriction).value_or(0.0f), restitution.empty() ? 0.0f : Utils::String::toFloat(restitution).value_or(0.0f));
     }
 
     PhysicsMaterial::PhysicsMaterial(float staticFriction, float dynamicFriction, float restitution) : staticFriction(staticFriction), dynamicFriction(dynamicFriction), restitution(restitution) {

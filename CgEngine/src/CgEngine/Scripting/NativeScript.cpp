@@ -5,14 +5,6 @@
 #include "Application.h"
 
 namespace CgEngine {
-    void NativeScript::setScene(Scene* scene) {
-        owningScene = scene;
-    }
-
-    void NativeScript::setEntity(Entity entity) {
-        owningEntity = entity;
-    }
-
     Entity NativeScript::getOwingEntity() {
         return owningEntity;
     }
@@ -106,5 +98,9 @@ namespace CgEngine {
         addOnRenderCallback([from, to, color](SceneRenderer& renderer) {
             renderer.submitDebugLine(from, to, color);
         }, true);
+    }
+
+    const ScriptParameterMap& NativeScript::getParameterMap() {
+        return *parameterMap;
     }
 }

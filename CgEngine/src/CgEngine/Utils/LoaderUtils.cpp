@@ -1,16 +1,32 @@
 #include "LoaderUtils.h"
+#include "StringUtils.h"
 
 namespace CgEngine::Utils::LoaderUtils {
     glm::vec3 stringTupleToVec3(const std::string& s) {
         size_t p0 = 0;
         size_t p1 = s.find(' ');
-        float x = std::stof(s.substr(p0, p1));
+        float x = Utils::String::toFloat(s.substr(p0, p1)).value_or(0.0f);
         p0 = p1 + 1;
         p1 = s.find(' ', p0);
-        float y = std::stof(s.substr(p0, p1));
-        float z = std::stof(s.substr(p1 + 1));
+        float y = Utils::String::toFloat(s.substr(p0, p1)).value_or(0.0f);
+        float z = Utils::String::toFloat(s.substr(p1 + 1)).value_or(0.0f);
 
         return {x, y, z};
+    }
+
+    glm::vec4 stringTupleToVec4(const std::string& s) {
+        size_t p0 = 0;
+        size_t p1 = s.find(' ');
+        float x = Utils::String::toFloat(s.substr(p0, p1)).value_or(0.0f);
+        p0 = p1 + 1;
+        p1 = s.find(' ', p0);
+        float y = Utils::String::toFloat(s.substr(p0, p1)).value_or(0.0f);
+        p1++;
+        p0 = s.find(' ', p1);
+        float z = Utils::String::toFloat(s.substr(p1, p0)).value_or(0.0f);
+        float w = Utils::String::toFloat(s.substr(p0 + 1)).value_or(0.0f);
+
+        return {x, y, z, w};
     }
 
     glm::vec3 hexStringToColor(const std::string& s) {

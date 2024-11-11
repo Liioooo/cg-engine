@@ -19,9 +19,6 @@ namespace CgEngine {
         NativeScript() = default;
         ~NativeScript() = default;
 
-        void setScene(Scene* scene);
-        void setEntity(Entity entity);
-
         virtual void onAttach() {};
         virtual void onDetach() {};
 
@@ -74,6 +71,8 @@ namespace CgEngine {
         PhysicsRaycastHit physicsRaycast(const glm::vec3& origin, const glm::vec3& direction, float maxDistance, const std::unordered_set<Entity>& excludeEntities);
 
         void drawDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color);
+
+        const ScriptParameterMap& getParameterMap();
 
         template<typename R>
         ResRef<R> getResource(const std::string& name) {
@@ -128,6 +127,7 @@ namespace CgEngine {
     private:
         Scene* owningScene;
         Entity owningEntity;
+        ScriptParameterMap* parameterMap;
     };
 
 }

@@ -1,6 +1,8 @@
 #include "PBRMaterial.h"
 #include "Application.h"
 #include "FileSystem.h"
+#include "Utils/StringUtils.h"
+#include "Utils/LoaderUtils.h"
 
 namespace CgEngine {
     PBRMaterial* PBRMaterial::createResource(const std::string& name) {
@@ -34,29 +36,21 @@ namespace CgEngine {
         auto* material = new PBRMaterial();
 
         if (!albedo.empty()) {
-            uint64_t color = std::stoul(albedo.substr(1), nullptr, 16);
-            float r = ((color >> 16) & 0xFF) / 255.0f;
-            float g = ((color >> 8) & 0xFF) / 255.0f;
-            float b = (color & 0xFF) / 255.0f;
-            material->setAlbedoColor({r, g, b});
+            material->setAlbedoColor(Utils::LoaderUtils::hexStringToColor(albedo));
         }
         if (!metalness.empty()) {
-            material->setMetalness(std::stof(metalness));
+            material->setMetalness(Utils::String::toFloat(metalness).value_or(0.0f));
         }
         if (!roughness.empty()) {
-            material->setRoughness(std::stof(roughness));
+            material->setRoughness(Utils::String::toFloat(roughness).value_or(1.0f));
         }
         if (!emissionTexture.empty()) {
             material->setEmissionTexture(resourceManager.getResource<Texture2D>(FileSystem::getAsGamePath(emissionTexture)));
-            float emissionIntensity = emission.empty() ? 1.0f : std::stof(emission);
+            float emissionIntensity = emission.empty() ? 1.0f : Utils::String::toFloat(emission).value_or(1.0f);
             material->setEmission({emissionIntensity, emissionIntensity, emissionIntensity});
         } else if (!emissionColor.empty()) {
-            float emissionIntensity = emission.empty() ? 1.0f : std::stof(emission);
-            uint64_t color = std::stoul(emissionColor.substr(1), nullptr, 16);
-            float r = ((color >> 16) & 0xFF) / 255.0f;
-            float g = ((color >> 8) & 0xFF) / 255.0f;
-            float b = (color & 0xFF) / 255.0f;
-            material->setEmission(glm::vec3(r, g, b) * emissionIntensity);
+            float emissionIntensity = emission.empty() ? 1.0f : Utils::String::toFloat(emission).value_or(1.0f);
+            material->setEmission(Utils::LoaderUtils::hexStringToColor(emissionColor) * emissionIntensity);
         }
         if (!albedoTexture.empty()) {
             std::string albedoTexturePath = FileSystem::getAsGamePath(albedoTexture);

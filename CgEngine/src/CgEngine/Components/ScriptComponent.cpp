@@ -8,9 +8,12 @@ namespace CgEngine {
     }
 
     void ScriptComponent::onAttach(Scene &scene, ScriptComponentParams &params) {
+        parameterMap = std::move(params.parameterMap);
+
         script = Application::get().getScriptManager().getScriptInstance(params.scriptName);
-        script->setEntity(entity);
-        script->setScene(&scene);
+        script->owningEntity = entity;
+        script->owningScene = &scene;
+        script->parameterMap = &parameterMap;
         script->onAttach();
     }
 

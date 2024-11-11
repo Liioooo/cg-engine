@@ -16,7 +16,7 @@
         <Components>
             <MeshRendererComponent asset-file="CG_CubeMesh" material="cube" />
             <TransformComponent position="10 1 0" rotation="20 20 0" scale="10 2 20" />
-            <ScriptComponent script-name="propertyTest" />
+            <ScriptComponent script-name="propertyTest" test="1.25" vec="1.0 2.0 -1.0" />
         </Components>
     </Entity>
     <Entity>

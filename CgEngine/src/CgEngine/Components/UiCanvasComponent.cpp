@@ -3,6 +3,8 @@
 #include "Ui/UiCircle.h"
 #include "Asserts.h"
 #include "Application.h"
+#include "Utils/StringUtils.h"
+#include "Utils/LoaderUtils.h"
 
 namespace CgEngine {
     void UiCanvasComponentParams::verifyParams() const {}
@@ -82,8 +84,8 @@ namespace CgEngine {
         auto* element = createElement<UiCircle>(elementNode);
 
         element->setLineWidth(elementNode.attribute("line-width").as_float(0.0f));
-        element->setLineColor(stringTupleToVec4(elementNode.attribute("line-color").as_string("0 0 0 1")));
-        element->setFillColor(stringTupleToVec4(elementNode.attribute("fill-color").as_string("0 0 0 1")));
+        element->setLineColor(Utils::LoaderUtils::stringTupleToVec4(elementNode.attribute("line-color").as_string("0 0 0 1")));
+        element->setFillColor(Utils::LoaderUtils::stringTupleToVec4(elementNode.attribute("fill-color").as_string("0 0 0 1")));
 
         std::string textureName = elementNode.attribute("texture").as_string("");
         if (!textureName.empty()) {
@@ -100,8 +102,8 @@ namespace CgEngine {
         auto* element = createElement<UiRect>(elementNode);
 
         element->setLineWidth(elementNode.attribute("line-width").as_float(0.0f));
-        element->setLineColor(stringTupleToVec4(elementNode.attribute("line-color").as_string("0 0 0 1")));
-        element->setFillColor(stringTupleToVec4(elementNode.attribute("fill-color").as_string("0 0 0 1")));
+        element->setLineColor(Utils::LoaderUtils::stringTupleToVec4(elementNode.attribute("line-color").as_string("0 0 0 1")));
+        element->setFillColor(Utils::LoaderUtils::stringTupleToVec4(elementNode.attribute("fill-color").as_string("0 0 0 1")));
 
         std::string textureName = elementNode.attribute("texture").as_string("");
         if (!textureName.empty()) {
@@ -168,13 +170,13 @@ namespace CgEngine {
 
     std::pair<float, UIPosUnit> UiCanvasComponent::stringToPosAndUnit(const std::string& s) {
         if (s.length() > 2 && s.compare(s.length() - 2, 2, "vw") == 0) {
-            float pos = 0.01f * std::stof(s.substr(0, s.length() - 2));
+            float pos = 0.01f * Utils::String::toFloat(s.substr(0, s.length() - 2)).value();
             return {pos, UIPosUnit::VWPercent};
         } else if (s.length() > 2 && s.compare(s.length() - 2, 2, "vh") == 0) {
-            float pos = 0.01f * std::stof(s.substr(0, s.length() - 2));
+            float pos = 0.01f * Utils::String::toFloat(s.substr(0, s.length() - 2)).value();
             return {pos, UIPosUnit::VHPercent};
         } else {
-            float pos = std::stof(s);
+            float pos = Utils::String::toFloat(s).value();
             return {pos, UIPosUnit::Pixel};
         }
 
@@ -196,21 +198,6 @@ namespace CgEngine {
             return UIYAlignment::Bottom;
         }
         return UIYAlignment::Center;
-    }
-
-    glm::vec4 UiCanvasComponent::stringTupleToVec4(const std::string& s) {
-        size_t p0 = 0;
-        size_t p1 = s.find(' ');
-        float x = std::stof(s.substr(p0, p1));
-        p0 = p1 + 1;
-        p1 = s.find(' ', p0);
-        float y = std::stof(s.substr(p0, p1));
-        p1++;
-        p0 = s.find(' ', p1);
-        float z = std::stof(s.substr(p1, p0));
-        float w = std::stof(s.substr(p0 + 1));
-
-        return {x, y, z, w};
     }
 
 }

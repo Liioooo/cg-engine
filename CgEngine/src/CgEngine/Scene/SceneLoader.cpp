@@ -157,6 +157,10 @@ namespace CgEngine {
         ScriptComponentParams params;
         if (!node.attribute("script-name").empty()) params.scriptName = node.attribute("script-name").as_string();
 
+        for (const auto& attribute: node.attributes()) {
+            params.parameterMap.insert(attribute.name(), attribute.as_string());
+        }
+
         scene->attachComponent<ScriptComponent>(entity, params);
     }
 

@@ -4,6 +4,7 @@
 #include "Asserts.h"
 #include "FileSystem.h"
 #include "Application.h"
+#include "Utils/StringUtils.h"
 #include <filesystem>
 
 namespace CgEngine {
@@ -18,8 +19,8 @@ namespace CgEngine {
                 std::string params = name.substr(14);
                 if (!params.empty()) {
                     size_t splitPoint = params.find('_');
-                    lonSegments = std::stoi(params.substr(0, splitPoint));
-                    latSegments = std::stoi(params.substr(splitPoint + 1));
+                    lonSegments = Utils::String::toInt(params.substr(0, splitPoint)).value();
+                    latSegments = Utils::String::toInt(params.substr(splitPoint + 1)).value();
                 }
             }
 
@@ -32,8 +33,8 @@ namespace CgEngine {
                 std::string params = name.substr(15);
                 if (!params.empty()) {
                     size_t splitPoint = params.find('_');
-                    radius = std::stof(params.substr(0, splitPoint));
-                    height = std::stof(params.substr(splitPoint + 1));
+                    radius = Utils::String::toFloat(params.substr(0, splitPoint)).value();
+                    height = Utils::String::toFloat(params.substr(splitPoint + 1)).value();
                 }
             }
 

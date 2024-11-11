@@ -40,5 +40,26 @@ namespace CgEngine::Utils::String {
         }
         return result;
     }
+
+    std::optional<int32_t> toInt(const std::string& s) {
+        try {
+            return std::stoi(s);
+        } catch (...) {
+            return std::nullopt;
+        }
+    }
+
+    std::optional<float> toFloat(const std::string& s) {
+        try {
+            return std::stof(s);
+        } catch (...) {
+            return std::nullopt;
+        }
+    }
+
+    bool toBool(const std::string& s) {
+        char first = *s.c_str();
+        return (first == '1' || first == 't' || first == 'T' || first == 'y' || first == 'Y');
+    }
 }
 

@@ -3,6 +3,7 @@
 #include "Events/Event.h"
 #include "Component.h"
 #include "TimeStep.h"
+#include "Scripting/ScriptParameterMap.h"
 
 namespace CgEngine {
 
@@ -10,6 +11,7 @@ namespace CgEngine {
 
     struct ScriptComponentParams {
         std::string scriptName;
+        ScriptParameterMap parameterMap;
 
         void verifyParams() const;
     };
@@ -40,6 +42,7 @@ namespace CgEngine {
 
     private:
         std::shared_ptr<NativeScript> script;
+        ScriptParameterMap parameterMap;
     };
 
 }
