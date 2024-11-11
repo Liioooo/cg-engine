@@ -1,9 +1,8 @@
 <Scene>
     <Entity id="camera">
         <Components>
-            <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
+            <TransformComponent position="0 2 0" rotation="0 0 0" scale="1 1 1" />
             <CameraComponent primary="true" projection="perspective" near="0.1" far="500" fov="80" exposure="0.75" bloom-intensity="0.1" />
-            <AudioListenerComponent active="true" volume="0.8" />
             <ScriptComponent script-name="flyingCameraScript" />
         </Components>
     </Entity>
@@ -14,63 +13,8 @@
     </Entity>
     <Entity>
         <Components>
-            <MeshRendererComponent asset-file="CG_CubeMesh" material="cube" />
-            <TransformComponent position="10 1 0" rotation="20 20 0" scale="10 2 20" />
-            <ScriptComponent script-name="propertyTest" test="1.25" vec="1.0 2.0 -1.0" />
-        </Components>
-    </Entity>
-    <Entity>
-        <Components>
-            <TransformComponent position="-5 0 -4" rotation="0 0 0" scale="1 1 1" />
-            <CustomShaderRendererComponent shader="custom-shader-test" asset-file="CG_CubeMesh" enable-culling="false" instance-count="10" use-dir-shadow-mapping-data="true" />
-        </Components>
-    </Entity>
-    <Entity id="customShaderTest2">
-        <Components>
-            <TransformComponent position="-5 0 5" rotation="0 0 0" scale="1 1 1" />
-        </Components>
-    </Entity>
-    <Entity>
-        <Components>
-            <TransformComponent position="-8 0 -4" rotation="10 40 0" scale="2 1 1" />
-            <CustomShaderRendererComponent shader="custom-shader-test" asset-file="CG_CubeMesh" bounding-min="-0.5 -0.5 -0.5" bounding-max="0.5 0.5 0.5" use-dir-shadow-mapping-data="true" />
-        </Components>
-    </Entity>
-    <Entity id="tess-test">
-        <Components>
-            <TransformComponent position="0 5 20" rotation="0 0 0" scale="2 2 2" />
-        </Components>
-    </Entity>
-    <Entity>
-        <Components>
-            <MeshRendererComponent asset-file="CG_CubeMesh" material="cube" enable-culling="true" />
-            <TransformComponent position="-10 1 0" rotation="30 0 0" scale="1 1 1" />
-            <ScriptComponent script-name="customMeshTestScript" />
-        </Components>
-    </Entity>
-    <Entity>
-        <Components>
-            <TransformComponent position="0 5 0" rotation="0 0 0" scale="1 1 1" />
-        </Components>
-        <Entity>
-            <Components>
-                <MeshRendererComponent asset-file="cube_anim.fbx" />
-                <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
-                <AnimationComponent asset-file="cube_anim.fbx" />
-            </Components>
-        </Entity>
-    </Entity>
-    <Entity id="audio">
-        <Components>
-            <MeshRendererComponent asset-file="CG_CubeMesh" />
-            <TransformComponent position="0 -1.55 0" rotation="0 0 0" scale="100 0.1 100" />
-            <AudioComponent asset-file="money.wav" play-on-attach="true" looping="false" auto-destroy="true" />
-        </Components>
-    </Entity>
-    <Entity>
-        <Components>
-            <TransformComponent position="0 0 0" rotation="25 0 -35" scale="1 1 1" />
-            <DirectionalLightComponent color="#ffffff" intensity="0.6" />
+            <TransformComponent position="0 1 0" rotation="0 0 0" scale="1 1 1" />
+            <ScriptComponent script-name="ocean" test="2" />
         </Components>
     </Entity>
     <Entity id="canvas">

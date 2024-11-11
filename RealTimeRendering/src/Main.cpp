@@ -2,6 +2,7 @@
 #include <Scripts/CustomMeshTestScript.h>
 #include <Scripts/PropertyTestScript.h>
 #include <Scripts/FPSCounter.h>
+#include <Scripts/Ocean.h>
 #include "CgEngine/Application.h"
 
 int main(int argc, char **argv) {
@@ -11,6 +12,7 @@ int main(int argc, char **argv) {
     application->registerNativeScript<RTR::CustomMeshTestScript>("customMeshTestScript");
     application->registerNativeScript<RTR::FPSCounter>("fpsCounter");
     application->registerNativeScript<RTR::PropertyTestScript>("propertyTest");
+    application->registerNativeScript<RTR::Ocean>("ocean");
 
     application->init();
     application->run();

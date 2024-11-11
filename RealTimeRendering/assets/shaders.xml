@@ -16,4 +16,29 @@
     <Shader name="custom-compute" type="compute">
         <Path>shaders/custom-compute-test.glsl</Path>
     </Shader>
+    <Shader name="ocean/init-spectrum" type="compute">
+        <Path>shaders/ocean/initSpectrum_comp.glsl</Path>
+    </Shader>
+    <Shader name="ocean/simulate-ocean" type="compute">
+        <Path>shaders/ocean/simulateOcean_comp.glsl</Path>
+    </Shader>
+    <Shader name="ocean/conjugate" type="compute">
+        <Path>shaders/ocean/conjugate_comp.glsl</Path>
+    </Shader>
+    <Shader name="ocean/fft/permute" type="compute">
+        <Path>shaders/ocean/fft/permute_comp.glsl</Path>
+    </Shader>
+    <Shader name="ocean/fft/precomputeTwiddleFactorsAndInputIndices" type="compute">
+        <Path>shaders/ocean/fft/precomputeTwiddleFactorsAndInputIndices_comp.glsl</Path>
+    </Shader>
+    <Shader name="ocean/fft/horizontalStepInverseFft" type="compute">
+        <Path>shaders/ocean/fft/horizontalStepInverseFft_comp.glsl</Path>
+    </Shader>
+    <Shader name="ocean/fft/verticalStepInverseFft" type="compute">
+        <Path>shaders/ocean/fft/verticalStepInverseFft_comp.glsl</Path>
+    </Shader>
+    <Shader name="ocean/render" type="render">
+        <Vertex>shaders/ocean/ocean_vertex.glsl</Vertex>
+        <Fragment>shaders/ocean/ocean_fragment.glsl</Fragment>
+    </Shader>
 </Shaders>

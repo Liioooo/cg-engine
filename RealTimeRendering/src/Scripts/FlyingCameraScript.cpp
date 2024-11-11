@@ -32,18 +32,31 @@ namespace RTR {
         }
 
         glm::vec3 front = glm::normalize(glm::quat({pitch, yaw, 0}) * glm::vec3(0, 0, -1));
+        float factor = 10.0f;
+        if (CgEngine::Input::isKeyPressed(CgEngine::KeyCode::LeftShift)) {
+            factor = 30.0f;
+        }
+        if (CgEngine::Input::isKeyPressed(CgEngine::KeyCode::LeftControl)) {
+            factor = 5.0f;
+        }
 
         if (CgEngine::Input::isKeyPressed(CgEngine::KeyCode::W)) {
-            pos += front * 10.0f * ts.getSeconds();
+            pos += front * factor * ts.getSeconds();
         }
         if (CgEngine::Input::isKeyPressed(CgEngine::KeyCode::S)) {
-            pos -= front * 10.0f * ts.getSeconds();
+            pos -= front * factor * ts.getSeconds();
         }
         if (CgEngine::Input::isKeyPressed(CgEngine::KeyCode::A)) {
-            pos -= glm::normalize(glm::cross(front, glm::vec3(0, 1, 0))) * 10.0f * ts.getSeconds();
+            pos -= glm::normalize(glm::cross(front, glm::vec3(0, 1, 0))) * factor * ts.getSeconds();
         }
         if (CgEngine::Input::isKeyPressed(CgEngine::KeyCode::D)) {
-            pos += glm::normalize(glm::cross(front, glm::vec3(0, 1, 0))) * 10.0f * ts.getSeconds();
+            pos += glm::normalize(glm::cross(front, glm::vec3(0, 1, 0))) * factor * ts.getSeconds();
+        }
+        if (CgEngine::Input::isKeyPressed(CgEngine::KeyCode::Q)) {
+            pos += glm::normalize(glm::vec3(0, -1, 0)) * factor * ts.getSeconds();
+        }
+        if (CgEngine::Input::isKeyPressed(CgEngine::KeyCode::E)) {
+            pos += glm::normalize(glm::vec3(0, 1, 0)) * factor * ts.getSeconds();
         }
 
         comp.setLocalPosition(pos);

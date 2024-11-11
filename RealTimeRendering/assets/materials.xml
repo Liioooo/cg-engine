@@ -12,4 +12,10 @@
         <Metalness>0</Metalness>
         <Emission>0.0</Emission>
     </Material>
+    <Material name="ocean">
+        <Albedo>#44aaff</Albedo>
+        <Roughness>0.5</Roughness>
+        <Metalness>0</Metalness>
+        <Emission>0.0</Emission>
+    </Material>
 </Materials>
