@@ -63,11 +63,15 @@ namespace CgEngine {
         float lastFrameTime = getTime();
         TimeStep timeStep{};
 
+        bool showImGuiWindow = false;
+
         Window& getWindow();
         void onEvent(Event& event);
         void onWindowClose(WindowCloseEvent& event);
         void onWindowResize(WindowResizeEvent& event);
         void onKeyPressed(KeyPressedEvent& event);
+
+        void renderImGuiWindow();
 
         static inline Application* instance;
     };

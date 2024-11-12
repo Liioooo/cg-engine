@@ -10,7 +10,7 @@
 #include "Events/WindowCloseEvent.h"
 #include "Events/WindowResizeEvent.h"
 #include "Rendering/Renderer.h"
-#include "ImGuiContext.h"
+#include "ImGui/ImGuiContext.h"
 
 namespace CgEngine {
     Window::Window(const WindowSpecification& spec, std::function<void(Event&)>&& eventCallback) : eventCallback(std::move(eventCallback)) {

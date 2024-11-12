@@ -453,11 +453,9 @@ namespace CgEngine {
         CG_ASSERT(!activeRendering, "Already Rendering Scene!")
         CG_ASSERT(activeScene, "No active Scene!")
 
-        ApplicationOptions& applicationOptions = Application::get().getApplicationOptions();
+        resetRenderingStats();
 
-#ifdef CG_ENABLE_DEBUG_FEATURES
-        sceneIndex++;
-#endif
+        ApplicationOptions& applicationOptions = Application::get().getApplicationOptions();
 
         activeRendering = true;
 
@@ -556,7 +554,7 @@ namespace CgEngine {
                 camera.getProjectionType() == CameraProjectionType::Perspective ? 1.0f : 0.0f
         };
         cameraData.exposure = camera.getExposure();
-        cameraData.bloomIntensity = camera.getBloomIntensity();
+        cameraData.bloomIntensity = applicationOptions.enableBloom ? camera.getBloomIntensity() : 0.0f;
         cameraData.bloomThreshold = camera.getBloomThreshold();
         ubCameraData->setData(cameraData);
 
@@ -613,8 +611,6 @@ namespace CgEngine {
     }
 
     void SceneRenderer::endScene() {
-        CG_GPU_TIME_FN(true, true)
-
         CG_ASSERT(activeRendering, "Not actively rendering!")
 
         ApplicationOptions& applicationOptions = Application::get().getApplicationOptions();
@@ -945,8 +941,12 @@ namespace CgEngine {
         return cameraFrustum;
     }
 
+    const RenderingStats& SceneRenderer::getRenderingStats() {
+        return renderingStats;
+    }
+
     void SceneRenderer::skinMeshes() {
-        CG_GPU_TIME_FN(true, true)
+        CG_GPU_TIME_FN(&renderingStats.skinMeshesTimer, false)
 
         skinningShader.bind();
         boneTransformsBuffer->bind(2);
@@ -963,7 +963,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::shadowMapPass() {
-        CG_GPU_TIME_FN(true, true)
+        CG_GPU_TIME_FN(&renderingStats.shadowMapTimer, false)
 
         if (!currentSceneEnvironment.dirLightCastShadows) {
             clearPass(shadowMapRenderPass);
@@ -981,7 +981,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::preDepthPass() {
-        CG_GPU_TIME_FN(true, true)
+        CG_GPU_TIME_FN(&renderingStats.preDepthTimer, false)
 
         Renderer::beginRenderPass(preDepthRenderPass);
 
@@ -994,7 +994,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::hbaoDeinterleavingPass() {
-        CG_GPU_TIME_FN(true, true)
+        CG_GPU_TIME_FN(&renderingStats.hbaoDeinterleavingTimer, false)
 
         auto& deinterleavingShader = hbaoDeinterleavingRenderPass.getSpecification().shader;
 
@@ -1013,7 +1013,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::hbaoComputePass() {
-        CG_GPU_TIME_FN(true, true)
+        CG_GPU_TIME_FN(&renderingStats.hbaoComputeTimer, false)
 
         hbaoShader.bind();
 
@@ -1026,7 +1026,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::hbaoReinterleavingPass() {
-        CG_GPU_TIME_FN(true, true)
+        CG_GPU_TIME_FN(&renderingStats.hbaoReinterleavingTimer, false)
 
         Renderer::beginRenderPass(hbaoReinterleavingRenderPass);
         hbaoReinterleavingRenderPass.getSpecification().shader.setTexture(hbaoResultTexture->getRendererId(), 0);
@@ -1035,7 +1035,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::hbaoBlurPass() {
-        CG_GPU_TIME_FN(true, true)
+        CG_GPU_TIME_FN(&renderingStats.hbaoBlurTimer, false)
 
         auto& shader = hbaoBlurRenderPass.getSpecification().shader;
 
@@ -1055,7 +1055,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::geometryPass() {
-        CG_GPU_TIME_FN(true, true)
+        CG_GPU_TIME_FN(&renderingStats.geometryTimer, false)
 
         Renderer::beginRenderPass(geometryRenderPass);
 
@@ -1075,7 +1075,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::customShaderPass() {
-        CG_GPU_TIME_FN(true, true)
+        CG_GPU_TIME_FN(&renderingStats.customShaderTimer, false)
 
         Renderer::beginRenderPass(customShaderRenderPass, true);
 
@@ -1132,7 +1132,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::skyboxPass() {
-        CG_GPU_TIME_FN(true, true)
+        CG_GPU_TIME_FN(&renderingStats.skyboxTimer, false)
 
         Renderer::beginRenderPass(skyboxRenderPass);
         Renderer::renderUnitCube(skyboxMaterial);
@@ -1179,7 +1179,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::bloomPass() {
-        CG_GPU_TIME_FN(true, true)
+        CG_GPU_TIME_FN(&renderingStats.bloomTimer, false)
 
         auto& downSampleShader = bloomDownSamplePass.getSpecification().shader;
 
@@ -1211,7 +1211,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::screenPass() {
-        CG_GPU_TIME_FN(true, true)
+        CG_GPU_TIME_FN(&renderingStats.screenTimer, false)
 
         Renderer::beginRenderPass(screenRenderPass);
         Renderer::renderUnitQuad(screenMaterial);
@@ -1219,7 +1219,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::uiPass() {
-        CG_GPU_TIME_FN(true, true)
+        CG_GPU_TIME_FN(&renderingStats.uiTimer, false)
 
         for (const auto& [zIndex, drawInfo]: uiDrawInfoQueue) {
 
@@ -1406,5 +1406,9 @@ namespace CgEngine {
         }
 
         return result;
+    }
+
+    void SceneRenderer::resetRenderingStats() {
+        renderingStats = {};
     }
 }

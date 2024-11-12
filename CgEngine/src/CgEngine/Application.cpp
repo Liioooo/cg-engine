@@ -1,7 +1,9 @@
 #include "Application.h"
 #include "Logging.h"
 #include "FileSystem.h"
-#include "ImGuiContext.h"
+#include "ImGui/ImGuiContext.h"
+#include "imgui.h"
+#include "ImGui/ImGuiWidgets.h"
 
 namespace CgEngine {
     Application::Application(const std::string &settingsIni) : iniReader(settingsIni) {
@@ -64,6 +66,7 @@ namespace CgEngine {
             activeScene->onUpdate(timeStep);
             activeScene->onRender(*sceneRenderer);
 
+            renderImGuiWindow();
             ImGuiContext::render();
 
             window->swapBuffers();
@@ -144,23 +147,41 @@ namespace CgEngine {
 
     void Application::onKeyPressed(KeyPressedEvent& event) {
         switch (event.getKeyCode()) {
-#ifdef CG_ENABLE_DEBUG_FEATURES
-            case KeyCode::F1: {
-                applicationOptions.debugShowPhysicsColliders = !applicationOptions.debugShowPhysicsColliders;
+            #ifdef CG_ENABLE_DEBUG_FEATURES
+            case KeyCode::F11: {
+                showImGuiWindow = !showImGuiWindow;
                 event.stopPropagation();
                 break;
             }
-            case KeyCode::F2: {
-                applicationOptions.debugShowNormals = !applicationOptions.debugShowNormals;
-                event.stopPropagation();
-                break;
-            }
-            case KeyCode::F3: {
-                applicationOptions.debugShowBoundingBoxes = !applicationOptions.debugShowBoundingBoxes;
-                event.stopPropagation();
-                break;
-            }
-#endif
+            #endif
         }
+    }
+
+    void Application::renderImGuiWindow() {
+        #ifdef CG_ENABLE_DEBUG_FEATURES
+            if (showImGuiWindow) {
+                ImGui::Begin("Debug Info", &showImGuiWindow);
+
+                if (ImGui::BeginTabBar("#main-tabbar")) {
+                    if (ImGui::BeginTabItem("Scene")) {
+                        ImGui::Text("scene");
+
+                        ImGui::EndTabItem();
+                    }
+                    if (ImGui::BeginTabItem("Application")) {
+                        ImGuiWidgets::applicationOptions(applicationOptions);
+                        ImGui::Separator();
+                        ImGuiWidgets::performanceStats(timeStep.getSeconds(), sceneRenderer->getRenderingStats());
+
+                        ImGui::EndTabItem();
+                    }
+
+                    ImGui::EndTabBar();
+                }
+
+
+                ImGui::End();
+            }
+        #endif
     }
 }

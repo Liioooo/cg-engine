@@ -8,13 +8,11 @@ namespace CgEngine {
 
     struct OpenGLTimer {
         std::string label;
-        bool insertDebugGroup;
+        float* timeOutput;
+        bool printToConsole;
         unsigned int queryID[2];
 
-        OpenGLTimer(std::string label, bool insertDebugGroup = false) : label(std::move(label)), insertDebugGroup(insertDebugGroup) {
-            if (insertDebugGroup) {
-                glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, this->label.c_str());
-            }
+        OpenGLTimer(std::string label, float* timeOutput = nullptr, bool printToConsole = false) : label(std::move(label)), timeOutput(timeOutput), printToConsole(printToConsole) {
             glGenQueries(2, queryID);
             glQueryCounter(queryID[0], GL_TIMESTAMP);
         };
@@ -31,24 +29,25 @@ namespace CgEngine {
             glGetQueryObjectui64v(queryID[0], GL_QUERY_RESULT, &startTime);
             glGetQueryObjectui64v(queryID[1], GL_QUERY_RESULT, &stopTime);
 
-            if (insertDebugGroup) {
-                glPopDebugGroup();
+            glDeleteQueries(2, queryID);
+
+            float time = (stopTime - startTime) / 1000000.0f;
+
+            if (timeOutput != nullptr) {
+                *timeOutput = time;
             }
-            CG_LOGGING_DEBUG("{0}: GPU TIME: {1}ms", label, (stopTime - startTime) / 1000000.0f)
+
+            if (printToConsole) {
+                CG_LOGGING_DEBUG("{0}: GPU TIME: {1}ms", label, time)
+            }
         }
     };
 }
 
-// #define CG_ENABLE_GPU_TIMERS
-
-#if defined(CG_ENABLE_DEBUG_FEATURES) && defined(CG_ENABLE_GPU_TIMERS)
-    #define CG_GPU_TIME_FN_ALWAYS() OpenGLTimer __cg_gpu_timer__("Timer: " + std::string(__FUNCTION__));
-    #define CG_GPU_TIME_FN(enable, debugGroup) if (enable) { OpenGLTimer __cg_gpu_timer__("Timer: " + std::string(__FUNCTION__), debugGroup); }
-    #define CG_GPU_TIME_FN_INFO(label, debugGroup, enable) if (enable) { OpenGLTimer __cg_gpu_timer__("Timer: " + std::string(__FUNCTION__) + ", INFO: " + label, debugGroup); }
+#if defined(CG_ENABLE_DEBUG_FEATURES)
+    #define CG_GPU_TIME_FN(timeOutput, printToConsole) OpenGLTimer __cg_gpu_timer__("Timer: " + std::string(__FUNCTION__), timeOutput, printToConsole);
 #else
-    #define CG_GPU_TIME_FN_ALWAYS()
-    #define CG_GPU_TIME_FN(enable, debugGroup)
-    #define CG_GPU_TIME_FN_INFO(label)
+    #define CG_GPU_TIME_FN(timeOutput, printToConsole)
 #endif
 
 

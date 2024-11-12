@@ -13,6 +13,22 @@ namespace CgEngine {
 
     class Scene;
 
+    struct RenderingStats {
+        float skinMeshesTimer = 0.0f;
+        float shadowMapTimer = 0.0f;
+        float preDepthTimer = 0.0f;
+        float hbaoDeinterleavingTimer = 0.0f;
+        float hbaoComputeTimer = 0.0f;
+        float hbaoReinterleavingTimer = 0.0f;
+        float hbaoBlurTimer = 0.0f;
+        float geometryTimer = 0.0f;
+        float customShaderTimer = 0.0f;
+        float skyboxTimer = 0.0f;
+        float bloomTimer = 0.0f;
+        float screenTimer = 0.0f;
+        float uiTimer = 0.0f;
+    };
+
     class SceneRenderer {
     public:
         explicit SceneRenderer(uint32_t viewportWidth, uint32_t viewportHeight);
@@ -31,6 +47,8 @@ namespace CgEngine {
         void submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, AABoundingBox& boundingBox, const glm::mat4& transform);
         void submitDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color);
         const CameraFrustum& getCamaraFrustum() const;
+
+        const RenderingStats& getRenderingStats();
 
     private:
         static const uint32_t maxBones = 100;
@@ -276,9 +294,8 @@ namespace CgEngine {
         float findDrawInfoTextureIndex(UiDrawInfo& drawInfo, const Texture2D* texture) const;
         std::array<glm::vec4, 16> generateHBAOJitterNoise() const;
 
-#ifdef CG_ENABLE_DEBUG_FEATURES
-        uint64_t sceneIndex = 0;
-#endif
+        RenderingStats renderingStats;
+        void resetRenderingStats();
 
     };
 
