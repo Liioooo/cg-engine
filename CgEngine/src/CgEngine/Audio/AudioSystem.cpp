@@ -131,7 +131,7 @@ namespace CgEngine {
             if (OpenAlExtensions::has_ALC_EXT_debug) {
                 alEnable(AL_DEBUG_OUTPUT_EXT);
                 alDebugMessageControlEXT(AL_DONT_CARE_EXT, AL_DONT_CARE_EXT, AL_DEBUG_SEVERITY_LOW_EXT, 0, nullptr, AL_TRUE);
-                alDebugMessageCallbackEXT(&AudioSystem::debugCallback, nullptr);
+                alDebugMessageCallbackEXT(reinterpret_cast<ALDEBUGPROCEXT>(&AudioSystem::debugCallback), nullptr);
             }
         #else
             alDisable(AL_DEBUG_OUTPUT_EXT);

@@ -20,7 +20,7 @@ layout(binding = 0) uniform sampler2D u_InputTex;
 out vec4 out_Color;
 
 float BlurFunction(vec2 uv, float r, float center_c, float center_d, inout float w_total) {
-    vec2 aoz = texture2D(u_InputTex, uv ).xy;
+    vec2 aoz = texture(u_InputTex, uv).xy;
     float c = aoz.x;
     float d = aoz.y;
 
@@ -35,7 +35,7 @@ float BlurFunction(vec2 uv, float r, float center_c, float center_d, inout float
 }
 
 void main() {
-    vec2  aoz = texture2D(u_InputTex, fs_in.TexCoord).xy;
+    vec2  aoz = texture(u_InputTex, fs_in.TexCoord).xy;
     float center_c = aoz.x;
     float center_d = aoz.y;
 

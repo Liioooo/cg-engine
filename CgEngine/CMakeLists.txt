@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.24)
 
 project(CG_ENGINE VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 17)
@@ -124,20 +124,46 @@ list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/vendor/fre
 ################################################################################
 
 # PHYSX ########################################################################
-list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/include")
-target_link_libraries(${PROJECT_NAME} PRIVATE debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/checked/PhysX_64.lib")
-target_link_libraries(${PROJECT_NAME} PRIVATE debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/checked/PhysXCommon_64.lib")
-target_link_libraries(${PROJECT_NAME} PRIVATE debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/checked/PhysXFoundation_64.lib")
-target_link_libraries(${PROJECT_NAME} PRIVATE debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/checked/PhysXCooking_64.lib")
-target_link_libraries(${PROJECT_NAME} PRIVATE debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/checked/PhysXExtensions_static_64.lib")
-target_link_libraries(${PROJECT_NAME} PRIVATE debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/checked/PhysXCharacterKinematic_static_64.lib")
-target_link_libraries(${PROJECT_NAME} PRIVATE debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/checked/PhysXPvdSDK_static_64.lib")
-target_link_libraries(${PROJECT_NAME} PRIVATE optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/release/PhysX_64.lib")
-target_link_libraries(${PROJECT_NAME} PRIVATE optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/release/PhysXCommon_64.lib")
-target_link_libraries(${PROJECT_NAME} PRIVATE optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/release/PhysXFoundation_64.lib")
-target_link_libraries(${PROJECT_NAME} PRIVATE optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/release/PhysXCooking_64.lib")
-target_link_libraries(${PROJECT_NAME} PRIVATE optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/release/PhysXExtensions_static_64.lib")
-target_link_libraries(${PROJECT_NAME} PRIVATE optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/release/PhysXCharacterKinematic_static_64.lib")
+if (WIN32)
+    list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/include")
+    target_link_libraries(${PROJECT_NAME} PRIVATE debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/checked/PhysX_64.lib")
+    target_link_libraries(${PROJECT_NAME} PRIVATE debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/checked/PhysXCommon_64.lib")
+    target_link_libraries(${PROJECT_NAME} PRIVATE debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/checked/PhysXFoundation_64.lib")
+    target_link_libraries(${PROJECT_NAME} PRIVATE debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/checked/PhysXCooking_64.lib")
+    target_link_libraries(${PROJECT_NAME} PRIVATE debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/checked/PhysXExtensions_static_64.lib")
+    target_link_libraries(${PROJECT_NAME} PRIVATE debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/checked/PhysXCharacterKinematic_static_64.lib")
+    target_link_libraries(${PROJECT_NAME} PRIVATE debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/checked/PhysXPvdSDK_static_64.lib")
+    target_link_libraries(${PROJECT_NAME} PRIVATE optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/release/PhysX_64.lib")
+    target_link_libraries(${PROJECT_NAME} PRIVATE optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/release/PhysXCommon_64.lib")
+    target_link_libraries(${PROJECT_NAME} PRIVATE optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/release/PhysXFoundation_64.lib")
+    target_link_libraries(${PROJECT_NAME} PRIVATE optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/release/PhysXCooking_64.lib")
+    target_link_libraries(${PROJECT_NAME} PRIVATE optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/release/PhysXExtensions_static_64.lib")
+    target_link_libraries(${PROJECT_NAME} PRIVATE optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/release/PhysXCharacterKinematic_static_64.lib")
+endif()
+if (UNIX)
+    list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/include")
+    set(PHYSX_LIBS
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysX_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysXCommon_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysXExtensions_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysXPvdSDK_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysXCooking_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysXFoundation_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysXCharacterKinematic_static_64.a"
+    )
+    target_link_libraries(${PROJECT_NAME} PRIVATE optimized "$<LINK_GROUP:RESCAN,${PHYSX_LIBS}>")
+
+    set(PHYSX_LIBS_DEBUG
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysX_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysXCommon_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysXExtensions_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysXPvdSDK_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysXCooking_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysXFoundation_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysXCharacterKinematic_static_64.a"
+    )
+    target_link_libraries(${PROJECT_NAME} PRIVATE debug "$<LINK_GROUP:RESCAN,${PHYSX_LIBS_DEBUG}>")
+endif ()
 ################################################################################
 
 # OpenAL #######################################################################

@@ -31,7 +31,7 @@ namespace CgEngine {
         }
 
     private:
-        Material* material;
+        Material* material = nullptr;
     };
 
 }

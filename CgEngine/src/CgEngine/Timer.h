@@ -6,7 +6,7 @@ namespace CgEngine {
 
     struct Timer {
         std::string label;
-        std::chrono::time_point<std::chrono::steady_clock> start, end;
+        std::chrono::time_point<std::chrono::system_clock> start, end;
         std::chrono::duration<float> duration;
 
         Timer(std::string label) : label(std::move(label)) {

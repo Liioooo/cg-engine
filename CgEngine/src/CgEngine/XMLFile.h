@@ -6,7 +6,7 @@ namespace CgEngine {
 
     class XMLFile {
     public:
-        explicit XMLFile() = default;
+        XMLFile() = default;
 
         void load(const std::string& name);
         bool isLoaded();
