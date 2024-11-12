@@ -32,14 +32,14 @@ namespace RTR {
     public:
         OceanParams oceanParams;
 
-        CgEngine::Texture2D* gaussianNoise;
-        CgEngine::Texture2D* initialSpectrum;
-        CgEngine::Texture2D* timeSpectrum;
-        CgEngine::Texture2D* waveData;
+        CgEngine::Texture2D* gaussianNoise = nullptr;
+        CgEngine::Texture2D* initialSpectrum = nullptr;
+        CgEngine::Texture2D* timeSpectrum = nullptr;
+        CgEngine::Texture2D* waveData = nullptr;
 
-        CgEngine::CustomComputeShader* initialSpectrumShader;
-        CgEngine::CustomComputeShader* conjugateSpectrumShader;
-        CgEngine::CustomComputeShader* timeSpectrumShader;
+        CgEngine::CustomComputeShader* initialSpectrumShader = nullptr;
+        CgEngine::CustomComputeShader* conjugateSpectrumShader = nullptr;
+        CgEngine::CustomComputeShader* timeSpectrumShader = nullptr;
 
         FastFourierTransform fastFourierTransform;
     };

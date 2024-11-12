@@ -10,12 +10,12 @@ namespace RTR {
         ~FastFourierTransform();
         void inverseTransform(CgEngine::Texture2D& input, bool outputToInput = true, bool permute = true);
     private:
-        CgEngine::CustomComputeShader* precomputeTwiddleFactorsAndInputIndicesShader;
-        CgEngine::CustomComputeShader* permuteShader;
-        CgEngine::CustomComputeShader* horizontalStepInverseFftShader;
-        CgEngine::CustomComputeShader* verticalStepInverseFftShader;
+        CgEngine::CustomComputeShader* precomputeTwiddleFactorsAndInputIndicesShader = nullptr;
+        CgEngine::CustomComputeShader* permuteShader = nullptr;
+        CgEngine::CustomComputeShader* horizontalStepInverseFftShader = nullptr;
+        CgEngine::CustomComputeShader* verticalStepInverseFftShader = nullptr;
 
-        CgEngine::Texture2D* buffer;
-        CgEngine::Texture2D* twiddleFactors;
+        CgEngine::Texture2D* buffer = nullptr;
+        CgEngine::Texture2D* twiddleFactors = nullptr;
     };
 }

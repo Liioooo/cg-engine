@@ -24,9 +24,9 @@ namespace RTR {
         void createMesh();
 
     private:
-        CgEngine::CustomMesh* mesh;
-        CgEngine::CustomValMaterial* mat;
-        CgEngine::ShaderStorageBuffer* instanceBuffer;
+        CgEngine::CustomMesh* mesh = nullptr;
+        CgEngine::CustomValMaterial* mat = nullptr;
+        CgEngine::ShaderStorageBuffer* instanceBuffer = nullptr;
 
         CgEngine::Uuid onPreRenderCbUuid;
 
@@ -34,11 +34,11 @@ namespace RTR {
 
         float currentTime = 0;
 
-        CgEngine::CustomComputeShader* initialSpectrumShader;
-        CgEngine::CustomComputeShader* timeSpectrumShader;
-        CgEngine::CustomComputeShader* conjugateSpectrumShader;
+        CgEngine::CustomComputeShader* initialSpectrumShader = nullptr;
+        CgEngine::CustomComputeShader* timeSpectrumShader = nullptr;
+        CgEngine::CustomComputeShader* conjugateSpectrumShader = nullptr;
 
-        RTR::OceanCascade* oceanCascade0;
+        OceanCascade* oceanCascade0 = nullptr;
     };
 
 }
