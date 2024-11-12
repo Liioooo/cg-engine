@@ -10,6 +10,7 @@
 #include "Events/WindowCloseEvent.h"
 #include "Events/WindowResizeEvent.h"
 #include "Rendering/Renderer.h"
+#include "ImGuiContext.h"
 
 namespace CgEngine {
     Window::Window(const WindowSpecification& spec, std::function<void(Event&)>&& eventCallback) : eventCallback(std::move(eventCallback)) {
@@ -68,10 +69,11 @@ namespace CgEngine {
 
         gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
 
-#ifdef CG_ENABLE_DEBUG_FEATURES
+        #ifdef CG_ENABLE_DEBUG_FEATURES
             glDebugMessageCallback(&Window::debugCallback, nullptr);
             glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-#endif
+        #endif
+
 
         Renderer::init();
 
@@ -135,9 +137,19 @@ namespace CgEngine {
                 }
             }
         });
+
+        #ifdef CG_ENABLE_DEBUG_FEATURES
+            float xscale, yscale;
+            glfwGetWindowContentScale(window, &xscale, &yscale);
+            ImGuiContext::init(window, glm::max(xscale, yscale));
+        #endif
     }
 
     Window::~Window() {
+        #ifdef CG_ENABLE_DEBUG_FEATURES
+            ImGuiContext::shutdown();
+        #endif
+
         glfwDestroyWindow(window);
         glfwTerminate();
     }

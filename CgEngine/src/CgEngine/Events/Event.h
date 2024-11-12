@@ -21,11 +21,23 @@ namespace CgEngine {
 
         virtual EventType getEventType() const = 0;
         virtual std::string getEventName() const = 0;
+
         void stopPropagation() {
             handled = true;
         }
+
         inline bool wasHandled() const {
             return handled;
+        }
+
+        inline bool isMouseEvent() const {
+            const auto eventType = getEventType();
+            return eventType == EventType::MouseButtonPressed || eventType == EventType::MouseButtonReleased || eventType == EventType::MouseMoved || eventType == EventType::MouseScrolled;
+        }
+
+        inline bool isKeyboardEvent() const {
+            const auto eventType = getEventType();
+            return eventType == EventType::KeyPressed || eventType == EventType::KeyReleased;
         }
 
     private:

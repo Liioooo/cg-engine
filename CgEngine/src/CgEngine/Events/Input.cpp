@@ -1,18 +1,19 @@
 #include "Input.h"
 #include "Application.h"
+#include "ImGuiContext.h"
 #include <GLFW/glfw3.h>
 
 namespace CgEngine {
     bool Input::isKeyPressed(KeyCode keyCode) {
         auto& window = Application::get().getWindow().getWindowHandle();
         auto state = glfwGetKey(&window, static_cast<int>(keyCode));
-        return state == GLFW_PRESS || state == GLFW_REPEAT;
+        return (state == GLFW_PRESS || state == GLFW_REPEAT) && !ImGuiContext::wantCaptureKeyboard();
     }
 
     bool Input::isMouseButtonPressed(MouseButton mouseButton) {
         auto& window = Application::get().getWindow().getWindowHandle();
         auto state = glfwGetMouseButton(&window, static_cast<int>(mouseButton));
-        return state == GLFW_PRESS;
+        return state == GLFW_PRESS && !ImGuiContext::wantCaptureMouse();
     }
 
     std::pair<float, float> Input::getMousePosition() {

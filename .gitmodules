@@ -26,3 +26,6 @@
 	path = CgEngine/vendor/openal-soft
 	url = https://github.com/kcat/openal-soft.git
 	branch = master
+[submodule "CgEngine/vendor/imgui"]
+	path = CgEngine/vendor/imgui
+	url = https://github.com/ocornut/imgui.git

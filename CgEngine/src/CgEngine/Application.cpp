@@ -1,6 +1,7 @@
 #include "Application.h"
 #include "Logging.h"
 #include "FileSystem.h"
+#include "ImGuiContext.h"
 
 namespace CgEngine {
     Application::Application(const std::string &settingsIni) : iniReader(settingsIni) {
@@ -57,10 +58,13 @@ namespace CgEngine {
 
         while (isRunning) {
             window->pollEvents();
+            ImGuiContext::newFrame();
 
             Scene* activeScene = sceneManager->getActiveScene();
             activeScene->onUpdate(timeStep);
             activeScene->onRender(*sceneRenderer);
+
+            ImGuiContext::render();
 
             window->swapBuffers();
 
@@ -113,6 +117,14 @@ namespace CgEngine {
 
         eventDispatcher.dispatch<WindowCloseEvent>(EVENT_BIND_FN(onWindowClose));
         eventDispatcher.dispatch<WindowResizeEvent>(EVENT_BIND_FN(onWindowResize));
+
+        if (ImGuiContext::wantCaptureKeyboard() && event.isKeyboardEvent()) {
+            return;
+        }
+        if (ImGuiContext::wantCaptureMouse() && event.isMouseEvent()) {
+            return;
+        }
+
         eventDispatcher.dispatch<KeyPressedEvent>(EVENT_BIND_FN(onKeyPressed));
 
         if (!event.wasHandled()) {

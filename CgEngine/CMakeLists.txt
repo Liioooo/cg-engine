@@ -148,6 +148,35 @@ list(APPEND ADDITIONAL_LIBRARY_DEPENDENCIES OpenAL)
 list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/vendor/openal-soft/include")
 ################################################################################
 
+# imgui ########################################################################
+set(IMGUI_PATH ${CMAKE_CURRENT_LIST_DIR}/vendor/imgui)
+file(GLOB IMGUI_GLOB
+    ${IMGUI_PATH}/imgui.h
+    ${IMGUI_PATH}/imgui.cpp
+    ${IMGUI_PATH}/imconfig.h
+    ${IMGUI_PATH}/imgui_demo.cpp
+    ${IMGUI_PATH}/imgui_draw.cpp
+    ${IMGUI_PATH}/imgui_internal.h
+    ${IMGUI_PATH}/imstb_rectpack.h
+    ${IMGUI_PATH}/imstb_textedit.h
+    ${IMGUI_PATH}/imstb_truetype.h
+    ${IMGUI_PATH}/imgui_tables.cpp
+    ${IMGUI_PATH}/imgui_widgets.cpp
+
+    # specific bindings...
+    ${IMGUI_PATH}/backends/imgui_impl_glfw.h
+    ${IMGUI_PATH}/backends/imgui_impl_glfw.cpp
+    ${IMGUI_PATH}/backends/imgui_impl_opengl3.h
+    ${IMGUI_PATH}/backends/imgui_impl_opengl3.cpp
+)
+add_library(imgui STATIC ${IMGUI_GLOB})
+target_include_directories(imgui PUBLIC ${IMGUI_PATH})
+target_link_libraries(imgui PRIVATE glfw)
+set_target_properties(imgui PROPERTIES MSVC_RUNTIME_LIBRARY ${MSVC_RUNTIME_LIBRARY_STR})
+list(APPEND ADDITIONAL_LIBRARY_DEPENDENCIES imgui)
+list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/vendor/imgui")
+################################################################################
+
 # DR_LIBS ######################################################################
 list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/vendor/dr_libs")
 ################################################################################
