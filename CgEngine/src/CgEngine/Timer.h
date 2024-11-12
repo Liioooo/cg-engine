@@ -10,11 +10,11 @@ namespace CgEngine {
         std::chrono::duration<float> duration;
 
         Timer(std::string label) : label(std::move(label)) {
-            start = std::chrono::high_resolution_clock::now();
+            start = std::chrono::system_clock::now();
         };
 
         ~Timer() {
-            end = std::chrono::high_resolution_clock::now();
+            end = std::chrono::system_clock::now();
             duration = end - start;
 
             float ms = duration.count() * 1000.0f;
