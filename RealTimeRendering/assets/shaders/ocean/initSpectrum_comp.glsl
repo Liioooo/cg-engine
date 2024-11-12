@@ -7,13 +7,14 @@ layout(rgba32f, binding = 1) uniform image2D h0_texture;
 layout(rgba32f, binding = 2) uniform image2D wave_texture;
 
 const float TWO_PI = 6.283185307179586;
+const float PI = 3.141592653589793;
 ivec2 L = ivec2(100, 100);
 int N = 256;
 int M = 256;
 int V = 11;
 int l = 1;
 float g = 9.81;
-float U_10 = 15;
+float U_10 = 12.5;
 uniform vec2 omega_hat = vec2(0.2, 0.4);
 float T = 20.0;
 float omega_0 = TWO_PI / T;
@@ -23,6 +24,7 @@ float omega(float k);
 float omega_bar(float k);
 vec2 h_tilde_0(vec2 k);
 float P_h(vec2 k);
+float JONSWAP(vec2 k);
 
 void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
@@ -69,5 +71,20 @@ float P_h(vec2 k) {
 }
 
 vec2 h_tilde_0(vec2 k) {
-    return imageLoad(gaussianNoise, ivec2(gl_GlobalInvocationID.xy)).xy * sqrt(P_h(k) / 2.0);
+    return imageLoad(gaussianNoise, ivec2(gl_GlobalInvocationID.xy)).xy * sqrt(JONSWAP(k) * 4 * PI * PI * L[0] * L[0]);
+}
+
+float JONSWAP(vec2 k) {
+    float F = 200000.0;
+    float alpha = 0.076 * pow(U_10 * U_10 / F / g, -0.22);
+    float omega_p = 22.0 * pow(g * g / U_10 / F, -1.0 / 3.0);
+    float gamma = 3.3;
+    float sigma = 0.09;
+    float omega = omega(length(k));
+    if (omega < omega_p) {
+        sigma = 0.07;
+    }
+    float r = exp(-1 * pow(omega - omega_p, 2.0) / 2.0 / sigma / sigma / omega_p / omega_p);
+    float S = alpha * g * g / omega / omega / omega / omega / omega * exp(-1.25 * pow(omega_p / omega, 4)) * pow(gamma, r);
+    return S;
 }
