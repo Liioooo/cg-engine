@@ -172,7 +172,10 @@ namespace CgEngine {
                         ImGuiWidgets::applicationOptions(applicationOptions);
                         ImGui::Separator();
                         ImGuiWidgets::performanceStats(timeStep.getSeconds(), sceneRenderer->getRenderingStats());
-
+                        ImGui::EndTabItem();
+                    }
+                    if (ImGui::BeginTabItem("Shaders")) {
+                        ImGuiWidgets::shaders(sceneRenderer->getShaderMap(), resourceManager);
                         ImGui::EndTabItem();
                     }
 

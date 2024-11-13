@@ -26,7 +26,7 @@ namespace CgEngine {
         std::string loadShaderSourceCodeWithType(const std::string& name, const std::string& type, ShaderEnv env);
         std::string loadShaderSourceCode(const std::string& name, ShaderEnv env);
         std::string preprocessShaderCode(std::string code, const std::vector<std::string>& alreadyImported = {});
-        void checkErrors(uint32_t id, const std::string &type);
+        bool checkErrors(uint32_t id, const std::string &type);
         int32_t getUniformLocation(uint32_t programId, std::unordered_map<std::string, int32_t>& uniformLocations, const std::string& name);
 
         int getSizeForShaderDataType(ShaderDataType type);
@@ -42,10 +42,13 @@ namespace CgEngine {
         Shader(Shader&& other) noexcept;
         Shader& operator=(Shader&& other) noexcept;
 
+        virtual void reload();
+
         void bind();
         bool isReady() const;
 
         uint32_t getProgramId() const;
+        std::string getName() const;
 
         void setBool(const std::string& name, bool value);
         void setInt(const std::string& name, int value);
@@ -58,13 +61,16 @@ namespace CgEngine {
         void setTexture(uint32_t textureRendererId, uint32_t textureUnit);
 
     protected:
-        void createShaderType(unsigned int type, const std::string& sType, const std::string& source);
+        bool createShaderType(unsigned int type, const std::string& sType, const std::string& source, unsigned int attachTo);
+        void clearUniformLocations();
 
         std::string name;
         uint32_t programId = ~0;
 
     private:
         std::unordered_map<std::string, int32_t> uniformLocations{};
+
+        bool load();
     };
 
     class ComputeShader {
@@ -76,10 +82,13 @@ namespace CgEngine {
         ComputeShader(ComputeShader&& other) noexcept;
         ComputeShader& operator= (ComputeShader&& other) noexcept;
 
+        virtual void reload();
+
         void bind();
         bool isReady() const;
 
         uint32_t getProgramId() const;
+        std::string getName() const;
 
         void dispatch(uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ);
         void waitForMemoryBarrier(std::initializer_list<MemoryBarrierBit> barriers);
@@ -100,11 +109,15 @@ namespace CgEngine {
         void setImageArray(Texture2DArray& texture, uint32_t textureUnit, ShaderStorageAccess storageAccess);
 
     protected:
+        void clearUniformLocations();
+
         std::string name;
         uint32_t programId = ~0;
 
     private:
         std::unordered_map<std::string, int32_t> uniformLocations{};
+
+        bool load();
     };
 
 }

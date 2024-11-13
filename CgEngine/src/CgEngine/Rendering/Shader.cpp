@@ -61,7 +61,7 @@ namespace CgEngine {
             return code;
         }
 
-        void checkErrors(uint32_t id, const std::string &type) {
+        bool checkErrors(uint32_t id, const std::string &type) {
             int isCompiled;
             int maxLength;
 
@@ -72,6 +72,7 @@ namespace CgEngine {
                     char* infoLog = new char[maxLength];
                     glGetProgramInfoLog(id, maxLength, &maxLength, infoLog);
                     CG_LOGGING_ERROR(type + " ERROR: " + infoLog);
+                    return true;
                 }
             } else {
                 glGetShaderiv(id, GL_COMPILE_STATUS, &isCompiled);
@@ -80,8 +81,10 @@ namespace CgEngine {
                     char* infoLog = new char[maxLength];
                     glGetShaderInfoLog(id, maxLength, &maxLength, infoLog);
                     CG_LOGGING_ERROR(type + " ERROR: " + infoLog);
+                    return true;
                 }
             }
+            return false;
         }
 
         int32_t getUniformLocation(uint32_t programId, std::unordered_map<std::string, int32_t>& uniformLocations, const std::string& name) {
@@ -138,36 +141,7 @@ namespace CgEngine {
     }
 
     Shader::Shader(std::string name) : name(std::move(name)) {
-        CG_LOGGING_DEBUG("Loading Shader: {0}", this->name)
-
-        std::string vertexSource = ShaderUtils::loadShaderSourceCodeWithType(this->name, "vertex", ShaderEnv::Engine);
-        std::string fragmentSource = ShaderUtils::loadShaderSourceCodeWithType(this->name, "fragment", ShaderEnv::Engine);
-        std::string geometrySource = ShaderUtils::loadShaderSourceCodeWithType(this->name, "geometry", ShaderEnv::Engine);
-        std::string tcsSource = ShaderUtils::loadShaderSourceCodeWithType(this->name, "tcs", ShaderEnv::Engine);
-        std::string tesSource = ShaderUtils::loadShaderSourceCodeWithType(this->name, "tes", ShaderEnv::Engine);
-
-        programId = glCreateProgram();
-
-        if (!vertexSource.empty()) {
-            createShaderType(GL_VERTEX_SHADER, "VERTEX", vertexSource);
-        }
-        if (!fragmentSource.empty()) {
-            createShaderType(GL_FRAGMENT_SHADER, "FRAGMENT", fragmentSource);
-        }
-        if (!geometrySource.empty()) {
-            createShaderType(GL_GEOMETRY_SHADER, "GEOMETRY", geometrySource);
-        }
-        if (!tcsSource.empty()) {
-            createShaderType(GL_TESS_CONTROL_SHADER, "TCS", tcsSource);
-        }
-        if (!tesSource.empty()) {
-            createShaderType(GL_TESS_EVALUATION_SHADER, "TES", tesSource);
-        }
-
-        glLinkProgram(programId);
-        ShaderUtils::checkErrors(programId, "PROGRAM");
-
-        CG_LOGGING_DEBUG("Loaded Shader: {0}", this->name)
+        load();
     }
 
     Shader::~Shader() {
@@ -195,6 +169,16 @@ namespace CgEngine {
         return *this;
     }
 
+    void Shader::reload() {
+        uint32_t oldId = programId;
+        if (!load()) {
+            clearUniformLocations();
+            if (oldId != ~ 0) {
+                glDeleteProgram(oldId);
+            }
+        }
+    }
+
     void Shader::bind() {
         CG_ASSERT(isReady(), "Shader is not ready!")
         glUseProgram(programId);
@@ -206,6 +190,10 @@ namespace CgEngine {
 
     uint32_t Shader::getProgramId() const {
         return programId;
+    }
+
+    std::string Shader::getName() const {
+        return name;
     }
 
     void Shader::setBool(const std::string &name, bool value) {
@@ -244,29 +232,64 @@ namespace CgEngine {
         glBindTextureUnit(textureUnit, textureRendererId);
     }
 
-    void Shader::createShaderType(unsigned int type, const std::string& sType, const std::string& source) {
+    bool Shader::createShaderType(unsigned int type, const std::string& sType, const std::string& source, unsigned int attachTo) {
         const char* cString = source.c_str();
         uint32_t id = glCreateShader(type);
         glShaderSource(id, 1, &cString, nullptr);
         glCompileShader(id);
-        ShaderUtils::checkErrors(id, sType);
-        glAttachShader(programId, id);
+        bool error = ShaderUtils::checkErrors(id, sType);
+        glAttachShader(attachTo, id);
+        glDeleteShader(id);
+        return error;
+    }
+
+    void Shader::clearUniformLocations() {
+        uniformLocations.clear();
+    }
+
+    bool Shader::load() {
+        CG_LOGGING_DEBUG("Loading Shader: {0}", this->name)
+
+        std::string vertexSource = ShaderUtils::loadShaderSourceCodeWithType(this->name, "vertex", ShaderEnv::Engine);
+        std::string fragmentSource = ShaderUtils::loadShaderSourceCodeWithType(this->name, "fragment", ShaderEnv::Engine);
+        std::string geometrySource = ShaderUtils::loadShaderSourceCodeWithType(this->name, "geometry", ShaderEnv::Engine);
+        std::string tcsSource = ShaderUtils::loadShaderSourceCodeWithType(this->name, "tcs", ShaderEnv::Engine);
+        std::string tesSource = ShaderUtils::loadShaderSourceCodeWithType(this->name, "tes", ShaderEnv::Engine);
+
+        uint32_t id = glCreateProgram();
+        bool error = false;
+
+        if (!vertexSource.empty()) {
+            error |= createShaderType(GL_VERTEX_SHADER, "VERTEX", vertexSource, id);
+        }
+        if (!fragmentSource.empty()) {
+            error |= createShaderType(GL_FRAGMENT_SHADER, "FRAGMENT", fragmentSource, id);
+        }
+        if (!geometrySource.empty()) {
+            error |= createShaderType(GL_GEOMETRY_SHADER, "GEOMETRY", geometrySource, id);
+        }
+        if (!tcsSource.empty()) {
+            error |= createShaderType(GL_TESS_CONTROL_SHADER, "TCS", tcsSource, id);
+        }
+        if (!tesSource.empty()) {
+            error |= createShaderType(GL_TESS_EVALUATION_SHADER, "TES", tesSource, id);
+        }
+
+        glLinkProgram(id);
+        error |= ShaderUtils::checkErrors(id, "PROGRAM");
+
+        if (!error) {
+            programId = id;
+        } else {
+            glDeleteProgram(id);
+        }
+
+        CG_LOGGING_DEBUG("Loaded Shader: {0}", this->name)
+        return error;
     }
 
     ComputeShader::ComputeShader(std::string name) : name(std::move(name)) {
-        std::string source = ShaderUtils::loadShaderSourceCodeWithType(this->name, "comp", ShaderEnv::Engine);
-
-        programId = glCreateProgram();
-
-        const char* cString = source.c_str();
-        uint32_t shaderId = glCreateShader(GL_COMPUTE_SHADER);
-        glShaderSource(shaderId, 1, &cString, nullptr);
-        glCompileShader(shaderId);
-        ShaderUtils::checkErrors(shaderId, "COMPUTE");
-        glAttachShader(programId, shaderId);
-
-        glLinkProgram(programId);
-        ShaderUtils::checkErrors(programId, "PROGRAM");
+        load();
     }
 
     ComputeShader::~ComputeShader() {
@@ -294,6 +317,16 @@ namespace CgEngine {
         return *this;
     }
 
+    void ComputeShader::reload() {
+        uint32_t oldId = programId;
+        if (!load()) {
+            clearUniformLocations();
+            if (oldId != ~ 0) {
+                glDeleteProgram(oldId);
+            }
+        }
+    }
+
     void ComputeShader::bind() {
         CG_ASSERT(isReady(), "ComputeShader is not ready!")
         glUseProgram(programId);
@@ -305,6 +338,10 @@ namespace CgEngine {
 
     uint32_t ComputeShader::getProgramId() const {
         return programId;
+    }
+
+    std::string ComputeShader::getName() const {
+        return name;
     }
 
     void ComputeShader::dispatch(uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ) {
@@ -370,5 +407,38 @@ namespace CgEngine {
 
     void ComputeShader::setImageArray(CgEngine::Texture2DArray& texture, uint32_t textureUnit, CgEngine::ShaderStorageAccess storageAccess) {
         glBindImageTexture(textureUnit, texture.getRendererId(), 0, GL_TRUE, 0, static_cast<GLuint>(storageAccess), TextureUtils::getOpenGLTextureFormatForImageBind(texture.getFormat()));
+    }
+
+    void ComputeShader::clearUniformLocations() {
+        uniformLocations.clear();
+    }
+
+    bool ComputeShader::load() {
+        CG_LOGGING_DEBUG("Loading ComputeShader: {0}", this->name)
+
+        std::string source = ShaderUtils::loadShaderSourceCodeWithType(this->name, "comp", ShaderEnv::Engine);
+
+        uint32_t id = glCreateProgram();
+        bool error = false;
+
+        const char* cString = source.c_str();
+        uint32_t shaderId = glCreateShader(GL_COMPUTE_SHADER);
+        glShaderSource(shaderId, 1, &cString, nullptr);
+        glCompileShader(shaderId);
+        error |= ShaderUtils::checkErrors(shaderId, "COMPUTE");
+        glAttachShader(id, shaderId);
+        glDeleteShader(shaderId);
+
+        glLinkProgram(id);
+        error |= ShaderUtils::checkErrors(id, "PROGRAM");
+
+        if (!error) {
+            programId = id;
+        } else {
+            glDeleteProgram(id);
+        }
+
+        CG_LOGGING_DEBUG("Loaded ComputeShader: {0}", this->name)
+        return error;
     }
 }

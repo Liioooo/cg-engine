@@ -100,6 +100,16 @@ namespace CgEngine {
             return true;
         }
 
+        template<typename R>
+        typename ResourceMap<R>::Iterator begin() {
+            return getResourceMap<R>().begin();
+        }
+
+        template<typename R>
+        typename ResourceMap<R>::Iterator end() {
+            return getResourceMap<R>().end();
+        }
+
         void unloadUnusedResources() {
             unloadUnusedResourceType<MeshVertices>();
             unloadUnusedResourceType<PBRMaterial>();

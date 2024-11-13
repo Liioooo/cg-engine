@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.23)
 
 project(GAME VERSION 0.1.0)
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 set(CMAKE_CXX_STANDARD 17)
 
 file(GLOB_RECURSE Header_Files "src/*.h")
@@ -59,30 +58,51 @@ target_link_libraries(${PROJECT_NAME} PRIVATE CG_ENGINE)
 ################################################################################
 # Copy DLLs
 ################################################################################
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:GAME> $<TARGET_FILE_DIR:GAME>
-        COMMAND_EXPAND_LISTS
-)
+if (WIN32)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:GAME> $<TARGET_FILE_DIR:GAME>
+            COMMAND_EXPAND_LISTS
+    )
 
-set(PHYSX_DLLS)
-list(APPEND PHYSX_DEBUG_DLLS
-        "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/checked/PhysX_64.dll"
-        "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/checked/PhysXCommon_64.dll"
-        "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/checked/PhysXFoundation_64.dll"
-        "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/checked/PhysXCooking_64.dll"
-)
-set(PHYSX_RELEASE_DLLS)
-list(APPEND PHYSX_RELEASE_DLLS
-        "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/release/PhysX_64.dll"
-        "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/release/PhysXCommon_64.dll"
-        "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/release/PhysXFoundation_64.dll"
-        "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/release/PhysXCooking_64.dll"
-)
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<IF:$<OR:$<CONFIG:Release>,$<CONFIG:Dist>>,${PHYSX_RELEASE_DLLS},${PHYSX_DEBUG_DLLS}>" $<TARGET_FILE_DIR:GAME>
-        COMMAND_EXPAND_LISTS
-)
-
+    set(PHYSX_DLLS)
+    list(APPEND PHYSX_DEBUG_DLLS
+            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/checked/PhysX_64.dll"
+            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/checked/PhysXCommon_64.dll"
+            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/checked/PhysXFoundation_64.dll"
+            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/checked/PhysXCooking_64.dll"
+    )
+    set(PHYSX_RELEASE_DLLS)
+    list(APPEND PHYSX_RELEASE_DLLS
+            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/release/PhysX_64.dll"
+            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/release/PhysXCommon_64.dll"
+            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/release/PhysXFoundation_64.dll"
+            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/release/PhysXCooking_64.dll"
+    )
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<IF:$<OR:$<CONFIG:Release>,$<CONFIG:Dist>>,${PHYSX_RELEASE_DLLS},${PHYSX_DEBUG_DLLS}>" $<TARGET_FILE_DIR:GAME>
+            COMMAND_EXPAND_LISTS
+    )
+endif()
+if (UNIX)
+    set(PHYSX_DLLS)
+    list(APPEND PHYSX_DEBUG_DLLS
+            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/linux/checked/libPhysX_64.so"
+            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/linux/checked/libPhysXCommon_64.so"
+            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/linux/checked/libPhysXFoundation_64.so"
+            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/linux/checked/libPhysXCooking_64.so"
+    )
+    set(PHYSX_RELEASE_DLLS)
+    list(APPEND PHYSX_RELEASE_DLLS
+            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/linux/release/libPhysX_64.so"
+            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/linux/release/libPhysXCommon_64.so"
+            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/linux/release/libPhysXFoundation_64.so"
+            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/linux/release/libPhysXCooking_64.so"
+    )
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<IF:$<OR:$<CONFIG:Release>,$<CONFIG:Dist>>,${PHYSX_RELEASE_DLLS},${PHYSX_DEBUG_DLLS}>" $<TARGET_FILE_DIR:GAME>
+            COMMAND_EXPAND_LISTS
+    )
+endif()
 ################################################################################
 # Precompiled Header
 ################################################################################

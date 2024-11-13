@@ -2,6 +2,7 @@
 #include <glad/glad.h>
 #include <Logging.h>
 #include <pugixml.hpp>
+#include <utility>
 #include <Asserts.h>
 #include "CustomShaders.h"
 
@@ -30,10 +31,23 @@ namespace CgEngine {
         return new CustomShader(name, vertexPath, fragmentPath, geometryPath, tcsPath, tesPath);
     }
 
-    CustomShader::CustomShader(std::string name, const std::string& vertexPath, const std::string& fragmentPath, const std::string& geometryPath, const std::string& tcsPath, const std::string& tesPath) : Shader() {
-        CG_LOGGING_DEBUG("Loading CustomShader: {0}", this->name)
-
+    CustomShader::CustomShader(std::string name, std::string vertexPath, std::string fragmentPath, std::string geometryPath, std::string tcsPath, std::string tesPath) : Shader(), vertexPath(std::move(vertexPath)), fragmentPath(std::move(fragmentPath)), geometryPath(std::move(geometryPath)), tcsPath(std::move(tcsPath)), tesPath(std::move(tesPath)) {
         this->name = std::move(name);
+        load();
+    }
+
+    void CustomShader::reload() {
+        uint32_t oldId = programId;
+        if (!load()) {
+            clearUniformLocations();
+            if (oldId != ~ 0) {
+                glDeleteProgram(oldId);
+            }
+        }
+    }
+
+    bool CustomShader::load() {
+        CG_LOGGING_DEBUG("Loading CustomShader: {0}", this->name)
 
         std::string vertexSource = ShaderUtils::preprocessShaderCode(ShaderUtils::loadShaderSourceCode(vertexPath, ShaderEnv::Custom));
         std::string fragmentSource = ShaderUtils::preprocessShaderCode(ShaderUtils::loadShaderSourceCode(fragmentPath, ShaderEnv::Custom));
@@ -44,28 +58,36 @@ namespace CgEngine {
         CG_ASSERT(!vertexSource.empty(), "CustomShader, Vertex Shader is required")
         CG_ASSERT(!fragmentSource.empty(), "CustomShader, Fragment Shader is required")
 
-        programId = glCreateProgram();
+        uint32_t id = glCreateProgram();
+        bool error = false;
 
         if (!vertexSource.empty()) {
-            createShaderType(GL_VERTEX_SHADER, "VERTEX", vertexSource);
+            error |= createShaderType(GL_VERTEX_SHADER, "VERTEX", vertexSource, id);
         }
         if (!fragmentSource.empty()) {
-            createShaderType(GL_FRAGMENT_SHADER, "FRAGMENT", fragmentSource);
+            error |= createShaderType(GL_FRAGMENT_SHADER, "FRAGMENT", fragmentSource, id);
         }
         if (!geometrySource.empty()) {
-            createShaderType(GL_GEOMETRY_SHADER, "GEOMETRY", geometrySource);
+            error |= createShaderType(GL_GEOMETRY_SHADER, "GEOMETRY", geometrySource, id);
         }
         if (!tcsSource.empty()) {
-            createShaderType(GL_TESS_CONTROL_SHADER, "TCS", tcsSource);
+            error |= createShaderType(GL_TESS_CONTROL_SHADER, "TCS", tcsSource, id);
         }
         if (!tesSource.empty()) {
-            createShaderType(GL_TESS_EVALUATION_SHADER, "TES", tesSource);
+            error |= createShaderType(GL_TESS_EVALUATION_SHADER, "TES", tesSource, id);
         }
 
-        glLinkProgram(programId);
-        ShaderUtils::checkErrors(programId, "PROGRAM");
+        glLinkProgram(id);
+        error |= ShaderUtils::checkErrors(id, "PROGRAM");
+
+        if (!error) {
+            programId = id;
+        } else {
+            glDeleteProgram(id);
+        }
 
         CG_LOGGING_DEBUG("Loaded CustomShader: {0}", this->name)
+        return error;
     }
 
     CustomComputeShader* CustomComputeShader::createResource(const std::string& name) {
@@ -79,27 +101,49 @@ namespace CgEngine {
         return new CustomComputeShader(name, path);
     }
 
-    CustomComputeShader::CustomComputeShader(std::string name, const std::string& path) : ComputeShader() {
-        CG_LOGGING_DEBUG("Loading CustomComputeShader: {0}", this->name)
-
+    CustomComputeShader::CustomComputeShader(std::string name, std::string path) : ComputeShader(), path(std::move(path)) {
         this->name = std::move(name);
+        load();
+    }
+
+    void CustomComputeShader::reload() {
+        uint32_t oldId = programId;
+        if (!load()) {
+            clearUniformLocations();
+            if (oldId != ~ 0) {
+                glDeleteProgram(oldId);
+            }
+        }
+    }
+
+    bool CustomComputeShader::load() {
+        CG_LOGGING_DEBUG("Loading CustomComputeShader: {0}", this->name)
 
         std::string source = ShaderUtils::preprocessShaderCode(ShaderUtils::loadShaderSourceCode(path, ShaderEnv::Custom));
 
         CG_ASSERT(!source.empty(), "CustomComputeShader, Shader Source is required")
 
-        programId = glCreateProgram();
+        uint32_t id = glCreateProgram();
+        bool error = false;
 
         const char* cString = source.c_str();
         uint32_t shaderId = glCreateShader(GL_COMPUTE_SHADER);
         glShaderSource(shaderId, 1, &cString, nullptr);
         glCompileShader(shaderId);
-        ShaderUtils::checkErrors(shaderId, "COMPUTE");
-        glAttachShader(programId, shaderId);
+        error |= ShaderUtils::checkErrors(shaderId, "COMPUTE");
+        glAttachShader(id, shaderId);
+        glDeleteShader(shaderId);
 
-        glLinkProgram(programId);
-        ShaderUtils::checkErrors(programId, "PROGRAM");
+        glLinkProgram(id);
+        error |= ShaderUtils::checkErrors(id, "PROGRAM");
+
+        if (!error) {
+            programId = id;
+        } else {
+            glDeleteProgram(id);
+        }
 
         CG_LOGGING_DEBUG("Loaded CustomComputeShader: {0}", this->name)
+        return error;
     }
 }

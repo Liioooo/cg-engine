@@ -32,6 +32,7 @@ namespace CgEngine {
             shadowMapRenderPassSpec.backfaceCulling = true;
 
             shadowMapRenderPass = RenderPass(std::move(shadowMapRenderPassSpec));
+            shaderMap.dirShadowMapShader = &shadowMapRenderPass.getSpecification().shader;
         }
         {
             FramebufferSpecification preDepthFramebufferSpec;
@@ -52,6 +53,7 @@ namespace CgEngine {
             preDepthRenderPassSpec.depthCompareOperator = DepthCompareOperator::Less;
 
             preDepthRenderPass = RenderPass(std::move(preDepthRenderPassSpec));
+            shaderMap.preDepthShader = &preDepthRenderPass.getSpecification().shader;
         }
         {
             glm::uvec2 quarterSize = (glm::uvec2(viewportWidth, viewportHeight) + 3u) / 4u;
@@ -116,8 +118,10 @@ namespace CgEngine {
             hbaoDeinterleavingRenderPassSpec.depthTest = false;
 
             hbaoDeinterleavingRenderPass = RenderPass(std::move(hbaoDeinterleavingRenderPassSpec));
+            shaderMap.hbaoDeinterleavingShader = &hbaoDeinterleavingRenderPass.getSpecification().shader;
 
             hbaoShader = ComputeShader("hbao");
+            shaderMap.hbaoShader = &hbaoShader;
 
             for (int i = 0; i < 16; i++) {
                 hbaoData.float2Offsets[i] = glm::vec4((float)(i % 4) + 0.5f, (float)(i / 4.0f) + 0.5f, 0.0f, 1.f);
@@ -149,6 +153,7 @@ namespace CgEngine {
             hbaoReinterleavingRenderPassSpec.depthWrite = false;
 
             hbaoReinterleavingRenderPass = RenderPass(std::move(hbaoReinterleavingRenderPassSpec));
+            shaderMap.hbaoReinterleavingShader = &hbaoReinterleavingRenderPass.getSpecification().shader;
 
             FramebufferSpecification hbaoBlurFramebufferSpec;
             hbaoBlurFramebufferSpec.width = viewportWidth;
@@ -173,6 +178,7 @@ namespace CgEngine {
             hbaoBlurRenderPassSpec.depthWrite = false;
 
             hbaoBlurRenderPass = RenderPass(std::move(hbaoBlurRenderPassSpec));
+            shaderMap.hbaoBlurShader = &hbaoBlurRenderPass.getSpecification().shader;
         }
         {
             FramebufferSpecification geoFramebufferSpec;
@@ -195,6 +201,7 @@ namespace CgEngine {
             geoRenderPassSpec.depthWrite = false;
 
             geometryRenderPass = RenderPass(std::move(geoRenderPassSpec));
+            shaderMap.geometryShader = &geometryRenderPass.getSpecification().shader;
         }
         {
             RenderPassSpecification customShaderRenderPassSpec;
@@ -220,6 +227,7 @@ namespace CgEngine {
             skyboxRenderPassSpec.clearStencilBuffer = false;
 
             skyboxRenderPass = RenderPass(std::move(skyboxRenderPassSpec));
+            shaderMap.skyboxShader = &skyboxRenderPass.getSpecification().shader;
         }
         {
             float bloomWidth = static_cast<float>(viewportWidth) / 2.0f;
@@ -249,6 +257,7 @@ namespace CgEngine {
             bloomDownSamplePassSpec.framebuffer = framebuffer;
 
             bloomDownSamplePass = RenderPass(std::move(bloomDownSamplePassSpec));
+            shaderMap.bloomDownSampleShader = &bloomDownSamplePass.getSpecification().shader;
 
             RenderPassSpecification bloomUpSamplePassSpec;
             bloomUpSamplePassSpec.shader = Shader("bloomUpSample");
@@ -264,6 +273,7 @@ namespace CgEngine {
             bloomUpSamplePassSpec.usingExistingFramebuffer = true;
 
             bloomUpSamplePass = RenderPass(std::move(bloomUpSamplePassSpec));
+            shaderMap.bloomUpSampleShader = &bloomUpSamplePass.getSpecification().shader;
         }
         {
             RenderPassSpecification physicsCollidersRenderPassSpec;
@@ -278,6 +288,7 @@ namespace CgEngine {
             physicsCollidersRenderPassSpec.wireframe = true;
 
             physicsCollidersRenderPass = RenderPass(std::move(physicsCollidersRenderPassSpec));
+            shaderMap.physicsCollidersShader = &physicsCollidersRenderPass.getSpecification().shader;
 
             physicsCollidersMaterial.set("u_Color", {0.0f, 1.0f, 0.0f});
         }
@@ -295,6 +306,7 @@ namespace CgEngine {
             boundingBoxRenderPassSpec.backfaceCulling = false;
 
             boundingBoxRenderPass = RenderPass(std::move(boundingBoxRenderPassSpec));
+            shaderMap.boundingBoxShader = &boundingBoxRenderPass.getSpecification().shader;
 
             boundingBoxMaterial.set("u_Color", {1.0f, 1.0f, 0.0f});
         }
@@ -310,6 +322,7 @@ namespace CgEngine {
             mormalsDebugRenderPassSpec.clearStencilBuffer = false;
 
             normalsDebugRenderPass = RenderPass(std::move(mormalsDebugRenderPassSpec));
+            shaderMap.normalsDebugShader = &normalsDebugRenderPass.getSpecification().shader;
 
             normalsDebugMaterial.set("u_Color", {1.0f, 0.0f, 0.0f});
         }
@@ -325,6 +338,7 @@ namespace CgEngine {
             debugLinesRenderPassSpec.clearStencilBuffer = false;
 
             debugLinesRenderPass = RenderPass(std::move(debugLinesRenderPassSpec));
+            shaderMap.debugLinesShader = &debugLinesRenderPass.getSpecification().shader;
         }
         {
             FramebufferSpecification screenFramebufferSpec;
@@ -342,6 +356,7 @@ namespace CgEngine {
             screenRenderPassSpec.depthTest = false;
 
             screenRenderPass = RenderPass(std::move(screenRenderPassSpec));
+            shaderMap.screenShader = &screenRenderPass.getSpecification().shader;
 
             screenMaterial.setTexture("u_FinalImage", geometryRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
             screenMaterial.setTexture("u_BloomTexture", bloomTextures[0]->getRendererId(), 1);
@@ -361,6 +376,7 @@ namespace CgEngine {
             uiCircleRenderPassSpec.usingExistingFramebuffer = true;
 
             uiCirclePass = RenderPass(std::move(uiCircleRenderPassSpec));
+            shaderMap.uiCircleShader = &uiCirclePass.getSpecification().shader;
 
             RenderPassSpecification uiRectRenderPassSpec;
             uiRectRenderPassSpec.shader = Shader("uiRect");
@@ -376,6 +392,7 @@ namespace CgEngine {
             uiRectRenderPassSpec.usingExistingFramebuffer = true;
 
             uiRectPass = RenderPass(std::move(uiRectRenderPassSpec));
+            shaderMap.uiRectShader = &uiRectPass.getSpecification().shader;
 
             RenderPassSpecification uiTextRenderPassSpec;
             uiTextRenderPassSpec.shader = Shader("uiText");
@@ -391,6 +408,8 @@ namespace CgEngine {
             uiTextRenderPassSpec.usingExistingFramebuffer = true;
 
             uiTextPass = RenderPass(std::move(uiTextRenderPassSpec));
+            shaderMap.uiTextShader = &uiTextPass.getSpecification().shader;
+
 
             uiProjectionMatrix = glm::ortho(0.0f, static_cast<float>(viewportWidth), 0.0f, static_cast<float>(viewportHeight));
         }
@@ -409,6 +428,7 @@ namespace CgEngine {
         boneTransformsBuffer->setData(nullptr, maxBones * maxAnimatedComponents * sizeof(glm::mat4));
 
         skinningShader = ComputeShader("skinning");
+        shaderMap.skinningShader = &skinningShader;
     }
 
     SceneRenderer::~SceneRenderer() {
@@ -943,6 +963,10 @@ namespace CgEngine {
 
     const RenderingStats& SceneRenderer::getRenderingStats() {
         return renderingStats;
+    }
+
+    ShaderMap& SceneRenderer::getShaderMap() {
+        return shaderMap;
     }
 
     void SceneRenderer::skinMeshes() {

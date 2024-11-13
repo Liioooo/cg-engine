@@ -6,4 +6,5 @@
 namespace CgEngine::ImGuiWidgets {
     void applicationOptions(ApplicationOptions& applicationOptions);
     void performanceStats(float ts, const RenderingStats& renderingStats);
+    void shaders(ShaderMap& shaderMap, ResourceManager& resourceManager);
 }

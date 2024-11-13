@@ -29,6 +29,29 @@ namespace CgEngine {
         float uiTimer = 0.0f;
     };
 
+    struct ShaderMap {
+        Shader* dirShadowMapShader;
+        Shader* preDepthShader;
+        Shader* hbaoDeinterleavingShader;
+        ComputeShader* hbaoShader;
+        Shader* hbaoReinterleavingShader;
+        Shader* hbaoBlurShader;
+        Shader* geometryShader;
+        Shader* skyboxShader;
+        Shader* bloomDownSampleShader;
+        Shader* bloomUpSampleShader;
+        Shader* physicsCollidersShader;
+        Shader* boundingBoxShader;
+        Shader* normalsDebugShader;
+        Shader* debugLinesShader;
+        Shader* screenShader;
+        Shader* uiCircleShader;
+        Shader* uiRectShader;
+        Shader* uiTextShader;
+        ComputeShader* skinningShader;
+
+    };
+
     class SceneRenderer {
     public:
         explicit SceneRenderer(uint32_t viewportWidth, uint32_t viewportHeight);
@@ -49,6 +72,8 @@ namespace CgEngine {
         const CameraFrustum& getCamaraFrustum() const;
 
         const RenderingStats& getRenderingStats();
+        ShaderMap& getShaderMap();
+
 
     private:
         static const uint32_t maxBones = 100;
@@ -293,6 +318,8 @@ namespace CgEngine {
 
         float findDrawInfoTextureIndex(UiDrawInfo& drawInfo, const Texture2D* texture) const;
         std::array<glm::vec4, 16> generateHBAOJitterNoise() const;
+
+        ShaderMap shaderMap;
 
         RenderingStats renderingStats;
         void resetRenderingStats();
