@@ -13,6 +13,7 @@ namespace CgEngine {
 
         virtual void checkedDetachComponent(Entity entity, Scene& scene) = 0;
         virtual void detachAllComponents(Scene& scene) = 0;
+        virtual void renderImGuiForEntity(Entity entity) = 0;
     };
 
     template<typename C>
@@ -94,6 +95,13 @@ namespace CgEngine {
 
         Iterator end() {
             return components.end();
+        }
+
+        void renderImGuiForEntity(Entity entity) override {
+            if (!hasComponent(entity)) {
+                return;
+            }
+            getComponent(entity).onRenderImGui();
         }
 
     private:

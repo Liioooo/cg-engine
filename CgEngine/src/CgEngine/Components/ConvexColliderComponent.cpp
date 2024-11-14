@@ -1,6 +1,7 @@
 #include "ConvexColliderComponent.h"
 #include "Scene/Scene.h"
 #include "Application.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void ConvexColliderComponentParams::verifyParams() const {
@@ -38,5 +39,10 @@ namespace CgEngine {
 
     PhysicsConvexMesh& ConvexColliderComponent::getPhysicsMesh() {
         return mesh->getPhysicsConvexMeshForNode(meshNode);
+    }
+
+    void ConvexColliderComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("ConvexColliderComponent")) {
+        }
     }
 }

@@ -75,6 +75,18 @@ namespace CgEngine {
         return idToEntity[id];
     }
 
+    std::optional<std::string> Scene::getIdForEntity(Entity entity) const {
+        auto idIter = std::find_if(
+                std::begin(idToEntity),
+                std::end(idToEntity),
+                [entity](auto&& p) { return p.second == entity;}
+        );
+        if (idIter != std::end(idToEntity)) {
+            return idIter->first;
+        }
+        return std::nullopt;
+    }
+
     const std::unordered_set<Entity>& Scene::getChildren(Entity entity) {
         return children[entity];
     }
@@ -423,13 +435,9 @@ namespace CgEngine {
             recursiveDestroyEntity(child);
         }
 
-        auto idIter = std::find_if(
-                std::begin(idToEntity),
-                std::end(idToEntity),
-                [entity](auto&& p) { return p.second == entity;}
-        );
-        if (idIter != std::end(idToEntity)) {
-            idToEntity.erase(idIter->first);
+        std::optional<std::string> entityId = getIdForEntity(entity);
+        if (entityId.has_value()) {
+            idToEntity.erase(entityId->erase());
         }
 
         entityTags.erase(entity);

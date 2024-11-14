@@ -4,6 +4,7 @@
 #include "ImGui/ImGuiContext.h"
 #include "imgui.h"
 #include "ImGui/ImGuiWidgets.h"
+#include "ImGui/ImGuiSceneView.h"
 
 namespace CgEngine {
     Application::Application(const std::string &settingsIni) : iniReader(settingsIni) {
@@ -164,8 +165,7 @@ namespace CgEngine {
 
                 if (ImGui::BeginTabBar("#main-tabbar")) {
                     if (ImGui::BeginTabItem("Scene")) {
-                        ImGui::Text("scene");
-
+                        ImGuiSceneView::renderSceneView(*sceneManager->getActiveScene());
                         ImGui::EndTabItem();
                     }
                     if (ImGui::BeginTabItem("Application")) {

@@ -1,4 +1,5 @@
 #include "PointLightComponent.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void PointLightComponentParams::verifyParams() const {}
@@ -40,5 +41,10 @@ namespace CgEngine {
 
     void PointLightComponent::setFalloff(float value) {
         falloff = value;
+    }
+
+    void PointLightComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("PointLightComponent")) {
+        }
     }
 }

@@ -17,6 +17,7 @@ namespace CgEngine {
         using Component::Component;
 
         void onAttach(Scene& scene, TransformComponentParams& params);
+        void onRenderImGui() override;
 
         const glm::vec3& getLocalPosition() const;
         const glm::vec3& getLocalRotationVec() const;
@@ -62,7 +63,7 @@ namespace CgEngine {
 
         glm::mat4 calculateModelMatrix(glm::vec3& pos, glm::vec3& rot, glm::vec3& scale);
         glm::mat4 calculateModelMatrix(glm::vec3& pos, glm::quat& rot, glm::vec3& scale);
-        void decomposeModelToGlobals();
+        void decomposeModel(glm::mat4 model, glm::vec3& posTarget, glm::vec3& scaleTarget, glm::vec3& rotVecTarget, glm::quat& rotQuatTarget);
     };
 
 }

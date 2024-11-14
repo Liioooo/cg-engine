@@ -1,5 +1,6 @@
 #include "CharacterControllerComponent.h"
 #include "Scene/Scene.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void CharacterControllerComponentParams::verifyParams() const {}
@@ -26,5 +27,10 @@ namespace CgEngine {
 
     bool CharacterControllerComponent::isGrounded() {
         return physicsController->isGrounded();
+    }
+
+    void CharacterControllerComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("CharacterControllerComponent")) {
+        }
     }
 }

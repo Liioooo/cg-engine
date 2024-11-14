@@ -20,6 +20,7 @@ namespace CgEngine {
         using Component::Component;
 
         void onAttach(Scene& scene, SpotLightComponentParams& params);
+        void onRenderImGui() override;
 
         const glm::vec3& getColor() const;
         void setColor(const glm::vec3& value);

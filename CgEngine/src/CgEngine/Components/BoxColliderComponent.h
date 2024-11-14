@@ -22,6 +22,7 @@ namespace CgEngine {
 
         void onAttach(Scene& scene, BoxColliderComponentParams& params);
         void onDetach(Scene& scene) override;
+        void onRenderImGui() override;
 
         ResRef<PhysicsMaterial> getPhysicsMaterial();
         glm::vec3 getHalfSize() const;

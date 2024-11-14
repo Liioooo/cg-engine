@@ -1,6 +1,7 @@
 #include "SkyboxComponent.h"
 #include "Rendering/Renderer.h"
 #include "Asserts.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void SkyboxComponentParams::verifyParams() const {
@@ -29,5 +30,10 @@ namespace CgEngine {
 
     float SkyboxComponent::getLod() const {
         return lod;
+    }
+
+    void SkyboxComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("SkyboxComponent")) {
+        }
     }
 }

@@ -29,6 +29,7 @@ namespace CgEngine {
 
         void onAttach(Scene& scene, RigidBodyComponentParams& params);
         void onDetach(Scene& scene) override;
+        void onRenderImGui() override;
 
         void setKinematic(bool isKinematic);
         void setMass(float mass);

@@ -19,6 +19,7 @@ namespace CgEngine {
         using Component::Component;
 
         void onAttach(Scene& scene, SkyboxComponentParams& params);
+        void onRenderImGui() override;
 
         const ResRef<TextureCube> getIrradianceMap() const;
         const ResRef<TextureCube> getPrefilterMap() const;

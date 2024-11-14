@@ -115,6 +115,12 @@ namespace CgEngine {
             }
         }
 
+        void renderImGuiForEntity(Entity entity) {
+            for (const auto &pair: componentArrays) {
+                pair.second->renderImGuiForEntity(entity);
+            }
+        }
+
     private:
         std::unordered_map<const char*, std::shared_ptr<IComponentArray>> componentArrays{};
 

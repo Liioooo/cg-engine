@@ -25,6 +25,7 @@ namespace CgEngine {
         using Component::Component;
 
         void onAttach(Scene& scene, AnimationComponentParams& params);
+        void onRenderImGui() override;
 
         void setAnimation(const std::string& name);
         void setAnimationPlaying(bool playing);

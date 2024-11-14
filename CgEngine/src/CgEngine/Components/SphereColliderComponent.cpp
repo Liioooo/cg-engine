@@ -1,6 +1,7 @@
 #include "SphereColliderComponent.h"
 #include "Scene/Scene.h"
 #include "Application.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void SphereColliderComponentParams::verifyParams() const {}
@@ -38,5 +39,10 @@ namespace CgEngine {
 
     bool SphereColliderComponent::getIsTrigger() const {
         return isTrigger;
+    }
+
+    void SphereColliderComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("SphereColliderComponent")) {
+        }
     }
 }

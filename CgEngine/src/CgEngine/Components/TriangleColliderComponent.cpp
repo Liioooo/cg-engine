@@ -1,6 +1,7 @@
 #include "TriangleColliderComponent.h"
 #include "Scene/Scene.h"
 #include "Application.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void TriangleColliderComponentParams::verifyParams() const {
@@ -38,5 +39,10 @@ namespace CgEngine {
 
     PhysicsTriangleMesh& TriangleColliderComponent::getPhysicsMesh() {
         return mesh->getPhysicsTriangleMeshForNode(meshNode);
+    }
+
+    void TriangleColliderComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("TriangleColliderComponent")) {
+        }
     }
 }

@@ -23,6 +23,7 @@ namespace CgEngine {
 
         void onAttach(Scene& scene, ConvexColliderComponentParams& params);
         void onDetach(Scene& scene) override;
+        void onRenderImGui() override;
 
         ResRef<PhysicsMaterial> getPhysicsMaterial();
         bool getIsTrigger() const;

@@ -1,6 +1,7 @@
 #include "BoxColliderComponent.h"
 #include "Scene/Scene.h"
 #include "Application.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void BoxColliderComponentParams::verifyParams() const {}
@@ -38,5 +39,10 @@ namespace CgEngine {
 
     bool BoxColliderComponent::getIsTrigger() const {
         return isTrigger;
+    }
+
+    void BoxColliderComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("BoxColliderComponent")) {
+        }
     }
 }

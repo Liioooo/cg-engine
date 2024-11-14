@@ -1,6 +1,7 @@
 #include "ScriptComponent.h"
 #include "Application.h"
 #include "Scripting/NativeScript.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void ScriptComponentParams::verifyParams() const {
@@ -55,5 +56,10 @@ namespace CgEngine {
         dispatcher.dispatch<MouseButtonPressedEvent>(EVENT_BIND_FN(script->onMouseButtonPressed));
         dispatcher.dispatch<MouseMovedEvent>(EVENT_BIND_FN(script->onMouseMoved));
         dispatcher.dispatch<KeyPressedEvent>(EVENT_BIND_FN(script->onKeyPressed));
+    }
+
+    void ScriptComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("ScriptComponent")) {
+        }
     }
 }

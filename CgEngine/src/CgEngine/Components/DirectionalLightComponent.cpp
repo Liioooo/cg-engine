@@ -1,4 +1,5 @@
 #include "DirectionalLightComponent.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void DirectionalLightComponentParams::verifyParams() const {}
@@ -33,5 +34,9 @@ namespace CgEngine {
         castShadows = value;
     }
 
+    void DirectionalLightComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("DirectionalLightComponent")) {
+        }
+    }
 
 }

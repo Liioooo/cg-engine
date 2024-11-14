@@ -1,6 +1,7 @@
 #include "AudioComponent.h"
 #include "Scene/Scene.h"
 #include "Application.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void AudioComponentParams::verifyParams() const {
@@ -80,5 +81,10 @@ namespace CgEngine {
 
     bool AudioComponent::getAutoDestroy() const {
         return autoDestroy;
+    }
+
+    void AudioComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("AudioComponent")) {
+        }
     }
 }

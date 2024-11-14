@@ -19,6 +19,7 @@ namespace CgEngine {
 
         void onAttach(Scene& scene, AudioListenerComponentParams& params);
         void onDetach(Scene& scene) override;
+        void onRenderImGui() override;
 
         bool isActive() const;
         void setActive(bool active);

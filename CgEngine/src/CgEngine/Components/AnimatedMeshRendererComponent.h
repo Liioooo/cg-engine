@@ -27,6 +27,7 @@ namespace CgEngine {
 
         void onAttach(Scene& scene, AnimatedMeshRendererComponentParams& params);
         void onDetach(Scene& scene) override;
+        void onRenderImGui() override;
 
         ResRef<MeshVertices> getMeshVertices();
         ResRef<PBRMaterial> getMaterial();

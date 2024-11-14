@@ -1,6 +1,7 @@
 #include "CapsuleColliderComponent.h"
 #include "Scene/Scene.h"
 #include "Application.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void CapsuleColliderComponentParams::verifyParams() const {}
@@ -43,5 +44,10 @@ namespace CgEngine {
 
     bool CapsuleColliderComponent::getIsTrigger() const {
         return isTrigger;
+    }
+
+    void CapsuleColliderComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("CapsuleColliderComponent")) {
+        }
     }
 }

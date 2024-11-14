@@ -1,6 +1,7 @@
 #include "AnimationComponent.h"
 #include "Scene/Scene.h"
 #include "Application.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void AnimationComponentParams::verifyParams() const {
@@ -75,5 +76,10 @@ namespace CgEngine {
         }
 
         transform.setLocalModalMatrix(localPosition * localRotation * localScale * glm::inverse(currentAnimation->getAnimationTransform()));
+    }
+
+    void AnimationComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("AnimationComponent")) {
+        }
     }
 }

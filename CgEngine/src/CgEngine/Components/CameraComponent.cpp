@@ -1,5 +1,6 @@
 #include "CameraComponent.h"
 #include "Scene/Scene.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void CameraComponentParams::verifyParams() const {}
@@ -41,5 +42,10 @@ namespace CgEngine {
 
     bool CameraComponent::isPrimary() const {
         return isPrimaryCam;
+    }
+
+    void CameraComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("CameraComponent")) {
+        }
     }
 }

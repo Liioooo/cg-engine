@@ -14,6 +14,8 @@ namespace CgEngine {
         virtual void onAttach(Scene& scene) {};
         virtual void onDetach(Scene& scene) {};
 
+        virtual void onRenderImGui() {};
+
         inline Entity getEntity() const {
             return entity;
         }

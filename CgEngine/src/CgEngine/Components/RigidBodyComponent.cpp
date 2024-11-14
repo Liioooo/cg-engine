@@ -1,5 +1,6 @@
 #include "RigidBodyComponent.h"
 #include "Scene/Scene.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void RigidBodyComponentParams::verifyParams() const {}
@@ -137,5 +138,10 @@ namespace CgEngine {
 
     void RigidBodyComponent::removeCollider(uint32_t colliderUuid) {
         actor->removeCollider(colliderUuid);
+    }
+
+    void RigidBodyComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("RigidBodyComponent")) {
+        }
     }
 }

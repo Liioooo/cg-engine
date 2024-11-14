@@ -1,4 +1,5 @@
 #include "SpotLightComponent.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void SpotLightComponentParams::verifyParams() const {}
@@ -58,5 +59,10 @@ namespace CgEngine {
 
     void SpotLightComponent::setOuterAngle(float value) {
         outerAngle = value;
+    }
+
+    void SpotLightComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("SpotLightComponent")) {
+        }
     }
 }

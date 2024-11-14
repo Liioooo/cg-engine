@@ -5,6 +5,7 @@
 #include "Application.h"
 #include "Utils/StringUtils.h"
 #include "Utils/LoaderUtils.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void UiCanvasComponentParams::verifyParams() const {}
@@ -198,6 +199,11 @@ namespace CgEngine {
             return UIYAlignment::Bottom;
         }
         return UIYAlignment::Center;
+    }
+
+    void UiCanvasComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("UiCanvasComponent")) {
+        }
     }
 
 }

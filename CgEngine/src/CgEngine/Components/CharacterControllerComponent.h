@@ -20,6 +20,7 @@ namespace CgEngine {
 
         void onAttach(Scene& scene, CharacterControllerComponentParams& params);
         void onDetach(Scene& scene) override;
+        void onRenderImGui() override;
 
         void move(glm::vec3 dir);
         void setPosition(glm::vec3 pos);

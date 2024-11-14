@@ -1,5 +1,6 @@
 #include "AnimatedMeshRendererComponent.h"
 #include "Application.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void AnimatedMeshRendererComponentParams::verifyParams() const {
@@ -165,5 +166,10 @@ namespace CgEngine {
             return localBoneTransforms[boneIndex];
         }
         return calcSingleBoneTransform(parentBoneIndex, localBoneTransforms) * localBoneTransforms[boneIndex];
+    }
+
+    void AnimatedMeshRendererComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("AnimatedMeshRendererComponent")) {
+        }
     }
 }

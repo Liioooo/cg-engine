@@ -1,6 +1,7 @@
 #include "AudioListenerComponent.h"
 #include "Scene/Scene.h"
 #include "Application.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void AudioListenerComponentParams::verifyParams() const {}
@@ -28,5 +29,10 @@ namespace CgEngine {
 
     void AudioListenerComponent::setVolume(float volume) {
         this->volume = volume;
+    }
+
+    void AudioListenerComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("AudioListenerComponent")) {
+        }
     }
 }

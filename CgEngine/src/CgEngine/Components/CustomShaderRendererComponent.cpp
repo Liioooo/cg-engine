@@ -1,5 +1,6 @@
 #include "CustomShaderRendererComponent.h"
 #include "Application.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void CustomShaderRendererComponentParams::verifyParams() const {
@@ -155,5 +156,10 @@ namespace CgEngine {
 
     std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> CustomShaderRendererComponent::getInstanceBuffers() {
         return instanceBuffers;
+    }
+
+    void CustomShaderRendererComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("CustomShaderRendererComponent")) {
+        }
     }
 }

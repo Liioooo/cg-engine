@@ -29,6 +29,7 @@ namespace CgEngine {
         using Component::Component;
 
         void onAttach(Scene& scene, CameraComponentParams& params);
+        void onRenderImGui() override;
 
         Camera& getCamera();
         bool isPrimary() const;

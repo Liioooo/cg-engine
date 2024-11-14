@@ -26,6 +26,7 @@ namespace CgEngine {
 
         void onAttach(Scene& scene, AudioComponentParams& params);
         void onDetach(Scene& scene) override;
+        void onRenderImGui() override;
 
         Uuid getUuid() const;
 

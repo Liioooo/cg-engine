@@ -22,6 +22,7 @@ namespace CgEngine {
 
         void onAttach(Scene& scene, SphereColliderComponentParams& params);
         void onDetach(Scene& scene) override;
+        void onRenderImGui() override;
 
         ResRef<PhysicsMaterial> getPhysicsMaterial();
         float getRadius() const;

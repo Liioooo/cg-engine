@@ -1,5 +1,6 @@
 #include "MeshRendererComponent.h"
 #include "Application.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void MeshRendererComponentParams::verifyParams() const {
@@ -113,6 +114,11 @@ namespace CgEngine {
             if (!customMesh->getMeshNodes().at(i).submeshIndices.empty()) {
                 meshNodes.push_back(i);
             }
+        }
+    }
+
+    void MeshRendererComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("MeshRendererComponent")) {
         }
     }
 }

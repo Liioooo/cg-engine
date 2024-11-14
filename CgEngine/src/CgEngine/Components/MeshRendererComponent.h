@@ -25,6 +25,7 @@ namespace CgEngine {
         using Component::Component;
 
         void onAttach(Scene& scene, MeshRendererComponentParams& params);
+        void onRenderImGui() override;
 
         ResRef<MeshVertices> getMeshVertices();
         CustomMesh* getCustomMesh();

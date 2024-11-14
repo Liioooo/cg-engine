@@ -1,5 +1,6 @@
 #include "TransformComponent.h"
 #include "Scene/Scene.h"
+#include "imgui.h"
 
 namespace CgEngine {
     void TransformComponentParams::verifyParams() const {}
@@ -95,7 +96,7 @@ namespace CgEngine {
             if (yawPitchRoll.x != 0 || yawPitchRoll.y != 0 || yawPitchRoll.z != 0) {
                 glm::vec3 direction = glm::normalize(glm::quat({yawPitchRoll.y, yawPitchRoll.x, yawPitchRoll.z}) * glm::vec3(0, 0, -1));
                 localModelMatrix = glm::inverse(glm::lookAt(localPosition, localPosition + direction, {0.0f, 1.0f, 0.0f}));
-                decomposeModelToGlobals();
+                decomposeModel(modelMatrix, globalPosition, globalScale, globalRotationVec, globalRotationQuat);
                 localRotationVec = globalRotationVec;
                 localRotationQuat = globalRotationQuat;
             } else {
@@ -108,7 +109,8 @@ namespace CgEngine {
             return true;
         } else if (localModalMatrixDirty) {
             modelMatrix = localModelMatrix;
-            decomposeModelToGlobals();
+            decomposeModel(modelMatrix, globalPosition, globalScale, globalRotationVec, globalRotationQuat);
+            decomposeModel(localModelMatrix, localPosition, localScale, localRotationVec, localRotationQuat);
             physicsDirty = false;
             localModalMatrixDirty = false;
             return true;
@@ -138,8 +140,11 @@ namespace CgEngine {
                     localModelMatrix = calculateModelMatrix(localPosition, localRotationVec, localScale);
                 }
             }
+            if (localModalMatrixDirty) {
+                decomposeModel(localModelMatrix, localPosition, localScale, localRotationVec, localRotationQuat);
+            }
             modelMatrix = parentModelMatrix * localModelMatrix;
-            decomposeModelToGlobals();
+            decomposeModel(modelMatrix, globalPosition, globalScale, globalRotationVec, globalRotationQuat);
             isDirty = false;
             physicsDirty = false;
             localModalMatrixDirty = false;
@@ -166,10 +171,8 @@ namespace CgEngine {
         return glm::translate(glm::mat4(1.0f), pos) * glm::toMat4(rot) * glm::scale(glm::mat4(1.0f), scale);
     }
 
-    void TransformComponent::decomposeModelToGlobals() {
-        glm::mat4 model = modelMatrix;
-
-        globalPosition = glm::vec3(model[3]);
+    void TransformComponent::decomposeModel(glm::mat4 model, glm::vec3& posTarget, glm::vec3& scaleTarget, glm::vec3& rotVecTarget, glm::quat& rotQuatTarget) {
+        posTarget = glm::vec3(model[3]);
         model[3] = glm::vec4(0.0f, 0.0f, 0.0f, model[3].w);
 
         glm::vec3 col[3];
@@ -178,23 +181,23 @@ namespace CgEngine {
         col[1] = glm::vec3(model[1]);
         col[2] = glm::vec3(model[2]);
 
-        globalScale.x = glm::length(col[0]);
+        scaleTarget.x = glm::length(col[0]);
         col[0] = glm::normalize(col[0]);
 
-        globalScale.y = glm::length(col[1]);
+        scaleTarget.y = glm::length(col[1]);
         col[1] = glm::normalize(col[1]);
 
-        globalScale.z = glm::length(col[2]);
+        scaleTarget.z = glm::length(col[2]);
         col[2] = glm::normalize(col[2]);
 
         float trace = col[0].x + col[1].y + col[2].z;
         if (trace > 0.0f) {
             float rot = glm::sqrt(trace + 1.0f);
-            globalRotationQuat.w = 0.5f * rot;
+            rotQuatTarget.w = 0.5f * rot;
             rot = 0.5f / rot;
-            globalRotationQuat.x = rot * (col[1].z - col[2].y);
-            globalRotationQuat.y = rot * (col[2].x - col[0].z);
-            globalRotationQuat.z = rot * (col[0].y - col[1].x);
+            rotQuatTarget.x = rot * (col[1].z - col[2].y);
+            rotQuatTarget.y = rot * (col[2].x - col[0].z);
+            rotQuatTarget.z = rot * (col[0].y - col[1].x);
         } else {
             int i, j, k = 0;
             int next[3] = {1, 2, 0};
@@ -206,13 +209,35 @@ namespace CgEngine {
 
             float rot = glm::sqrt(col[i][i] - col[j][j] - col[k][k] + 1.0f);
 
-            globalRotationQuat[i] = 0.5f * rot;
+            rotQuatTarget[i] = 0.5f * rot;
             rot = 0.5f / rot;
-            globalRotationQuat[j] = rot * (col[i][j] + col[j][i]);
-            globalRotationQuat[k] = rot * (col[i][k] + col[k][i]);
-            globalRotationQuat.w = rot * (col[j][k] - col[k][j]);
+            rotQuatTarget[j] = rot * (col[i][j] + col[j][i]);
+            rotQuatTarget[k] = rot * (col[i][k] + col[k][i]);
+            rotQuatTarget.w = rot * (col[j][k] - col[k][j]);
         }
 
-        globalRotationVec = glm::eulerAngles(globalRotationQuat);
+        rotVecTarget = glm::eulerAngles(rotQuatTarget);
+    }
+
+    void TransformComponent::onRenderImGui() {
+        if (ImGui::CollapsingHeader("TransformComponent")) {
+            ImGui::BeginDisabled();
+            ImGui::DragFloat3("Global Position", glm::value_ptr(globalPosition));
+            ImGui::DragFloat3("Global Rotation", glm::value_ptr(globalRotationVec));
+            ImGui::DragFloat3("Global Scale", glm::value_ptr(globalScale));
+            ImGui::EndDisabled();
+
+            bool changed = false;
+            changed |= ImGui::DragFloat3("Local Position", glm::value_ptr(localPosition), 0.1f);
+            changed |= ImGui::DragFloat3("Local Rotation", glm::value_ptr(localRotationVec), 0.01f, 0, glm::two_pi<float>());
+            changed |= ImGui::DragFloat3("Local Scale", glm::value_ptr(localScale), 0.05f);
+            changed |= ImGui::DragFloat3("Yaw/Pitch/Roll", glm::value_ptr(yawPitchRoll), 0.05f);
+
+            if (changed) {
+                localRotationQuat = glm::quat(localRotationVec);
+            }
+
+            isDirty = changed;
+        }
     }
 }

@@ -48,6 +48,7 @@ namespace CgEngine {
     };
 
     class Scene {
+        friend class ImGuiSceneView;
     public:
         Scene(int viewportWidth, int viewportHeight);
         ~Scene();
@@ -56,6 +57,7 @@ namespace CgEngine {
         Entity createEntity(Entity parent, const std::string& id);
         void destroyEntity(Entity entity);
         Entity findEntityById(const std::string& id);
+        std::optional<std::string> getIdForEntity(Entity entity) const;
         const std::unordered_set<Entity>& getChildren(Entity entity);
         Entity getParent(Entity entity);
         bool hasParent(Entity entity) const;
