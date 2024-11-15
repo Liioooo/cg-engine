@@ -39,12 +39,20 @@ namespace CgEngine {
         return interpolateFn(keyFrames.at(previousIndex).value, keyFrames.at(frameIndex).value, scaleFactor);
     }
 
+    const std::string& SkeletalAnimation::getName() const {
+        return name;
+    }
+
     float SkeletalAnimation::getDuration() const {
         return duration;
     }
 
     const std::vector<AnimationChannel>& SkeletalAnimation::getChannels() const {
         return channels;
+    }
+
+    const std::string& Animation::getName() const {
+        return name;
     }
 
     float Animation::getDuration() const {

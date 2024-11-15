@@ -1,3 +1,5 @@
+#include <utility>
+
 #pragma once
 
 namespace CgEngine {
@@ -35,27 +37,31 @@ namespace CgEngine {
 
     class SkeletalAnimation {
     public:
-        SkeletalAnimation(std::vector<AnimationChannel> channels, float duration) : channels(std::move(channels)), duration(duration) {};
-        SkeletalAnimation(SkeletalAnimation&& other) : channels(std::move(other.channels)), duration(other.duration) {};
+        SkeletalAnimation(std::string name, std::vector<AnimationChannel> channels, float duration) : name(std::move(name)), channels(std::move(channels)), duration(duration) {};
+        SkeletalAnimation(SkeletalAnimation&& other) : name(std::move(other.name)), channels(std::move(other.channels)), duration(other.duration) {};
 
+        const std::string& getName() const;
         float getDuration() const;
         const std::vector<AnimationChannel>& getChannels() const;
 
     private:
+        std::string name;
         std::vector<AnimationChannel> channels;
         float duration;
     };
 
     class Animation {
     public:
-        Animation(AnimationChannel channel, float duration, glm::mat4 animationTransform) : channel(std::move(channel)), duration(duration), animationTransform(animationTransform) {};
-        Animation(Animation&& other) : channel(std::move(other.channel)), duration(other.duration), animationTransform(other.animationTransform) {};
+        Animation(std::string name, AnimationChannel channel, float duration, glm::mat4 animationTransform) : name(std::move(name)), channel(std::move(channel)), duration(duration), animationTransform(animationTransform) {};
+        Animation(Animation&& other) : name(std::move(other.name)), channel(std::move(other.channel)), duration(other.duration), animationTransform(other.animationTransform) {};
 
+        const std::string& getName() const;
         float getDuration() const;
         const AnimationChannel& getChannel() const;
         const glm::mat4& getAnimationTransform() const;
 
     private:
+        std::string name;
         AnimationChannel channel;
         float duration;
         glm::mat4 animationTransform;

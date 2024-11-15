@@ -80,6 +80,19 @@ namespace CgEngine {
 
     void AnimationComponent::onRenderImGui() {
         if (ImGui::CollapsingHeader("AnimationComponent")) {
+            if (ImGui::BeginCombo("Animation", currentAnimation->getName().c_str())) {
+                for (const auto& item: animationSource->getAnimations()) {
+                    if (ImGui::Selectable(item.first.c_str(), currentAnimation == &item.second)) {
+                        setAnimation(item.first);
+                    }
+                }
+                ImGui::EndCombo();
+            }
+
+            ImGui::Checkbox("Is Playing", &isAnimationPlaying);
+            ImGui::Checkbox("Loop", &loopAnimation);
+            ImGui::SliderFloat("Speed", &animationSpeed, 0.0f, 5.0f);
+            ImGui::SliderFloat("Time", &animationTime, 0.0f, 1.0f);
         }
     }
 }

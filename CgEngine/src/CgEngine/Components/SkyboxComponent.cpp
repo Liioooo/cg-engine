@@ -34,6 +34,8 @@ namespace CgEngine {
 
     void SkyboxComponent::onRenderImGui() {
         if (ImGui::CollapsingHeader("SkyboxComponent")) {
+            ImGui::DragFloat("Intesity", &intensity, 0.001, 0.0f, 1.0f);
+            ImGui::DragFloat("LOD", &lod, 0.01, 0.0f);
         }
     }
 }

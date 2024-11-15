@@ -934,7 +934,7 @@ namespace CgEngine {
 
         const auto animationDuration = static_cast<float>(aiAnimation->mDuration / ticksPerSecond);
 
-        return SkeletalAnimation(std::move(channels), animationDuration);
+        return SkeletalAnimation(aiAnimation->mName.C_Str(), std::move(channels), animationDuration);
     }
 
     void MeshVertices::importAnimations(const aiScene* scene) {
@@ -971,7 +971,7 @@ namespace CgEngine {
                 const auto animationDuration = static_cast<float>(aiAnimation->mDuration / ticksPerSecond);
                 auto& meshNode = meshNodes.at(nodeNameToNode.at(nodeAnimation->mNodeName.C_Str()));
 
-                return Animation(std::move(channel), animationDuration, meshNode.transform);
+                return Animation(aiAnimation->mName.C_Str(), std::move(channel), animationDuration, meshNode.transform);
             }
         }
 

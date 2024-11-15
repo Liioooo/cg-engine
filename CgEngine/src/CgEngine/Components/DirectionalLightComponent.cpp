@@ -36,6 +36,9 @@ namespace CgEngine {
 
     void DirectionalLightComponent::onRenderImGui() {
         if (ImGui::CollapsingHeader("DirectionalLightComponent")) {
+            ImGui::ColorEdit3("Color", glm::value_ptr(color), ImGuiColorEditFlags_DisplayRGB);
+            ImGui::DragFloat("Intesity", &intensity, 0.001, 0.0f, 1.0f);
+            ImGui::Checkbox("Cast Shadows", &castShadows);
         }
     }
 

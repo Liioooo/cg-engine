@@ -45,6 +45,10 @@ namespace CgEngine {
 
     void PointLightComponent::onRenderImGui() {
         if (ImGui::CollapsingHeader("PointLightComponent")) {
+            ImGui::ColorEdit3("Color", glm::value_ptr(color), ImGuiColorEditFlags_DisplayRGB);
+            ImGui::DragFloat("Intesity", &intensity, 0.001, 0.0f, 1.0f);
+            ImGui::DragFloat("Radius", &radius, 0.01, 0.0f);
+            ImGui::DragFloat("Falloff", &falloff, 0.01, 0.0f);
         }
     }
 }

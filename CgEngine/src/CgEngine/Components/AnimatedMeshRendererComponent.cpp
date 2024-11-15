@@ -170,6 +170,20 @@ namespace CgEngine {
 
     void AnimatedMeshRendererComponent::onRenderImGui() {
         if (ImGui::CollapsingHeader("AnimatedMeshRendererComponent")) {
+            if (ImGui::BeginCombo("Animation", currentAnimation->getName().c_str())) {
+                for (const auto& item: mesh->getSkeletalAnimations()) {
+                    if (ImGui::Selectable(item.first.c_str(), currentAnimation == &item.second)) {
+                        setAnimation(item.first);
+                    }
+                }
+                ImGui::EndCombo();
+            }
+
+            ImGui::Checkbox("Is Playing", &isAnimationPlaying);
+            ImGui::Checkbox("Loop", &loopAnimation);
+            ImGui::SliderFloat("Speed", &animationSpeed, 0.0f, 5.0f);
+            ImGui::SliderFloat("Time", &animationTime, 0.0f, 1.0f);
+            ImGui::Checkbox("Cast Shadows", &castShadows);
         }
     }
 }
