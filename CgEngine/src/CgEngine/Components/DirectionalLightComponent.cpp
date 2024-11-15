@@ -1,5 +1,8 @@
 #include "DirectionalLightComponent.h"
 #include "imgui.h"
+#include "ImGui/ImGuiWidgets.h"
+#include "Utils/StringUtils.h"
+#include "Utils/LoaderUtils.h"
 
 namespace CgEngine {
     void DirectionalLightComponentParams::verifyParams() const {}
@@ -39,6 +42,13 @@ namespace CgEngine {
             ImGui::ColorEdit3("Color", glm::value_ptr(color), ImGuiColorEditFlags_DisplayRGB);
             ImGui::DragFloat("Intesity", &intensity, 0.001, 0.0f, 1.0f);
             ImGui::Checkbox("Cast Shadows", &castShadows);
+            ImGuiWidgets::copyCurrentConfig("DirectionalLightComponent", [*this] {
+                std::unordered_map<std::string, std::string> map;
+                map["color"] = Utils::LoaderUtils::vec3ColorToHexString(color);
+                map["intensity"] = std::to_string(intensity);
+                map["cast-shadows"] = Utils::String::fromBool(castShadows);
+                return map;
+            });
         }
     }
 

@@ -183,6 +183,10 @@ namespace CgEngine {
         return *window;
     }
 
+    void Window::setClipboardText(const char* string) {
+        glfwSetClipboardString(window, string);
+    }
+
     void Window::errorCallback(int error, const char *description) {
         CG_LOGGING_ERROR("GlFW ERROR {0}: {1}", error, description);
     }

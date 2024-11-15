@@ -8,6 +8,7 @@ namespace CgEngine::ImGuiWidgets {
     void applicationOptions(ApplicationOptions& applicationOptions);
     void performanceStats(float ts, const RenderingStats& renderingStats);
     void shaders(ShaderMap& shaderMap, ResourceManager& resourceManager);
+    void copyCurrentConfig(const std::string& compName, const std::function<std::unordered_map<std::string, std::string>()>& getConfigMap);
 
     template <typename T, typename Getter, typename Setter>
     void dragFloat(const char* label, T* t, Getter getter, Setter setter, float speed, float min = 0.0f, float max = 0.0f) {

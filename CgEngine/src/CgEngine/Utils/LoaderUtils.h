@@ -5,6 +5,8 @@ namespace CgEngine::Utils::LoaderUtils {
     glm::vec4 stringTupleToVec4(const std::string& s);
     glm::vec3 hexStringToColor(const std::string& s);
     std::vector<std::string> getListFromString(const std::string& s);
+
+    std::string vec3ColorToHexString(const glm::vec3& color);
 }
 
 

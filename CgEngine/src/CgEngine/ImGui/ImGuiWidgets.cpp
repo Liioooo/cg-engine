@@ -1,5 +1,7 @@
 #include "ImGuiWidgets.h"
 #include "imgui.h"
+#include "Application.h"
+#include "pugixml.hpp"
 
 namespace CgEngine::ImGuiWidgets {
     void applicationOptions(ApplicationOptions& applicationOptions) {
@@ -209,6 +211,23 @@ namespace CgEngine::ImGuiWidgets {
                 it->second->reload();
             }
             ImGui::PopID();
+        }
+    }
+
+    void ImGuiWidgets::copyCurrentConfig(const std::string& compName, const std::function<std::unordered_map<std::string, std::string>()>& getConfigMap) {
+        if (ImGui::Button("Copy Config")) {
+            const auto& configMap = getConfigMap();
+
+            pugi::xml_document doc;
+            pugi::xml_node node = doc.append_child(compName.c_str());
+
+            for (const auto& [key, val]: configMap) {
+                node.append_attribute(key.c_str()).set_value(val.c_str());
+            }
+
+            std::ostringstream stream;
+            doc.print(stream);
+            Application::get().getWindow().setClipboardText(stream.str().c_str());
         }
     }
 

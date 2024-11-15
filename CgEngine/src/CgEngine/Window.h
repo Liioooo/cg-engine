@@ -28,6 +28,8 @@ namespace CgEngine {
         uint32_t getHeight();
         GLFWwindow& getWindowHandle();
 
+        void setClipboardText(const char* string);
+
     private:
         bool vsync = false;
         uint32_t windowWidth;

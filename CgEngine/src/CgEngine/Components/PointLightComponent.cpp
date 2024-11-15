@@ -1,5 +1,6 @@
 #include "PointLightComponent.h"
 #include "imgui.h"
+#include "ImGui/ImGuiWidgets.h"
 
 namespace CgEngine {
     void PointLightComponentParams::verifyParams() const {}
@@ -49,6 +50,13 @@ namespace CgEngine {
             ImGui::DragFloat("Intesity", &intensity, 0.001, 0.0f, 1.0f);
             ImGui::DragFloat("Radius", &radius, 0.01, 0.0f);
             ImGui::DragFloat("Falloff", &falloff, 0.01, 0.0f);
+            ImGuiWidgets::copyCurrentConfig("PointLightComponent", [*this] {
+                std::unordered_map<std::string, std::string> map;
+                map["intensity"] = std::to_string(intensity);
+                map["radius"] = std::to_string(radius);
+                map["falloff"] = std::to_string(falloff);
+                return map;
+            });
         }
     }
 }

@@ -48,4 +48,14 @@ namespace CgEngine::Utils::LoaderUtils {
 
         return result;
     }
+
+    std::string vec3ColorToHexString(const glm::vec3& color) {
+        int r = static_cast<int>(glm::round(color.r * 255.0f));
+        int g = static_cast<int>(glm::round(color.g * 255.0f));
+        int b = static_cast<int>(glm::round(color.b * 255.0f));
+
+        std::stringstream stream;
+        stream << std::hex << r << g << b;
+        return "#" + stream.str();
+    }
 }

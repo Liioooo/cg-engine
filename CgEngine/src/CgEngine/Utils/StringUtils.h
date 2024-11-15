@@ -8,6 +8,8 @@ namespace CgEngine::Utils::String {
     std::optional<int32_t> toInt(const std::string& s);
     std::optional<float> toFloat(const std::string& s);
     bool toBool(const std::string& s);
+
+    std::string fromBool(bool value);
 }
 
 

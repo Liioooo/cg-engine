@@ -27,7 +27,6 @@ namespace CgEngine {
     };
 
     class Application {
-        friend class Input;
     public:
         explicit Application(const std::string& settingsIni);
         ~Application();
@@ -43,6 +42,7 @@ namespace CgEngine {
         PhysicsSystem& getPhysicsSystem();
         ResourceManager& getResourceManager();
         SceneManager& getSceneManager();
+        Window& getWindow();
 
         template<typename S>
         void registerNativeScript(const std::string& name) {
@@ -65,7 +65,6 @@ namespace CgEngine {
 
         bool showImGuiWindow = false;
 
-        Window& getWindow();
         void onEvent(Event& event);
         void onWindowClose(WindowCloseEvent& event);
         void onWindowResize(WindowResizeEvent& event);

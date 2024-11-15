@@ -61,5 +61,9 @@ namespace CgEngine::Utils::String {
         char first = *s.c_str();
         return (first == '1' || first == 't' || first == 'T' || first == 'y' || first == 'Y');
     }
+
+    std::string fromBool(bool value) {
+        return value ? "true" : "false";
+    }
 }
 
