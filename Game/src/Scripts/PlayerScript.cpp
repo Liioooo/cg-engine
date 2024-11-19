@@ -7,7 +7,7 @@
 
 namespace Game {
     void PlayerScript::onAttach() {
-        CgEngine::Input::setCursorMode(CgEngine::CursorMode::Locked);
+        //CgEngine::Input::setCursorMode(CgEngine::CursorMode::Locked);
         prevMousePos = CgEngine::Input::getMousePosition();
 
         cameraRaycastExcluded.insert(getOwingEntity());
