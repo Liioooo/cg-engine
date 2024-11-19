@@ -14,6 +14,8 @@
 | assimp    | https://github.com/assimp/assimp          | 3D Model loading                           |
 | PhysX     | https://github.com/NVIDIA-Omniverse/PhysX | 3D Physics                                 |
 | FreeType  | https://freetype.org/index.html           | Font loading                               |
+| OpenAl    | https://github.com/kcat/openal-soft       | Playing Audio                              |
+| ImGui     | https://github.com/ocornut/imgui          | Displaying Debug Information               |
 
 ## Available Components
 
@@ -47,13 +49,10 @@ enable_hbao = true
 startScene = scenes/start_scene.xml
 ```
 
-Some properties can be changed at runtime (But they only work in Debug and Release, not Dist):
-- `debug_show_physics_colliders`: F1
-- `debug_show_normals`: F2
-- `debug_show_bounding_boxes`: F3
+Debug information can be displayed by pressing `F11`. There it is also possible to change all sort of parameters (Application Options, Component Properties, Reload Shaders). But this only works in Debug and Release, not Dist.
 
 ### `assets/materials.xml`
-Here you can define material to render.
+Here you can define materials to render.
 
 ```xml
 <Materials>

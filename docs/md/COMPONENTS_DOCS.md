@@ -278,3 +278,21 @@ For lengths and sizes following units can be used:
 | `text`       | Text            | `Some Text`  | `""`        |
 | `color`      | Text color      | `1 0 0 1`    | `0 0 0 1`   |
 | `font`       | Font to use     | `roboto.ttf` | -           |
+
+### AudioListenerComponent
+
+| **Property** | **Description**                     | **Example** | **Default** |
+|--------------|-------------------------------------|-------------|-------------|
+| `volume`     | Gain of the listener                | `0.8`       | `1`         |
+| `active`     | Indicates if the Listener is active | `true`      | `true`      |
+
+### AudioComponent
+
+| **Property**     | **Description**                                                            | **Example**    | **Default** |
+|------------------|----------------------------------------------------------------------------|----------------|-------------|
+| `asset-file`     | The sound that should be played                                            | `my-sound.wav` | -           |
+| `volume`         | Volume to play the sound at                                                | `0.5`          | `1`         |
+| `pitch`          | Pitch to use to play the sound                                             | `0.8`          | `1`         |
+| `looping`        | Indicate if the sound should loop when finished playing                    | `true`         | `false`     |
+| `play-on-attach` | If true, the sound will start to play as soon as the component is attached | `true`         | `false`     |
+| `auto-destroy`   | If true, the component will be destroyed when the sound finishes playing   | `true`         | `false`     |

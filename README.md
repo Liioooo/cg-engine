@@ -1,8 +1,11 @@
-# cgue23-pac3D
+# cgue23-pac3D, rtr24-island
 
-Leo Preissegger
+Leo Preissegger, Tobias Seczer
 
-A preview of the game can be found in the [CG - Hall Of Fame 2023](https://www.cg.tuwien.ac.at/courses/CG/HallOfFame/2023S).
+A preview of the game from CGUE 2023 can be found in the [CG - Hall Of Fame 2023](https://www.cg.tuwien.ac.at/courses/CG/HallOfFame/2023S).
+
+- **CGUE 2023 Pac3D** is located in the directory [Game](Game).
+- **RTR 2024 Island** is located in the directory [RealTimeRendering](RealTimeRendering).
 
 ## Hardware
 The Game was tested on the following Hardware:
