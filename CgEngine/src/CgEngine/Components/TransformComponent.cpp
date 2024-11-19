@@ -1,6 +1,8 @@
 #include "TransformComponent.h"
 #include "Scene/Scene.h"
 #include "imgui.h"
+#include "ImGui/ImGuiWidgets.h"
+#include "Utils/LoaderUtils.h"
 
 namespace CgEngine {
     void TransformComponentParams::verifyParams() const {}
@@ -238,6 +240,12 @@ namespace CgEngine {
             }
 
             isDirty = changed;
+
+            ImGuiWidgets::copyCurrentConfig("TransformComponent", [this](auto& map) {
+                map["position"] = Utils::LoaderUtils::vec3ToStringTuple(localPosition);
+                map["rotation"] = Utils::LoaderUtils::vec3ToStringTuple(localRotationVec);
+                map["scale"] = Utils::LoaderUtils::vec3ToStringTuple(localScale);
+            });
         }
     }
 }

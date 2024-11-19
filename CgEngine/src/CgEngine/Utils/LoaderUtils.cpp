@@ -58,4 +58,16 @@ namespace CgEngine::Utils::LoaderUtils {
         stream << std::hex << r << g << b;
         return "#" + stream.str();
     }
+
+    std::string vec3ToStringTuple(const glm::vec3& vec) {
+        std::stringstream stream;
+        stream << vec.x << ' ' << vec.y << ' ' << vec.z;
+        return stream.str();
+    }
+
+    std::string vec4ToStringTuple(const glm::vec4& vec) {
+        std::stringstream stream;
+        stream << vec.x << ' ' << vec.y << ' ' << vec.z << ' ' << vec.w;
+        return stream.str();
+    }
 }

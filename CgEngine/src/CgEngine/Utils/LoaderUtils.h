@@ -7,6 +7,8 @@ namespace CgEngine::Utils::LoaderUtils {
     std::vector<std::string> getListFromString(const std::string& s);
 
     std::string vec3ColorToHexString(const glm::vec3& color);
+    std::string vec3ToStringTuple(const glm::vec3& vec);
+    std::string vec4ToStringTuple(const glm::vec4& vec);
 }
 
 
