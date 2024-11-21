@@ -2,89 +2,69 @@
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-layout(rg32f, binding = 0) uniform image2D gaussianNoise;
-layout(rgba32f, binding = 1) uniform image2D h0_texture;
-layout(rgba32f, binding = 2) uniform image2D wave_texture;
-
 const float TWO_PI = 6.283185307179586;
 const float PI = 3.141592653589793;
-ivec2 L = ivec2(100, 100);
-int N = 256;
-int M = 256;
-int V = 11;
-int l = 1;
-float g = 9.81;
-float U_10 = 12.5;
-uniform vec2 omega_hat = vec2(0.2, 0.4);
-float T = 20.0;
-float omega_0 = TWO_PI / T;
-float D = 500.0;
+
+layout(rg32f, binding = 0) uniform image2D u_gaussianNoise;
+layout(rgba32f, binding = 1) uniform image2D u_h0Texture;
+layout(rgba32f, binding = 2) uniform image2D u_waveTexture;
+
+uniform float u_T;
+uniform float u_gamma;
+uniform float u_alpha;
+uniform float u_omega_p;
+uniform vec2 u_wind;
+uniform int u_size;
+uniform float u_length;
+uniform float u_depth;
+uniform float u_g;
+uniform float u_cutoffLow = 5.0;
+uniform float u_cutoffHigh = TWO_PI / 17.0 * 6.0;
+float omega_0 = TWO_PI / u_T;
 
 float omega(float k);
 float omega_bar(float k);
-vec2 h_tilde_0(vec2 k);
-float P_h(vec2 k);
 float JONSWAP(vec2 k);
 
 void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
 
-    int nx = texelCoord.x - N / 2;
-    int nz = texelCoord.y - M / 2;
-    vec2 k = vec2(TWO_PI * nx / L.x, TWO_PI * nz / L.y);
+    int nx = texelCoord.x - u_size / 2;
+    int nz = texelCoord.y - u_size / 2;
+    float deltaK = TWO_PI / u_length;
+    vec2 k = vec2(TWO_PI * nx / u_length, TWO_PI * nz / u_length);
     float k_length = length(k);
-    vec2 h0 = h_tilde_0(k);
+    vec2 h0 = vec2(0, 0);
     vec4 wave = vec4(k.x, 1, k.y, 0);
 
-    if (k_length <= 2 && k_length >= 0.0001) {
+    // TODO: Add these as uniforms for each cascade
+    if (k_length <= u_cutoffHigh && k_length >= u_cutoffLow) {
         wave.g = 1 / k_length;
-        wave.a = omega_bar(k_length);
-    } else {
+        wave.a = omega(k_length);
+        h0 = imageLoad(u_gaussianNoise, ivec2(gl_GlobalInvocationID.xy)).xy * sqrt(2.0 * JONSWAP(k) * deltaK * deltaK);
     }
 
-    imageStore(h0_texture, texelCoord, vec4(h0.xy, 0, 1));
-    imageStore(wave_texture, texelCoord, wave);
+    imageStore(u_h0Texture, texelCoord, vec4(h0.xy, 0, 1));
+    imageStore(u_waveTexture, texelCoord, wave);
 }
 
 float omega(float k) {
-    return sqrt(g * k * tanh(min(k * D, 18)));
+    return sqrt(u_g * k * tanh(min(k * u_depth, 18)));
 }
 
 float omega_bar(float k) {
     return floor(omega(k) / omega_0) * omega_0;
 }
 
-float P_h(vec2 k) {
-    float A = 0.00002;
-    float k_length = length(k);
-    if (k_length == 0) {
-        return 0;
-    }
-    float k_length_2 = k_length * k_length;
-    float k_length_4 = k_length_2 * k_length_2;
-    float _L = V * V / g;
-    float _L_2 = _L * _L;
-    float k_dot_omega = dot(normalize(k), normalize(omega_hat));
-    float k_dot_omega_2 = k_dot_omega * k_dot_omega;
-    float l_2 = _L_2 * 0.001 * 0.001;
-    return A * exp(-1 / (k_length_2 * _L_2)) / k_length_4 * k_dot_omega_2 * exp(-k_length_2 * l_2);
-}
-
-vec2 h_tilde_0(vec2 k) {
-    return imageLoad(gaussianNoise, ivec2(gl_GlobalInvocationID.xy)).xy * sqrt(JONSWAP(k) * 4 * PI * PI * L[0] * L[0]);
-}
-
 float JONSWAP(vec2 k) {
-    float F = 200000.0;
-    float alpha = 0.076 * pow(U_10 * U_10 / F / g, -0.22);
-    float omega_p = 22.0 * pow(g * g / U_10 / F, -1.0 / 3.0);
-    float gamma = 3.3;
     float sigma = 0.09;
     float omega = omega(length(k));
-    if (omega < omega_p) {
+    if (omega < u_omega_p) {
         sigma = 0.07;
     }
-    float r = exp(-1 * pow(omega - omega_p, 2.0) / 2.0 / sigma / sigma / omega_p / omega_p);
-    float S = alpha * g * g / omega / omega / omega / omega / omega * exp(-1.25 * pow(omega_p / omega, 4)) * pow(gamma, r);
+    float omega_recip = 1.0 / omega;
+    float sigma_recip = 1.0 / sigma;
+    float r = exp(-((omega - u_omega_p) * (omega - u_omega_p)) / (2.0 * sigma_recip * sigma_recip * u_omega_p * u_omega_p));
+    float S = u_alpha * u_g * u_g * omega_recip * omega_recip * omega_recip * omega_recip * omega_recip * exp(-1.25 * pow(u_omega_p * omega_recip, 4)) * pow(u_gamma, r);
     return S;
 }

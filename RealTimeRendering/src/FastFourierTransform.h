@@ -2,18 +2,21 @@
 
 #include <Rendering/Texture.h>
 #include <Rendering/CustomShaders.h>
+#include <Resources/ResRef.h>
+#include <Resources/ResourceManager.h>
 
 namespace RTR {
     class FastFourierTransform {
     public:
-        FastFourierTransform();
+        FastFourierTransform(CgEngine::ResourceManager& resourceManager);
         ~FastFourierTransform();
         void inverseTransform(CgEngine::Texture2D& input, bool outputToInput = true, bool permute = true);
     private:
-        CgEngine::CustomComputeShader* precomputeTwiddleFactorsAndInputIndicesShader = nullptr;
-        CgEngine::CustomComputeShader* permuteShader = nullptr;
-        CgEngine::CustomComputeShader* horizontalStepInverseFftShader = nullptr;
-        CgEngine::CustomComputeShader* verticalStepInverseFftShader = nullptr;
+        CgEngine::ResourceManager& resourceManager;
+        CgEngine::ResRef<CgEngine::CustomComputeShader> precomputeTwiddleFactorsAndInputIndicesShader = nullptr;
+        CgEngine::ResRef<CgEngine::CustomComputeShader> permuteShader = nullptr;
+        CgEngine::ResRef<CgEngine::CustomComputeShader> horizontalStepInverseFftShader = nullptr;
+        CgEngine::ResRef<CgEngine::CustomComputeShader> verticalStepInverseFftShader = nullptr;
 
         CgEngine::Texture2D* buffer = nullptr;
         CgEngine::Texture2D* twiddleFactors = nullptr;

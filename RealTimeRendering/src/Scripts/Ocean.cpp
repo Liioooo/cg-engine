@@ -48,8 +48,9 @@ namespace RTR {
         }
 
         mat = new CgEngine::CustomValMaterial();
-        // mat->set("u_Color", glm::vec3(0.0f, 0.6f, 0.1f));
-        mat->setTexture2D("tex", *oceanCascade0->timeSpectrum, 0);
+        mat->setTexture2D("displacement", *oceanCascade0->displacement, 0);
+        mat->setTexture2D("derivatives", *oceanCascade0->derivatives, 1);
+        mat->setTexture2D("turbulence", *oceanCascade0->turbulence, 2);
 
         CgEngine::CustomShaderRendererComponentParams params;
         params.shader = "ocean/render";
@@ -63,13 +64,45 @@ namespace RTR {
     }
 
     void Ocean::onAttach() {
-        initialSpectrumShader = CgEngine::CustomComputeShader::createResource("ocean/init-spectrum");
-        timeSpectrumShader = CgEngine::CustomComputeShader::createResource("ocean/simulate-ocean");
-        conjugateSpectrumShader = CgEngine::CustomComputeShader::createResource("ocean/conjugate");
+        float length0 = 250;
+        float length1 = 17;
+        float length2 = 5;
 
-        oceanCascade0 = new OceanCascade(RTR::OceanParams(), initialSpectrumShader, conjugateSpectrumShader, timeSpectrumShader);
+        float boundary1 = 2 * glm::pi<float>() / length1 * 6;
+        float boundary2 = 2 * glm::pi<float>() / length2 * 6;
+
+        RTR::OceanParams oceanParams0 = {
+            256,
+            length0,
+            500,
+            9.81,
+            {
+                30,
+                3.3,
+                -1, // Will be calculated
+                -1, // Will be calculated
+                0.0001f,
+                boundary1,
+                {0, 0} // Currently not used
+            }
+        };
+
+        auto oceanParams1 = OceanParams(oceanParams0);
+        oceanParams1.length = length1;
+        oceanParams1.spectrumParams.cutoffLow = boundary1;
+        oceanParams1.spectrumParams.cutoffHigh = boundary2;
+        auto oceanParams2 = OceanParams(oceanParams0);
+        oceanParams2.length = length2;
+        oceanParams2.spectrumParams.cutoffLow = boundary2;
+        oceanParams2.spectrumParams.cutoffHigh = 9999;
+
+        oceanCascade0 = new OceanCascade(oceanParams0, CgEngine::Application::get().getResourceManager());
+        oceanCascade1 = new OceanCascade(oceanParams1, CgEngine::Application::get().getResourceManager());
+        oceanCascade2 = new OceanCascade(oceanParams2, CgEngine::Application::get().getResourceManager());
 
         oceanCascade0->calculateInitialState();
+        oceanCascade1->calculateInitialState();
+        oceanCascade2->calculateInitialState();
         createMesh();
 
         onPreRenderCbUuid = addOnPreRenderCallback([](const CgEngine::CameraFrustum& camaraFrustum) {
@@ -79,12 +112,31 @@ namespace RTR {
 
     void Ocean::update(CgEngine::TimeStep ts) {
         currentTime = currentTime + ts.getSeconds();
-        oceanCascade0->calculateStateAtTime(currentTime);
+        oceanCascade0->calculateStateAtTime(currentTime, ts.getSeconds());
+        oceanCascade1->calculateStateAtTime(currentTime, ts.getSeconds());
+        oceanCascade2->calculateStateAtTime(currentTime, ts.getSeconds());
     }
 
     void Ocean::onKeyPressed(CgEngine::KeyPressedEvent& event) {
         if (event.getKeyCode() == CgEngine::KeyCode::Enter) {
             oceanCascade0->calculateInitialState();
+            oceanCascade1->calculateInitialState();
+            oceanCascade2->calculateInitialState();
+        }
+        if (event.getKeyCode() == CgEngine::KeyCode::F1) {
+            mat->setTexture2D("displacement", *oceanCascade0->displacement, 0);
+            mat->setTexture2D("derivatives", *oceanCascade0->derivatives, 1);
+            mat->setTexture2D("turbulence", *oceanCascade0->turbulence, 2);
+        }
+        if (event.getKeyCode() == CgEngine::KeyCode::F2) {
+            mat->setTexture2D("displacement", *oceanCascade1->displacement, 0);
+            mat->setTexture2D("derivatives", *oceanCascade1->derivatives, 1);
+            mat->setTexture2D("turbulence", *oceanCascade1->turbulence, 2);
+        }
+        if (event.getKeyCode() == CgEngine::KeyCode::F3) {
+            mat->setTexture2D("displacement", *oceanCascade2->displacement, 0);
+            mat->setTexture2D("derivatives", *oceanCascade2->derivatives, 1);
+            mat->setTexture2D("turbulence", *oceanCascade2->turbulence, 2);
         }
     }
 

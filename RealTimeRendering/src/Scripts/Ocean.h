@@ -34,11 +34,9 @@ namespace RTR {
 
         float currentTime = 0;
 
-        CgEngine::CustomComputeShader* initialSpectrumShader = nullptr;
-        CgEngine::CustomComputeShader* timeSpectrumShader = nullptr;
-        CgEngine::CustomComputeShader* conjugateSpectrumShader = nullptr;
-
         OceanCascade* oceanCascade0 = nullptr;
+        OceanCascade* oceanCascade1 = nullptr;
+        OceanCascade* oceanCascade2 = nullptr;
     };
 
 }

@@ -25,6 +25,9 @@
     <Shader name="ocean/conjugate" type="compute">
         <Path>shaders/ocean/conjugate_comp.glsl</Path>
     </Shader>
+    <Shader name="ocean/compute-final" type="compute">
+        <Path>shaders/ocean/computeFinalTextures_comp.glsl</Path>
+    </Shader>
     <Shader name="ocean/fft/permute" type="compute">
         <Path>shaders/ocean/fft/permute_comp.glsl</Path>
     </Shader>

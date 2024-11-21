@@ -2,18 +2,14 @@
 
 namespace RTR {
 
-    FastFourierTransform::FastFourierTransform() {
-        precomputeTwiddleFactorsAndInputIndicesShader = CgEngine::CustomComputeShader::createResource("ocean/fft/precomputeTwiddleFactorsAndInputIndices");
-        permuteShader = CgEngine::CustomComputeShader::createResource("ocean/fft/permute");
-        horizontalStepInverseFftShader = CgEngine::CustomComputeShader::createResource("ocean/fft/horizontalStepInverseFft");
-        verticalStepInverseFftShader = CgEngine::CustomComputeShader::createResource("ocean/fft/verticalStepInverseFft");
+    FastFourierTransform::FastFourierTransform(CgEngine::ResourceManager& resourceManager): resourceManager(resourceManager) {
+        precomputeTwiddleFactorsAndInputIndicesShader = resourceManager.getResource<CgEngine::CustomComputeShader>("ocean/fft/precomputeTwiddleFactorsAndInputIndices");
+        permuteShader = resourceManager.getResource<CgEngine::CustomComputeShader>("ocean/fft/permute");
+        horizontalStepInverseFftShader = resourceManager.getResource<CgEngine::CustomComputeShader>("ocean/fft/horizontalStepInverseFft");
+        verticalStepInverseFftShader = resourceManager.getResource<CgEngine::CustomComputeShader>("ocean/fft/verticalStepInverseFft");
     }
 
     FastFourierTransform::~FastFourierTransform() {
-        delete precomputeTwiddleFactorsAndInputIndicesShader;
-        delete permuteShader;
-        delete horizontalStepInverseFftShader;
-        delete verticalStepInverseFftShader;
         delete buffer;
         delete twiddleFactors;
     }
@@ -31,10 +27,10 @@ namespace RTR {
                     CgEngine::MipMapFiltering::Nearest
             );
             precomputeTwiddleFactorsAndInputIndicesShader->bind();
-            precomputeTwiddleFactorsAndInputIndicesShader->setInt("size", (int)input.getWidth());
+            precomputeTwiddleFactorsAndInputIndicesShader->setInt("u_size", (int)input.getWidth());
             precomputeTwiddleFactorsAndInputIndicesShader->setImage2D(*twiddleFactors, 0, CgEngine::ShaderStorageAccess::ReadWrite);
             precomputeTwiddleFactorsAndInputIndicesShader->dispatch(logSize, static_cast<int>(input.getHeight() / 2.0 / 8.0), 1);
-            precomputeTwiddleFactorsAndInputIndicesShader->waitForMemoryBarrier({CgEngine::MemoryBarrierBit::All});
+            precomputeTwiddleFactorsAndInputIndicesShader->waitForMemoryBarrier({CgEngine::MemoryBarrierBit::ShaderImageAccess});
         }
         if (buffer == nullptr || buffer->getWidth() != input.getWidth()) {
             buffer = new CgEngine::Texture2D(
@@ -53,10 +49,10 @@ namespace RTR {
 
         for (int i = 0; i < logSize; i++) {
             pingPong = !pingPong;
-            horizontalStepInverseFftShader->setInt("_step", i);
-            horizontalStepInverseFftShader->setBool("pingPong", pingPong);
+            horizontalStepInverseFftShader->setInt("u_step", i);
+            horizontalStepInverseFftShader->setBool("u_pingPong", pingPong);
             horizontalStepInverseFftShader->dispatch(input.getWidth() / 8, input.getHeight() / 8, 1);
-            horizontalStepInverseFftShader->waitForMemoryBarrier({CgEngine::MemoryBarrierBit::All});
+            horizontalStepInverseFftShader->waitForMemoryBarrier({CgEngine::MemoryBarrierBit::ShaderImageAccess});
         }
 
         verticalStepInverseFftShader->bind();
@@ -66,10 +62,10 @@ namespace RTR {
 
         for (int i = 0; i < logSize; i++) {
             pingPong = !pingPong;
-            verticalStepInverseFftShader->setInt("_step", i);
-            verticalStepInverseFftShader->setBool("pingPong", pingPong);
+            verticalStepInverseFftShader->setInt("u_step", i);
+            verticalStepInverseFftShader->setBool("u_pingPong", pingPong);
             verticalStepInverseFftShader->dispatch(input.getWidth() / 8, input.getHeight() / 8, 1);
-            verticalStepInverseFftShader->waitForMemoryBarrier({CgEngine::MemoryBarrierBit::All});
+            verticalStepInverseFftShader->waitForMemoryBarrier({CgEngine::MemoryBarrierBit::ShaderImageAccess});
         }
 
 //    if (pingPong && outputToInput) {
@@ -89,7 +85,7 @@ namespace RTR {
                 permuteShader->setImage2D(*buffer, 0, CgEngine::ShaderStorageAccess::ReadWrite);
             }
             permuteShader->dispatch(input.getWidth() / 8, input.getHeight() / 8, 1);
-            permuteShader->waitForMemoryBarrier({CgEngine::MemoryBarrierBit::All});
+            permuteShader->waitForMemoryBarrier({CgEngine::MemoryBarrierBit::ShaderImageAccess});
         }
         /*
         if (scale) {
