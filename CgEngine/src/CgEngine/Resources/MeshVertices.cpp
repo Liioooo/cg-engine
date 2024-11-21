@@ -700,6 +700,7 @@ namespace CgEngine {
                     spec.wrap = getTextureWrapFromAssimp(aiEmissiveWrapMode[0]);
                     spec.mipMapFiltering = MipMapFiltering::Trilinear;
                     spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
+                    spec.compression = applicationOptions.useTextureCompression;
 
                     material->setEmissionTexture(resourceManager.getResource<Texture2D>(texturePath, spec));
                     if (hasEmissionIntensity) {
@@ -728,6 +729,7 @@ namespace CgEngine {
                     spec.wrap = getTextureWrapFromAssimp(aiAlbedoWrapMode[0]);
                     spec.mipMapFiltering = MipMapFiltering::Trilinear;
                     spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
+                    spec.compression = applicationOptions.useTextureCompression;
 
                     material->setAlbedoTexture(resourceManager.getResource<Texture2D>(texturePath, spec));
                 } else {
@@ -751,6 +753,7 @@ namespace CgEngine {
                     spec.wrap = getTextureWrapFromAssimp(aiAlbedoWrapMode[0]);
                     spec.mipMapFiltering = MipMapFiltering::Trilinear;
                     spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
+                    spec.compression = applicationOptions.useTextureCompression;
 
                     material->setRoughnessTexture(resourceManager.getResource<Texture2D>(texturePath, spec));
                 } else {
@@ -768,6 +771,7 @@ namespace CgEngine {
                     spec.wrap = getTextureWrapFromAssimp(aiAlbedoWrapMode[0]);
                     spec.mipMapFiltering = MipMapFiltering::Trilinear;
                     spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
+                    spec.compression = false;
 
                     material->setNormalTexture(resourceManager.getResource<Texture2D>(texturePath, spec));
                 }
@@ -788,6 +792,7 @@ namespace CgEngine {
                     spec.wrap = getTextureWrapFromAssimp(aiAlbedoWrapMode[0]);
                     spec.mipMapFiltering = MipMapFiltering::Trilinear;
                     spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
+                    spec.compression = applicationOptions.useTextureCompression;
 
                     material->setMetalnessTexture(resourceManager.getResource<Texture2D>(texturePath, spec));
                 } else {

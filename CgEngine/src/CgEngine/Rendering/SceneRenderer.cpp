@@ -63,6 +63,7 @@ namespace CgEngine {
             for (uint32_t i = 0; i < hbaoDeinterleavingDepthTextureViews.size(); i++) {
                 hbaoDeinterleavingDepthTextureViews[i] = new Texture2DView(
                         hbaoDeinterleavingDepthTexture->getRendererId(),
+                        false,
                         hbaoDeinterleavingDepthTexture->getFormat(),
                         TextureWrap::Clamp,
                         0, 1, i, 1,
@@ -503,6 +504,7 @@ namespace CgEngine {
                 delete hbaoDeinterleavingDepthTextureViews[i];
                 hbaoDeinterleavingDepthTextureViews[i] = new Texture2DView(
                         hbaoDeinterleavingDepthTexture->getRendererId(),
+                        false,
                         hbaoDeinterleavingDepthTexture->getFormat(),
                         TextureWrap::Clamp,
                         0, 1, i, 1,

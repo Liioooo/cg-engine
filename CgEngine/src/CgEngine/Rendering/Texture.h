@@ -32,6 +32,7 @@ namespace CgEngine {
         TextureWrap wrap = TextureWrap::Repeat;
         MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear;
         float anisotropicFiltering = 1.0f;
+        bool compression = false;
     };
 
     class Texture2D {
@@ -39,9 +40,9 @@ namespace CgEngine {
         static Texture2D* createResource(const std::string& name);
         static Texture2D* createResource(const std::string& name, const Texture2DResourceSpecification& spec);
 
-        Texture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear, float anisotropicFiltering = 1.0f);
-        Texture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, const void* data, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear, float anisotropicFiltering = 1.0f);
-        Texture2D(const std::string& path, bool srgb, TextureWrap wrap = TextureWrap::Repeat, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear, float anisotropicFiltering = 1.0f);
+        Texture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear, float anisotropicFiltering = 1.0f, bool compression = false);
+        Texture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, const void* data, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear, float anisotropicFiltering = 1.0f, bool compression = false);
+        Texture2D(const std::string& path, bool srgb, TextureWrap wrap = TextureWrap::Repeat, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear, float anisotropicFiltering = 1.0f, bool compression = false);
         ~Texture2D();
 
         bool operator ==(const Texture2D& other) const {
@@ -54,6 +55,7 @@ namespace CgEngine {
         uint32_t getHeightForMip(uint32_t mip) const;
         TextureFormat getFormat() const;
         uint32_t getRendererId() const;
+        bool isCompressed() const;
         void bind(uint32_t slot) const;
         void generateMipMaps();
         void setClampBorderColor(const glm::vec4& color);
@@ -65,6 +67,7 @@ namespace CgEngine {
         uint32_t width;
         uint32_t height;
         TextureFormat format;
+        bool compression;
     };
 
     class Texture2DArray {
@@ -97,8 +100,8 @@ namespace CgEngine {
     public:
         static TextureCube* createResource(const std::string& name);
 
-        TextureCube(TextureFormat format, uint32_t width, uint32_t height, MipMapFiltering mipMapFiltering = MipMapFiltering::Bilinear);
-        TextureCube(TextureFormat format, uint32_t width, uint32_t height, const void* data, MipMapFiltering mipMapFiltering = MipMapFiltering::Bilinear);
+        TextureCube(TextureFormat format, uint32_t width, uint32_t height, MipMapFiltering mipMapFiltering = MipMapFiltering::Bilinear, bool compression = false);
+        TextureCube(TextureFormat format, uint32_t width, uint32_t height, const void* data, MipMapFiltering mipMapFiltering = MipMapFiltering::Bilinear, bool compression = false);
         ~TextureCube();
 
         bool operator ==(const TextureCube& other) const {
@@ -109,6 +112,7 @@ namespace CgEngine {
         uint32_t getHeight() const;
         TextureFormat getFormat() const;
         uint32_t getRendererId() const;
+        bool isCompressed() const;
         void bind(uint32_t slot) const;
         void generateMipMaps();
 
@@ -117,11 +121,12 @@ namespace CgEngine {
         uint32_t width;
         uint32_t height;
         TextureFormat format;
+        bool compression;
     };
 
     class Texture2DView {
     public:
-        Texture2DView(uint32_t originalTexture, TextureFormat format, TextureWrap wrap, uint32_t minLevel, uint32_t numLevels, uint32_t minLayer, uint32_t numLayers, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear);
+        Texture2DView(uint32_t originalTexture, bool originalTextureCompression, TextureFormat format, TextureWrap wrap, uint32_t minLevel, uint32_t numLevels, uint32_t minLayer, uint32_t numLayers, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear);
         ~Texture2DView();
 
         TextureFormat getFormat() const;

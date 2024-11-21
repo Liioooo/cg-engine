@@ -135,10 +135,10 @@ namespace CgEngine {
         glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
         uint32_t whiteTextureData = 0xffffffff;
-        whiteTexture = new Texture2D(TextureFormat::RGBA, 1, 1, TextureWrap::Clamp, &whiteTextureData, MipMapFiltering::Nearest);
+        whiteTexture = new Texture2D(TextureFormat::RGBA, 1, 1, TextureWrap::Clamp, &whiteTextureData, MipMapFiltering::Nearest, 1.0f, true);
 
         uint32_t blackCubeMapTextureData = 0xff000000;
-        blackCubeTexture = new TextureCube(TextureFormat::RGBA, 1, 1, &blackCubeMapTextureData, MipMapFiltering::Nearest);
+        blackCubeTexture = new TextureCube(TextureFormat::RGBA, 1, 1, &blackCubeMapTextureData, MipMapFiltering::Nearest, true);
 
         brdfLUT = new Texture2D(FileSystem::getAsEnginePath("ibl_brdf_lut.png"), false, TextureWrap::Clamp, MipMapFiltering::Bilinear);
 
