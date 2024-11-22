@@ -27,7 +27,7 @@ out vec2 frag_texCoord;
 
 void main() {
     vec4 di = a_Pos + texture(u_displacement, a_TexCoord.xy);
-    vec4 worldPosition = u_Transform * di + vec4(0.0f, gl_InstanceID * 5.0f, 0.0f, 0.f);
+    vec4 worldPosition = u_Transform * di;
 
     vs_out.DirShadowMapPosition = calcDirShadowMapPostion(worldPosition.xyz);
     vs_out.Normal = mat3(transpose(inverse(u_Transform))) * a_Normal.xyz;

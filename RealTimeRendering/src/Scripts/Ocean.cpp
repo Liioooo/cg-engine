@@ -38,15 +38,6 @@ namespace RTR {
         mesh->setVertexData(vertices, indices, CgEngine::MeshProps::DEFAULT_VERT_BUFF_LAYOUT);
         mesh->setBoundingBox({-wh, -0.25f, -dh}, {wh, 0.25f, dh});
 
-        if (hasEntityComponent<CgEngine::MeshRendererComponent>()) {
-            getComponent<CgEngine::MeshRendererComponent>().setCustomMesh(mesh);
-        } else {
-            CgEngine::MeshRendererComponentParams meshParams;
-            meshParams.customMesh = mesh;
-            meshParams.material = "ocean";
-            attachComponent<CgEngine::MeshRendererComponent>(meshParams);
-        }
-
         mat = new CgEngine::CustomValMaterial();
         mat->setTexture2D("displacement", *oceanCascade0->displacement, 0);
         mat->setTexture2D("derivatives", *oceanCascade0->derivatives, 1);
