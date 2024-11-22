@@ -160,7 +160,7 @@ namespace RTR {
                 oceanParams.size,
                 oceanParams.size,
                 CgEngine::TextureWrap::Repeat,
-                CgEngine::MipMapFiltering::Nearest // TODO: Trilinear?
+                CgEngine::MipMapFiltering::Trilinear // TODO: Trilinear?
         );
         turbulence = new CgEngine::Texture2D(
                 CgEngine::TextureFormat::Float32A,

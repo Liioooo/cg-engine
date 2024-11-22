@@ -214,7 +214,7 @@ namespace CgEngine::ImGuiWidgets {
         }
     }
 
-    void ImGuiWidgets::copyCurrentConfig(const std::string& compName, const std::function<void(std::unordered_map<std::string, std::string>&)>& getConfigMap) {
+    void copyCurrentConfig(const std::string& compName, const std::function<void(std::unordered_map<std::string, std::string>&)>& getConfigMap) {
         if (ImGui::Button("Copy Config")) {
             std::unordered_map<std::string, std::string> configMap;
             getConfigMap(configMap);
