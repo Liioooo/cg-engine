@@ -39,9 +39,9 @@ namespace RTR {
         mesh->setBoundingBox({-wh, -0.25f, -dh}, {wh, 0.25f, dh});
 
         mat = new CgEngine::CustomValMaterial();
-        mat->setTexture2D("displacement", *oceanCascade0->displacement, 0);
-        mat->setTexture2D("derivatives", *oceanCascade0->derivatives, 1);
-        mat->setTexture2D("turbulence", *oceanCascade0->turbulence, 2);
+        mat->setTexture2D("u_displacement", *oceanCascade0->displacement, 0);
+        mat->setTexture2D("u_derivatives", *oceanCascade0->derivatives, 1);
+        mat->setTexture2D("u_turbulence", *oceanCascade0->turbulence, 2);
 
         CgEngine::CustomShaderRendererComponentParams params;
         params.shader = "ocean/render";
@@ -115,19 +115,19 @@ namespace RTR {
             oceanCascade2->calculateInitialState();
         }
         if (event.getKeyCode() == CgEngine::KeyCode::F1) {
-            mat->setTexture2D("displacement", *oceanCascade0->displacement, 0);
-            mat->setTexture2D("derivatives", *oceanCascade0->derivatives, 1);
-            mat->setTexture2D("turbulence", *oceanCascade0->turbulence, 2);
+            mat->setTexture2D("u_displacement", *oceanCascade0->displacement, 0);
+            mat->setTexture2D("u_derivatives", *oceanCascade0->derivatives, 1);
+            mat->setTexture2D("u_turbulence", *oceanCascade0->turbulence, 2);
         }
         if (event.getKeyCode() == CgEngine::KeyCode::F2) {
-            mat->setTexture2D("displacement", *oceanCascade1->displacement, 0);
-            mat->setTexture2D("derivatives", *oceanCascade1->derivatives, 1);
-            mat->setTexture2D("turbulence", *oceanCascade1->turbulence, 2);
+            mat->setTexture2D("u_displacement", *oceanCascade1->displacement, 0);
+            mat->setTexture2D("u_derivatives", *oceanCascade1->derivatives, 1);
+            mat->setTexture2D("u_turbulence", *oceanCascade1->turbulence, 2);
         }
         if (event.getKeyCode() == CgEngine::KeyCode::F3) {
-            mat->setTexture2D("displacement", *oceanCascade2->displacement, 0);
-            mat->setTexture2D("derivatives", *oceanCascade2->derivatives, 1);
-            mat->setTexture2D("turbulence", *oceanCascade2->turbulence, 2);
+            mat->setTexture2D("u_displacement", *oceanCascade2->displacement, 0);
+            mat->setTexture2D("u_derivatives", *oceanCascade2->derivatives, 1);
+            mat->setTexture2D("u_turbulence", *oceanCascade2->turbulence, 2);
         }
     }
 

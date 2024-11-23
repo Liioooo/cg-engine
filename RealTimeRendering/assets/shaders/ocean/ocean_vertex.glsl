@@ -12,9 +12,9 @@ layout (location = 4) in vec4 a_TexCoord;
 
 uniform mat4 u_Transform;
 
-uniform layout(location=0) sampler2D u_displacement;
-uniform layout(location=1) sampler2D u_derivatives;
-uniform layout(location=2) sampler2D u_turbulance;
+uniform layout(binding=0) sampler2D u_displacement;
+uniform layout(binding=1) sampler2D u_derivatives;
+uniform layout(binding=2) sampler2D u_turbulance;
 
 out VS_OUT {
     vec3 WorldPosition;
