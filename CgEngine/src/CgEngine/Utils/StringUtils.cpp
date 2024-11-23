@@ -41,6 +41,10 @@ namespace CgEngine::Utils::String {
         return result;
     }
 
+    bool startsWith(std::string_view string, const std::string& test) {
+        return string.rfind(test, 0) == 0;
+    }
+
     std::optional<int32_t> toInt(const std::string& s) {
         try {
             return std::stoi(s);

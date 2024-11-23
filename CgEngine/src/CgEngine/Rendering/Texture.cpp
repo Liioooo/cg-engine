@@ -240,6 +240,74 @@ namespace CgEngine {
         stbi_image_free(data);
     }
 
+    Texture2D::Texture2D(const unsigned char* buffer, int bufferLen, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering, float anisotropicFiltering, bool compression) {
+        int loadWidth, loadHeight, channels;
+        unsigned char* data;
+
+        if (stbi_is_hdr_from_memory(buffer, bufferLen)) {
+            stbi_info_from_memory(buffer, bufferLen, &loadWidth, &loadHeight, &channels);
+            if (channels <= 3) {
+                data = (unsigned char*)(stbi_loadf_from_memory(buffer, bufferLen, &loadWidth, &loadHeight, &channels, STBI_rgb));
+                format = TextureFormat::Float32;
+            } else {
+                data = (unsigned char*)(stbi_loadf_from_memory(buffer, bufferLen, &loadWidth, &loadHeight, &channels, STBI_rgb_alpha));
+                format = TextureFormat::Float32A;
+            }
+        } else {
+            stbi_info_from_memory(buffer, bufferLen, &loadWidth, &loadHeight, &channels);
+            if (channels <= 3) {
+                data = stbi_load_from_memory(buffer, bufferLen, &loadWidth, &loadHeight, &channels, STBI_rgb);
+                format = TextureFormat::RGB;
+            } else {
+                data = stbi_load_from_memory(buffer, bufferLen, &loadWidth, &loadHeight, &channels, STBI_rgb_alpha);
+                format = TextureFormat::RGBA;
+            }
+        }
+
+        if (!data) {
+            return;
+        }
+
+        width = loadWidth;
+        height = loadHeight;
+        this->compression = compression;
+
+        if (srgb) {
+            glCreateTextures(GL_TEXTURE_2D, 1, &id);
+            glBindTexture(GL_TEXTURE_2D, id);
+
+            TextureUtils::applyMipMapFiltering(mipMapFiltering, GL_TEXTURE_2D);
+            GLint textureWrap = TextureUtils::getTextureWrap(wrap);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, textureWrap);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, textureWrap);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, anisotropicFiltering);
+
+            GLint glFormat = TextureUtils::getOpenGLTextureFormat(format);
+            GLenum type = TextureUtils::getOpenGLTextureType(format);
+            glTexImage2D(GL_TEXTURE_2D, 0, compression ? (channels == 3 ? GL_COMPRESSED_SRGB_S3TC_DXT1_EXT : GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT) : (channels == 3 ? GL_SRGB : GL_SRGB_ALPHA), width, height, 0, glFormat, type, data);
+
+            glGenerateMipmap(GL_TEXTURE_2D);
+        } else {
+            glCreateTextures(GL_TEXTURE_2D, 1, &id);
+            glBindTexture(GL_TEXTURE_2D, id);
+
+            TextureUtils::applyMipMapFiltering(mipMapFiltering, GL_TEXTURE_2D);
+            GLint textureWrap = TextureUtils::getTextureWrap(wrap);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, textureWrap);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, textureWrap);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, anisotropicFiltering);
+
+            GLint internalFormat = TextureUtils::getOpenGLTextureInternalFormat(format, compression);
+            GLint glFormat = TextureUtils::getOpenGLTextureFormat(format);
+            GLenum type = TextureUtils::getOpenGLTextureType(format);
+            glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, glFormat, type, data);
+
+            glGenerateMipmap(GL_TEXTURE_2D);
+        }
+
+        stbi_image_free(data);
+    }
+
     Texture2D::~Texture2D() {
         glDeleteTextures(1, &id);
     }
