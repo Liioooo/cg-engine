@@ -22,6 +22,7 @@ uniform float u_cutoffLow = 5.0;
 uniform float u_cutoffHigh = TWO_PI / 17.0 * 6.0;
 float omega_0 = TWO_PI / u_T;
 
+float frequencyDerivative(float k);
 float omega(float k);
 float omega_bar(float k);
 float JONSWAP(vec2 k);
@@ -41,11 +42,18 @@ void main() {
     if (k_length <= u_cutoffHigh && k_length >= u_cutoffLow) {
         wave.g = 1 / k_length;
         wave.a = omega(k_length);
-        h0 = imageLoad(u_gaussianNoise, ivec2(gl_GlobalInvocationID.xy)).xy * sqrt(2.0 * JONSWAP(k) * deltaK * deltaK);
+        float dOmegadk = frequencyDerivative(k_length);
+        h0 = imageLoad(u_gaussianNoise, ivec2(gl_GlobalInvocationID.xy)).xy * sqrt(2.0 * JONSWAP(k) * deltaK * deltaK * abs(dOmegadk) / k_length);
     }
 
     imageStore(u_h0Texture, texelCoord, vec4(h0.xy, 0, 1));
     imageStore(u_waveTexture, texelCoord, wave);
+}
+
+float frequencyDerivative(float k) {
+    float th = tanh(min(k * u_depth, 20));
+    float ch = cosh(k * u_depth);
+    return u_g * (u_depth * k / ch / ch + th) / omega(k) / 2;
 }
 
 float omega(float k) {

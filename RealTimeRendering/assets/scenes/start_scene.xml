@@ -8,12 +8,18 @@
     </Entity>
     <Entity>
         <Components>
-            <SkyboxComponent hdri-path="kloppenheim_02_2k.hdr" lod="0.1" intensity="0.3" />
+            <SkyboxComponent hdri-path="table_mountain_1_puresky_2k.hdr" lod="0.1" intensity="2.0" />
         </Components>
     </Entity>
     <Entity>
         <Components>
-            <TransformComponent position="0 1 0" rotation="0 0 0" scale="1 1 1" />
+            <TransformComponent position="0 0 0" rotation="25 0 -35" scale="1 1 1" />
+            <DirectionalLightComponent color="#ffffff" intensity="0.6" />
+        </Components>
+    </Entity>
+    <Entity>
+        <Components>
+            <TransformComponent position="0 2 0" rotation="0 0 0" scale="1 1 1" />
             <ScriptComponent script-name="ocean" test="2" />
         </Components>
     </Entity>

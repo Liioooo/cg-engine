@@ -71,7 +71,6 @@ namespace RTR {
         finalTexturesShader->dispatch(oceanParams.size / 8, oceanParams.size / 8, 1);
         finalTexturesShader->waitForMemoryBarrier({CgEngine::MemoryBarrierBit::ShaderImageAccess});
 
-        displacement->generateMipMaps();
         derivatives->generateMipMaps();
         turbulence->generateMipMaps();
     }
@@ -167,7 +166,7 @@ namespace RTR {
                 oceanParams.size,
                 oceanParams.size,
                 CgEngine::TextureWrap::Repeat,
-                CgEngine::MipMapFiltering::Nearest // TODO: Trilinear?
+                CgEngine::MipMapFiltering::Trilinear // TODO: Trilinear?
         );
     }
 

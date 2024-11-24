@@ -11,8 +11,8 @@ namespace RTR {
         // TODO: This needs to be done in a tesselation shader anyhow
         int segmentsX = 256 - 1;
         int segmentsY = 256 - 1;
-        float wh = 250 / 2.0;
-        float dh = 250 / 2.0;
+        float wh = 400 / 2.0;
+        float dh = 400 / 2.0;
 
         float dx = 1.0 / segmentsX;
         float dy = 1.0 / segmentsY;
@@ -39,9 +39,15 @@ namespace RTR {
         mesh->setBoundingBox({-wh, -0.25f, -dh}, {wh, 0.25f, dh});
 
         mat = new CgEngine::CustomValMaterial();
-        mat->setTexture2D("u_displacement", *oceanCascade0->displacement, 0);
-        mat->setTexture2D("u_derivatives", *oceanCascade0->derivatives, 1);
-        mat->setTexture2D("u_turbulence", *oceanCascade0->turbulence, 2);
+        mat->setTexture2D("u_displacementC0", *oceanCascade0->displacement, 10);
+        mat->setTexture2D("u_derivativesC0", *oceanCascade0->derivatives, 11);
+        mat->setTexture2D("u_turbulenceC0", *oceanCascade0->turbulence, 12);
+        mat->setTexture2D("u_displacementC1", *oceanCascade1->displacement, 13);
+        mat->setTexture2D("u_derivativesC1", *oceanCascade1->derivatives, 14);
+        mat->setTexture2D("u_turbulenceC1", *oceanCascade1->turbulence, 15);
+        mat->setTexture2D("u_displacementC2", *oceanCascade2->displacement, 16);
+        mat->setTexture2D("u_derivativesC2", *oceanCascade2->derivatives, 17);
+        mat->setTexture2D("u_turbulenceC2", *oceanCascade2->turbulence, 18);
 
         CgEngine::CustomShaderRendererComponentParams params;
         params.shader = "ocean/render";
