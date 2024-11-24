@@ -23,6 +23,12 @@
             <ScriptComponent script-name="ocean" />
         </Components>
     </Entity>
+    <Entity>
+        <Components>
+            <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
+            <MeshRendererComponent asset-file="rtr_island.fbx" />
+        </Components>
+    </Entity>
     <Entity id="canvas">
         <Components>
             <UiCanvasComponent />
