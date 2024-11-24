@@ -1,7 +1,7 @@
 <Scene>
     <Entity id="camera">
         <Components>
-            <TransformComponent position="0 2 0" rotation="0 0 0" scale="1 1 1" />
+            <TransformComponent position="1.08298 16.935 -6.05486" rotation="0 0 0" scale="1 1 1" />
             <CameraComponent primary="true" projection="perspective" near="0.1" far="500" fov="80" exposure="0.75" bloom-intensity="0.1" />
             <ScriptComponent script-name="flyingCameraScript" />
         </Components>
