@@ -45,19 +45,21 @@ void main() {
 
     vs_out.ViewVector = vec3(u_CameraData.position - u_Transform * a_Pos);
     float viewDist = length(vs_out.ViewVector);
-    float lod_c0 = min(7.13 * 250 / viewDist, 1);
-    float lod_c1 = min(7.13 * 17 / viewDist, 1);
-    float lod_c2 = min(7.13 * 5 / viewDist, 1);
+    float lod_c0 = min(7.13 * length0 / viewDist, 1);
+    float lod_c1 = min(7.13 * length1 / viewDist, 1);
+    float lod_c2 = min(7.13 * length2 / viewDist, 1);
 
-    vec4 di = a_Pos + displacement0 * lod_c0 + displacement1 * lod_c1 + displacement2 * lod_c2;
-    vec4 worldPosition = u_Transform * di;
+    vec4 displacement = displacement0 * lod_c0;
+    float largeWaveBias = displacement.y;
+    displacement += displacement1 * lod_c1 + displacement2 * lod_c2;
+    vec4 worldPosition = u_Transform * a_Pos + displacement;
 
     vs_out.DirShadowMapPosition = calcDirShadowMapPostion(worldPosition.xyz);
     vs_out.Normal = mat3(transpose(inverse(u_Transform))) * a_Normal.xyz;
     vs_out.WorldPosition = worldPosition.xyz;
     vs_out.TexCoord = a_TexCoord;
 
-    vs_out.LodScales = vec4(lod_c0, lod_c1, lod_c2, max(displacement0.y - displacement0.y * 0.8 - (-0.1), 0) / 4.8);
+    vs_out.LodScales = vec4(lod_c0, lod_c1, lod_c2, max(displacement.y - largeWaveBias * 0.8 - (-0.1), 0) / 4.8);
 
     gl_Position = u_CameraData.viewProjection * worldPosition;
 }

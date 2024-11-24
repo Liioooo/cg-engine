@@ -24,7 +24,6 @@ float omega_0 = TWO_PI / u_T;
 
 float frequencyDerivative(float k);
 float omega(float k);
-float omega_bar(float k);
 float JONSWAP(vec2 k);
 
 void main() {
@@ -38,7 +37,6 @@ void main() {
     vec2 h0 = vec2(0, 0);
     vec4 wave = vec4(k.x, 1, k.y, 0);
 
-    // TODO: Add these as uniforms for each cascade
     if (k_length <= u_cutoffHigh && k_length >= u_cutoffLow) {
         wave.g = 1 / k_length;
         wave.a = omega(k_length);
@@ -58,10 +56,6 @@ float frequencyDerivative(float k) {
 
 float omega(float k) {
     return sqrt(u_g * k * tanh(min(k * u_depth, 18)));
-}
-
-float omega_bar(float k) {
-    return floor(omega(k) / omega_0) * omega_0;
 }
 
 float JONSWAP(vec2 k) {

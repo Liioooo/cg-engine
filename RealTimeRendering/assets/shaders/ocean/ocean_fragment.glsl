@@ -103,5 +103,5 @@ void main() {
     fresnel = pow(fresnel, 5.0);
 
     // vec3 calcIBL(vec3 F0, vec3 matAlbedo, float matMetalness, float matRoughness, vec3 N, vec3 V, float NdotV) {
-    o_FragColor = vec4(calcIBL(vec3(0.04), vec3(_albedo), 0.0, 1 - _smoothness, N, _viewDir, max(0.0, dot(N, _viewDir))), 1.0);// + mix(color * (1 - fresnel), vec4(0.0), jacobian);
+    o_FragColor = vec4(calcIBL(vec3(0.04), vec3(_albedo), 0.0, 1 - _smoothness, N, _viewDir, max(0.0, dot(N, _viewDir))), 1.0) + mix(color * (1 - fresnel), vec4(0.0), jacobian);
 }
