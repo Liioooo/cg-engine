@@ -25,6 +25,12 @@ GPU 1:
 	Driver date:	02/05/2022
 	DirectX version:	12 (FL 12.1)
 	Physical location:	PCI bus 1, device 0, function 0
+
+GPU 2:
+	NVIDIA GeForce GTX 1080
+
+	Driver version:	32.0.15.6094
+	Driver date:	14/08/2024
 ```
 
 ## Documentation
