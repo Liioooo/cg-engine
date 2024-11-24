@@ -1,21 +1,2 @@
 <Materials>
-    <Material name="ground">
-        <Albedo>#fe0e0e</Albedo>
-        <Roughness>1.0</Roughness>
-        <Metalness>0</Metalness>
-        <Emission>0.0</Emission>
-        <EmissionColor>#ff0000</EmissionColor>
-    </Material>
-    <Material name="cube">
-        <Albedo>#ff0000</Albedo>
-        <Roughness>1.0</Roughness>
-        <Metalness>0</Metalness>
-        <Emission>0.0</Emission>
-    </Material>
-    <Material name="ocean">
-        <Albedo>#44aaff</Albedo>
-        <Roughness>0.5</Roughness>
-        <Metalness>0</Metalness>
-        <Emission>0.0</Emission>
-    </Material>
 </Materials>
