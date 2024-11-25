@@ -115,6 +115,14 @@ namespace CgEngine {
         calculateBoneTransforms(mesh->getSkeleton()->getBoneTransforms());
     }
 
+    bool AnimatedMeshRendererComponent::isActive() const {
+        return active;
+    }
+
+    void AnimatedMeshRendererComponent::setActive(bool a) {
+        active = a;
+    }
+
     void AnimatedMeshRendererComponent::update(TimeStep ts) {
         if (!isAnimationPlaying || animationSpeed == 0) {
             return;

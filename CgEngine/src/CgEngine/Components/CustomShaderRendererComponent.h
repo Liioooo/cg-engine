@@ -71,6 +71,9 @@ namespace CgEngine {
         void setInstanceBuffer2(ShaderStorageBuffer* instanceBuffer);
         std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> getInstanceBuffers();
 
+        bool isActive() const;
+        void setActive(bool a);
+
     private:
         ResRef<MeshVertices> mesh;
         CustomMesh* customMesh = nullptr;
@@ -83,6 +86,7 @@ namespace CgEngine {
         CustomShaderRendererComponentRenderPassOptions renderPassOptions;
         AABoundingBox boundingBox;
         std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers = {nullptr, nullptr};
+        bool active = true;
     };
 
 }

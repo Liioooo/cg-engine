@@ -43,6 +43,9 @@ namespace CgEngine {
         void setLoopAnimation(bool loop);
         void reset();
 
+        bool isActive() const;
+        void setActive(bool a);
+
         void update(TimeStep ts);
 
     private:
@@ -64,6 +67,8 @@ namespace CgEngine {
 
         void calculateBoneTransforms(const std::vector<glm::mat4>& localBoneTransforms);
         glm::mat4 calcSingleBoneTransform(uint32_t boneIndex, const std::vector<glm::mat4>& localBoneTransforms);
+
+        bool active;
     };
 
 }

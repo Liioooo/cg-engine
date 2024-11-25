@@ -158,6 +158,14 @@ namespace CgEngine {
         return instanceBuffers;
     }
 
+    bool CustomShaderRendererComponent::isActive() const {
+        return active;
+    }
+
+    void CustomShaderRendererComponent::setActive(bool a) {
+        active = a;
+    }
+
     void CustomShaderRendererComponent::onRenderImGui() {
         if (ImGui::CollapsingHeader("CustomShaderRendererComponent")) {
         }

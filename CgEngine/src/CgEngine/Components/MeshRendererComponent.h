@@ -37,6 +37,9 @@ namespace CgEngine {
         void setCullingEnabled(bool value);
         const std::vector<uint32_t>& getMeshNodes();
 
+        bool isActive() const;
+        void setActive(bool a);
+
         void setCustomMesh(CustomMesh* mesh);
 
     private:
@@ -46,6 +49,7 @@ namespace CgEngine {
         bool castShadows;
         bool enableCulling;
         std::vector<uint32_t> meshNodes;
+        bool active = true;
     };
 
 }

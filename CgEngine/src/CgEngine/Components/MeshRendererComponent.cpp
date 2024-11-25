@@ -100,6 +100,14 @@ namespace CgEngine {
         return meshNodes;
     }
 
+    bool MeshRendererComponent::isActive() const {
+        return active;
+    }
+
+    void MeshRendererComponent::setActive(bool a) {
+        active = a;
+    }
+
     void MeshRendererComponent::setCustomMesh(CustomMesh* mesh) {
         for (uint32_t i = 0; i < mesh->getMaterialCount(); i++) {
             CG_ASSERT(dynamic_cast<const PBRMaterial*>(mesh->getMaterial(i)) != nullptr, "MeshRendererComponentParams: Your custom mesh does not only contain PBRMaterials!")

@@ -197,7 +197,7 @@ namespace CgEngine {
         }
 
         for (auto it = componentManager->begin<AnimatedMeshRendererComponent>(); it != componentManager->end<AnimatedMeshRendererComponent>(); it++) {
-            it->update(ts);
+            if (it->isActive()) it->update(ts);
         }
 
         if (!componentManager->getEntitiesWithComponent<AudioListenerComponent>().empty()) {
@@ -335,15 +335,15 @@ namespace CgEngine {
         executeOnPreRenderFunctions(renderer);
 
         for (auto it = componentManager->begin<MeshRendererComponent>(); it != componentManager->end<MeshRendererComponent>(); it++) {
-            renderer.submitMesh(it->getRenderMesh(), it->getMeshNodes(), it->getMaterial().get(), it->getCastShadows(), it->getCullingEnabled(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix());
+            if (it->isActive()) renderer.submitMesh(it->getRenderMesh(), it->getMeshNodes(), it->getMaterial().get(), it->getCastShadows(), it->getCullingEnabled(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix());
         }
 
         for (auto it = componentManager->begin<AnimatedMeshRendererComponent>(); it != componentManager->end<AnimatedMeshRendererComponent>(); it++) {
-            renderer.submitAnimatedMesh(it->getMeshVertices().get(), it->getMeshNodes(), it->getMaterial().get(), it->getCastShadows(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getBoneTransforms(), it->getSkinnedVAO());
+            if (it->isActive()) renderer.submitAnimatedMesh(it->getMeshVertices().get(), it->getMeshNodes(), it->getMaterial().get(), it->getCastShadows(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getBoneTransforms(), it->getSkinnedVAO());
         }
 
         for (auto it = componentManager->begin<CustomShaderRendererComponent>(); it != componentManager->end<CustomShaderRendererComponent>(); it++) {
-            renderer.submitCustomShaderMesh(it->getRenderMesh(), it->getMeshNodes(), it->getRenderMaterial(), it->getCullingEnabled(), it->getBoundingBox(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getShader().get(), it->getInstanceCount(), it->getRenderPassOptions(), it->getInstanceBuffers());
+            if (it->isActive()) renderer.submitCustomShaderMesh(it->getRenderMesh(), it->getMeshNodes(), it->getRenderMaterial(), it->getCullingEnabled(), it->getBoundingBox(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getShader().get(), it->getInstanceCount(), it->getRenderPassOptions(), it->getInstanceBuffers());
         }
 
         for (auto it = componentManager->cbegin<UiCanvasComponent>(); it != componentManager->cend<UiCanvasComponent>(); it++) {
