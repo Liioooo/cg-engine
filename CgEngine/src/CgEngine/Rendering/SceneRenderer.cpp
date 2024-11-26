@@ -419,11 +419,11 @@ namespace CgEngine {
             Renderer::getWhiteTexture().bind(i);
         }
 
-        ubCameraData = new UniformBuffer<UBCameraData>("CameraData", 0, geometryRenderPass.getSpecification().shader);
-        ubLightData = new UniformBuffer<UBLightData>("LightData", 1, geometryRenderPass.getSpecification().shader);
-        ubDirShadowData = new UniformBuffer<UBDirShadowData>("DirShadowData", 2, shadowMapRenderPass.getSpecification().shader);
-        ubScreenData = new UniformBuffer<UBScreenData>("ScreenData", 3, hbaoDeinterleavingRenderPass.getSpecification().shader);
-        ubHBAOData = new UniformBuffer<UBHBAOData>("HBAOData", 4, hbaoShader);
+        ubCameraData = UniformBuffer<UBCameraData>("CameraData", 0, geometryRenderPass.getSpecification().shader);
+        ubLightData = UniformBuffer<UBLightData>("LightData", 1, geometryRenderPass.getSpecification().shader);
+        ubDirShadowData = UniformBuffer<UBDirShadowData>("DirShadowData", 2, shadowMapRenderPass.getSpecification().shader);
+        ubScreenData = UniformBuffer<UBScreenData>("ScreenData", 3, hbaoDeinterleavingRenderPass.getSpecification().shader);
+        ubHBAOData = UniformBuffer<UBHBAOData>("HBAOData", 4, hbaoShader);
 
         boneTransformsBuffer = new ShaderStorageBuffer();
         boneTransformsBuffer->setData(nullptr, maxBones * maxAnimatedComponents * sizeof(glm::mat4));
@@ -435,11 +435,6 @@ namespace CgEngine {
     SceneRenderer::~SceneRenderer() {
         delete hbaoDeinterleavingFramebuffers[0];
         delete hbaoDeinterleavingFramebuffers[1];
-
-        delete ubCameraData;
-        delete ubLightData;
-        delete ubDirShadowData;
-        delete ubScreenData;
 
         delete boneTransformsBuffer;
     }
@@ -477,7 +472,7 @@ namespace CgEngine {
             screenData.invFullResolution = { invViewportWidth, invViewportHeight};
             screenData.halfResolution = glm::ivec2{ viewportWidth,  viewportHeight } / 2;
             screenData.invHalfResolution = { invViewportWidth * 2.0f,  invViewportHeight * 2.0f };
-            ubScreenData->setData(screenData);
+            ubScreenData.setData(screenData);
 
             preDepthRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
             geometryRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
@@ -563,7 +558,7 @@ namespace CgEngine {
         cameraData.exposure = camera.getExposure();
         cameraData.bloomIntensity = applicationOptions.enableBloom ? camera.getBloomIntensity() : 0.0f;
         cameraData.bloomThreshold = camera.getBloomThreshold();
-        ubCameraData->setData(cameraData);
+        ubCameraData.setData(cameraData);
 
         cameraFrustum.updateCameraFrustum(camera, cameraTransform[3], -cameraTransform[2]);
 
@@ -598,7 +593,7 @@ namespace CgEngine {
             indexSL++;
         }
 
-        ubLightData->setData(lightData);
+        ubLightData.setData(lightData);
 
         skyboxMaterial.setTextureCube("u_Texture", *sceneEnvironment.prefilterMap, 0);
         skyboxMaterial.set("u_Intensity", sceneEnvironment.environmentIntensity);
@@ -1338,7 +1333,7 @@ namespace CgEngine {
             dirShadowData.lightSpaceMat[i] = lightProjection * lightView;
         }
 
-        ubDirShadowData->setData(dirShadowData);
+        ubDirShadowData.setData(dirShadowData);
     }
 
     void SceneRenderer::setupHBAOData(const glm::mat4& cameraProjection, const Camera& camera) {
@@ -1375,7 +1370,7 @@ namespace CgEngine {
 
         hbaoData.invQuarterResolution = 1.0f / glm::vec2{ static_cast<float>(viewportWidth) / 4, static_cast<float>(viewportHeight) / 4 };
 
-        ubHBAOData->setData(hbaoData);
+        ubHBAOData.setData(hbaoData);
     }
 
     float SceneRenderer::findDrawInfoTextureIndex(UiDrawInfo& drawInfo, const Texture2D* texture) const {

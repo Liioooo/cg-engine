@@ -163,7 +163,7 @@ namespace CgEngine {
             float bloomThreshold;
             float _padding0_;
         };
-        UniformBuffer<UBCameraData>* ubCameraData;
+        UniformBuffer<UBCameraData> ubCameraData;
 
         struct UBPointLight {
             glm::vec4 position;
@@ -196,13 +196,13 @@ namespace CgEngine {
             UBPointLight pointLights[100];
             UBSpotLight spotLights[100];
         };
-        UniformBuffer<UBLightData>* ubLightData;
+        UniformBuffer<UBLightData> ubLightData;
 
         struct UBDirShadowData {
             glm::mat4 lightSpaceMat[4];
             glm::vec4 cascadeSplits;
         };
-        UniformBuffer<UBDirShadowData>* ubDirShadowData;
+        UniformBuffer<UBDirShadowData> ubDirShadowData;
 
         struct UBScreenData {
             glm::vec2 invFullResolution;
@@ -210,7 +210,7 @@ namespace CgEngine {
             glm::vec2 invHalfResolution;
             glm::vec2 halfResolution;
         };
-        UniformBuffer<UBScreenData>* ubScreenData;
+        UniformBuffer<UBScreenData> ubScreenData;
 
         struct UBHBAOData {
             glm::vec4 perspectiveInfo;
@@ -226,7 +226,7 @@ namespace CgEngine {
             glm::vec4 float2Offsets[16];
             glm::vec4 jitters[16];
         } hbaoData;
-        UniformBuffer<UBHBAOData>* ubHBAOData;
+        UniformBuffer<UBHBAOData> ubHBAOData;
 
         float hbaoSharpness = 1.0f;
 
