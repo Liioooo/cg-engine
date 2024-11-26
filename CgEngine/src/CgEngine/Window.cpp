@@ -61,7 +61,7 @@ namespace CgEngine {
             icon.width = std::get<1>(iconData);
             icon.height = std::get<2>(iconData);
             glfwSetWindowIcon(window, 1, &icon);
-            TextureUtils::freImageData(std::get<0>(iconData));
+            TextureUtils::freeImageData(std::get<0>(iconData));
         }
 
         glfwMakeContextCurrent(window);

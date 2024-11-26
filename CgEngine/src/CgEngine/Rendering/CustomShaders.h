@@ -17,6 +17,9 @@ namespace CgEngine {
 
         explicit CustomShader(std::string name, std::string vertexPath, std::string fragmentPath, std::string geometryPath, std::string tcsPath, std::string tesPath);
 
+        CustomShader(CustomShader& other) = delete;
+        CustomShader& operator=(CustomShader& other) = delete;
+
         void reload() override;
 
     private:
@@ -34,6 +37,9 @@ namespace CgEngine {
         static CustomComputeShader* createResource(const std::string& name);
 
         explicit CustomComputeShader(std::string name, std::string path);
+
+        CustomComputeShader(CustomComputeShader& other) = delete;
+        CustomComputeShader& operator=(CustomComputeShader& other) = delete;
 
         void reload() override;
 

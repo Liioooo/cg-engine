@@ -118,14 +118,14 @@ namespace CgEngine {
 
         ComputeShader skinningShader;
 
-        Texture2DArray* dirShadowMaps;
-        std::array<Texture2D*, 7> bloomTextures;
+        Texture2DArray dirShadowMaps;
+        std::array<Texture2D, 7> bloomTextures;
 
-        Texture2DArray* hbaoDeinterleavingDepthTexture;
-        std::array<Texture2DView*, 16> hbaoDeinterleavingDepthTextureViews;
+        Texture2DArray hbaoDeinterleavingDepthTexture;
+        std::array<Texture2DView, 16> hbaoDeinterleavingDepthTextureViews;
         std::array<Framebuffer*, 2> hbaoDeinterleavingFramebuffers;
         glm::uvec3 hbaoWorkGroupSize;
-        Texture2DArray* hbaoResultTexture;
+        Texture2DArray hbaoResultTexture;
 
         CameraFrustum cameraFrustum;
 

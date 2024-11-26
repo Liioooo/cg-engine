@@ -96,9 +96,9 @@ namespace CgEngine {
 
         static inline ShaderStorageBuffer* transformsBuffer;
 
-        static inline ComputeShader* environmentMapSphereToCube;
-        static inline ComputeShader* environmentMapPrefilterMap;
-        static inline ComputeShader* environmentMapIrradianceMap;
+        static inline ComputeShader environmentMapSphereToCube;
+        static inline ComputeShader environmentMapPrefilterMap;
+        static inline ComputeShader environmentMapIrradianceMap;
     };
 
 }

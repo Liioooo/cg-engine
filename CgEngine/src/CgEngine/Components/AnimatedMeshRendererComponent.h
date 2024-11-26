@@ -68,7 +68,7 @@ namespace CgEngine {
         void calculateBoneTransforms(const std::vector<glm::mat4>& localBoneTransforms);
         glm::mat4 calcSingleBoneTransform(uint32_t boneIndex, const std::vector<glm::mat4>& localBoneTransforms);
 
-        bool active;
+        bool active = true;
     };
 
 }

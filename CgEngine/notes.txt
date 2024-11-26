@@ -11,8 +11,8 @@ SSBO:
 2: BoneTransforms
 3: OriginalVertexBuffer
 4: SkinnedVertexBuffer
-5: CustomShaderRenderer (InstanceBuffer0)
-6: CustomShaderRenderer (InstanceBuffer1)
+5: CustomShaderRenderer (InstanceBuffer1)
+6: CustomShaderRenderer (InstanceBuffer2)
 
 1 - 4: Used for Vertex Skinning pass
 

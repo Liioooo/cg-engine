@@ -8,8 +8,8 @@ namespace CgEngine {
         {
             ApplicationOptions& applicationOptions = Application::get().getApplicationOptions();
 
-            dirShadowMaps = new Texture2DArray(TextureFormat::Depth, applicationOptions.shadowMapResolution, applicationOptions.shadowMapResolution, TextureWrap::ClampBorder, 4, MipMapFiltering::Bilinear);
-            dirShadowMaps->setClampBorderColor({1.0f, 1.0f, 1.0f, 1.0f});
+            dirShadowMaps = Texture2DArray(TextureFormat::Depth, applicationOptions.shadowMapResolution, applicationOptions.shadowMapResolution, TextureWrap::ClampBorder, 4, MipMapFiltering::Bilinear);
+            dirShadowMaps.setClampBorderColor({1.0f, 1.0f, 1.0f, 1.0f});
 
             FramebufferSpecification shadowMapFramebufferSpec;
             shadowMapFramebufferSpec.height = applicationOptions.shadowMapResolution;
@@ -18,7 +18,7 @@ namespace CgEngine {
             shadowMapFramebufferSpec.hasDepthStencilAttachment = false;
             shadowMapFramebufferSpec.hasDepthAttachment = false;
             shadowMapFramebufferSpec.useExistingDepthAttachment = true;
-            shadowMapFramebufferSpec.existingDepthAttachment = dirShadowMaps->getRendererId();
+            shadowMapFramebufferSpec.existingDepthAttachment = dirShadowMaps.getRendererId();
 
             auto* framebuffer = new Framebuffer(shadowMapFramebufferSpec);
 
@@ -58,13 +58,13 @@ namespace CgEngine {
         {
             glm::uvec2 quarterSize = (glm::uvec2(viewportWidth, viewportHeight) + 3u) / 4u;
 
-            hbaoDeinterleavingDepthTexture = new Texture2DArray(TextureFormat::RedFloat32, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
+            hbaoDeinterleavingDepthTexture = Texture2DArray(TextureFormat::RedFloat32, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
 
             for (uint32_t i = 0; i < hbaoDeinterleavingDepthTextureViews.size(); i++) {
-                hbaoDeinterleavingDepthTextureViews[i] = new Texture2DView(
-                        hbaoDeinterleavingDepthTexture->getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[i] = Texture2DView(
+                        hbaoDeinterleavingDepthTexture.getRendererId(),
                         false,
-                        hbaoDeinterleavingDepthTexture->getFormat(),
+                        hbaoDeinterleavingDepthTexture.getFormat(),
                         TextureWrap::Clamp,
                         0, 1, i, 1,
                         MipMapFiltering::Nearest
@@ -79,14 +79,14 @@ namespace CgEngine {
             hbaoDeinterleavingFramebufferSpec0.hasDepthAttachment = false;
             hbaoDeinterleavingFramebufferSpec0.useExistingColorAttachment = true;
             hbaoDeinterleavingFramebufferSpec0.existingColorAttachments = {
-                    hbaoDeinterleavingDepthTextureViews[0]->getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[1]->getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[2]->getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[3]->getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[4]->getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[5]->getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[6]->getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[7]->getRendererId()
+                    hbaoDeinterleavingDepthTextureViews[0].getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[1].getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[2].getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[3].getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[4].getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[5].getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[6].getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[7].getRendererId()
             };
             hbaoDeinterleavingFramebuffers[0] = new Framebuffer(hbaoDeinterleavingFramebufferSpec0);
 
@@ -98,14 +98,14 @@ namespace CgEngine {
             hbaoDeinterleavingFramebufferSpec1.hasDepthAttachment = false;
             hbaoDeinterleavingFramebufferSpec1.useExistingColorAttachment = true;
             hbaoDeinterleavingFramebufferSpec1.existingColorAttachments = {
-                    hbaoDeinterleavingDepthTextureViews[8]->getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[9]->getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[10]->getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[11]->getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[12]->getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[13]->getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[14]->getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[15]->getRendererId()
+                    hbaoDeinterleavingDepthTextureViews[8].getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[9].getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[10].getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[11].getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[12].getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[13].getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[14].getRendererId(),
+                    hbaoDeinterleavingDepthTextureViews[15].getRendererId()
             };
             hbaoDeinterleavingFramebuffers[1] = new Framebuffer(hbaoDeinterleavingFramebufferSpec1);
 
@@ -129,7 +129,7 @@ namespace CgEngine {
             }
             std::memcpy(hbaoData.jitters, generateHBAOJitterNoise().data(), sizeof(glm::vec4) * 16);
 
-            hbaoResultTexture = new Texture2DArray(TextureFormat::RedGreenFloat16, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
+            hbaoResultTexture = Texture2DArray(TextureFormat::RedGreenFloat16, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
 
             FramebufferSpecification hbaoReinterleavingFramebufferSpec;
             hbaoReinterleavingFramebufferSpec.width = viewportWidth;
@@ -234,7 +234,7 @@ namespace CgEngine {
             float bloomWidth = static_cast<float>(viewportWidth) / 2.0f;
             float bloomHeight = static_cast<float>(viewportHeight) / 2.0f;
             for (auto& bloomTexture: bloomTextures) {
-                bloomTexture = new Texture2D(TextureFormat::Float32, static_cast<uint32_t>(bloomWidth), static_cast<uint32_t>(bloomHeight), TextureWrap::Clamp, MipMapFiltering::Bilinear);
+                bloomTexture = Texture2D(TextureFormat::Float32, static_cast<uint32_t>(bloomWidth), static_cast<uint32_t>(bloomHeight), TextureWrap::Clamp, MipMapFiltering::Bilinear);
                 bloomWidth /= 2.0f;
                 bloomHeight /= 2.0f;
             }
@@ -245,7 +245,7 @@ namespace CgEngine {
             bloomFramebufferSpec.clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
             bloomFramebufferSpec.hasDepthStencilAttachment = false;
             bloomFramebufferSpec.useExistingColorAttachment = true;
-            bloomFramebufferSpec.existingColorAttachments = { bloomTextures[0]->getRendererId() };
+            bloomFramebufferSpec.existingColorAttachments = { bloomTextures[0].getRendererId() };
 
             auto* framebuffer = new Framebuffer(bloomFramebufferSpec);
 
@@ -360,7 +360,7 @@ namespace CgEngine {
             shaderMap.screenShader = &screenRenderPass.getSpecification().shader;
 
             screenMaterial.setTexture("u_FinalImage", geometryRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
-            screenMaterial.setTexture("u_BloomTexture", bloomTextures[0]->getRendererId(), 1);
+            screenMaterial.setTexture("u_BloomTexture", bloomTextures[0].getRendererId(), 1);
         }
         {
             RenderPassSpecification uiCircleRenderPassSpec;
@@ -433,19 +433,8 @@ namespace CgEngine {
     }
 
     SceneRenderer::~SceneRenderer() {
-        delete dirShadowMaps;
-
-        for (int i = 0; i < bloomTextures.size(); i++) {
-            delete bloomTextures[i];
-        }
-
-        for (int i = 0; i < hbaoDeinterleavingDepthTextureViews.size(); i++) {
-            delete hbaoDeinterleavingDepthTextureViews[i];
-        }
-        delete hbaoDeinterleavingDepthTexture;
         delete hbaoDeinterleavingFramebuffers[0];
         delete hbaoDeinterleavingFramebuffers[1];
-        delete hbaoResultTexture;
 
         delete ubCameraData;
         delete ubLightData;
@@ -497,15 +486,13 @@ namespace CgEngine {
 
             glm::uvec2 quarterSize = (glm::uvec2(viewportWidth, viewportHeight) + 3u) / 4u;
 
-            delete hbaoDeinterleavingDepthTexture;
-            hbaoDeinterleavingDepthTexture = new Texture2DArray(TextureFormat::RedFloat32, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
+            hbaoDeinterleavingDepthTexture = Texture2DArray(TextureFormat::RedFloat32, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
 
             for (int i = 0; i < hbaoDeinterleavingDepthTextureViews.size(); i++) {
-                delete hbaoDeinterleavingDepthTextureViews[i];
-                hbaoDeinterleavingDepthTextureViews[i] = new Texture2DView(
-                        hbaoDeinterleavingDepthTexture->getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[i] = Texture2DView(
+                        hbaoDeinterleavingDepthTexture.getRendererId(),
                         false,
-                        hbaoDeinterleavingDepthTexture->getFormat(),
+                        hbaoDeinterleavingDepthTexture.getFormat(),
                         TextureWrap::Clamp,
                         0, 1, i, 1,
                         MipMapFiltering::Nearest
@@ -514,26 +501,26 @@ namespace CgEngine {
 
             hbaoDeinterleavingFramebuffers[0]->resize(quarterSize.x, quarterSize.y, false);
             hbaoDeinterleavingFramebuffers[0]->setColorAttachments({
-                hbaoDeinterleavingDepthTextureViews[0]->getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[1]->getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[2]->getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[3]->getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[4]->getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[5]->getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[6]->getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[7]->getRendererId()
+                hbaoDeinterleavingDepthTextureViews[0].getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[1].getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[2].getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[3].getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[4].getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[5].getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[6].getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[7].getRendererId()
             }, 0, quarterSize.x, quarterSize.y);
 
             hbaoDeinterleavingFramebuffers[1]->resize(quarterSize.x, quarterSize.y, false);
             hbaoDeinterleavingFramebuffers[1]->setColorAttachments({
-                hbaoDeinterleavingDepthTextureViews[8]->getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[9]->getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[10]->getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[11]->getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[12]->getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[13]->getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[14]->getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[15]->getRendererId()
+                hbaoDeinterleavingDepthTextureViews[8].getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[9].getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[10].getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[11].getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[12].getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[13].getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[14].getRendererId(),
+                hbaoDeinterleavingDepthTextureViews[15].getRendererId()
             }, 0, quarterSize.x, quarterSize.y);
 
             constexpr uint32_t HBAO_WORK_GROUP_SIZE = 16u;
@@ -542,8 +529,7 @@ namespace CgEngine {
             hbaoWorkGroupSize.y = quarterSizeWorkGroups.y / 16u;
             hbaoWorkGroupSize.z = 16u;
 
-            delete hbaoResultTexture;
-            hbaoResultTexture = new Texture2DArray(TextureFormat::RedGreenFloat16, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
+            hbaoResultTexture = Texture2DArray(TextureFormat::RedGreenFloat16, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
 
             hbaoReinterleavingRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
             hbaoBlurRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
@@ -551,14 +537,13 @@ namespace CgEngine {
             float bloomWidth = static_cast<float>(viewportWidth) / 2.0f;
             float bloomHeight = static_cast<float>(viewportHeight) / 2.0f;
             for (int i = 0; i < bloomTextures.size(); i++) {
-                delete bloomTextures[i];
-                bloomTextures[i] = new Texture2D(TextureFormat::Float32, static_cast<uint32_t>(bloomWidth), static_cast<uint32_t>(bloomHeight), TextureWrap::Clamp, MipMapFiltering::Bilinear);
+                bloomTextures[i] = Texture2D(TextureFormat::Float32, static_cast<uint32_t>(bloomWidth), static_cast<uint32_t>(bloomHeight), TextureWrap::Clamp, MipMapFiltering::Bilinear);
                 bloomWidth /= 2.0f;
                 bloomHeight /= 2.0f;
             }
 
             screenMaterial.setTexture("u_FinalImage", geometryRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
-            screenMaterial.setTexture("u_BloomTexture", bloomTextures[0]->getRendererId(), 1);
+            screenMaterial.setTexture("u_BloomTexture", bloomTextures[0].getRendererId(), 1);
 
             uiProjectionMatrix = glm::ortho(0.0f, static_cast<float>(viewportWidth), 0.0f, static_cast<float>(viewportHeight));
         }
@@ -1043,9 +1028,9 @@ namespace CgEngine {
 
         hbaoShader.bind();
 
-        hbaoShader.setTexture2D(hbaoDeinterleavingDepthTexture->getRendererId(), 0);
+        hbaoShader.setTexture2D(hbaoDeinterleavingDepthTexture.getRendererId(), 0);
         hbaoShader.setTexture2D(preDepthRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 1);
-        hbaoShader.setImageArray(*hbaoResultTexture, 2, ShaderStorageAccess::WriteOnly);
+        hbaoShader.setImageArray(hbaoResultTexture, 2, ShaderStorageAccess::WriteOnly);
 
         hbaoShader.dispatch(hbaoWorkGroupSize.x, hbaoWorkGroupSize.y, hbaoWorkGroupSize.z);
         hbaoShader.waitForMemoryBarrier({MemoryBarrierBit::TextureFetch, MemoryBarrierBit::ShaderImageAccess});
@@ -1055,7 +1040,7 @@ namespace CgEngine {
         CG_GPU_TIME_FN(&renderingStats.hbaoReinterleavingTimer, false)
 
         Renderer::beginRenderPass(hbaoReinterleavingRenderPass);
-        hbaoReinterleavingRenderPass.getSpecification().shader.setTexture(hbaoResultTexture->getRendererId(), 0);
+        hbaoReinterleavingRenderPass.getSpecification().shader.setTexture(hbaoResultTexture.getRendererId(), 0);
         Renderer::renderUnitQuad(emptyMaterial);
         Renderer::endRenderPass();
     }
@@ -1089,7 +1074,7 @@ namespace CgEngine {
         geometryRenderPass.getSpecification().shader.setTexture(currentSceneEnvironment.prefilterMapId, 6);
         geometryRenderPass.getSpecification().shader.setTexture(Renderer::getBrdfLUTTexture().getRendererId(), 7);
         geometryRenderPass.getSpecification().shader.setFloat("u_EnvironmentIntensity", currentSceneEnvironment.environmentIntensity);
-        geometryRenderPass.getSpecification().shader.setTexture(dirShadowMaps->getRendererId(), 8);
+        geometryRenderPass.getSpecification().shader.setTexture(dirShadowMaps.getRendererId(), 8);
         geometryRenderPass.getSpecification().shader.setTexture(hbaoBlurRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 9);
 
         for (const auto [mk, command]: drawCommandQueue) {
@@ -1125,7 +1110,7 @@ namespace CgEngine {
                 }
 
                 if (command.renderPassOptions.useDirShadowMappingData && !lastCommandUseDirShadowMappingData) {
-                    shader->setTexture(dirShadowMaps->getRendererId(), 8);
+                    shader->setTexture(dirShadowMaps.getRendererId(), 8);
                 }
                 lastCommandUseDirShadowMappingData = command.renderPassOptions.useDirShadowMappingData;
 
@@ -1134,7 +1119,7 @@ namespace CgEngine {
                     shader->setTexture(currentSceneEnvironment.prefilterMapId, 6);
                     shader->setTexture(Renderer::getBrdfLUTTexture().getRendererId(), 7);
                     shader->setFloat("u_EnvironmentIntensity", currentSceneEnvironment.environmentIntensity);
-                    shader->setTexture(dirShadowMaps->getRendererId(), 8);
+                    shader->setTexture(dirShadowMaps.getRendererId(), 8);
                 }
                 lastCommandUseEnvironmentMappingData = command.renderPassOptions.useEnvironmentMappingData;
 
@@ -1209,7 +1194,7 @@ namespace CgEngine {
 
         auto& downSampleShader = bloomDownSamplePass.getSpecification().shader;
 
-        bloomDownSamplePass.getSpecification().framebuffer->setColorAttachments({bloomTextures[0]->getRendererId()}, 0, viewportWidth / 2, viewportHeight / 2);
+        bloomDownSamplePass.getSpecification().framebuffer->setColorAttachments({bloomTextures[0].getRendererId()}, 0, viewportWidth / 2, viewportHeight / 2);
         Renderer::beginRenderPass(bloomDownSamplePass);
         downSampleShader.setTexture(geometryRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
         downSampleShader.setBool("u_UseThreshold", true);
@@ -1218,9 +1203,9 @@ namespace CgEngine {
 
         downSampleShader.setBool("u_UseThreshold", false);
         for (uint32_t i = 0; i < bloomTextures.size() - 1; ++i) {
-            bloomDownSamplePass.getSpecification().framebuffer->setColorAttachments({bloomTextures[i + 1]->getRendererId()}, 0, bloomTextures[i + 1]->getWidth(), bloomTextures[i + 1]->getHeight());
+            bloomDownSamplePass.getSpecification().framebuffer->setColorAttachments({bloomTextures[i + 1].getRendererId()}, 0, bloomTextures[i + 1].getWidth(), bloomTextures[i + 1].getHeight());
             Renderer::beginRenderPass(bloomDownSamplePass);
-            downSampleShader.setTexture(bloomTextures[i]->getRendererId(), 0);
+            downSampleShader.setTexture(bloomTextures[i].getRendererId(), 0);
             Renderer::renderUnitQuad(emptyMaterial);
             Renderer::endRenderPass();
         }
@@ -1228,9 +1213,9 @@ namespace CgEngine {
         auto& upSampleShader = bloomUpSamplePass.getSpecification().shader;
 
         for (uint32_t i = bloomTextures.size() - 1; i > 0; i--) {
-            bloomUpSamplePass.getSpecification().framebuffer->setColorAttachments({bloomTextures[i - 1]->getRendererId()}, 0, bloomTextures[i - 1]->getWidth(), bloomTextures[i - 1]->getHeight());
+            bloomUpSamplePass.getSpecification().framebuffer->setColorAttachments({bloomTextures[i - 1].getRendererId()}, 0, bloomTextures[i - 1].getWidth(), bloomTextures[i - 1].getHeight());
             Renderer::beginRenderPass(bloomUpSamplePass);
-            upSampleShader.setTexture(bloomTextures[i]->getRendererId(), 0);
+            upSampleShader.setTexture(bloomTextures[i].getRendererId(), 0);
             Renderer::renderUnitQuad(emptyMaterial);
             Renderer::endRenderPass();
         }
@@ -1340,7 +1325,7 @@ namespace CgEngine {
             glm::mat4 lightProjection = glm::ortho(minOrtho.x, maxOrtho.x, minOrtho.y, maxOrtho.y, -50.0f, maxOrtho.z - minOrtho.z + 50.0f);
 
             glm::mat4 shadowMatrix = lightProjection * lightView;
-            float shadowMapResolution = static_cast<float>(dirShadowMaps->getWidth());
+            float shadowMapResolution = static_cast<float>(dirShadowMaps.getWidth());
             glm::vec4 shadowOrigin = (shadowMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)) * shadowMapResolution / 2.0f;
             glm::vec4 roundedOrigin = glm::round(shadowOrigin);
             glm::vec4 roundOffset = roundedOrigin - shadowOrigin;

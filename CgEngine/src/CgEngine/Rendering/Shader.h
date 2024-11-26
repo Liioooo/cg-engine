@@ -42,6 +42,9 @@ namespace CgEngine {
         Shader(Shader&& other) noexcept;
         Shader& operator=(Shader&& other) noexcept;
 
+        Shader(Shader& other) = delete;
+        Shader& operator=(Shader& other) = delete;
+
         virtual void reload();
 
         void bind();
@@ -81,6 +84,9 @@ namespace CgEngine {
 
         ComputeShader(ComputeShader&& other) noexcept;
         ComputeShader& operator= (ComputeShader&& other) noexcept;
+
+        ComputeShader(ComputeShader& other) = delete;
+        ComputeShader& operator=(ComputeShader& other) = delete;
 
         virtual void reload();
 

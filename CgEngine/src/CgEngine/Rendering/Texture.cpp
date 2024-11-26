@@ -122,10 +122,12 @@ namespace CgEngine {
             return {data, loadWidth,loadHeight};
         }
 
-        void freImageData(unsigned char* data) {
+        void freeImageData(unsigned char* data) {
             stbi_image_free(data);
         }
     }
+
+
 
     Texture2D* Texture2D::createResource(const std::string& name) {
         return createResource(name, {});
@@ -309,7 +311,44 @@ namespace CgEngine {
     }
 
     Texture2D::~Texture2D() {
-        glDeleteTextures(1, &id);
+        if (id != ~0) {
+            glDeleteTextures(1, &id);
+        }
+    }
+
+    Texture2D::Texture2D(Texture2D&& other) noexcept {
+        id = other.id;
+        width = other.width;
+        height = other.height;
+        format = other.format;
+        compression = other.compression;
+
+        other.id = ~0;
+        other.width = 0;
+        other.height = 0;
+    }
+
+    Texture2D& Texture2D::operator=(Texture2D&& other) noexcept {
+        if (this != &other) {
+            if (id != ~0) {
+                glDeleteTextures(1, &id);
+            }
+
+            id = other.id;
+            width = other.width;
+            height = other.height;
+            format = other.format;
+            compression = other.compression;
+
+            other.id = ~0;
+            other.width = 0;
+            other.height = 0;
+        }
+        return *this;
+    }
+
+    bool Texture2D::isReady() const {
+        return id != ~0;
     }
 
     uint32_t Texture2D::getWidth() const {
@@ -385,7 +424,46 @@ namespace CgEngine {
     }
 
     Texture2DArray::~Texture2DArray() {
-        glDeleteTextures(1, &id);
+        if (id != ~0) {
+            glDeleteTextures(1, &id);
+        }
+    }
+
+    Texture2DArray::Texture2DArray(Texture2DArray&& other) noexcept {
+        id = other.id;
+        width = other.width;
+        height = other.height;
+        format = other.format;
+        count = other.count;
+
+        other.id = ~0;
+        other.width = 0;
+        other.height = 0;
+        other.count = 0;
+    }
+
+    Texture2DArray& Texture2DArray::operator=(Texture2DArray&& other) noexcept {
+        if (this != &other) {
+            if (id != ~0) {
+                glDeleteTextures(1, &id);
+            }
+
+            id = other.id;
+            width = other.width;
+            height = other.height;
+            format = other.format;
+            count = other.count;
+
+            other.id = ~0;
+            other.width = 0;
+            other.height = 0;
+            other.count = 0;
+        }
+        return *this;
+    }
+
+    bool Texture2DArray::isReady() const {
+        return id != ~0;
     }
 
     uint32_t Texture2DArray::getWidth() const {
@@ -470,7 +548,44 @@ namespace CgEngine {
     }
 
     TextureCube::~TextureCube() {
-        glDeleteTextures(1, &id);
+        if (id != ~0) {
+            glDeleteTextures(1, &id);
+        }
+    }
+
+    TextureCube::TextureCube(TextureCube&& other) noexcept {
+        id = other.id;
+        width = other.width;
+        height = other.height;
+        format = other.format;
+        compression = other.compression;
+
+        other.id = ~0;
+        other.width = 0;
+        other.height = 0;
+    }
+
+    TextureCube& TextureCube::operator=(TextureCube&& other) noexcept {
+        if (this != &other) {
+            if (id != ~0) {
+                glDeleteTextures(1, &id);
+            }
+
+            id = other.id;
+            width = other.width;
+            height = other.height;
+            format = other.format;
+            compression = other.compression;
+
+            other.id = ~0;
+            other.width = 0;
+            other.height = 0;
+        }
+        return *this;
+    }
+
+    bool TextureCube::isReady() const {
+        return id != ~0;
     }
 
     uint32_t TextureCube::getWidth() const {
@@ -517,11 +632,38 @@ namespace CgEngine {
     }
 
     Texture2DView::~Texture2DView() {
-        glDeleteTextures(1, &id);
+        if (id != ~0) {
+            glDeleteTextures(1, &id);
+        }
+    }
+
+    Texture2DView::Texture2DView(Texture2DView&& other) noexcept {
+        id = other.id;
+        format = other.format;
+
+        other.id = ~0;
+    }
+
+    Texture2DView& Texture2DView::operator=(Texture2DView&& other) noexcept {
+        if (this != &other) {
+            if (id != ~0) {
+                glDeleteTextures(1, &id);
+            }
+
+            id = other.id;
+            format = other.format;
+
+            other.id = ~0;
+        }
+        return *this;
     }
 
     TextureFormat Texture2DView::getFormat() const {
         return format;
+    }
+
+    bool Texture2DView::isReady() const {
+        return id != ~0;
     }
 
     uint32_t Texture2DView::getRendererId() const {

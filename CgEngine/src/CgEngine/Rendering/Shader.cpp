@@ -160,6 +160,10 @@ namespace CgEngine {
 
     Shader& Shader::operator=(Shader&& other) noexcept {
         if (this != &other) {
+            if (programId != ~0) {
+                glDeleteProgram(programId);
+            }
+
             programId = other.programId;
             name = std::move(other.name);
             uniformLocations = std::move(other.uniformLocations);

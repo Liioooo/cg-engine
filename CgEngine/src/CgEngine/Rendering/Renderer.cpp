@@ -145,9 +145,9 @@ namespace CgEngine {
         transformsBuffer = new ShaderStorageBuffer();
         transformsBuffer->bind(0);
 
-        environmentMapSphereToCube = new ComputeShader("sphereToCube");
-        environmentMapPrefilterMap = new ComputeShader("prefilterMap");
-        environmentMapIrradianceMap = new ComputeShader("irradianceMap");
+        environmentMapSphereToCube = ComputeShader("sphereToCube");
+        environmentMapPrefilterMap = ComputeShader("prefilterMap");
+        environmentMapIrradianceMap = ComputeShader("irradianceMap");
     }
 
     void Renderer::shutdown() {
@@ -158,10 +158,6 @@ namespace CgEngine {
         delete unitCubeVAO;
         delete linesVAO;
         delete transformsBuffer;
-
-        delete environmentMapSphereToCube;
-        delete environmentMapPrefilterMap;
-        delete environmentMapIrradianceMap;
     }
 
     void Renderer::beginRenderPass(RenderPass& renderPass, bool omitShaderBinding) {
@@ -436,11 +432,11 @@ namespace CgEngine {
 
         TextureCube cubeMap(TextureFormat::Float32A, MAP_SIZE, MAP_SIZE, MipMapFiltering::Bilinear);
 
-        environmentMapSphereToCube->bind();
-        environmentMapSphereToCube->setTexture2D(sphereMap, 0);
-        environmentMapSphereToCube->setImageCube(cubeMap, 1, ShaderStorageAccess::WriteOnly, 0);
-        environmentMapSphereToCube->dispatch(MAP_SIZE / 32, MAP_SIZE / 32, 6);
-        environmentMapSphereToCube->waitForMemoryBarrier({MemoryBarrierBit::All});
+        environmentMapSphereToCube.bind();
+        environmentMapSphereToCube.setTexture2D(sphereMap, 0);
+        environmentMapSphereToCube.setImageCube(cubeMap, 1, ShaderStorageAccess::WriteOnly, 0);
+        environmentMapSphereToCube.dispatch(MAP_SIZE / 32, MAP_SIZE / 32, 6);
+        environmentMapSphereToCube.waitForMemoryBarrier({MemoryBarrierBit::All});
 
         cubeMap.generateMipMaps();
         TextureUtils::applyMipMapFiltering(MipMapFiltering::Trilinear, GL_TEXTURE_CUBE_MAP);
@@ -450,25 +446,25 @@ namespace CgEngine {
         auto* prefilterMap = new TextureCube(TextureFormat::Float32A, MAP_SIZE, MAP_SIZE, MipMapFiltering::Trilinear);
         prefilterMap->generateMipMaps();
 
-        environmentMapPrefilterMap->bind();
-        environmentMapPrefilterMap->setTextureCube(cubeMap, 0);
+        environmentMapPrefilterMap.bind();
+        environmentMapPrefilterMap.setTextureCube(cubeMap, 0);
 
         for (uint32_t i = 0, size = MAP_SIZE; i < mipCount; i++, size /= 2) {
             uint32_t numGroups = glm::max(1u, size / 32);
             float roughness = static_cast<float>(i) / static_cast<float>(mipCount - 1);
-            environmentMapPrefilterMap->setFloat("u_Roughness", roughness);
-            environmentMapPrefilterMap->setImageCube(*prefilterMap, 1, ShaderStorageAccess::WriteOnly, i);
-            environmentMapPrefilterMap->dispatch(numGroups, numGroups, 6);
-            environmentMapPrefilterMap->waitForMemoryBarrier({MemoryBarrierBit::All});
+            environmentMapPrefilterMap.setFloat("u_Roughness", roughness);
+            environmentMapPrefilterMap.setImageCube(*prefilterMap, 1, ShaderStorageAccess::WriteOnly, i);
+            environmentMapPrefilterMap.dispatch(numGroups, numGroups, 6);
+            environmentMapPrefilterMap.waitForMemoryBarrier({MemoryBarrierBit::All});
         }
 
         auto* irradianceMap = new TextureCube(TextureFormat::Float32A, 32, 32, MipMapFiltering::Bilinear);
 
-        environmentMapIrradianceMap->bind();
-        environmentMapIrradianceMap->setTextureCube(*prefilterMap, 0);
-        environmentMapIrradianceMap->setImageCube(*irradianceMap, 1, ShaderStorageAccess::WriteOnly);
-        environmentMapIrradianceMap->dispatch(irradianceMap->getWidth() / 2, irradianceMap->getWidth() / 2, 6);
-        environmentMapIrradianceMap->waitForMemoryBarrier({MemoryBarrierBit::All});
+        environmentMapIrradianceMap.bind();
+        environmentMapIrradianceMap.setTextureCube(*prefilterMap, 0);
+        environmentMapIrradianceMap.setImageCube(*irradianceMap, 1, ShaderStorageAccess::WriteOnly);
+        environmentMapIrradianceMap.dispatch(irradianceMap->getWidth() / 2, irradianceMap->getWidth() / 2, 6);
+        environmentMapIrradianceMap.waitForMemoryBarrier({MemoryBarrierBit::All});
 
         resourceManager.insertResource(hdriPath + "-irradiance", irradianceMap);
         resourceManager.insertResource(hdriPath + "-prefilter", prefilterMap);
