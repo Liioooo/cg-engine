@@ -1,15 +1,21 @@
 #include "VertexArrayObject.h"
 #include "Shader.h"
 #include "glad/glad.h"
+#include "Asserts.h"
 
 namespace CgEngine {
-    VertexArrayObject::VertexArrayObject() {
-        glGenVertexArrays(1, &vao);
+    VertexArrayObject::VertexArrayObject(bool initVao) {
+        if (initVao) {
+            glGenVertexArrays(1, &vao);
+        }
     }
 
     VertexArrayObject::~VertexArrayObject() {
-        glDeleteVertexArrays(1, &vao);
-        if (!usingExistingIndexBuffer) {
+        if (vao != ~0) {
+            glDeleteVertexArrays(1, &vao);
+        }
+
+        if (!usingExistingIndexBuffer && ebo != ~0) {
             glDeleteBuffers(1, &ebo);
         }
 
@@ -18,12 +24,53 @@ namespace CgEngine {
         }
     }
 
+    VertexArrayObject::VertexArrayObject(VertexArrayObject&& other) noexcept {
+        vao = other.vao;
+        ebo = other.ebo;
+        usingExistingIndexBuffer = other.usingExistingIndexBuffer;
+        vertexBufferIndex = other.vertexBufferIndex;
+        indexCount = other.indexCount;
+        vertexBuffers = std::move(other.vertexBuffers);
+
+        other.vao = ~0;
+        other.ebo = ~0;
+        other.indexCount = 0;
+    }
+
+    VertexArrayObject& VertexArrayObject::operator=(VertexArrayObject&& other) noexcept {
+        if (this != &other) {
+            if (vao != ~0) {
+                glDeleteVertexArrays(1, &vao);
+            }
+            if (!usingExistingIndexBuffer && ebo != ~0) {
+                glDeleteBuffers(1, &ebo);
+            }
+
+            vao = other.vao;
+            ebo = other.ebo;
+            usingExistingIndexBuffer = other.usingExistingIndexBuffer;
+            vertexBufferIndex = other.vertexBufferIndex;
+            indexCount = other.indexCount;
+            vertexBuffers = std::move(other.vertexBuffers);
+
+            other.vao = ~0;
+            other.ebo = ~0;
+            other.indexCount = 0;
+        }
+        return *this;
+    }
+
     void VertexArrayObject::bind() const {
+        CG_ASSERT(isReady(), "VertexArrayObject is not ready!")
         glBindVertexArray(vao);
     }
 
     void VertexArrayObject::unbind() const {
         glBindVertexArray(0);
+    }
+
+    bool VertexArrayObject::isReady() const {
+        return vao != ~0;
     }
 
     void VertexArrayObject::addVertexBuffer(VertexBuffer* buffer) {
@@ -108,6 +155,7 @@ namespace CgEngine {
     }
 
     uint32_t VertexArrayObject::getRendererId() const {
+        CG_ASSERT(isReady(), "VertexArrayObject is not ready!")
         return vao;
     }
 

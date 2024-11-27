@@ -54,6 +54,7 @@ namespace CgEngine {
         }
 
         void setData(const D& data) {
+            CG_ASSERT(isReady(), "UniformBuffer is not ready")
             glNamedBufferSubData(bufferId, 0, bufferSize, &data);
         }
 

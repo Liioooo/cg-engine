@@ -79,7 +79,6 @@ namespace CgEngine {
 
     MeshVertices::~MeshVertices() {
         delete skeleton;
-        delete boneInfluencesBuffer;
     }
 
     const std::vector<MeshProps::Vertex>& MeshVertices::getVertices() const {
@@ -174,7 +173,7 @@ namespace CgEngine {
         return skeletalAnimations;
     }
 
-    const ShaderStorageBuffer* MeshVertices::getBoneInfluencesBuffer() const {
+    const ShaderStorageBuffer& MeshVertices::getBoneInfluencesBuffer() const {
         return boneInfluencesBuffer;
     }
 
@@ -669,8 +668,8 @@ namespace CgEngine {
                 item.normalizeWeights();
             }
 
-            mesh->boneInfluencesBuffer = new ShaderStorageBuffer();
-            mesh->boneInfluencesBuffer->setData(mesh->boneInfluences.data(), mesh->boneInfluences.size() * sizeof(BoneInfluence));
+            mesh->boneInfluencesBuffer = ShaderStorageBuffer();
+            mesh->boneInfluencesBuffer.setData(mesh->boneInfluences.data(), mesh->boneInfluences.size() * sizeof(BoneInfluence));
         }
 
         mesh->importAnimations(scene);

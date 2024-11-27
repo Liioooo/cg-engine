@@ -360,6 +360,8 @@ namespace CgEngine {
     }
 
     uint32_t Texture2D::getWidthForMip(uint32_t mip) const {
+        CG_ASSERT(isReady(), "Texture2D is not ready")
+
         int w;
         glBindTexture(GL_TEXTURE_2D, id);
         glGetTexLevelParameteriv(GL_TEXTURE_2D, mip, GL_TEXTURE_WIDTH, &w);
@@ -367,6 +369,8 @@ namespace CgEngine {
     }
 
     uint32_t Texture2D::getHeightForMip(uint32_t mip) const {
+        CG_ASSERT(isReady(), "Texture2D is not ready")
+
         int h;
         glBindTexture(GL_TEXTURE_2D, id);
         glGetTexLevelParameteriv(GL_TEXTURE_2D, mip, GL_TEXTURE_HEIGHT, &h);
@@ -378,6 +382,7 @@ namespace CgEngine {
     }
 
     uint32_t Texture2D::getRendererId() const {
+        CG_ASSERT(isReady(), "Texture2D is not ready")
         return id;
     }
 
@@ -386,26 +391,36 @@ namespace CgEngine {
     }
 
     void Texture2D::bind(uint32_t slot) const {
+        CG_ASSERT(isReady(), "Texture2D is not ready")
+
         glBindTextureUnit(slot, id);
     }
 
     void Texture2D::generateMipMaps() {
+        CG_ASSERT(isReady(), "Texture2D is not ready")
+
         glBindTexture(GL_TEXTURE_2D, id);
         glGenerateMipmap(GL_TEXTURE_2D);
     }
 
     void Texture2D::setClampBorderColor(const glm::vec4& color) {
+        CG_ASSERT(isReady(), "Texture2D is not ready")
+
         glBindTexture(GL_TEXTURE_2D, id);
         TextureUtils::setClampBorderColor(color, GL_TEXTURE_2D);
     }
 
     void Texture2D::bufferSubData(int x, int y, int w, int h, const void* data) {
+        CG_ASSERT(isReady(), "Texture2D is not ready")
+
         GLint glFormat = TextureUtils::getOpenGLTextureFormat(format);
         GLenum type = TextureUtils::getOpenGLTextureType(format);
         glTextureSubImage2D(id, 0, x, y, w, h, glFormat, type, data);
     }
 
     void Texture2D::setUnpackAlignment(int alignment) {
+        CG_ASSERT(isReady(), "Texture2D is not ready")
+
         glBindTexture(GL_TEXTURE_2D, id);
         glPixelStorei(GL_UNPACK_ALIGNMENT, alignment);
     }
@@ -487,15 +502,20 @@ namespace CgEngine {
     }
 
     void Texture2DArray::bind(uint32_t slot) const {
+        CG_ASSERT(isReady(), "Texture2DArray is not ready")
         glBindTextureUnit(slot, id);
     }
 
     void Texture2DArray::generateMipMaps() {
+        CG_ASSERT(isReady(), "Texture2DArray is not ready")
+
         glBindTexture(GL_TEXTURE_2D_ARRAY, id);
         glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
     }
 
     void Texture2DArray::setClampBorderColor(const glm::vec4& color) {
+        CG_ASSERT(isReady(), "Texture2DArray is not ready")
+
         glBindTexture(GL_TEXTURE_2D_ARRAY, id);
         TextureUtils::setClampBorderColor(color, GL_TEXTURE_2D_ARRAY);
     }
@@ -609,10 +629,13 @@ namespace CgEngine {
     }
 
     void TextureCube::bind(uint32_t slot) const {
+        CG_ASSERT(isReady(), "TextureCube is not ready")
         glBindTextureUnit(slot, id);
     }
 
     void TextureCube::generateMipMaps() {
+        CG_ASSERT(isReady(), "TextureCube is not ready")
+
         glBindTexture(GL_TEXTURE_CUBE_MAP, id);
         glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
     }
@@ -667,10 +690,12 @@ namespace CgEngine {
     }
 
     uint32_t Texture2DView::getRendererId() const {
+        CG_ASSERT(isReady(), "Texture2DView is not ready")
         return id;
     }
 
     void Texture2DView::bind(uint32_t slot) const {
+        CG_ASSERT(isReady(), "Texture2DView is not ready")
         glBindTextureUnit(slot, id);
     }
 }

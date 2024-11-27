@@ -201,38 +201,47 @@ namespace CgEngine {
     }
 
     void Shader::setBool(const std::string &name, bool value) {
+        CG_ASSERT(isReady(), "Shader is not ready!")
         glUniform1i(ShaderUtils::getUniformLocation(programId, uniformLocations, name), value);
     }
 
     void Shader::setInt(const std::string &name, int value) {
+        CG_ASSERT(isReady(), "Shader is not ready!")
         glUniform1i(ShaderUtils::getUniformLocation(programId, uniformLocations, name), value);
     }
 
     void Shader::setFloat(const std::string &name, float value) {
+        CG_ASSERT(isReady(), "Shader is not ready!")
         glUniform1f(ShaderUtils::getUniformLocation(programId, uniformLocations, name), value);
     }
 
     void Shader::setVec2(const std::string &name, const glm::vec2 &vec) {
+        CG_ASSERT(isReady(), "Shader is not ready!")
         glUniform2f(ShaderUtils::getUniformLocation(programId, uniformLocations, name), vec.x, vec.y);
     }
 
     void Shader::setVec3(const std::string &name, const glm::vec3 &vec) {
+        CG_ASSERT(isReady(), "Shader is not ready!")
         glUniform3f(ShaderUtils::getUniformLocation(programId, uniformLocations, name), vec.x, vec.y, vec.z);
     }
 
     void Shader::setVec4(const std::string &name, const glm::vec4 &vec) {
+        CG_ASSERT(isReady(), "Shader is not ready!")
         glUniform4f(ShaderUtils::getUniformLocation(programId, uniformLocations, name), vec.x, vec.y, vec.z, vec.w);
     }
 
     void Shader::setMat3(const std::string &name, const glm::mat3 &mat) {
+        CG_ASSERT(isReady(), "Shader is not ready!")
         glUniformMatrix3fv(ShaderUtils::getUniformLocation(programId, uniformLocations, name), 1, GL_FALSE, glm::value_ptr(mat));
     }
 
     void Shader::setMat4(const std::string &name, const glm::mat4 &mat) {
+        CG_ASSERT(isReady(), "Shader is not ready!")
         glUniformMatrix4fv(ShaderUtils::getUniformLocation(programId, uniformLocations, name), 1, GL_FALSE, glm::value_ptr(mat));
     }
 
     void Shader::setTexture(uint32_t textureRendererId, uint32_t textureUnit) {
+        CG_ASSERT(isReady(), "Shader is not ready!")
         glBindTextureUnit(textureUnit, textureRendererId);
     }
 
@@ -345,6 +354,7 @@ namespace CgEngine {
     }
 
     uint32_t ComputeShader::getProgramId() const {
+        CG_ASSERT(isReady(), "ComputeShader is not ready!")
         return programId;
     }
 
@@ -353,6 +363,7 @@ namespace CgEngine {
     }
 
     void ComputeShader::dispatch(uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ) {
+        CG_ASSERT(isReady(), "ComputeShader is not ready!")
         glDispatchCompute(groupsX, groupsY, groupsZ);
     }
 
@@ -361,59 +372,72 @@ namespace CgEngine {
     }
 
     void ComputeShader::setBool(const std::string &name, bool value) {
+        CG_ASSERT(isReady(), "ComputeShader is not ready!")
         glUniform1i(ShaderUtils::getUniformLocation(programId, uniformLocations, name), value);
     }
 
     void ComputeShader::setInt(const std::string &name, int value) {
+        CG_ASSERT(isReady(), "ComputeShader is not ready!")
         glUniform1i(ShaderUtils::getUniformLocation(programId, uniformLocations, name), value);
     }
 
     void ComputeShader::setFloat(const std::string &name, float value) {
+        CG_ASSERT(isReady(), "ComputeShader is not ready!")
         glUniform1f(ShaderUtils::getUniformLocation(programId, uniformLocations, name), value);
     }
 
     void ComputeShader::setVec2(const std::string &name, const glm::vec2 &vec) {
+        CG_ASSERT(isReady(), "ComputeShader is not ready!")
         glUniform2f(ShaderUtils::getUniformLocation(programId, uniformLocations, name), vec.x, vec.y);
     }
 
     void ComputeShader::setVec3(const std::string &name, const glm::vec3 &vec) {
+        CG_ASSERT(isReady(), "ComputeShader is not ready!")
         glUniform3f(ShaderUtils::getUniformLocation(programId, uniformLocations, name), vec.x, vec.y, vec.z);
     }
 
     void ComputeShader::setVec4(const std::string &name, const glm::vec4 &vec) {
+        CG_ASSERT(isReady(), "ComputeShader is not ready!")
         glUniform4f(ShaderUtils::getUniformLocation(programId, uniformLocations, name), vec.x, vec.y, vec.z, vec.w);
     }
 
     void ComputeShader::setMat3(const std::string &name, const glm::mat3 &mat) {
+        CG_ASSERT(isReady(), "ComputeShader is not ready!")
         glUniformMatrix3fv(ShaderUtils::getUniformLocation(programId, uniformLocations, name), 1, GL_FALSE, glm::value_ptr(mat));
     }
 
     void ComputeShader::setMat4(const std::string &name, const glm::mat4 &mat) {
+        CG_ASSERT(isReady(), "ComputeShader is not ready!")
         glUniformMatrix4fv(ShaderUtils::getUniformLocation(programId, uniformLocations, name), 1, GL_FALSE, glm::value_ptr(mat));
     }
 
     void ComputeShader::setTexture2D(Texture2D& texture2D, uint32_t textureUnit) {
+        CG_ASSERT(isReady(), "ComputeShader is not ready!")
         glBindTextureUnit(textureUnit, texture2D.getRendererId());
     }
 
     void ComputeShader::setTexture2D(uint32_t textureRendererId, uint32_t textureUnit) {
+        CG_ASSERT(isReady(), "ComputeShader is not ready!")
         glBindTextureUnit(textureUnit, textureRendererId);
     }
 
     void ComputeShader::setImage2D(Texture2D &texture, uint32_t textureUnit, ShaderStorageAccess storageAccess, uint32_t level) {
+        CG_ASSERT(isReady(), "ComputeShader is not ready!")
         glBindImageTexture(textureUnit, texture.getRendererId(), level, GL_FALSE, 0, static_cast<GLuint>(storageAccess), TextureUtils::getOpenGLTextureFormatForImageBind(texture.getFormat()));
     }
 
     void ComputeShader::setTextureCube(TextureCube &texture, uint32_t textureUnit) {
+        CG_ASSERT(isReady(), "ComputeShader is not ready!")
         glBindTextureUnit(textureUnit, texture.getRendererId());
-
     }
 
     void ComputeShader::setImageCube(TextureCube& texture, uint32_t textureUnit, ShaderStorageAccess storageAccess, uint32_t level) {
+        CG_ASSERT(isReady(), "ComputeShader is not ready!")
         glBindImageTexture(textureUnit, texture.getRendererId(), level, GL_TRUE, 0, static_cast<GLuint>(storageAccess), TextureUtils::getOpenGLTextureFormatForImageBind(texture.getFormat()));
     }
 
     void ComputeShader::setImageArray(CgEngine::Texture2DArray& texture, uint32_t textureUnit, CgEngine::ShaderStorageAccess storageAccess) {
+        CG_ASSERT(isReady(), "ComputeShader is not ready!")
         glBindImageTexture(textureUnit, texture.getRendererId(), 0, GL_TRUE, 0, static_cast<GLuint>(storageAccess), TextureUtils::getOpenGLTextureFormatForImageBind(texture.getFormat()));
     }
 

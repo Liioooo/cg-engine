@@ -26,7 +26,6 @@ namespace CgEngine {
         using Component::Component;
 
         void onAttach(Scene& scene, AnimatedMeshRendererComponentParams& params);
-        void onDetach(Scene& scene) override;
         void onRenderImGui() override;
 
         ResRef<MeshVertices> getMeshVertices();
@@ -61,7 +60,7 @@ namespace CgEngine {
         bool loopAnimation = true;
 
         std::vector<glm::mat4> boneTransforms;
-        VertexArrayObject* skinnedVAO;
+        VertexArrayObject skinnedVAO{false};
 
         float animationTime = 0.0f;
 

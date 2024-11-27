@@ -300,7 +300,7 @@ namespace CgEngine {
 
         glm::mat4 uiProjectionMatrix;
 
-        ShaderStorageBuffer* boneTransformsBuffer;
+        ShaderStorageBuffer boneTransformsBuffer{false};
 
         struct CustomShaderDrawCommand {
             uint32_t instanceCount;

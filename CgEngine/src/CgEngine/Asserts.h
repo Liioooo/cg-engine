@@ -4,10 +4,10 @@
 
 #ifdef CG_ENABLE_DEBUG_FEATURES
     #if defined(PLATFORM_WIN32)
-		#define CG_DEBUG_BREAK() system("pause"); __debugbreak();
+		#define CG_DEBUG_BREAK() __debugbreak();
 	#elif defined(PLATFORM_UNIX)
 		#include <signal.h>
-		#define CG_DEBUG_BREAK() system("pause"); raise(SIGTRAP);
+		#define CG_DEBUG_BREAK() raise(SIGTRAP);
 	#else
 		#error "Platform doesn't support debugbreak yet!"
 	#endif

@@ -47,22 +47,18 @@ namespace CgEngine {
             currentAnimation = &mesh->getSkeletalAnimations().at(params.animation);
         }
 
-        skinnedVAO = new VertexArrayObject();
+        skinnedVAO = VertexArrayObject();
 
         auto* vertexBuffer = new VertexBuffer(mesh->getVertices().size() * sizeof(MeshProps::Vertex), VertexBufferUsage::Dynamic);
         vertexBuffer->setLayout(mesh->getVAO()->getVertexBuffers()[0]->getLayout());
-        skinnedVAO->addVertexBuffer(vertexBuffer);
-        skinnedVAO->useExistingIndexBuffer(mesh->getVAO()->getIndexBufferRendererId(), mesh->getVAO()->getIndexCount());
+        skinnedVAO.addVertexBuffer(vertexBuffer);
+        skinnedVAO.useExistingIndexBuffer(mesh->getVAO()->getIndexBufferRendererId(), mesh->getVAO()->getIndexCount());
 
         boneTransforms.resize(mesh->getBoneInfos().size());
 
         if (!params.autoPlayAnimation) {
             calculateBoneTransforms(mesh->getSkeleton()->getBoneTransforms());
         }
-    }
-
-    void AnimatedMeshRendererComponent::onDetach(Scene& scene) {
-        delete skinnedVAO;
     }
 
     ResRef<MeshVertices> AnimatedMeshRendererComponent::getMeshVertices() {
@@ -90,7 +86,7 @@ namespace CgEngine {
     }
 
     VertexArrayObject* AnimatedMeshRendererComponent::getSkinnedVAO() {
-        return skinnedVAO;
+        return &skinnedVAO;
     }
 
     void AnimatedMeshRendererComponent::setAnimation(const std::string& name) {

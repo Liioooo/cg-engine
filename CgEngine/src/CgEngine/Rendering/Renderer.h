@@ -86,15 +86,15 @@ namespace CgEngine {
         static inline Texture2D* brdfLUT;
         static inline TextureCube* blackCubeTexture;
 
-        static inline VertexArrayObject* quadVAO;
-        static inline VertexArrayObject* unitCubeVAO;
-        static inline VertexArrayObject* linesVAO;
+        static inline VertexArrayObject quadVAO{false};
+        static inline VertexArrayObject unitCubeVAO{false};
+        static inline VertexArrayObject linesVAO{false};
 
-        static inline VertexArrayObject* uiCircleVAO;
-        static inline VertexArrayObject* uiRectVAO;
-        static inline VertexArrayObject* uiTextVAO;
+        static inline VertexArrayObject uiCircleVAO{false};
+        static inline VertexArrayObject uiRectVAO{false};
+        static inline VertexArrayObject uiTextVAO{false};
 
-        static inline ShaderStorageBuffer* transformsBuffer;
+        static inline ShaderStorageBuffer transformsBuffer{false};
 
         static inline ComputeShader environmentMapSphereToCube;
         static inline ComputeShader environmentMapPrefilterMap;

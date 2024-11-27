@@ -31,12 +31,12 @@ namespace CgEngine {
         quadVertexData[3].pos = {-1.0f, 1.0f, 0.0f};
         quadVertexData[3].uv = {0.0f, 1.0f};
 
-        quadVAO = new VertexArrayObject();
+        quadVAO = VertexArrayObject();
         auto* quadVertexBuffer = new VertexBuffer(quadVertexData, 4 * sizeof(QuadVertex));
         quadVertexBuffer->setLayout({{ShaderDataType::Float3, true}, {ShaderDataType::Float2, true}});
-        quadVAO->addVertexBuffer(quadVertexBuffer);
+        quadVAO.addVertexBuffer(quadVertexBuffer);
         uint32_t quadIndices[6] = {0, 1, 2, 2, 3, 0 };
-        quadVAO->setIndexBuffer(quadIndices, 6);
+        quadVAO.setIndexBuffer(quadIndices, 6);
 
         float unitCubeVertices[] = {
                 -1.0f, 1.0f, 1.0f, // left_top_front_0
@@ -64,16 +64,16 @@ namespace CgEngine {
                 5, 7, 3
         };
 
-        unitCubeVAO = new VertexArrayObject();
+        unitCubeVAO = VertexArrayObject();
         auto* unitCubeVertexBuffer = new VertexBuffer(unitCubeVertices, sizeof(unitCubeVertices));
         unitCubeVertexBuffer->setLayout({{ShaderDataType::Float3, false}});
-        unitCubeVAO->addVertexBuffer(unitCubeVertexBuffer);
-        unitCubeVAO->setIndexBuffer(unitCubeIndices, 36);
+        unitCubeVAO.addVertexBuffer(unitCubeVertexBuffer);
+        unitCubeVAO.setIndexBuffer(unitCubeIndices, 36);
 
-        linesVAO = new VertexArrayObject();
+        linesVAO = VertexArrayObject();
         auto* linesVertexBuffer = new VertexBuffer(0, VertexBufferUsage::Dynamic);
         linesVertexBuffer->setLayout({{ShaderDataType::Float3, false}, {ShaderDataType::Float3, false}});
-        linesVAO->addVertexBuffer(linesVertexBuffer);
+        linesVAO.addVertexBuffer(linesVertexBuffer);
 
         auto* uiIndices = new uint32_t[maxUiIndices];
 
@@ -90,23 +90,23 @@ namespace CgEngine {
             offset += 4;
         }
 
-        uiCircleVAO = new VertexArrayObject();
+        uiCircleVAO = VertexArrayObject();
         auto* uiCircleVertexBuffer = new VertexBuffer(0, VertexBufferUsage::Dynamic);
         uiCircleVertexBuffer->setLayout({{ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float, false}, {ShaderDataType::Float, false}, {ShaderDataType::Float, false}});
-        uiCircleVAO->addVertexBuffer(uiCircleVertexBuffer);
-        uiCircleVAO->setIndexBuffer(uiIndices, maxUiIndices);
+        uiCircleVAO.addVertexBuffer(uiCircleVertexBuffer);
+        uiCircleVAO.setIndexBuffer(uiIndices, maxUiIndices);
 
-        uiRectVAO = new VertexArrayObject();
+        uiRectVAO = VertexArrayObject();
         auto* uiRectVertexBuffer = new VertexBuffer(0, VertexBufferUsage::Dynamic);
         uiCircleVertexBuffer->setLayout({{ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float2, false}, {ShaderDataType::Float, false}, {ShaderDataType::Float, false}});
-        uiRectVAO->addVertexBuffer(uiCircleVertexBuffer);
-        uiRectVAO->setIndexBuffer(uiIndices, maxUiIndices);
+        uiRectVAO.addVertexBuffer(uiCircleVertexBuffer);
+        uiRectVAO.setIndexBuffer(uiIndices, maxUiIndices);
 
-        uiTextVAO = new VertexArrayObject();
+        uiTextVAO = VertexArrayObject();
         auto* uiTextVertexBuffer = new VertexBuffer(0, VertexBufferUsage::Dynamic);
         uiTextVertexBuffer->setLayout({{ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float, false}});
-        uiTextVAO->addVertexBuffer(uiTextVertexBuffer);
-        uiTextVAO->setIndexBuffer(uiIndices, maxUiIndices);
+        uiTextVAO.addVertexBuffer(uiTextVertexBuffer);
+        uiTextVAO.setIndexBuffer(uiIndices, maxUiIndices);
 
         isWireframe = false;
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -142,8 +142,8 @@ namespace CgEngine {
 
         brdfLUT = new Texture2D(FileSystem::getAsEnginePath("ibl_brdf_lut.png"), false, TextureWrap::Clamp, MipMapFiltering::Bilinear);
 
-        transformsBuffer = new ShaderStorageBuffer();
-        transformsBuffer->bind(0);
+        transformsBuffer = ShaderStorageBuffer();
+        transformsBuffer.bind(0);
 
         environmentMapSphereToCube = ComputeShader("sphereToCube");
         environmentMapPrefilterMap = ComputeShader("prefilterMap");
@@ -154,10 +154,6 @@ namespace CgEngine {
         delete whiteTexture;
         delete blackCubeTexture;
         delete brdfLUT;
-        delete quadVAO;
-        delete unitCubeVAO;
-        delete linesVAO;
-        delete transformsBuffer;
     }
 
     void Renderer::beginRenderPass(RenderPass& renderPass, bool omitShaderBinding) {
@@ -319,8 +315,8 @@ namespace CgEngine {
 
         material.uploadToShader(currentRenderPass->getSpecification().shader);
 
-        quadVAO->bind();
-        glDrawElements(GL_TRIANGLES, quadVAO->getIndexCount(), GL_UNSIGNED_INT, nullptr);
+        quadVAO.bind();
+        glDrawElements(GL_TRIANGLES, quadVAO.getIndexCount(), GL_UNSIGNED_INT, nullptr);
     }
 
     void Renderer::renderUnitCube(const Material &material) {
@@ -328,8 +324,8 @@ namespace CgEngine {
 
         material.uploadToShader(currentRenderPass->getSpecification().shader);
 
-        unitCubeVAO->bind();
-        glDrawElements(GL_TRIANGLES, unitCubeVAO->getIndexCount(), GL_UNSIGNED_INT, nullptr);
+        unitCubeVAO.bind();
+        glDrawElements(GL_TRIANGLES, unitCubeVAO.getIndexCount(), GL_UNSIGNED_INT, nullptr);
     }
 
     void Renderer::renderLines(const std::vector<LineDrawInfo>& lines) {
@@ -337,8 +333,8 @@ namespace CgEngine {
             return;
         }
 
-        linesVAO->bind();
-        auto& vertexBuffer = linesVAO->getVertexBuffers()[0];
+        linesVAO.bind();
+        auto& vertexBuffer = linesVAO.getVertexBuffers()[0];
         auto vertices = std::vector<float>();
 
         for (const auto& line: lines) {
@@ -368,7 +364,7 @@ namespace CgEngine {
 
         material.uploadToShader(currentRenderPass->getSpecification().shader);
         vao.bind();
-        transformsBuffer->setData(transforms.data(), transforms.size() * sizeof(glm::mat4));
+        transformsBuffer.setData(transforms.data(), transforms.size() * sizeof(glm::mat4));
         glDrawElementsInstancedBaseVertex(currentRenderPass->getDrawMode(), indexCount, GL_UNSIGNED_INT, (void*)(baseIndex * sizeof(uint32_t)), instanceCount, baseVertex);
     }
 
@@ -382,24 +378,24 @@ namespace CgEngine {
     void Renderer::renderUiCircles(const std::vector<UiCircleVertex>& vertices, uint32_t indexCount) {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
 
-        uiCircleVAO->bind();
-        uiCircleVAO->getVertexBuffers()[0]->setData(vertices.data(), vertices.size() * sizeof(UiCircleVertex), VertexBufferUsage::Dynamic);
+        uiCircleVAO.bind();
+        uiCircleVAO.getVertexBuffers()[0]->setData(vertices.data(), vertices.size() * sizeof(UiCircleVertex), VertexBufferUsage::Dynamic);
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
     }
 
     void Renderer::renderUiRects(const std::vector<UiRectVertex>& vertices, uint32_t indexCount) {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
 
-        uiRectVAO->bind();
-        uiRectVAO->getVertexBuffers()[0]->setData(vertices.data(), vertices.size() * sizeof(UiRectVertex), VertexBufferUsage::Dynamic);
+        uiRectVAO.bind();
+        uiRectVAO.getVertexBuffers()[0]->setData(vertices.data(), vertices.size() * sizeof(UiRectVertex), VertexBufferUsage::Dynamic);
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
     }
 
     void Renderer::renderUiText(const std::vector<UiTextVertex>& vertices, uint32_t indexCount) {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
 
-        uiTextVAO->bind();
-        uiTextVAO->getVertexBuffers()[0]->setData(vertices.data(), vertices.size() * sizeof(UiTextVertex), VertexBufferUsage::Dynamic);
+        uiTextVAO.bind();
+        uiTextVAO.getVertexBuffers()[0]->setData(vertices.data(), vertices.size() * sizeof(UiTextVertex), VertexBufferUsage::Dynamic);
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
     }
 

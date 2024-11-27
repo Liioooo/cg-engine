@@ -425,8 +425,8 @@ namespace CgEngine {
         ubScreenData = UniformBuffer<UBScreenData>("ScreenData", 3, hbaoDeinterleavingRenderPass.getSpecification().shader);
         ubHBAOData = UniformBuffer<UBHBAOData>("HBAOData", 4, hbaoShader);
 
-        boneTransformsBuffer = new ShaderStorageBuffer();
-        boneTransformsBuffer->setData(nullptr, maxBones * maxAnimatedComponents * sizeof(glm::mat4));
+        boneTransformsBuffer = ShaderStorageBuffer();
+        boneTransformsBuffer.setData(nullptr, maxBones * maxAnimatedComponents * sizeof(glm::mat4));
 
         skinningShader = ComputeShader("skinning");
         shaderMap.skinningShader = &skinningShader;
@@ -435,8 +435,6 @@ namespace CgEngine {
     SceneRenderer::~SceneRenderer() {
         delete hbaoDeinterleavingFramebuffers[0];
         delete hbaoDeinterleavingFramebuffers[1];
-
-        delete boneTransformsBuffer;
     }
 
     void SceneRenderer::setActiveScene(Scene* scene) {
@@ -736,12 +734,12 @@ namespace CgEngine {
         CG_ASSERT(skinningQueue.size() < maxAnimatedComponents, "Cannot render that many AnimatedMeshRendererComponents")
 
         uint32_t boneTransformOffset = skinningQueue.size() * maxBones * sizeof(glm::mat4);
-        boneTransformsBuffer->setSubData(boneTransformOffset, boneTransforms.data(), boneTransforms.size() * sizeof(glm::mat4));
+        boneTransformsBuffer.setSubData(boneTransformOffset, boneTransforms.data(), boneTransforms.size() * sizeof(glm::mat4));
 
         SkinningInfo& skinningInfo = skinningQueue.emplace_back();
         skinningInfo.originalVertexBuffer = mesh->getVAO()->getVertexBuffers()[0];
         skinningInfo.skinnedVertexBuffer = skinnedVAO->getVertexBuffers()[0];
-        skinningInfo.boneInfluencesBuffer = mesh->getBoneInfluencesBuffer();
+        skinningInfo.boneInfluencesBuffer = &mesh->getBoneInfluencesBuffer();
         skinningInfo.numVertices = mesh->getVertices().size();
 
         auto& submeshes = mesh->getSubmeshes();
@@ -955,7 +953,7 @@ namespace CgEngine {
         CG_GPU_TIME_FN(&renderingStats.skinMeshesTimer, false)
 
         skinningShader.bind();
-        boneTransformsBuffer->bind(2);
+        boneTransformsBuffer.bind(2);
 
         for (uint32_t i = 0; i < skinningQueue.size(); i++) {
             skinningQueue[i].originalVertexBuffer->bindAsSSBO(3);
