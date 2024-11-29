@@ -25,5 +25,5 @@ void main() {
     imageStore(u_derivatives, texelCoord, vec4(dyxDyz, dxxDzz * u_lambda));
     float jacobian = (1 + u_lambda * dxxDzz.x) * (1 + u_lambda * dxxDzz.y) - u_lambda * u_lambda * dyDxz.y * dyDxz.y;
     float turbulanceR = imageLoad(u_turbulence, texelCoord).r + u_deltaTime * 0.5 / max(jacobian, 0.5);
-    imageStore(u_turbulence, texelCoord, vec4(min(turbulanceR, jacobian), 0, 0, 0));
+    imageStore(u_turbulence, texelCoord, vec4(min(turbulanceR, jacobian), 0.0, 0.0, 1.0));
 }
