@@ -63,8 +63,8 @@ void main() {
 
 //    #if defined(CLOSE)
     float jacobian = texture(u_turbulanceC0, fs_in.TexCoord.xy).x
-        + texture(u_turbulanceC1, fs_in.TexCoord.xy).x
-        + texture(u_turbulanceC2, fs_in.TexCoord.xy).x;
+        + texture(u_turbulanceC1, fs_in.TexCoord.xy * (length0 / length1)).x
+        + texture(u_turbulanceC2, fs_in.TexCoord.xy * (length0 / length2)).x;
     jacobian = min(1.0, max(0.0, (-jacobian + 2.72) * 0.2));
 //    #elif defined(MID)
 //            float jacobian = tex2D(_Turbulence_c0, IN.worldUV / LengthScale0).x
