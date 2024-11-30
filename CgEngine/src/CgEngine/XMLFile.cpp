@@ -7,8 +7,8 @@ namespace CgEngine {
         return xmlDocument;
     }
 
-    void XMLFile::load(const std::string& name) {
-        CG_ASSERT(FileSystem::checkFileExists(name), "XMLFile cannot be loaded: " + name + " does not exist.")
+    void XMLFile::load(const std::filesystem::path& name) {
+        CG_ASSERT(FileSystem::checkFileExists(name), "XMLFile cannot be loaded: " + name.string() + " does not exist.")
         xmlDocument.load_string(FileSystem::readFileToString(name).c_str());
         loaded = true;
     }

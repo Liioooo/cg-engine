@@ -8,7 +8,11 @@ namespace CgEngine {
     }
 
     Font::Font(const std::string& name) {
-        auto error = FT_New_Face(getFTLibrary(), FileSystem::getAsGamePath(name).c_str(), 0, &ftFace);
+        auto fontPath = FileSystem::getAsGamePath(name);
+
+        CG_ASSERT(FileSystem::checkFileExists(fontPath), "Font Path " + fontPath.string() + " does not exist")
+
+        auto error = FT_New_Face(getFTLibrary(), fontPath.string().c_str(), 0, &ftFace);
         if (error) {
             CG_LOGGING_ERROR(FT_Error_String(error));
         }

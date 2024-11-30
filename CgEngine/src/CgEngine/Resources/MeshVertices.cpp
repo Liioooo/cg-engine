@@ -40,7 +40,7 @@ namespace CgEngine {
 
             return createCapsuleMesh(height, radius);
         } else {
-            return loadMeshAsset(name);
+            return loadMeshAsset(FileSystem::getAsGamePath(name));
         }
     }
 
@@ -550,18 +550,18 @@ namespace CgEngine {
         return mesh;
     }
 
-    MeshVertices *MeshVertices::loadMeshAsset(const std::string& path) {
-        CG_LOGGING_DEBUG("Loading Mesh Asset: {0}", path)
+    MeshVertices *MeshVertices::loadMeshAsset(const std::filesystem::path& path) {
+        CG_LOGGING_DEBUG("Loading Mesh Asset: {0}", path.string())
+
+        CG_ASSERT(FileSystem::checkFileExists(path), "3D-Asset could not be loaded: " + path.string() + ", Does not exist")
 
         auto importer = Assimp::Importer();
 
-        std::string modelPath = FileSystem::getAsGamePath(path);
-
-        const aiScene *scene = importer.ReadFile(modelPath, aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_SortByPType |
+        const aiScene *scene = importer.ReadFile(path.string(), aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_SortByPType |
                                                             aiProcess_GenNormals | aiProcess_FlipUVs | aiProcess_GenBoundingBoxes |
                                                             aiProcess_OptimizeMeshes | aiProcess_JoinIdenticalVertices | aiProcess_LimitBoneWeights);
 
-        CG_ASSERT(scene && scene->HasMeshes() && scene->mRootNode, "3D-Asset could not be loaded: " + path + ", " + importer.GetErrorString())
+        CG_ASSERT(scene && scene->HasMeshes() && scene->mRootNode, "3D-Asset could not be loaded: " + path.string() + ", " + importer.GetErrorString())
 
         auto* mesh = new MeshVertices();
 
@@ -697,13 +697,13 @@ namespace CgEngine {
                         if (tex->mHeight == 0) {
                             auto* texture = new Texture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, true, getTextureWrapFromAssimp(aiEmissiveWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
 
-                            std::string resId = modelPath + "/" + std::string(aiEmissiveTexPath.C_Str());
+                            std::string resId = path.string() + "/" + std::string(aiEmissiveTexPath.C_Str());
 
                             resourceManager.insertResource<Texture2D>(resId, texture);
                             material->setEmissionTexture(resourceManager.getResource<Texture2D>(resId));
                         }
                     } else {
-                        std::string texturePath = getTexturePath(modelPath, aiEmissiveTexPath.C_Str());
+                        std::filesystem::path texturePath = getTexturePath(path, aiEmissiveTexPath.C_Str());
 
                         Texture2DResourceSpecification spec{};
                         spec.srgb = true;
@@ -712,7 +712,7 @@ namespace CgEngine {
                         spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
                         spec.compression = applicationOptions.useTextureCompression;
 
-                        material->setEmissionTexture(resourceManager.getResource<Texture2D>(texturePath, spec));
+                        material->setEmissionTexture(resourceManager.getResource<Texture2D>(texturePath.string(), spec));
                     }
 
                     if (hasEmissionIntensity) {
@@ -739,13 +739,13 @@ namespace CgEngine {
                         if (tex->mHeight == 0) {
                             auto* texture = new Texture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, true, getTextureWrapFromAssimp(aiAlbedoWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
 
-                            std::string resId = modelPath + "/" + std::string(aiAlbedoTexPath.C_Str());
+                            std::string resId = path.string() + "/" + std::string(aiAlbedoTexPath.C_Str());
 
                             resourceManager.insertResource<Texture2D>(resId, texture);
                             material->setAlbedoTexture(resourceManager.getResource<Texture2D>(resId));
                         }
                     } else {
-                        std::string texturePath = getTexturePath(modelPath, aiAlbedoTexPath.C_Str());
+                        std::filesystem::path texturePath = getTexturePath(path, aiAlbedoTexPath.C_Str());
 
                         Texture2DResourceSpecification spec{};
                         spec.srgb = true;
@@ -754,7 +754,7 @@ namespace CgEngine {
                         spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
                         spec.compression = applicationOptions.useTextureCompression;
 
-                        material->setAlbedoTexture(resourceManager.getResource<Texture2D>(texturePath, spec));
+                        material->setAlbedoTexture(resourceManager.getResource<Texture2D>(texturePath.string(), spec));
                     }
                 } else {
                     material->setAlbedoColor({aiAlbedo.r, aiAlbedo.g, aiAlbedo.b});
@@ -778,13 +778,13 @@ namespace CgEngine {
                         if (tex->mHeight == 0) {
                             auto* texture = new Texture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiRoughnessWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
 
-                            std::string resId = modelPath + "/" + std::string(aiRoughnessTexPath.C_Str());
+                            std::string resId = path.string() + "/" + std::string(aiRoughnessTexPath.C_Str());
 
                             resourceManager.insertResource<Texture2D>(resId, texture);
                             material->setRoughnessTexture(resourceManager.getResource<Texture2D>(resId));
                         }
                     } else {
-                        std::string texturePath = getTexturePath(modelPath, aiRoughnessTexPath.C_Str());
+                        std::filesystem::path texturePath = getTexturePath(path, aiRoughnessTexPath.C_Str());
 
                         Texture2DResourceSpecification spec{};
                         spec.srgb = false;
@@ -793,7 +793,7 @@ namespace CgEngine {
                         spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
                         spec.compression = applicationOptions.useTextureCompression;
 
-                        material->setRoughnessTexture(resourceManager.getResource<Texture2D>(texturePath, spec));
+                        material->setRoughnessTexture(resourceManager.getResource<Texture2D>(texturePath.string(), spec));
                     }
                 } else if (hasSpecularTexture) {
                     if (Utils::String::startsWith(aiSpecularTexPath.C_Str(), "*")) {
@@ -801,13 +801,13 @@ namespace CgEngine {
                         if (tex->mHeight == 0) {
                             auto* texture = new Texture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiSpecularWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
 
-                            std::string resId = modelPath + "/" + std::string(aiSpecularTexPath.C_Str());
+                            std::string resId = path.string() + "/" + std::string(aiSpecularTexPath.C_Str());
 
                             resourceManager.insertResource<Texture2D>(resId, texture);
                             material->setRoughnessTexture(resourceManager.getResource<Texture2D>(resId));
                         }
                     } else {
-                        std::string texturePath = getTexturePath(modelPath, aiSpecularTexPath.C_Str());
+                        std::filesystem::path texturePath = getTexturePath(path, aiSpecularTexPath.C_Str());
 
                         Texture2DResourceSpecification spec{};
                         spec.srgb = false;
@@ -816,7 +816,7 @@ namespace CgEngine {
                         spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
                         spec.compression = applicationOptions.useTextureCompression;
 
-                        material->setRoughnessTexture(resourceManager.getResource<Texture2D>(texturePath, spec));
+                        material->setRoughnessTexture(resourceManager.getResource<Texture2D>(texturePath.string(), spec));
                     }
                 } else {
                     material->setRoughness(roughness);
@@ -831,13 +831,13 @@ namespace CgEngine {
                         if (tex->mHeight == 0) {
                             auto* texture = new Texture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiNormalWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, false);
 
-                            std::string resId = modelPath + "/" + std::string(aiNormalTexPath.C_Str());
+                            std::string resId = path.string() + "/" + std::string(aiNormalTexPath.C_Str());
 
                             resourceManager.insertResource<Texture2D>(resId, texture);
                             material->setNormalTexture(resourceManager.getResource<Texture2D>(resId));
                         }
                     } else {
-                        std::string texturePath = getTexturePath(modelPath, aiNormalTexPath.C_Str());
+                        std::filesystem::path texturePath = getTexturePath(path, aiNormalTexPath.C_Str());
 
                         Texture2DResourceSpecification spec{};
                         spec.srgb = false;
@@ -846,7 +846,7 @@ namespace CgEngine {
                         spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
                         spec.compression = false;
 
-                        material->setNormalTexture(resourceManager.getResource<Texture2D>(texturePath, spec));
+                        material->setNormalTexture(resourceManager.getResource<Texture2D>(texturePath.string(), spec));
                     }
                 }
 
@@ -864,13 +864,13 @@ namespace CgEngine {
                         if (tex->mHeight == 0) {
                             auto* texture = new Texture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiMetalnessWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
 
-                            std::string resId = modelPath + "/" + std::string(aiMetalnessTexPath.C_Str());
+                            std::string resId = path.string() + "/" + std::string(aiMetalnessTexPath.C_Str());
 
                             resourceManager.insertResource<Texture2D>(resId, texture);
                             material->setMetalnessTexture(resourceManager.getResource<Texture2D>(resId));
                         }
                     } else {
-                        std::string texturePath = getTexturePath(modelPath, aiMetalnessTexPath.C_Str());
+                        std::filesystem::path texturePath = getTexturePath(path, aiMetalnessTexPath.C_Str());
 
                         Texture2DResourceSpecification spec{};
                         spec.srgb = false;
@@ -879,7 +879,7 @@ namespace CgEngine {
                         spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
                         spec.compression = applicationOptions.useTextureCompression;
 
-                        material->setMetalnessTexture(resourceManager.getResource<Texture2D>(texturePath, spec));
+                        material->setMetalnessTexture(resourceManager.getResource<Texture2D>(texturePath.string(), spec));
                     }
 
                 } else {
@@ -890,16 +890,14 @@ namespace CgEngine {
             mesh->materials.emplace_back(Application::get().getResourceManager().getResource<PBRMaterial>("default-pbr-material"));
         }
 
-        CG_LOGGING_DEBUG("Loaded Mesh Asset: {0}", path);
+        CG_LOGGING_DEBUG("Loaded Mesh Asset: {0}", path.string());
 
         return mesh;
     }
 
-    std::string MeshVertices::getTexturePath(const std::string &modelPath, const std::string &texturePath) {
-        std::filesystem::path path = modelPath;
-        auto directory = path.parent_path();
-        directory /= texturePath;
-        return directory.string();
+    std::filesystem::path MeshVertices::getTexturePath(const std::filesystem::path& modelPath, const std::string &texturePath) {
+        auto directory = modelPath.parent_path();
+        return directory / texturePath;
     }
 
     glm::mat4 MeshVertices::getTransformFromAssimpTransform(const aiMatrix4x4 &transform) {

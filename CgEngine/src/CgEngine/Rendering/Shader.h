@@ -25,7 +25,7 @@ namespace CgEngine {
     namespace ShaderUtils {
         std::string loadShaderSourceCodeWithType(const std::string& name, const std::string& type, ShaderEnv env);
         std::string loadShaderSourceCode(const std::string& name, ShaderEnv env);
-        std::string preprocessShaderCode(std::string code, const std::vector<std::string>& alreadyImported = {});
+        std::string preprocessShaderCode(std::string code, const std::vector<std::filesystem::path>& alreadyImported = {});
         bool checkErrors(uint32_t id, const std::string &type);
         int32_t getUniformLocation(uint32_t programId, std::unordered_map<std::string, int32_t>& uniformLocations, const std::string& name);
 

@@ -116,9 +116,9 @@ namespace CgEngine {
             return static_cast<uint32_t>(std::floor(std::log2(glm::min(width, height))) + 1);
         }
 
-        std::tuple<unsigned char*, int, int> loadImageData(const std::string& path) {
+        std::tuple<unsigned char*, int, int> loadImageData(const std::filesystem::path& path) {
             int loadWidth, loadHeight, channels;
-            auto data = stbi_load(path.c_str(), &loadWidth, &loadHeight, &channels, STBI_rgb_alpha);
+            auto data = stbi_load(path.string().c_str(), &loadWidth, &loadHeight, &channels, STBI_rgb_alpha);
             return {data, loadWidth,loadHeight};
         }
 
@@ -171,29 +171,31 @@ namespace CgEngine {
         glGenerateMipmap(GL_TEXTURE_2D);
     }
 
-    Texture2D::Texture2D(const std::string &path, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering, float anisotropicFiltering, bool compression) {
+    Texture2D::Texture2D(const std::filesystem::path& path, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering, float anisotropicFiltering, bool compression) {
         int loadWidth, loadHeight, channels;
 
-        CG_ASSERT(FileSystem::checkFileExists(path), "Texture2D: " + path + " does not exist!")
+        CG_ASSERT(FileSystem::checkFileExists(path), "Texture2D: " + path.string() + " does not exist!")
+
+        std::string pathString = path.string();
 
         unsigned char* data;
 
-        if (stbi_is_hdr(path.c_str())) {
-            stbi_info(path.c_str(), &loadWidth, &loadHeight, &channels);
+        if (stbi_is_hdr(pathString.c_str())) {
+            stbi_info(pathString.c_str(), &loadWidth, &loadHeight, &channels);
             if (channels <= 3) {
-                data = (unsigned char*)(stbi_loadf(path.c_str(), &loadWidth, &loadHeight, &channels, STBI_rgb));
+                data = (unsigned char*)(stbi_loadf(pathString.c_str(), &loadWidth, &loadHeight, &channels, STBI_rgb));
                 format = TextureFormat::Float32;
             } else {
-                data = (unsigned char*)(stbi_loadf(path.c_str(), &loadWidth, &loadHeight, &channels, STBI_rgb_alpha));
+                data = (unsigned char*)(stbi_loadf(pathString.c_str(), &loadWidth, &loadHeight, &channels, STBI_rgb_alpha));
                 format = TextureFormat::Float32A;
             }
         } else {
-            stbi_info(path.c_str(), &loadWidth, &loadHeight, &channels);
+            stbi_info(pathString.c_str(), &loadWidth, &loadHeight, &channels);
             if (channels <= 3) {
-                data = stbi_load(path.c_str(), &loadWidth, &loadHeight, &channels, STBI_rgb);
+                data = stbi_load(pathString.c_str(), &loadWidth, &loadHeight, &channels, STBI_rgb);
                 format = TextureFormat::RGB;
             } else {
-                data = stbi_load(path.c_str(), &loadWidth, &loadHeight, &channels, STBI_rgb_alpha);
+                data = stbi_load(pathString.c_str(), &loadWidth, &loadHeight, &channels, STBI_rgb_alpha);
                 format = TextureFormat::RGBA;
             }
         }
@@ -521,6 +523,7 @@ namespace CgEngine {
     }
 
     TextureCube* TextureCube::createResource(const std::string& name) {
+        CG_LOGGING_WARNING("Creating Resource of Type TextureCube will create a empty Resource! ({0})", name)
         return new TextureCube(TextureFormat::RGB, 1, 1);
     }
 

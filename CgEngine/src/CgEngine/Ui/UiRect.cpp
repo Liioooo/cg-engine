@@ -31,7 +31,7 @@ namespace CgEngine {
 
     void UiRect::setTextureByName(const std::string& textureName) {
         auto& resourceManager = Application::get().getResourceManager();
-        std::string texturePath = FileSystem::getAsGamePath(textureName);
+        std::string texturePath = FileSystem::getAsGamePath(textureName).string();
 
         Texture2DResourceSpecification spec{};
         spec.srgb = false;

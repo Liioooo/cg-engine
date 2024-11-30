@@ -48,7 +48,7 @@ namespace CgEngine {
             Texture2DResourceSpecification spec{};
             spec.compression = applicationOptions.useTextureCompression;
 
-            material->setEmissionTexture(resourceManager.getResource<Texture2D>(FileSystem::getAsGamePath(emissionTexture), spec));
+            material->setEmissionTexture(resourceManager.getResource<Texture2D>(FileSystem::getAsGamePath(emissionTexture).string(), spec));
             float emissionIntensity = emission.empty() ? 1.0f : Utils::String::toFloat(emission).value_or(1.0f);
             material->setEmission({emissionIntensity, emissionIntensity, emissionIntensity});
         } else if (!emissionColor.empty()) {
@@ -56,7 +56,7 @@ namespace CgEngine {
             material->setEmission(Utils::LoaderUtils::hexStringToColor(emissionColor) * emissionIntensity);
         }
         if (!albedoTexture.empty()) {
-            std::string albedoTexturePath = FileSystem::getAsGamePath(albedoTexture);
+            std::string albedoTexturePath = FileSystem::getAsGamePath(albedoTexture).string();
 
             Texture2DResourceSpecification spec{};
             spec.srgb = albedoTextureSRGB;
@@ -71,19 +71,19 @@ namespace CgEngine {
             Texture2DResourceSpecification spec{};
             spec.compression = applicationOptions.useTextureCompression;
 
-            material->setMetalnessTexture(resourceManager.getResource<Texture2D>(FileSystem::getAsGamePath(metalnessTexture), spec));
+            material->setMetalnessTexture(resourceManager.getResource<Texture2D>(FileSystem::getAsGamePath(metalnessTexture).string(), spec));
         }
         if (!roughnessTexture.empty()) {
             Texture2DResourceSpecification spec{};
             spec.compression = applicationOptions.useTextureCompression;
 
-            material->setRoughnessTexture(resourceManager.getResource<Texture2D>(FileSystem::getAsGamePath(roughnessTexture), spec));
+            material->setRoughnessTexture(resourceManager.getResource<Texture2D>(FileSystem::getAsGamePath(roughnessTexture).string(), spec));
         }
         if (!normalTexture.empty()) {
             Texture2DResourceSpecification spec{};
             spec.compression = false;
 
-            material->setNormalTexture(resourceManager.getResource<Texture2D>(FileSystem::getAsGamePath(normalTexture), spec));
+            material->setNormalTexture(resourceManager.getResource<Texture2D>(FileSystem::getAsGamePath(normalTexture).string(), spec));
         }
 
         return material;

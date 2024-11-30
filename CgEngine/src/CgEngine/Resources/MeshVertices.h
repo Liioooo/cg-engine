@@ -50,9 +50,9 @@ namespace CgEngine {
         static MeshVertices* createCubeMesh();
         static MeshVertices* createSphereMesh(uint32_t latSegments, uint32_t lonSegments);
         static MeshVertices* createCapsuleMesh(float height, float radius);
-        static MeshVertices* loadMeshAsset(const std::string& path);
+        static MeshVertices* loadMeshAsset(const std::filesystem::path& path);
 
-        static std::string getTexturePath(const std::string& modelPath, const std::string& texturePath);
+        static std::filesystem::path getTexturePath(const std::filesystem::path& modelPath, const std::string& texturePath);
         static glm::mat4 getTransformFromAssimpTransform(const aiMatrix4x4& transform);
         static glm::vec3 getVec3FromAssimpVec(const aiVector3D& vec);
         static glm::quat getQuatFromAssimpQuat(const aiQuaternion& quat);

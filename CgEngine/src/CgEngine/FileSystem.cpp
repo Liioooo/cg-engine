@@ -3,7 +3,7 @@
 #include "Logging.h"
 
 namespace CgEngine {
-    std::string FileSystem::readFileToString(const std::string& path) {
+    std::string FileSystem::readFileToString(const std::filesystem::path& path) {
         std::ifstream file(path);
 
         if (file.is_open()) {
@@ -14,32 +14,34 @@ namespace CgEngine {
             return out;
         }
 
-        CG_LOGGING_ERROR("Unable to load File: {0}", path);
-        return std::string{};
+        CG_LOGGING_ERROR("Unable to load File: {0}", path.string());
+        return "";
     }
 
-    bool FileSystem::checkFileExists(const std::string& path) {
-        std::ifstream file(path);
-        if (file.is_open()) {
-            file.close();
-            return true;
-        }
-        return false;
+    bool FileSystem::checkFileExists(const std::filesystem::path& path) {
+        return std::filesystem::exists(path) && std::filesystem::is_regular_file(path);
     }
 
-    std::string FileSystem::getAsGamePath(const std::string& path) {
-        if (path.rfind("assets/game/", 0) == 0) {
-            return path;
+    std::filesystem::path FileSystem::getAsGamePath(const std::filesystem::path& path) {
+        if (!isSubpath(path, relativeGame)) {
+            return relativeGame / path;
         }
-
-        return "assets/game/" + path;
+        return path;
     }
 
-    std::string FileSystem::getAsEnginePath(const std::string& path) {
-        if (path.rfind("assets/engine/", 0) == 0) {
-            return path;
+    std::filesystem::path FileSystem::getAsEnginePath(const std::filesystem::path& path) {
+        if (!isSubpath(path, relativeGame)) {
+            return relativeEngine / path;
         }
+        return path;
+    }
 
-        return "assets/engine/" + path;
+    bool FileSystem::isSubpath(const std::filesystem::path& path, const std::filesystem::path& base) {
+        auto rel = std::filesystem::relative(path, base);
+        return !rel.empty() && rel.native()[0] != '.';
+    }
+
+    std::string FileSystem::getExtension(const std::filesystem::path& path) {
+        return path.extension().string();
     }
 }

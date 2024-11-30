@@ -6,7 +6,7 @@ namespace CgEngine {
 
     class AudioWavLoader {
     public:
-        static AudioFile* loadWavFile(const std::string& path);
+        static AudioFile* loadWavFile(const std::filesystem::path& path);
     };
 
 }

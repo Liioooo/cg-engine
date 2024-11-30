@@ -11,6 +11,7 @@
 #include "Events/WindowResizeEvent.h"
 #include "Rendering/Renderer.h"
 #include "ImGui/ImGuiContext.h"
+#include "FileSystem.h"
 
 namespace CgEngine {
     Window::Window(const WindowSpecification& spec, std::function<void(Event&)>&& eventCallback) : eventCallback(std::move(eventCallback)) {
@@ -54,7 +55,7 @@ namespace CgEngine {
             CG_LOGGING_ERROR("Failed to create Window");
         }
 
-        if (!spec.icon.empty()) {
+        if (!spec.icon.empty() && FileSystem::checkFileExists(spec.icon)) {
             GLFWimage icon;
             auto iconData = TextureUtils::loadImageData(spec.icon);
             icon.pixels = std::get<0>(iconData);

@@ -90,7 +90,7 @@ namespace CgEngine {
 
         std::string textureName = elementNode.attribute("texture").as_string("");
         if (!textureName.empty()) {
-            std::string texturePath = FileSystem::getAsGamePath(textureName);
+            std::string texturePath = FileSystem::getAsGamePath(textureName).string();
             auto& resourceManager = Application::get().getResourceManager();
             element->setTexture(resourceManager.getResource<Texture2D>(texturePath));
         }
@@ -109,7 +109,7 @@ namespace CgEngine {
         std::string textureName = elementNode.attribute("texture").as_string("");
         if (!textureName.empty()) {
             auto& resourceManager = Application::get().getResourceManager();
-            std::string texturePath = FileSystem::getAsGamePath(textureName);
+            std::string texturePath = FileSystem::getAsGamePath(textureName).string();
 
             Texture2DResourceSpecification spec{};
             spec.srgb = false;

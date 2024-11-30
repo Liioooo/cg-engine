@@ -21,11 +21,11 @@ namespace CgEngine {
 
         CG_ASSERT(FileSystem::checkFileExists(path), "The AudioFile you are trying to load does not exist")
 
-        std::string extension = Utils::String::getExtension(path);
+        std::string extension = FileSystem::getExtension(path);
 
-        if (Utils::String::equalsIgnoreCase(extension, "wav")) {
+        if (Utils::String::equalsIgnoreCase(extension, ".wav")) {
             return AudioWavLoader::loadWavFile(path);
-        } else if (Utils::String::equalsIgnoreCase(extension, "ogg")) {
+        } else if (Utils::String::equalsIgnoreCase(extension, ".ogg")) {
 
         }
 

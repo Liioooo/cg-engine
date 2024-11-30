@@ -8,7 +8,7 @@ namespace CgEngine {
     public:
         XMLFile() = default;
 
-        void load(const std::string& name);
+        void load(const std::filesystem::path& name);
         bool isLoaded();
 
         const pugi::xml_document& getXMLDocument();

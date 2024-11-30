@@ -13,7 +13,7 @@ namespace CgEngine {
         }
 
         std::string loadShaderSourceCode(const std::string& name, ShaderEnv env) {
-            const std::string path = env == ShaderEnv::Engine ? FileSystem::getAsEnginePath("shaders/" + name) : FileSystem::getAsGamePath(name);
+            const std::filesystem::path path = env == ShaderEnv::Engine ? FileSystem::getAsEnginePath(std::filesystem::path("./shaders/") / name) : FileSystem::getAsGamePath(name);
 
             if (!FileSystem::checkFileExists(path)) {
                 return "";
@@ -21,10 +21,10 @@ namespace CgEngine {
             return FileSystem::readFileToString(path);
         }
 
-        std::string preprocessShaderCode(std::string code, const std::vector<std::string>& alreadyImported) {
-            std::array<std::string, 2> includeDirs = {
-                    "assets/game/",
-                    "assets/engine/shaders/"
+        std::string preprocessShaderCode(std::string code, const std::vector<std::filesystem::path>& alreadyImported) {
+            std::array<std::filesystem::path, 2> includeDirs = {
+                    FileSystem::getAsGamePath("./"),
+                    FileSystem::getAsEnginePath("./shaders/")
             };
 
             const auto r = std::regex("#include\\s+\"(.*)\"");
@@ -41,15 +41,15 @@ namespace CgEngine {
 
             for (const auto& result: results) {
                 for (const auto& dir: includeDirs) {
-                    const std::string path = dir + result.second;
+                    const std::filesystem::path path = dir / result.second;
 
-                    if (std::find(alreadyImported.begin(), alreadyImported.end(),path) != alreadyImported.end()) {
+                    if (std::find(alreadyImported.begin(), alreadyImported.end(), path) != alreadyImported.end()) {
                         code.replace(code.find(result.first), result.first.length(), "");
                         break;
                     }
 
                     if (FileSystem::checkFileExists(path)) {
-                        const_cast<std::vector<std::string>&>(alreadyImported).emplace_back(path);
+                        const_cast<std::vector<std::filesystem::path>&>(alreadyImported).emplace_back(path);
                         std::string importCode = preprocessShaderCode(FileSystem::readFileToString(path), alreadyImported);
                         CG_ASSERT(!importCode.empty(), "Unable to load Shader: " + result.second)
                         code.replace(code.find(result.first), result.first.length(), importCode);
