@@ -8,4 +8,5 @@ layout (binding = 0, std140) uniform CameraData {
     float exposure;
     float bloomIntensity;
     float bloomThreshold;
+    float _padding_; // Needed because on some drivers this is added automatically and on some not...
 } u_CameraData;

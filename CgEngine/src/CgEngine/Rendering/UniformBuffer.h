@@ -66,7 +66,8 @@ namespace CgEngine {
             uint32_t shaderBlockIndex = glGetUniformBlockIndex(shaderForInitRendererId, blockName.c_str());
             glGetActiveUniformBlockiv(shaderForInitRendererId, shaderBlockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, &bufferSize);
 
-            CG_ASSERT(sizeof(D) == bufferSize, "Buffer size mismatch!")
+            CG_LOGGING_INFO("Unifoorm Buffer: {0}, OpenGL Size: {1}, C++ Size: {2}", blockName, bufferSize, sizeof(D))
+            CG_ASSERT(sizeof(D) == bufferSize, "UnfiormBuffer" + blockName + ", Buffer size mismatch!")
 
             glGenBuffers(1, &bufferId);
             glBindBufferBase(GL_UNIFORM_BUFFER, binding, bufferId);
