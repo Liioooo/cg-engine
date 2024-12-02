@@ -84,7 +84,16 @@ list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/vendor/glm
 ################################################################################
 
 # SPDLOG #######################################################################
+set(SPDLOG_USE_STD_FORMAT OFF CACHE BOOL "" FORCE)
+set(SPDLOG_FMT_EXTERNAL OFF CACHE BOOL "" FORCE)
+set(SPDLOG_FMT_EXTERNAL_HO OFF CACHE BOOL "" FORCE)
+set(SPDLOG_MSVC_UTF8 ON CACHE BOOL "" FORCE)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/vendor/spdlog)
+target_compile_definitions(${PROJECT_NAME} PUBLIC SPDLOG_COMPILED_LIB)
+target_compile_options(${PROJECT_NAME} PUBLIC $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CXX_COMPILER_ID:MSVC>>:/utf-8>)
+set_target_properties(spdlog PROPERTIES MSVC_RUNTIME_LIBRARY ${MSVC_RUNTIME_LIBRARY_STR})
 list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/vendor/spdlog/include")
+list(APPEND ADDITIONAL_LIBRARY_DEPENDENCIES spdlog::spdlog)
 ################################################################################
 
 # INIH #########################################################################
