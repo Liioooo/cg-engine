@@ -31,6 +31,9 @@ namespace CgEngine {
 
         int getSizeForShaderDataType(ShaderDataType type);
         unsigned int shaderDataTypeToOpenGLBaseType(ShaderDataType type);
+
+        std::string getSourceWithLineNumbers(const std::string& source);
+        void printShaderCode(std::string vertexSource, std::string fragmentSource, std::string geometrySource, std::string tcsSource, std::string tesSource);
     }
 
     class Shader {

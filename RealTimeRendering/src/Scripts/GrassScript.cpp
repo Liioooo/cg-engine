@@ -6,9 +6,35 @@ namespace RTR {
         geometryLow = createGeometry(GRASS_SEGMENTS_LOW);
         geometryHigh = createGeometry(GRASS_SEGMENTS_HIGH);
 
+        grassMaterialHigh.set("u_GrassParams", glm::vec2{GRASS_SEGMENTS_HIGH, GRASS_VERTICES_HIGH});
+        grassMaterialHigh.set("u_GrassSize", glm::vec2{GRASS_WIDTH, GRASS_HEIGHT});
+        grassMaterialHigh.set("u_GrassLOD", glm::vec2{GRASS_LOD_DIST, GRASS_MAX_DIST});
 
-//        CgEngine::CustomShaderRendererComponentParams params;
-//        auto& rendererComp = attachComponent<CgEngine::CustomShaderRendererComponent>(params);
+
+        grassMaterialLow.set("u_GrassParams", glm::vec2{GRASS_SEGMENTS_LOW, GRASS_VERTICES_LOW});
+        grassMaterialLow.set("u_GrassSize", glm::vec2{GRASS_WIDTH, GRASS_HEIGHT});
+        grassMaterialLow.set("u_GrassLOD", glm::vec2{GRASS_LOD_DIST, GRASS_MAX_DIST});
+
+        grassContainer = createEntity();
+        CgEngine::TransformComponentParams p;
+        attachComponent<CgEngine::TransformComponent>(grassContainer, p);
+
+
+        auto e = createEntity(grassContainer);
+
+        CgEngine::TransformComponentParams transformParams;
+        transformParams.position = {0.0f, 0.0, 0.0f};
+        attachComponent<CgEngine::TransformComponent>(e, transformParams);
+
+        CgEngine::CustomShaderRendererComponentParams rendererParams;
+        rendererParams.customMesh = geometryHigh.first;
+        rendererParams.customMaterial = &grassMaterialHigh;
+        rendererParams.instanceCount = NUM_GRASS;
+        rendererParams.shader = "grass/render";
+        rendererParams.enableCulling = false;
+        rendererParams.renderPassOptions.useEnvironmentMappingData = true;
+        auto& rendererComp = attachComponent<CgEngine::CustomShaderRendererComponent>(e, rendererParams);
+        rendererComp.setInstanceBuffer1(geometryHigh.second);
     }
 
     void GrassScript::onDetach() {
@@ -19,7 +45,10 @@ namespace RTR {
     }
 
     void GrassScript::update(CgEngine::TimeStep ts) {
+        currentTime += ts.getSeconds();
 
+        grassMaterialHigh.set("u_Time", currentTime);
+        grassMaterialLow.set("u_Time", currentTime);
     }
 
     std::pair<CgEngine::CustomMesh*, CgEngine::ShaderStorageBuffer*> GrassScript::createGeometry(uint8_t segments) {
@@ -58,8 +87,8 @@ namespace RTR {
         }
 
         std::vector<int> vertId;
-        vertId.reserve(vertices * 2);
-        for (int i = 0; i < vertices * 2; ++i) {
+        vertId.resize(vertices * 2);
+        for (int i = 0; i < vertices * 2; i++) {
             vertId[i] = i;
         }
 

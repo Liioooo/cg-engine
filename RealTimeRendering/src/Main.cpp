@@ -3,6 +3,7 @@
 #include <Scripts/PropertyTestScript.h>
 #include <Scripts/FPSCounter.h>
 #include <Scripts/Ocean.h>
+#include <Scripts/GrassScript.h>
 #include "CgEngine/Application.h"
 
 int main(int argc, char **argv) {
@@ -13,6 +14,7 @@ int main(int argc, char **argv) {
     application->registerNativeScript<RTR::FPSCounter>("fpsCounter");
     application->registerNativeScript<RTR::PropertyTestScript>("propertyTest");
     application->registerNativeScript<RTR::Ocean>("ocean");
+    application->registerNativeScript<RTR::GrassScript>("grass");
 
     application->init();
     application->run();

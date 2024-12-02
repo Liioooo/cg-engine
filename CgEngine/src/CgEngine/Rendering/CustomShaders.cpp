@@ -83,6 +83,7 @@ namespace CgEngine {
         if (!error) {
             programId = id;
         } else {
+            ShaderUtils::printShaderCode(vertexSource, fragmentSource, geometrySource, tcsSource, tesSource);
             glDeleteProgram(id);
         }
 

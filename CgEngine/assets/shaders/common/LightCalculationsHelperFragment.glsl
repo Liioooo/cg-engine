@@ -1,5 +1,8 @@
 #include "common/PI.glsl"
 
+// Constant normal incidence Fresnel factor for all dielectrics.
+const vec3 Fdielectric = vec3(0.04);
+
 float squareDistanceAttenuation(float distance, float lightRadius, float lightFalloff) {
     float attenuation = clamp(1.0 - (distance * distance) / (lightRadius * lightRadius), 0.0, 1.0);
     return attenuation * mix(attenuation, 1.0, lightFalloff);
@@ -35,7 +38,7 @@ float geometrySmith(float NdotV, float NdotL, float roughness) {
 float distributionGGX(vec3 N, vec3 H, float roughness) {
     float alpha = roughness * roughness;
     float alphaSq = alpha * alpha;
-    float NdotH  = max(dot(N, H), 0.0);
+    float NdotH  = max(dot(N, H), 0.0f);
 
     float denom = (NdotH * NdotH) * (alphaSq - 1.0) + 1.0;
     return alphaSq / (PI * denom * denom);
@@ -43,4 +46,9 @@ float distributionGGX(vec3 N, vec3 H, float roughness) {
 
 vec3 fresnelSchlick(vec3 F0, float cosTheta) {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
+vec3 calcF0(vec3 albedo, float metalness) {
+    vec3 F0 = Fdielectric;
+    return mix(F0, albedo, metalness);
 }

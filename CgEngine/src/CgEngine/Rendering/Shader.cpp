@@ -140,6 +140,28 @@ namespace CgEngine {
         }
     }
 
+    std::string ShaderUtils::getSourceWithLineNumbers(const std::string& source) {
+        uint32_t lineNumber = 1;
+
+        std::istringstream s(source);
+        std::stringstream out;
+
+        std::string line;
+        while (std::getline(s, line)) {
+            out << "[" << lineNumber << "] " << line << "\n";
+            lineNumber++;
+        }
+        return out.str();
+    }
+
+    void ShaderUtils::printShaderCode(std::string vertexSource, std::string fragmentSource, std::string geometrySource, std::string tcsSource, std::string tesSource) {
+        CG_LOGGING_INFO("Vertex: \n{}", getSourceWithLineNumbers(vertexSource));
+        CG_LOGGING_INFO("Fragment: \n{}", getSourceWithLineNumbers(fragmentSource));
+        CG_LOGGING_INFO("Geometry: \n{}", getSourceWithLineNumbers(geometrySource));
+        CG_LOGGING_INFO("TCS: \n{}", getSourceWithLineNumbers(tcsSource));
+        CG_LOGGING_INFO("TES: \n{}", getSourceWithLineNumbers(tesSource));
+    }
+
     Shader::Shader(std::string name) : name(std::move(name)) {
         load();
     }
@@ -294,6 +316,7 @@ namespace CgEngine {
         if (!error) {
             programId = id;
         } else {
+            ShaderUtils::printShaderCode(vertexSource, fragmentSource, geometrySource, tcsSource, tesSource);
             glDeleteProgram(id);
         }
 

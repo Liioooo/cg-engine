@@ -27,6 +27,15 @@ namespace RTR {
         uint32_t GRASS_PATCH_SIZE = 10;
         uint32_t NUM_GRASS = (32 * 32) * 3;
 
+        float GRASS_LOD_DIST = 15.0f;
+        float GRASS_MAX_DIST = 100.0f;
+
+        float GRASS_WIDTH = 0.1f;
+        float GRASS_HEIGHT = 1.5f;
+
+        float currentTime = 0.0f;
+        CgEngine::Entity grassContainer;
+
         CgEngine::CustomValMaterial grassMaterialHigh;
         CgEngine::CustomValMaterial grassMaterialLow;
 

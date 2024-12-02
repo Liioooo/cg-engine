@@ -1083,9 +1083,8 @@ namespace CgEngine {
 
         Renderer::beginRenderPass(customShaderRenderPass, true);
 
-        // can be true at the start, because the values are already bound from the previous geometryPass
-        bool lastCommandUseDirShadowMappingData = true;
-        bool lastCommandUseEnvironmentMappingData = true;
+        bool lastCommandUseDirShadowMappingData = false;
+        bool lastCommandUseEnvironmentMappingData = false;
 
         const Material* lastUsedMaterial = nullptr;
 
@@ -1112,7 +1111,6 @@ namespace CgEngine {
                     shader->setTexture(currentSceneEnvironment.prefilterMapId, 6);
                     shader->setTexture(Renderer::getBrdfLUTTexture().getRendererId(), 7);
                     shader->setFloat("u_EnvironmentIntensity", currentSceneEnvironment.environmentIntensity);
-                    shader->setTexture(dirShadowMaps.getRendererId(), 8);
                 }
                 lastCommandUseEnvironmentMappingData = command.renderPassOptions.useEnvironmentMappingData;
 
