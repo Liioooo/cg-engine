@@ -64,7 +64,10 @@ namespace CgEngine {
         renderPassOptions = params.renderPassOptions;
 
         enableCulling = params.enableCulling;
-        boundingBox.addBoxCoordinates(params.boundingMax, params.boundingMin);
+
+        if (params.boundingMax != glm::vec3(0.0f) || params.boundingMin != glm::vec3(0.0f)) {
+            boundingBox.addBoxCoordinates(params.boundingMax, params.boundingMin);
+        }
     }
 
     ResRef<MeshVertices> CustomShaderRendererComponent::getMeshVertices() {
@@ -142,8 +145,20 @@ namespace CgEngine {
         return renderPassOptions;
     }
 
-    AABoundingBox& CustomShaderRendererComponent::getBoundingBox() {
+    const AABoundingBox& CustomShaderRendererComponent::getBoundingBox() {
+        if (boundingBox.hasCoords()) {
+            return boundingBox;
+        }
+
+        auto* mesh = getRenderMesh();
+        if (mesh->getMeshNodes().at(0).aaBoundingBox.hasCoords()) {
+            return mesh->getMeshNodes().at(0).aaBoundingBox;
+        }
         return boundingBox;
+    }
+
+    void CustomShaderRendererComponent::addBoundingBoxCoordinates(glm::vec3 max, glm::vec3 min) {
+        boundingBox.addBoxCoordinates(max, min);
     }
 
     void CustomShaderRendererComponent::setInstanceBuffer1(ShaderStorageBuffer* instanceBuffer) {

@@ -24,7 +24,7 @@ namespace RTR {
         uint32_t GRASS_VERTICES_LOW = (GRASS_SEGMENTS_LOW + 1) * 2;
         uint32_t GRASS_VERTICES_HIGH = (GRASS_SEGMENTS_HIGH + 1) * 2;
 
-        uint32_t GRASS_PATCH_SIZE = 10;
+        float GRASS_PATCH_SIZE = 10;
         uint32_t NUM_GRASS = (32 * 32) * 3;
 
         float GRASS_LOD_DIST = 15.0f;

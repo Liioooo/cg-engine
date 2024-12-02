@@ -6,7 +6,7 @@ namespace CgEngine {
         return glm::dot(normal, point) - distance;
     }
 
-    bool CameraFrustum::testAABoundingBoxInFrustum(AABoundingBox& boundingBox, const glm::mat4& boxTransform) const {
+    bool CameraFrustum::testAABoundingBoxInFrustum(const AABoundingBox& boundingBox, const glm::mat4& boxTransform) const {
         auto [boxCenter, boxExtents] = boundingBox.getTransformedAdjustedCenterAndExtents(boxTransform);
 
         for (const auto& plane: frustumPlanes) {

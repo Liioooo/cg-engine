@@ -7,6 +7,9 @@ namespace CgEngine {
         AABoundingBox() = default;
 
         void addBoxCoordinates(glm::vec3 max, glm::vec3 min);
+        void setCenterAndExtents(glm::vec3 center, glm::vec3 extents);
+
+        bool hasCoords() const;
 
         glm::vec3 getCenterPoint() const;
         glm::vec3 getExtents() const;

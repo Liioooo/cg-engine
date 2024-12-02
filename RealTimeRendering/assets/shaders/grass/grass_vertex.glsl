@@ -33,12 +33,13 @@ void main() {
     vec4 hashVal = hash42(vec2(grassBladeWorldPos.x, grassBladeWorldPos.z));
 
     float highLODOut = smoothstep(u_GrassLOD.x * 0.5, u_GrassLOD.x, distance(u_CameraData.position.xyz, grassBladeWorldPos));
+    float lodFadeIn = smoothstep(u_GrassLOD.x, u_GrassLOD.y, distance(u_CameraData.position.xyz, grassBladeWorldPos));
 
     float isGrassAllowed = 1.0f;
 
     float randomAngle = hashVal.x * 2.0f * PI;
     float randomShade = remap(hashVal.y, -1.0f, 1.0f, 0.5f, 1.0f);
-    float randomHeight = remap(hashVal.z, 0.0f, 1.0f, 0.75f, 1.5f) * isGrassAllowed;
+    float randomHeight = remap(hashVal.z, 0.0f, 1.0f, 0.75f, 1.5f) * mix(1.0f, 0.0f, lodFadeIn) * isGrassAllowed;
     float randomLean = remap(hashVal.w, 0.0f, 1.0f, 0.1f, 0.4f);
 
     vec2 hashGrassColour = hash22(vec2(grassBladeWorldPos.x, grassBladeWorldPos.z));

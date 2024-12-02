@@ -12,7 +12,7 @@ namespace CgEngine {
         const uint32_t getMaterialCount() const override;
 
         void setMaterial(Material* material);
-        void setBoundingBox(glm::vec3 max, glm::vec3 min);
+        AABoundingBox& getBoundingBox();
 
         template<typename V>
         void setVertexData(const std::vector<V>& vertices, const std::vector<uint32_t>& indices, const std::vector<VertexBufferElement>& vertexBufferLayout) {

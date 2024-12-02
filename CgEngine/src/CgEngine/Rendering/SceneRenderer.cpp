@@ -777,7 +777,7 @@ namespace CgEngine {
         }
     }
 
-    void SceneRenderer::submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, AABoundingBox& boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions, std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers) {
+    void SceneRenderer::submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, const AABoundingBox& boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions, std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers) {
         if (enableCulling && !cameraFrustum.testAABoundingBoxInFrustum(boundingBox, transform)) {
             return;
         }
@@ -913,7 +913,7 @@ namespace CgEngine {
         }
     }
 
-    void SceneRenderer::submitBoundingBoxMesh(CgEngine::MeshVertices* boundingBoxMesh, CgEngine::AABoundingBox& boundingBox, const glm::mat4& transform) {
+    void SceneRenderer::submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, const AABoundingBox& boundingBox, const glm::mat4& transform) {
         auto [center, extents] = boundingBox.getTransformedAdjustedCenterAndExtents(transform);
 
         const auto& boundingBoxSubmesh = boundingBoxMesh->getSubmeshes().at(0);

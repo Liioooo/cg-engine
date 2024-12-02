@@ -23,6 +23,17 @@ namespace CgEngine {
         }
     }
 
+    void AABoundingBox::setCenterAndExtents(glm::vec3 center, glm::vec3 extents) {
+        addedCoords = true;
+
+        min = center - extents / 2.0f;
+        max = center + extents / 2.0f;
+    }
+
+    bool AABoundingBox::hasCoords() const {
+        return addedCoords;
+    }
+
     glm::vec3 AABoundingBox::getCenterPoint() const {
         return (min + max) / 2.0f;
     }

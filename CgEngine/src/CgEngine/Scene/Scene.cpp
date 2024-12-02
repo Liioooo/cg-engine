@@ -352,7 +352,7 @@ namespace CgEngine {
 
         executeOnRenderFunctions(renderer);
 
-#ifdef CG_ENABLE_DEBUG_FEATURES
+        #ifdef CG_ENABLE_DEBUG_FEATURES
         auto& applicationOptions = Application::get().getApplicationOptions();
         if (applicationOptions.debugShowPhysicsColliders) {
             auto& resourceManager = Application::get().getResourceManager();
@@ -403,7 +403,7 @@ namespace CgEngine {
                 renderer.submitBoundingBoxMesh(cubeMesh, it->getBoundingBox(), transform.getModelMatrix());
             }
         }
-#endif
+        #endif
 
         renderer.endScene();
     }

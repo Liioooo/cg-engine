@@ -20,7 +20,7 @@ namespace CgEngine {
     public:
         CameraFrustum() = default;
 
-        bool testAABoundingBoxInFrustum(AABoundingBox& boundingBox, const glm::mat4& boxTransform) const;
+        bool testAABoundingBoxInFrustum(const AABoundingBox& boundingBox, const glm::mat4& boxTransform) const;
 
     private:
         void updateCameraFrustum(const Camera& camera, const glm::vec3 cameraPos, const glm::vec3& cameraFront);

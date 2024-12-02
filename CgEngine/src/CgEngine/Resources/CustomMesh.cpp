@@ -32,7 +32,7 @@ namespace CgEngine {
         this->material = material;
     }
 
-    void CustomMesh::setBoundingBox(glm::vec3 max, glm::vec3 min) {
-        meshNodes[0].aaBoundingBox.addBoxCoordinates(max, min);
+    AABoundingBox& CustomMesh::getBoundingBox()  {
+        return meshNodes[0].aaBoundingBox;
     }
 }

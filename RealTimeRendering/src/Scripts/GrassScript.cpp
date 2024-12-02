@@ -31,7 +31,7 @@ namespace RTR {
         rendererParams.customMaterial = &grassMaterialHigh;
         rendererParams.instanceCount = NUM_GRASS;
         rendererParams.shader = "grass/render";
-        rendererParams.enableCulling = false;
+        rendererParams.enableCulling = true;
         rendererParams.renderPassOptions.useEnvironmentMappingData = true;
         auto& rendererComp = attachComponent<CgEngine::CustomShaderRendererComponent>(e, rendererParams);
         rendererComp.setInstanceBuffer1(geometryHigh.second);
@@ -94,6 +94,7 @@ namespace RTR {
 
         auto* mesh = new CgEngine::CustomMesh();
         mesh->setVertexData(vertId, indices, {{CgEngine::ShaderDataType::Int, false}});
+        mesh->getBoundingBox().setCenterAndExtents(glm::vec3(0.0f), glm::vec3(GRASS_PATCH_SIZE, 200.0f, GRASS_PATCH_SIZE));
 
         auto* positionsBuffer = new CgEngine::ShaderStorageBuffer();
         positionsBuffer->setData(offsets.data(), offsets.size() * sizeof(glm::vec2));

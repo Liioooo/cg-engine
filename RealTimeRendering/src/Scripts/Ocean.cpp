@@ -36,7 +36,7 @@ namespace RTR {
         }
 
         mesh->setVertexData(vertices, indices, CgEngine::MeshProps::DEFAULT_VERT_BUFF_LAYOUT);
-        mesh->setBoundingBox({-wh, -0.25f, -dh}, {wh, 0.25f, dh});
+        mesh->getBoundingBox().addBoxCoordinates({-wh, -0.25f, -dh}, {wh, 0.25f, dh});
 
         mat = new CgEngine::CustomValMaterial();
         mat->setTexture2D("u_displacementC0", *oceanCascade0->displacement, 10);
