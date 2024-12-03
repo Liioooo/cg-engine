@@ -51,6 +51,7 @@ namespace CgEngine {
         Entity instantiatePrefab(const std::string& prefabName, Entity parent, glm::vec3 position = {0.0f, 0.0f, 0.0f}, glm::vec3 rotation = {0.0f, 0.0f, 0.0f}, glm::vec3 scale = {1.0f, 1.0f, 1.0f}, const std::string& tag = "", const std::string& id = "");
         void setEntityTag(Entity entity, const std::string& tag);
         std::string getEntityTag(Entity entity);
+        CameraComponent& getPrimaryCamaraComponent();
 
         /*
          * Called just before Meshes are submitted for rendering
@@ -104,13 +105,13 @@ namespace CgEngine {
             return owningScene->hasComponent<C>(entity);
         }
 
-        template<typename C, typename P>
-        C& attachComponent(P componentPrams) {
+        template<typename C>
+        C& attachComponent(typename C::Params componentPrams = typename C::Params{}) {
             return owningScene->attachComponent<C>(owningEntity, componentPrams);
         }
 
-        template<typename C, typename P>
-        C& attachComponent(Entity entity, P componentPrams) {
+        template<typename C>
+        C& attachComponent(Entity entity, typename C::Params componentPrams = typename C::Params{}) {
             return owningScene->attachComponent<C>(entity, componentPrams);
         }
 

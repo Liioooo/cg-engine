@@ -79,8 +79,8 @@ namespace CgEngine {
 
         void executeFixedUpdate(TimeStep ts);
 
-        template<typename C, typename P>
-        C& attachComponent(Entity entity, P componentParams) {
+        template<typename C>
+        C& attachComponent(Entity entity, typename C::Params componentParams) {
             return componentManager->attachComponent<C>(entity, *this, componentParams);
         }
 
@@ -140,6 +140,8 @@ namespace CgEngine {
             return *physicsScene;
         }
 
+        CameraComponent& getPrimaryCamaraComponent();
+
     private:
         Entity nextEntityId = 1;
         uint32_t entityCount = 0;
@@ -165,8 +167,6 @@ namespace CgEngine {
         int viewportWidth;
         int viewportHeight;
         PhysicsScene* physicsScene;
-
-        CameraComponent& getPrimaryCamaraComponent();
 
         void recursiveDestroyEntity(Entity entity);
         void recursiveUpdateChildTransforms(Entity entity, const glm::mat4& parentModelMatrix, bool parentDirty);

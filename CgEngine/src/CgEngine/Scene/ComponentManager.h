@@ -53,8 +53,8 @@ namespace CgEngine {
             registerComponentType<AudioComponent>();
         }
 
-        template<typename C, typename P>
-        C& attachComponent(Entity entity, Scene& scene, P componentParams) {
+        template<typename C>
+        C& attachComponent(Entity entity, Scene& scene, typename C::Params componentParams) {
             componentParams.verifyParams();
             C& comp =  getComponentArray<C>()->attachComponent(entity);
             comp.onAttach(scene, componentParams);

@@ -63,7 +63,7 @@ namespace CgEngine {
         }
 
         C& getComponent(Entity entity) {
-            CG_ASSERT(entityToComponentsIndex.find(entity) != entityToComponentsIndex.end(), "Getting non-existent component.")
+            CG_ASSERT(entityToComponentsIndex.find(entity) != entityToComponentsIndex.end(), "Getting non-existent component. Entity: " + std::to_string(entity) + ", Component: " + typeid(C).name())
 
             return components[entityToComponentsIndex[entity]];
         }

@@ -70,6 +70,10 @@ namespace CgEngine {
         return owningScene->getEntityTag(entity);
     }
 
+    CameraComponent& NativeScript::getPrimaryCamaraComponent() {
+        return owningScene->getPrimaryCamaraComponent();
+    }
+
     Uuid NativeScript::addOnPreRenderCallback(const std::function<void(const CameraFrustum& camaraFrustum)>& cb, bool once) {
         return owningScene->submitOnPreRenderFunction(cb, once);
     }

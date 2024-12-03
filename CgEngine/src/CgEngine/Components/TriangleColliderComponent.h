@@ -20,6 +20,7 @@ namespace CgEngine {
         friend class RigidBodyComponent;
     public:
         using Component::Component;
+        using Params = TriangleColliderComponentParams;
 
         void onAttach(Scene& scene, TriangleColliderComponentParams& params);
         void onDetach(Scene& scene) override;

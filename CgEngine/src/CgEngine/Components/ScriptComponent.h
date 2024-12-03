@@ -19,6 +19,7 @@ namespace CgEngine {
     class ScriptComponent : public Component {
     public:
         using Component::Component;
+        using Params = ScriptComponentParams;
 
         void onAttach(Scene& scene, ScriptComponentParams& params);
         void onDetach(Scene& scene) override;

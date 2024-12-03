@@ -23,6 +23,7 @@ namespace CgEngine {
     class AnimationComponent : public Component {
     public:
         using Component::Component;
+        using Params = AnimationComponentParams;
 
         void onAttach(Scene& scene, AnimationComponentParams& params);
         void onRenderImGui() override;

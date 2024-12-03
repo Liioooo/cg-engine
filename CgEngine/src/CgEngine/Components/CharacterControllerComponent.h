@@ -17,6 +17,7 @@ namespace CgEngine {
     class CharacterControllerComponent : public Component {
     public:
         using Component::Component;
+        using Params = CharacterControllerComponentParams;
 
         void onAttach(Scene& scene, CharacterControllerComponentParams& params);
         void onDetach(Scene& scene) override;

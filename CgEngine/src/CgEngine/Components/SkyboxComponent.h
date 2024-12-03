@@ -17,6 +17,7 @@ namespace CgEngine {
     class SkyboxComponent : public Component{
     public:
         using Component::Component;
+        using Params = SkyboxComponentParams;
 
         void onAttach(Scene& scene, SkyboxComponentParams& params);
         void onRenderImGui() override;

@@ -18,6 +18,7 @@ namespace CgEngine {
     class SpotLightComponent : public Component {
     public:
         using Component::Component;
+        using Params = SpotLightComponentParams;
 
         void onAttach(Scene& scene, SpotLightComponentParams& params);
         void onRenderImGui() override;

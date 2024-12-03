@@ -45,6 +45,7 @@ namespace CgEngine {
     class CustomShaderRendererComponent : public Component {
     public:
         using Component::Component;
+        using Params = CustomShaderRendererComponentParams;
 
         void onAttach(Scene& scene, CustomShaderRendererComponentParams& params);
         void onRenderImGui() override;

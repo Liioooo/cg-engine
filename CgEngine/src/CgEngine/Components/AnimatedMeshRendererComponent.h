@@ -24,6 +24,7 @@ namespace CgEngine {
     class AnimatedMeshRendererComponent : public Component {
     public:
         using Component::Component;
+        using Params = AnimatedMeshRendererComponentParams;
 
         void onAttach(Scene& scene, AnimatedMeshRendererComponentParams& params);
         void onRenderImGui() override;

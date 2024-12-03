@@ -27,6 +27,7 @@ namespace CgEngine {
     class CameraComponent : public Component {
     public:
         using Component::Component;
+        using Params = CameraComponentParams;
 
         void onAttach(Scene& scene, CameraComponentParams& params);
         void onRenderImGui() override;

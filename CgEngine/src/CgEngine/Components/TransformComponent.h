@@ -15,6 +15,7 @@ namespace CgEngine {
     class TransformComponent : public Component {
     public:
         using Component::Component;
+        using Params = TransformComponentParams;
 
         void onAttach(Scene& scene, TransformComponentParams& params);
         void onRenderImGui() override;

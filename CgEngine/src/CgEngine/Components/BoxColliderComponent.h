@@ -19,6 +19,7 @@ namespace CgEngine {
         friend class RigidBodyComponent;
     public:
         using Component::Component;
+        using Params = BoxColliderComponentParams;
 
         void onAttach(Scene& scene, BoxColliderComponentParams& params);
         void onDetach(Scene& scene) override;

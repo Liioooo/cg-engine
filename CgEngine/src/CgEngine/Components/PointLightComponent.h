@@ -16,6 +16,7 @@ namespace CgEngine {
     class PointLightComponent : public Component {
     public:
         using Component::Component;
+        using Params = PointLightComponentParams;
 
         void onAttach(Scene& scene, PointLightComponentParams& params);
         void onRenderImGui() override;

@@ -3,8 +3,10 @@
 namespace RTR {
 
     void GrassScript::onAttach() {
-        geometryLow = createGeometry(GRASS_SEGMENTS_LOW);
+        createOffsetsBuffer();
+
         geometryHigh = createGeometry(GRASS_SEGMENTS_HIGH);
+        geometryLow = createGeometry(GRASS_SEGMENTS_LOW);
 
         grassMaterialHigh.set("u_GrassParams", glm::vec2{GRASS_SEGMENTS_HIGH, GRASS_VERTICES_HIGH});
         grassMaterialHigh.set("u_GrassSize", glm::vec2{GRASS_WIDTH, GRASS_HEIGHT});
@@ -19,43 +21,93 @@ namespace RTR {
         CgEngine::TransformComponentParams p;
         attachComponent<CgEngine::TransformComponent>(grassContainer, p);
 
+        for (const auto& pos: GRASS_POSITIONS) {
+            CgEngine::Entity grassTileEntity = createEntity(grassContainer);
 
-        auto e = createEntity(grassContainer);
+            CgEngine::TransformComponentParams transformParams;
+            transformParams.position = {pos.x, 0.0f, pos.y};
+            attachComponent<CgEngine::TransformComponent>(grassTileEntity, transformParams);
 
-        CgEngine::TransformComponentParams transformParams;
-        transformParams.position = {0.0f, 0.0, 0.0f};
-        attachComponent<CgEngine::TransformComponent>(e, transformParams);
+            CgEngine::Entity grassLowEntity = createEntity(grassTileEntity);
+            attachComponent<CgEngine::TransformComponent>(grassLowEntity);
 
-        CgEngine::CustomShaderRendererComponentParams rendererParams;
-        rendererParams.customMesh = geometryHigh.first;
-        rendererParams.customMaterial = &grassMaterialHigh;
-        rendererParams.instanceCount = NUM_GRASS;
-        rendererParams.shader = "grass/render";
-        rendererParams.enableCulling = true;
-        rendererParams.renderPassOptions.useEnvironmentMappingData = true;
-        auto& rendererComp = attachComponent<CgEngine::CustomShaderRendererComponent>(e, rendererParams);
-        rendererComp.setInstanceBuffer1(geometryHigh.second);
+            CgEngine::CustomShaderRendererComponentParams rendererLowParams;
+            rendererLowParams.customMesh = geometryLow;
+            rendererLowParams.customMaterial = &grassMaterialLow;
+            rendererLowParams.instanceCount = NUM_GRASS;
+            rendererLowParams.shader = "grass/render";
+            rendererLowParams.enableCulling = true;
+            rendererLowParams.renderPassOptions.useEnvironmentMappingData = true;
+            auto& rendererLowComp = attachComponent<CgEngine::CustomShaderRendererComponent>(grassLowEntity, rendererLowParams);
+            rendererLowComp.setInstanceBuffer1(offsetsBuffer);
+
+            CgEngine::Entity grassHighEntity = createEntity(grassTileEntity);
+            attachComponent<CgEngine::TransformComponent>(grassHighEntity);
+
+            CgEngine::CustomShaderRendererComponentParams rendererHighParams;
+            rendererHighParams.customMesh = geometryHigh;
+            rendererHighParams.customMaterial = &grassMaterialHigh;
+            rendererHighParams.instanceCount = NUM_GRASS;
+            rendererHighParams.shader = "grass/render";
+            rendererHighParams.enableCulling = true;
+            rendererHighParams.renderPassOptions.useEnvironmentMappingData = true;
+            auto& rendererHighComp = attachComponent<CgEngine::CustomShaderRendererComponent>(grassHighEntity, rendererHighParams);
+            rendererHighComp.setInstanceBuffer1(offsetsBuffer);
+
+            grassEntities.emplace_back(grassLowEntity, grassHighEntity);
+
+        }
     }
 
     void GrassScript::onDetach() {
-        delete geometryLow.first;
-        delete geometryLow.second;
-        delete geometryHigh.first;
-        delete geometryHigh.second;
+        delete offsetsBuffer;
+        delete geometryLow;
+        delete geometryHigh;
     }
 
     void GrassScript::update(CgEngine::TimeStep ts) {
+        auto& primaryCamPos = getComponent<CgEngine::TransformComponent>(getPrimaryCamaraComponent().getEntity()).getGlobalPosition();
+
+        for (const auto& [lowEntity, highEntity]: grassEntities) {
+            auto distance = glm::distance(primaryCamPos, getComponent<CgEngine::TransformComponent>(lowEntity).getGlobalPosition());
+
+            auto& lowRenderer = getComponent<CgEngine::CustomShaderRendererComponent>(lowEntity);
+            auto& highRenderer = getComponent<CgEngine::CustomShaderRendererComponent>(highEntity);
+
+            if (distance >= GRASS_MAX_DIST) {
+                lowRenderer.setActive(false);
+                highRenderer.setActive(false);
+            } else if (distance >= GRASS_LOD_DIST) {
+                lowRenderer.setActive(true);
+                highRenderer.setActive(false);
+            } else {
+                lowRenderer.setActive(false);
+                highRenderer.setActive(true);
+            }
+        }
+
         currentTime += ts.getSeconds();
 
         grassMaterialHigh.set("u_Time", currentTime);
         grassMaterialLow.set("u_Time", currentTime);
     }
 
-    std::pair<CgEngine::CustomMesh*, CgEngine::ShaderStorageBuffer*> GrassScript::createGeometry(uint8_t segments) {
+    void GrassScript::createOffsetsBuffer() {
         std::random_device rd;
         std::mt19937 mt(rd());
         std::uniform_real_distribution<float> dist(-static_cast<float>(GRASS_PATCH_SIZE) * 0.5f, static_cast<float>(GRASS_PATCH_SIZE) * 0.5f);
 
+        std::vector<glm::vec2> offsets;
+        offsets.reserve(NUM_GRASS);
+        for (uint32_t i = 0; i < NUM_GRASS; ++i) {
+            offsets.emplace_back(dist(mt), dist(mt));
+        }
+
+        offsetsBuffer = new CgEngine::ShaderStorageBuffer();
+        offsetsBuffer->setData(offsets.data(), offsets.size() * sizeof(glm::vec2));
+    }
+
+    CgEngine::CustomMesh* GrassScript::createGeometry(uint8_t segments) {
         const uint32_t vertices = (segments + 1) * 2;
 
         std::vector<uint32_t> indices;
@@ -80,12 +132,6 @@ namespace RTR {
             indices[i*12+11] = fi + 2;
         }
 
-        std::vector<glm::vec2> offsets;
-        offsets.reserve(NUM_GRASS);
-        for (uint32_t i = 0; i < NUM_GRASS; ++i) {
-            offsets.emplace_back(dist(mt), dist(mt));
-        }
-
         std::vector<int> vertId;
         vertId.resize(vertices * 2);
         for (int i = 0; i < vertices * 2; i++) {
@@ -96,9 +142,6 @@ namespace RTR {
         mesh->setVertexData(vertId, indices, {{CgEngine::ShaderDataType::Int, false}});
         mesh->getBoundingBox().setCenterAndExtents(glm::vec3(0.0f), glm::vec3(GRASS_PATCH_SIZE, 200.0f, GRASS_PATCH_SIZE));
 
-        auto* positionsBuffer = new CgEngine::ShaderStorageBuffer();
-        positionsBuffer->setData(offsets.data(), offsets.size() * sizeof(glm::vec2));
-
-        return {mesh, positionsBuffer};
+        return mesh;
     }
 }

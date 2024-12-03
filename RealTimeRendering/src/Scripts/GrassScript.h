@@ -25,13 +25,31 @@ namespace RTR {
         uint32_t GRASS_VERTICES_HIGH = (GRASS_SEGMENTS_HIGH + 1) * 2;
 
         float GRASS_PATCH_SIZE = 10;
-        uint32_t NUM_GRASS = (32 * 32) * 3;
+        uint32_t NUM_GRASS = (32 * 32) * 6;
 
-        float GRASS_LOD_DIST = 15.0f;
+        float GRASS_LOD_DIST = 25.0f;
         float GRASS_MAX_DIST = 100.0f;
 
         float GRASS_WIDTH = 0.1f;
         float GRASS_HEIGHT = 1.5f;
+
+        const std::array<glm::vec2, 12> GRASS_POSITIONS = {
+                glm::vec2(0.0f, 0.0f),
+                glm::vec2(0.0f, 10.0f),
+                glm::vec2(0.0f, 20.0f),
+                glm::vec2(0.0f, 30.0f),
+                glm::vec2(10.0f, 0.0f),
+                glm::vec2(10.0f, 10.0f),
+                glm::vec2(10.0f, 20.0f),
+                glm::vec2(10.0f, 30.0f),
+                glm::vec2(20.0f, 0.0f),
+                glm::vec2(20.0f, 10.0f),
+                glm::vec2(20.0f, 20.0f),
+                glm::vec2(20.0f, 30.0f),
+        };
+
+        // <low, high>
+        std::vector<std::pair<CgEngine::Entity, CgEngine::Entity>> grassEntities;
 
         float currentTime = 0.0f;
         CgEngine::Entity grassContainer;
@@ -39,10 +57,12 @@ namespace RTR {
         CgEngine::CustomValMaterial grassMaterialHigh;
         CgEngine::CustomValMaterial grassMaterialLow;
 
-        std::pair<CgEngine::CustomMesh*, CgEngine::ShaderStorageBuffer*> geometryHigh;
-        std::pair<CgEngine::CustomMesh*, CgEngine::ShaderStorageBuffer*> geometryLow;
+        CgEngine::ShaderStorageBuffer* offsetsBuffer;
+        CgEngine::CustomMesh* geometryHigh;
+        CgEngine::CustomMesh* geometryLow;
 
-        std::pair<CgEngine::CustomMesh*, CgEngine::ShaderStorageBuffer*> createGeometry(uint8_t segments);
+        void createOffsetsBuffer();
+        CgEngine::CustomMesh* createGeometry(uint8_t segments);
 
     };
 

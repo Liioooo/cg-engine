@@ -54,7 +54,7 @@ namespace RTR {
         params.customMesh = mesh;
         params.instanceCount = 1;
         params.customMaterial = mat;
-        params.enableCulling = false;
+        params.enableCulling = true;
         params.renderPassOptions.useDirShadowMappingData = true;
 
         auto& c = attachComponent<CgEngine::CustomShaderRendererComponent>(params);

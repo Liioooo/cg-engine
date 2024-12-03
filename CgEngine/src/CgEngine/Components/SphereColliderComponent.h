@@ -19,6 +19,7 @@ namespace CgEngine {
         friend class RigidBodyComponent;
     public:
         using Component::Component;
+        using Params = SphereColliderComponentParams;
 
         void onAttach(Scene& scene, SphereColliderComponentParams& params);
         void onDetach(Scene& scene) override;

@@ -17,6 +17,7 @@ namespace CgEngine {
     class UiCanvasComponent : public Component {
     public:
         using Component::Component;
+        using Params = UiCanvasComponentParams;
 
         void onAttach(Scene& scene, UiCanvasComponentParams& params);
         void onDetach(Scene& scene) override;

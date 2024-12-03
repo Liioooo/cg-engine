@@ -15,6 +15,7 @@ namespace CgEngine {
     class DirectionalLightComponent : public Component {
     public:
         using Component::Component;
+        using Params = DirectionalLightComponentParams;
 
         void onAttach(Scene& scene, DirectionalLightComponentParams& params);
         void onRenderImGui() override;

@@ -23,6 +23,7 @@ namespace CgEngine {
     class MeshRendererComponent : public Component {
     public:
         using Component::Component;
+        using Params = MeshRendererComponentParams;
 
         void onAttach(Scene& scene, MeshRendererComponentParams& params);
         void onRenderImGui() override;

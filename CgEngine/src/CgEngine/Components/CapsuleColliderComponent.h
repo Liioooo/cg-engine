@@ -20,6 +20,7 @@ namespace CgEngine {
         friend class RigidBodyComponent;
     public:
         using Component::Component;
+        using Params = CapsuleColliderComponentParams;
 
         void onAttach(Scene& scene, CapsuleColliderComponentParams& params);
         void onDetach(Scene& scene) override;

@@ -16,6 +16,7 @@ namespace CgEngine {
     class AudioListenerComponent : public Component {
     public:
         using Component::Component;
+        using Params = AudioListenerComponentParams;
 
         void onAttach(Scene& scene, AudioListenerComponentParams& params);
         void onDetach(Scene& scene) override;

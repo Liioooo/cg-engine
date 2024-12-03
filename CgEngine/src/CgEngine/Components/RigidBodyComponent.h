@@ -26,6 +26,7 @@ namespace CgEngine {
         friend class ConvexColliderComponent;
     public:
         using Component::Component;
+        using Params = RigidBodyComponentParams;
 
         void onAttach(Scene& scene, RigidBodyComponentParams& params);
         void onDetach(Scene& scene) override;
