@@ -32,7 +32,8 @@ void main() {
 
     vec4 hashVal = hash42(vec2(grassBladeWorldPos.x, grassBladeWorldPos.z));
 
-    float highLODOut = smoothstep(u_GrassLOD.x * 0.5, u_GrassLOD.x, distance(u_CameraData.position.xyz, grassBladeWorldPos));
+    float highLODOut = smoothstep(u_GrassLOD.x * 0.5f, u_GrassLOD.x, distance(u_CameraData.position.xyz, grassBladeWorldPos));
+    float highLODOutForTile = smoothstep(u_GrassLOD.x * 0.6f, u_GrassLOD.x, distance(u_CameraData.position.xyz, u_Transform[3].xyz));
     float lodFadeIn = smoothstep(u_GrassLOD.x, u_GrassLOD.y, distance(u_CameraData.position.xyz, grassBladeWorldPos));
 
     float isGrassAllowed = 1.0f;
@@ -60,6 +61,9 @@ void main() {
     float xSide = mod(vertID, 2.0f);
 
     float heightPercent = (vertID - xSide) / (GRASS_SEGMENTS * 2.0f);
+
+    float heightLODFadeAdjust = mix(-heightPercent, 1.0f - heightPercent, step(0.5f, heightPercent));
+    heightPercent += (heightLODFadeAdjust * highLODOutForTile);
 
     float grassTotalHeight = u_GrassSize.y * randomHeight;
 

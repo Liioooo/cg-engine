@@ -60,6 +60,7 @@ namespace CgEngine {
 
     void ScriptComponent::onRenderImGui() {
         if (ImGui::CollapsingHeader("ScriptComponent")) {
+            script->onRenderImGui();
         }
     }
 }

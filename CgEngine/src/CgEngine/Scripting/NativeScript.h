@@ -37,6 +37,8 @@ namespace CgEngine {
         virtual void onMouseMoved(MouseMovedEvent& event) {}
         virtual void onKeyPressed(KeyPressedEvent& event) {}
 
+        virtual void onRenderImGui() {};
+
         Entity getOwingEntity();
         void destroyEntity();
         void destroyEntity(Entity entity);
