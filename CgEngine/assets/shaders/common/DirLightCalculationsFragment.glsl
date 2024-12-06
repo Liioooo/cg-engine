@@ -18,7 +18,7 @@ vec3 calcDirLight(vec3 F0, vec3 matAlbedo, float matMetalness, float matRoughnes
 
     vec3 kd = (1.0f - F) * (1.0f - matMetalness);
     vec3 diffuseBRDF = kd * matAlbedo;
-    vec3 specularBRDF = (F * D * G) / max(0.0001, 4.0 * NdotL * NdotV);
+    vec3 specularBRDF = (F * D * G) / max(0.0001f, 4.0f * NdotL * NdotV);
     specularBRDF = clamp(specularBRDF, vec3(0.0f), vec3(10.0f));
     return (diffuseBRDF + specularBRDF) * Lradiance * NdotL;
 }

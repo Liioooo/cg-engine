@@ -10,11 +10,16 @@ layout(binding = 5, std430) buffer Positions {
     vec2 positions[];
 } b_Positions;
 
+uniform layout(binding=10) sampler2D u_HeightGrassMap;
+
 uniform mat4 u_Transform;
 uniform vec2 u_GrassParams; // x: GRASS_SEGMENTS, y: GRASS_VERTICES
 uniform vec2 u_GrassSize; // x: GRASS_WIDTH, y: GRASS_HEIGHT
-uniform vec2 u_GrassLOD; // x: GRASS_LOD_DIST, y: GRASS_MAX_DIST
+uniform vec3 u_GrassLOD; // x: GRASS_LOD_DIST, y: GRASS_MAX_DIST, z: terrainNormalRatio
 uniform float u_Time;
+uniform vec3 u_IslandCenter;
+uniform vec2 u_IslandSize;
+uniform mat4 u_GrassColor;
 
 layout (location = 0) in int vertId;
 
@@ -30,17 +35,21 @@ void main() {
     vec3 grassOffset = vec3(b_Positions.positions[gl_InstanceID].x, 0.0, b_Positions.positions[gl_InstanceID].y);
     vec3 grassBladeWorldPos = (u_Transform * vec4(grassOffset, 1.0)).xyz;
 
+    vec2 islandCenterToGrassWorldPos = grassBladeWorldPos.xz - u_IslandCenter.xz;
+
+    vec2 islandUV = vec2(0.5f, 0.5f) + vec2(islandCenterToGrassWorldPos.x * (1.0f / u_IslandSize.x), islandCenterToGrassWorldPos.y * (1.0f / u_IslandSize.y));
+
+    vec2 heightGrassMapSample = textureLod(u_HeightGrassMap, islandUV, 0.0f).xy;
+
     vec4 hashVal = hash42(vec2(grassBladeWorldPos.x, grassBladeWorldPos.z));
 
     float highLODOut = smoothstep(u_GrassLOD.x * 0.5f, u_GrassLOD.x, distance(u_CameraData.position.xyz, grassBladeWorldPos));
     float highLODOutForTile = smoothstep(u_GrassLOD.x * 0.6f, u_GrassLOD.x, distance(u_CameraData.position.xyz, u_Transform[3].xyz));
     float lodFadeIn = smoothstep(u_GrassLOD.x, u_GrassLOD.y, distance(u_CameraData.position.xyz, grassBladeWorldPos));
 
-    float isGrassAllowed = 1.0f;
-
     float randomAngle = hashVal.x * 2.0f * PI;
     float randomShade = remap(hashVal.y, -1.0f, 1.0f, 0.5f, 1.0f);
-    float randomHeight = remap(hashVal.z, 0.0f, 1.0f, 0.75f, 1.5f) * mix(1.0f, 0.0f, lodFadeIn) * isGrassAllowed;
+    float randomHeight = remap(hashVal.z, 0.0f, 1.0f, 0.75f, 1.5f) * mix(1.0f, 0.0f, lodFadeIn) * easeIn(heightGrassMapSample.y, 2.0f) * step(0.2f, heightGrassMapSample.y);
     float randomLean = remap(hashVal.w, 0.0f, 1.0f, 0.1f, 0.4f);
 
     vec2 hashGrassColour = hash22(vec2(grassBladeWorldPos.x, grassBladeWorldPos.z));
@@ -69,7 +78,7 @@ void main() {
 
     float grassTotalWidthHigh = easeOut(1.0f - heightPercent, 2.0f);
     float grassTotalWidthLow = 1.0f - heightPercent;
-    float grassTotalWidth = u_GrassSize.x * mix(grassTotalWidthHigh, grassTotalWidthLow, highLODOut);
+    float grassTotalWidth = u_GrassSize.x * mix(grassTotalWidthHigh, grassTotalWidthLow, highLODOut) * easeIn(heightGrassMapSample.y, 1.5f) * step(0.2f, heightGrassMapSample.y);
 
     float x = (xSide - 0.5) * grassTotalWidth;
     float y = heightPercent * grassTotalHeight;
@@ -96,14 +105,32 @@ void main() {
     grassVertexNormal1 = grassMat * grassVertexNormal1;
     grassVertexNormal1 *= zSide;
 
+    vec2 texelSizeHeightMap = 1.0f / textureSize(u_HeightGrassMap, 0);
+
+    float heightL = texture(u_HeightGrassMap, islandUV - vec2(texelSizeHeightMap.x, 0.0f)).r;
+    float heightR = texture(u_HeightGrassMap, islandUV + vec2(texelSizeHeightMap.x, 0.0f)).r;
+    float heightD = texture(u_HeightGrassMap, islandUV - vec2(0.0f, texelSizeHeightMap.y)).r;
+    float heightU = texture(u_HeightGrassMap, islandUV + vec2(0.0f, texelSizeHeightMap.y)).r;
+
+    // Compute gradients
+    float dX = heightR - heightL; // Gradient in X
+    float dZ = heightU - heightD; // Gradient in Z
+
+    vec3 terrainNormal = normalize(vec3(-dX, 1.0f, -dZ));
+
+    float skyFadeIn = (1.0f - highLODOut) * u_GrassLOD.z;
+    grassVertexNormal0 = normalize(mix(terrainNormal, normalize(grassVertexNormal0), skyFadeIn));
+    grassVertexNormal1 = normalize(mix(terrainNormal, normalize(grassVertexNormal1), skyFadeIn));
+
     vec3 grassVertexPosition = vec3(x, y, 0.0f);
     grassVertexPosition = grassMat * grassVertexPosition;
     grassVertexPosition += grassBladeWorldPos;
+    grassVertexPosition.y += heightGrassMapSample.x * 50.0f;
 
-    vec3 b1 = vec3(0.02, 0.075, 0.01);
-    vec3 b2 = vec3(0.025, 0.1, 0.01);
-    vec3 t1 = vec3(0.65, 0.8, 0.25);
-    vec3 t2 = vec3(0.8, 0.9, 0.4);
+    vec3 b1 = u_GrassColor[0].rgb;
+    vec3 b2 = u_GrassColor[1].rgb;
+    vec3 t1 = u_GrassColor[2].rgb;
+    vec3 t2 = u_GrassColor[3].rgb;
 
     vec3 baseColour = mix(b1, b2, hashGrassColour.x);
     vec3 tipColour = mix(t1, t2, hashGrassColour.y);
@@ -111,11 +138,9 @@ void main() {
     vec3 lowLODColour = mix(b1, t1, heightPercent);
     vs_out.GrassColor = mix(highLODColour, lowLODColour, highLODOut);
 
-    mat3 normalMat = mat3(transpose(inverse(u_Transform)));
-
     vs_out.WorldPosition = grassVertexPosition;
-    vs_out.Normal0 = normalMat * grassVertexNormal0;
-    vs_out.Normal1 = normalMat * grassVertexNormal1;
+    vs_out.Normal0 = grassVertexNormal0;
+    vs_out.Normal1 = grassVertexNormal1;
     vs_out.GrassParams = vec3(heightPercent, xSide, highLODOut);
 
     gl_Position = u_CameraData.viewProjection * vec4(grassVertexPosition, 1.0f);

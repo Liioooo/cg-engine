@@ -23,23 +23,17 @@
             <ScriptComponent script-name="ocean" />
         </Components>
     </Entity>
-    <Entity>
+    <Entity id="island">
         <Components>
             <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
             <MeshRendererComponent asset-file="rtr_island.fbx" />
         </Components>
-    </Entity>
-    <Entity id="grass-plane">
-        <Components>
-            <TransformComponent position="219.8 4.9 13.4" rotation="0 0 0" scale="37.8 0.1 46.05" />
-            <MeshRendererComponent mesh="CG_CubeMesh" />
-        </Components>
-    </Entity>
-    <Entity id="grass">
-        <Components>
-            <TransformComponent position="208.6 5 0" rotation="0 0 0" scale="1 1 1" />
-            <ScriptComponent script-name="grass" />
-        </Components>
+        <Entity id="grass">
+            <Components>
+                <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
+                <ScriptComponent script-name="grass" />
+            </Components>
+        </Entity>
     </Entity>
     <Entity id="canvas">
         <Components>

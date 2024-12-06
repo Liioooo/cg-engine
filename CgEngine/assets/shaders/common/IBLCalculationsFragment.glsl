@@ -13,8 +13,8 @@ vec3 calcIBL(vec3 F0, vec3 matAlbedo, float matMetalness, float matRoughness, ve
 
     vec3 R = reflect(-V, N);
     int envPrefilterTexLevels = textureQueryLevels(u_PrefilterMap);
-    vec3 prefilteredColor = textureLod(u_PrefilterMap, R,  matRoughness * envPrefilterTexLevels).rgb;
-    vec2 specularBRDF = texture(u_BrdfLUT, vec2(NdotV, matRoughness)).rg;
+    vec3 prefilteredColor = textureLod(u_PrefilterMap, R, matRoughness * envPrefilterTexLevels).rgb;
+    vec2 specularBRDF = texture(u_BrdfLUT, vec2(NdotV, 1.0f - matRoughness)).rg;
     vec3 specularIBL = prefilteredColor * (F0 * specularBRDF.x + specularBRDF.y);
 
     return kd * diffuseIBL + specularIBL;

@@ -1,4 +1,6 @@
 #include "GrassScript.h"
+#include "CgEngine/FileSystem.h"
+#include "imgui.h"
 
 namespace RTR {
 
@@ -8,14 +10,38 @@ namespace RTR {
         geometryHigh = createGeometry(GRASS_SEGMENTS_HIGH);
         geometryLow = createGeometry(GRASS_SEGMENTS_LOW);
 
+        CgEngine::ResRef<CgEngine::Texture2D> heightGrassMap = getResource<CgEngine::Texture2D>(CgEngine::FileSystem::getAsGamePath("./textures/island_height_grass_map.png").string());
+
+        CgEngine::Entity islandEntity = getParentEntity();
+        glm::vec3 islandCenter = getComponent<CgEngine::TransformComponent>(islandEntity).getGlobalPosition();
+
+        auto& islandRenderer = getComponent<CgEngine::MeshRendererComponent>(islandEntity);
+        uint32_t islandMeshNodeIndex = islandRenderer.getRenderMesh()->getMeshNodeIndex("Plane");
+
+        auto& islandMeshNode = islandRenderer.getRenderMesh()->getMeshNodes().at(islandMeshNodeIndex);
+
+        auto [_, islandExtents] = islandMeshNode.aaBoundingBox.getTransformedAdjustedCenterAndExtents(islandMeshNode.transform);
+        glm::vec2 islandSize = glm::vec2(islandExtents.x, islandExtents.z) * 2.0f;
+
+        glm::mat4 grassColorsUniform = glm::mat4(glm::vec4(baseColor1, 0.0f), glm::vec4(baseColor2, 0.0f), glm::vec4(tipColor1, 0.0f), glm::vec4(tipColor2, 0.0f));
+
         grassMaterialHigh.set("u_GrassParams", glm::vec2{GRASS_SEGMENTS_HIGH, GRASS_VERTICES_HIGH});
         grassMaterialHigh.set("u_GrassSize", glm::vec2{GRASS_WIDTH, GRASS_HEIGHT});
-        grassMaterialHigh.set("u_GrassLOD", glm::vec2{GRASS_LOD_DIST, GRASS_MAX_DIST});
-
+        grassMaterialHigh.set("u_GrassLOD", glm::vec3{GRASS_LOD_DIST, GRASS_MAX_DIST, GRASS_TERRAIN_NORMAL_RATIO});
+        grassMaterialHigh.setTexture2D("u_HeightGrassMap", *heightGrassMap, 10);
+        grassMaterialHigh.set("u_IslandSize", islandSize);
+        grassMaterialHigh.set("u_IslandCenter", islandCenter);
+        grassMaterialHigh.set("u_GrassColor", grassColorsUniform);
 
         grassMaterialLow.set("u_GrassParams", glm::vec2{GRASS_SEGMENTS_LOW, GRASS_VERTICES_LOW});
         grassMaterialLow.set("u_GrassSize", glm::vec2{GRASS_WIDTH, GRASS_HEIGHT});
-        grassMaterialLow.set("u_GrassLOD", glm::vec2{GRASS_LOD_DIST, GRASS_MAX_DIST});
+        grassMaterialLow.set("u_GrassLOD", glm::vec3{GRASS_LOD_DIST, GRASS_MAX_DIST, GRASS_TERRAIN_NORMAL_RATIO});
+        grassMaterialLow.setTexture2D("u_HeightGrassMap", *heightGrassMap, 10);
+        grassMaterialLow.set("u_IslandSize", islandSize);
+        grassMaterialLow.set("u_IslandCenter", islandCenter);
+        grassMaterialLow.set("u_GrassColor", grassColorsUniform);
+
+
 
         grassContainer = createEntity();
         CgEngine::TransformComponentParams p;
@@ -140,8 +166,34 @@ namespace RTR {
 
         auto* mesh = new CgEngine::CustomMesh();
         mesh->setVertexData(vertId, indices, {{CgEngine::ShaderDataType::Int, false}});
-        mesh->getBoundingBox().setCenterAndExtents(glm::vec3(0.0f), glm::vec3(GRASS_PATCH_SIZE, 200.0f, GRASS_PATCH_SIZE));
+        mesh->getBoundingBox().setCenterAndExtents(glm::vec3(0.0f), glm::vec3(GRASS_PATCH_SIZE / 2.0f, 200.0f, GRASS_PATCH_SIZE / 2.0f));
 
         return mesh;
+    }
+
+    void GrassScript::onRenderImGui() {
+        bool changed = false;
+
+        changed |= ImGui::ColorEdit3("Tip Color 1", glm::value_ptr(tipColor1), ImGuiColorEditFlags_DisplayRGB);
+        changed |= ImGui::ColorEdit3("Tip Color 2", glm::value_ptr(tipColor2), ImGuiColorEditFlags_DisplayRGB);
+        changed |= ImGui::ColorEdit3("Base Color 1", glm::value_ptr(baseColor1), ImGuiColorEditFlags_DisplayRGB);
+        changed |= ImGui::ColorEdit3("Base Color 2", glm::value_ptr(baseColor2), ImGuiColorEditFlags_DisplayRGB);
+
+        changed |= ImGui::InputFloat("Grass Height", &GRASS_HEIGHT);
+        changed |= ImGui::InputFloat("Grass Width", &GRASS_WIDTH);
+        changed |= ImGui::SliderFloat("Terrain Normal Ratio", &GRASS_TERRAIN_NORMAL_RATIO, 0.0f, 1.0f);
+
+        if (changed) {
+            glm::mat4 grassColorsUniform = glm::mat4(glm::vec4(baseColor1, 0.0f), glm::vec4(baseColor2, 0.0f), glm::vec4(tipColor1, 0.0f), glm::vec4(tipColor2, 0.0f));
+
+            grassMaterialHigh.set("u_GrassColor", grassColorsUniform);
+            grassMaterialLow.set("u_GrassColor", grassColorsUniform);
+
+            grassMaterialHigh.set("u_GrassSize", glm::vec2{GRASS_WIDTH, GRASS_HEIGHT});
+            grassMaterialLow.set("u_GrassSize", glm::vec2{GRASS_WIDTH, GRASS_HEIGHT});
+
+            grassMaterialHigh.set("u_GrassLOD", glm::vec3{GRASS_LOD_DIST, GRASS_MAX_DIST, GRASS_TERRAIN_NORMAL_RATIO});
+            grassMaterialLow.set("u_GrassLOD", glm::vec3{GRASS_LOD_DIST, GRASS_MAX_DIST, GRASS_TERRAIN_NORMAL_RATIO});
+        }
     }
 }
