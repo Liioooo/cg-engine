@@ -23,11 +23,11 @@
     <Shader name="ocean/fft/verticalStepInverseFft" type="compute">
         <Path>shaders/ocean/fft/verticalStepInverseFft_comp.glsl</Path>
     </Shader>
-    <Shader name="ocean/render" type="render">
+    <Shader name="ocean/render" type="render" forward="true">
         <Vertex>shaders/ocean/ocean_vertex.glsl</Vertex>
         <Fragment>shaders/ocean/ocean_fragment.glsl</Fragment>
     </Shader>
-    <Shader name="grass/render" type="render">
+    <Shader name="grass/render" type="render" forward="true">
         <Vertex>shaders/grass/grass_vertex.glsl</Vertex>
         <Fragment>shaders/grass/grass_fragment.glsl</Fragment>
     </Shader>

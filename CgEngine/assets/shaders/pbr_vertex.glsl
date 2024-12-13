@@ -1,36 +1,13 @@
 #version 450 core
 
-#include "common/CameraDataBuffer.glsl"
-#include "common/DirShadowMappingVertex.glsl"
-
-layout(binding = 0, std430) buffer Transforms {
-    mat4 transforms[];
-} b_Transforms;
-
-layout (location = 0) in vec4 a_Pos;
-layout (location = 1) in vec4 a_Normal;
-layout (location = 2) in vec4 a_Tangent;
-layout (location = 3) in vec4 a_Bitangent;
-layout (location = 4) in vec4 a_TexCoord;
+layout (location = 0) in vec3 a_Pos;
+layout (location = 1) in vec2 a_TexCoord;
 
 out VS_OUT {
-    vec3 WorldPosition;
-    vec4 DirShadowMapPosition[4];
-    vec3 Normal;
-    mat3 TBN;
     vec2 TexCoord;
 } vs_out;
 
 void main() {
-    mat4 model = b_Transforms.transforms[gl_InstanceID];
-
-    vec4 worldPosition = model * a_Pos;
-
-    vs_out.TexCoord = a_TexCoord.xy;
-    vs_out.WorldPosition = worldPosition.xyz;
-    vs_out.Normal = mat3(transpose(inverse(model))) * a_Normal.xyz;
-    vs_out.TBN = mat3(model) * mat3(a_Tangent.xyz, a_Bitangent.xzy, a_Normal.xyz);
-    vs_out.DirShadowMapPosition = calcDirShadowMapPostion(worldPosition.xyz);
-
-    gl_Position = u_CameraData.viewProjection * worldPosition;
+    gl_Position = vec4(a_Pos.x, a_Pos.y, a_Pos.z, 1.0);
+    vs_out.TexCoord = a_TexCoord;
 }

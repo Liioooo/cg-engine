@@ -19,13 +19,13 @@ namespace CgEngine::ImGuiWidgets {
         ImGui::SeparatorText("GPU Timers");
         ImGui::Text("Skin Meshes: %.6fms", renderingStats.skinMeshesTimer);
         ImGui::Text("Shadow Maps: %.6fms", renderingStats.shadowMapTimer);
-        ImGui::Text("Pre Depth: %.6fms", renderingStats.preDepthTimer);
+        ImGui::Text("G Buffer: %.6fms", renderingStats.gBufferTimer);
         ImGui::Text("HBAO Deinterleave: %.6fms", renderingStats.hbaoDeinterleavingTimer);
         ImGui::Text("HBAO Compute: %.6fms", renderingStats.hbaoComputeTimer);
         ImGui::Text("HBAO Reinterleave: %.6fms", renderingStats.hbaoReinterleavingTimer);
         ImGui::Text("HBAO Blur: %.6fms", renderingStats.hbaoBlurTimer);
-        ImGui::Text("Geometry: %.6fms", renderingStats.geometryTimer);
-        ImGui::Text("Custom Shader: %.6fms", renderingStats.customShaderTimer);
+        ImGui::Text("PBR: %.6fms", renderingStats.pbrTimer);
+        ImGui::Text("Custom Shader Forward: %.6fms", renderingStats.customShaderForwardTimer);
         ImGui::Text("Skybox: %.6fms", renderingStats.skyboxTimer);
         ImGui::Text("Bloom: %.6fms", renderingStats.bloomTimer);
         ImGui::Text("Screen: %.6fms", renderingStats.screenTimer);
@@ -45,11 +45,11 @@ namespace CgEngine::ImGuiWidgets {
         }
         ImGui::PopID();
 
-        ImGui::Text("preDepth");
+        ImGui::Text("gBuffer");
         ImGui::SameLine();
         ImGui::PushID(id++);
         if (ImGui::SmallButton("Reload")) {
-            shaderMap.preDepthShader->reload();
+            shaderMap.gBufferShader->reload();
         }
         ImGui::PopID();
 
@@ -89,7 +89,7 @@ namespace CgEngine::ImGuiWidgets {
         ImGui::SameLine();
         ImGui::PushID(id++);
         if (ImGui::SmallButton("Reload")) {
-            shaderMap.geometryShader->reload();
+            shaderMap.pbrShader->reload();
         }
         ImGui::PopID();
 

@@ -15,12 +15,13 @@ namespace CgEngine {
     public:
         static CustomShader* createResource(const std::string& name);
 
-        explicit CustomShader(std::string name, std::string vertexPath, std::string fragmentPath, std::string geometryPath, std::string tcsPath, std::string tesPath);
+        explicit CustomShader(std::string name, std::string vertexPath, std::string fragmentPath, std::string geometryPath, std::string tcsPath, std::string tesPath, bool isForward);
 
         CustomShader(CustomShader& other) = delete;
         CustomShader& operator=(CustomShader& other) = delete;
 
         void reload() override;
+        bool isForward() const;
 
     private:
         bool load();
@@ -30,6 +31,8 @@ namespace CgEngine {
         std::string geometryPath;
         std::string tcsPath;
         std::string tesPath;
+
+        bool forward;
     };
 
     class CustomComputeShader : public ComputeShader {

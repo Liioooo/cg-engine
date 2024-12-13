@@ -1,6 +1,7 @@
 #version 450 core
 
 #include "common/CameraDataBuffer.glsl"
+#include "common/GBuffersVertex.glsl"
 
 layout(binding = 0, std430) buffer Transforms {
     mat4 transforms[];
@@ -13,13 +14,21 @@ layout (location = 3) in vec4 a_Bitangent;
 layout (location = 4) in vec4 a_TexCoord;
 
 out VS_OUT {
+    vec2 TexCoord;
+    mat3 TBN;
     vec3 Normal;
-    mat3 CameraView;
 } vs_out;
 
 void main() {
     mat4 model = b_Transforms.transforms[gl_InstanceID];
-    vs_out.Normal = mat3(model) * a_Normal.xyz;
-    vs_out.CameraView = mat3(u_CameraData.view);
-    gl_Position = u_CameraData.viewProjection * model * a_Pos;
+
+    vec4 worldPosition = model * a_Pos;
+
+    vs_out.TexCoord = a_TexCoord.xy;
+    vs_out.TBN = mat3(model) * mat3(a_Tangent.xyz, a_Bitangent.xzy, a_Normal.xyz);
+    vs_out.Normal = mat3(transpose(inverse(model))) * a_Normal.xyz;
+
+    gl_Position = u_CameraData.viewProjection * worldPosition;
+
+    passGBufferData();
 }

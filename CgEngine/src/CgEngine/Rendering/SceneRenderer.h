@@ -16,13 +16,13 @@ namespace CgEngine {
     struct RenderingStats {
         float skinMeshesTimer = 0.0f;
         float shadowMapTimer = 0.0f;
-        float preDepthTimer = 0.0f;
+        float gBufferTimer = 0.0f;
         float hbaoDeinterleavingTimer = 0.0f;
         float hbaoComputeTimer = 0.0f;
         float hbaoReinterleavingTimer = 0.0f;
         float hbaoBlurTimer = 0.0f;
-        float geometryTimer = 0.0f;
-        float customShaderTimer = 0.0f;
+        float pbrTimer = 0.0f;
+        float customShaderForwardTimer = 0.0f;
         float skyboxTimer = 0.0f;
         float bloomTimer = 0.0f;
         float screenTimer = 0.0f;
@@ -31,12 +31,12 @@ namespace CgEngine {
 
     struct ShaderMap {
         Shader* dirShadowMapShader;
-        Shader* preDepthShader;
+        Shader* gBufferShader;
         Shader* hbaoDeinterleavingShader;
         ComputeShader* hbaoShader;
         Shader* hbaoReinterleavingShader;
         Shader* hbaoBlurShader;
-        Shader* geometryShader;
+        Shader* pbrShader;
         Shader* skyboxShader;
         Shader* bloomDownSampleShader;
         Shader* bloomUpSampleShader;
@@ -88,8 +88,8 @@ namespace CgEngine {
         bool activeRendering = false;
 
         RenderPass shadowMapRenderPass;
-        RenderPass preDepthRenderPass;
-        RenderPass geometryRenderPass;
+        RenderPass gBufferRenderPass;
+        RenderPass pbrRenderPass;
         RenderPass screenRenderPass;
         RenderPass skyboxRenderPass;
         RenderPass bloomDownSamplePass;
@@ -101,7 +101,7 @@ namespace CgEngine {
         RenderPass boundingBoxRenderPass;
         RenderPass normalsDebugRenderPass;
         RenderPass debugLinesRenderPass;
-        RenderPass customShaderRenderPass;
+        RenderPass customShaderForwardRenderPass;
 
         RenderPass hbaoDeinterleavingRenderPass;
         RenderPass hbaoReinterleavingRenderPass;
@@ -109,6 +109,7 @@ namespace CgEngine {
 
         ComputeShader hbaoShader;
 
+        CustomValMaterial pbrPassMaterial;
         CustomValMaterial screenMaterial;
         CustomValMaterial skyboxMaterial;
         CustomValMaterial physicsCollidersMaterial;
@@ -131,13 +132,14 @@ namespace CgEngine {
 
         void skinMeshes();
         void shadowMapPass();
-        void preDepthPass();
+        void gBufferPass();
         void hbaoDeinterleavingPass();
         void hbaoComputePass();
         void hbaoReinterleavingPass();
         void hbaoBlurPass();
-        void geometryPass();
-        void customShaderPass();
+        void pbrPass();
+        void customShaderDeferredPass();
+        void customShaderForwardPass();
         void skyboxPass();
         void physicsCollidersPass();
         void boundingBoxPass();
@@ -153,6 +155,7 @@ namespace CgEngine {
 
         struct UBCameraData {
             glm::mat4 viewProjection;
+            glm::mat4 invViewProjection;
             glm::mat4 projection;
             glm::mat4 view;
             glm::mat4 uiProjectionMatrix;
@@ -314,7 +317,8 @@ namespace CgEngine {
             std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers = {nullptr, nullptr};
         };
 
-        std::unordered_map<CustomShader*, std::vector<CustomShaderDrawCommand>> customShaderDrawCommandQueue;
+        std::unordered_map<CustomShader*, std::vector<CustomShaderDrawCommand>> customShaderDeferredDrawCommandQueue;
+        std::unordered_map<CustomShader*, std::vector<CustomShaderDrawCommand>> customShaderForwardDrawCommandQueue;
 
         float findDrawInfoTextureIndex(UiDrawInfo& drawInfo, const Texture2D* texture) const;
         std::array<glm::vec4, 16> generateHBAOJitterNoise() const;

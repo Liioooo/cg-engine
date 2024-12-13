@@ -28,10 +28,12 @@ namespace CgEngine {
         std::string tcsPath = shaderNode.child("Tcs").child_value();
         std::string tesPath = shaderNode.child("Tes").child_value();
 
-        return new CustomShader(name, vertexPath, fragmentPath, geometryPath, tcsPath, tesPath);
+        bool forward = shaderNode.attribute("forward").as_bool(false);
+
+        return new CustomShader(name, vertexPath, fragmentPath, geometryPath, tcsPath, tesPath, forward);
     }
 
-    CustomShader::CustomShader(std::string name, std::string vertexPath, std::string fragmentPath, std::string geometryPath, std::string tcsPath, std::string tesPath) : Shader(), vertexPath(std::move(vertexPath)), fragmentPath(std::move(fragmentPath)), geometryPath(std::move(geometryPath)), tcsPath(std::move(tcsPath)), tesPath(std::move(tesPath)) {
+    CustomShader::CustomShader(std::string name, std::string vertexPath, std::string fragmentPath, std::string geometryPath, std::string tcsPath, std::string tesPath, bool isForward) : Shader(), vertexPath(std::move(vertexPath)), fragmentPath(std::move(fragmentPath)), geometryPath(std::move(geometryPath)), tcsPath(std::move(tcsPath)), tesPath(std::move(tesPath)), forward(isForward) {
         this->name = std::move(name);
         load();
     }
@@ -44,6 +46,10 @@ namespace CgEngine {
                 glDeleteProgram(oldId);
             }
         }
+    }
+
+    bool CustomShader::isForward() const {
+        return forward;
     }
 
     bool CustomShader::load() {

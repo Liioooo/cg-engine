@@ -1,7 +1,7 @@
 #version 450 core
 
 #include "common/CameraDataBuffer.glsl"
-#include "common/DirShadowMappingVertex.glsl"
+#include "common/DirShadowMapping.glsl"
 
 
 layout (location = 0) in vec4 a_Pos;

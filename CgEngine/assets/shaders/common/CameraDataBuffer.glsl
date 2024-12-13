@@ -1,5 +1,6 @@
 layout (binding = 0, std140) uniform CameraData {
     mat4 viewProjection;
+    mat4 invViewProjection;
     mat4 projection;
     mat4 view;
     mat4 uiProjectionMatrix;
