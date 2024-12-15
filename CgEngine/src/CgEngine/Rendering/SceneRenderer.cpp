@@ -1,7 +1,7 @@
 #include "SceneRenderer.h"
 #include "Asserts.h"
 #include "Application.h"
-#include "OpeGLTimer.h"
+#include "OpenGLTimer.h"
 
 namespace CgEngine {
     SceneRenderer::SceneRenderer(uint32_t viewportWidth, uint32_t viewportHeight) : viewportWidth(viewportWidth), viewportHeight(viewportHeight), invViewportWidth(1.0f / static_cast<float>(viewportWidth)), invViewportHeight(1.0f / static_cast<float>(viewportHeight)) {
@@ -613,14 +613,15 @@ namespace CgEngine {
         skyboxMaterial.set("u_Intensity", sceneEnvironment.environmentIntensity);
         skyboxMaterial.set("u_Lod", sceneEnvironment.environmentLod);
 
-        pbrPassMaterial.setTexture("u_IrradianceMap", currentSceneEnvironment.irradianceMapId, 5);
-        pbrPassMaterial.setTexture("u_PrefilterMap", currentSceneEnvironment.prefilterMapId, 6);
-        pbrPassMaterial.set("u_EnvironmentIntensity", currentSceneEnvironment.environmentIntensity);
-
         currentSceneEnvironment.environmentIntensity = sceneEnvironment.environmentIntensity;
         currentSceneEnvironment.irradianceMapId = sceneEnvironment.irradianceMap->getRendererId();
         currentSceneEnvironment.prefilterMapId = sceneEnvironment.prefilterMap->getRendererId();
         currentSceneEnvironment.dirLightCastShadows = lightEnvironment.dirLightCastShadows && lightEnvironment.dirLightIntensity != 0.0f;
+
+        pbrPassMaterial.setTexture("u_IrradianceMap", currentSceneEnvironment.irradianceMapId, 5);
+        pbrPassMaterial.setTexture("u_PrefilterMap", currentSceneEnvironment.prefilterMapId, 6);
+        pbrPassMaterial.set("u_EnvironmentIntensity", currentSceneEnvironment.environmentIntensity);
+
 
         setupShadowMapData(lightEnvironment.dirLightDirection, cameraData.viewProjection, camera);
 
@@ -985,7 +986,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::skinMeshes() {
-        CG_GPU_TIME_FN(&renderingStats.skinMeshesTimer, false)
+        CG_GPU_TIME_FN(&renderingStats.skinMeshesTimer)
 
         skinningShader.bind();
         boneTransformsBuffer.bind(2);
@@ -1002,7 +1003,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::shadowMapPass() {
-        CG_GPU_TIME_FN(&renderingStats.shadowMapTimer, false)
+        CG_GPU_TIME_FN(&renderingStats.shadowMapTimer)
 
         if (!currentSceneEnvironment.dirLightCastShadows) {
             clearPass(shadowMapRenderPass);
@@ -1020,7 +1021,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::gBufferPass() {
-        CG_GPU_TIME_FN(&renderingStats.gBufferTimer, false)
+        CG_GPU_TIME_FN(&renderingStats.gBufferTimer)
 
         Renderer::beginRenderPass(gBufferRenderPass);
 
@@ -1033,7 +1034,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::hbaoDeinterleavingPass() {
-        CG_GPU_TIME_FN(&renderingStats.hbaoDeinterleavingTimer, false)
+        CG_GPU_TIME_FN(&renderingStats.hbaoDeinterleavingTimer)
 
         auto& deinterleavingShader = hbaoDeinterleavingRenderPass.getSpecification().shader;
 
@@ -1052,7 +1053,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::hbaoComputePass() {
-        CG_GPU_TIME_FN(&renderingStats.hbaoComputeTimer, false)
+        CG_GPU_TIME_FN(&renderingStats.hbaoComputeTimer)
 
         hbaoShader.bind();
 
@@ -1065,7 +1066,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::hbaoReinterleavingPass() {
-        CG_GPU_TIME_FN(&renderingStats.hbaoReinterleavingTimer, false)
+        CG_GPU_TIME_FN(&renderingStats.hbaoReinterleavingTimer)
 
         Renderer::beginRenderPass(hbaoReinterleavingRenderPass);
         hbaoReinterleavingRenderPass.getSpecification().shader.setTexture(hbaoResultTexture.getRendererId(), 0);
@@ -1074,7 +1075,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::hbaoBlurPass() {
-        CG_GPU_TIME_FN(&renderingStats.hbaoBlurTimer, false)
+        CG_GPU_TIME_FN(&renderingStats.hbaoBlurTimer)
 
         auto& shader = hbaoBlurRenderPass.getSpecification().shader;
 
@@ -1094,7 +1095,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::pbrPass() {
-        CG_GPU_TIME_FN(&renderingStats.pbrTimer, false)
+        CG_GPU_TIME_FN(&renderingStats.pbrTimer)
 
         Renderer::beginRenderPass(pbrRenderPass);
         Renderer::renderUnitQuad(pbrPassMaterial);
@@ -1106,7 +1107,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::customShaderForwardPass() {
-        CG_GPU_TIME_FN(&renderingStats.customShaderForwardTimer, false)
+        CG_GPU_TIME_FN(&renderingStats.customShaderForwardTimer)
 
         Renderer::beginRenderPass(customShaderForwardRenderPass, true);
 
@@ -1134,8 +1135,8 @@ namespace CgEngine {
                 lastCommandUseDirShadowMappingData = command.renderPassOptions.useDirShadowMappingData;
 
                 if (command.renderPassOptions.useEnvironmentMappingData && !lastCommandUseEnvironmentMappingData) {
-                    shader->setTexture(currentSceneEnvironment.irradianceMapId, 5);
-                    shader->setTexture(currentSceneEnvironment.prefilterMapId, 6);
+//                    shader->setTexture(currentSceneEnvironment.irradianceMapId, 5);
+//                    shader->setTexture(currentSceneEnvironment.prefilterMapId, 6);
                     shader->setTexture(Renderer::getBrdfLUTTexture().getRendererId(), 7);
                     shader->setFloat("u_EnvironmentIntensity", currentSceneEnvironment.environmentIntensity);
                 }
@@ -1161,7 +1162,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::skyboxPass() {
-        CG_GPU_TIME_FN(&renderingStats.skyboxTimer, false)
+        CG_GPU_TIME_FN(&renderingStats.skyboxTimer)
 
         Renderer::beginRenderPass(skyboxRenderPass);
         Renderer::renderUnitCube(skyboxMaterial);
@@ -1208,7 +1209,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::bloomPass() {
-        CG_GPU_TIME_FN(&renderingStats.bloomTimer, false)
+        CG_GPU_TIME_FN(&renderingStats.bloomTimer)
 
         auto& downSampleShader = bloomDownSamplePass.getSpecification().shader;
 
@@ -1240,7 +1241,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::screenPass() {
-        CG_GPU_TIME_FN(&renderingStats.screenTimer, false)
+        CG_GPU_TIME_FN(&renderingStats.screenTimer)
 
         Renderer::beginRenderPass(screenRenderPass);
         Renderer::renderUnitQuad(screenMaterial);
@@ -1248,7 +1249,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::uiPass() {
-        CG_GPU_TIME_FN(&renderingStats.uiTimer, false)
+        CG_GPU_TIME_FN(&renderingStats.uiTimer)
 
         for (const auto& [zIndex, drawInfo]: uiDrawInfoQueue) {
 

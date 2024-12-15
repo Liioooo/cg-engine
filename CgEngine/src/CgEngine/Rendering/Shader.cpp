@@ -91,7 +91,11 @@ namespace CgEngine {
             if (uniformLocations.find(name) == uniformLocations.end()) {
                 int32_t location = glGetUniformLocation(programId, name.c_str());
 
-                CG_ASSERT(location != -1, "Uniform doesn't exist! Uniform:" + name)
+                #ifdef CG_ENABLE_DEBUG_FEATURES
+                if (location == -1) {
+                    CG_LOGGING_WARNING("Uniform doesn't exist! Uniform: {}", name)
+                }
+                #endif
 
                 uniformLocations.insert({name, location});
                 return location;

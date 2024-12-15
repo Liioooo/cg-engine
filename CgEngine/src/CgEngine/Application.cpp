@@ -5,6 +5,7 @@
 #include "imgui.h"
 #include "ImGui/ImGuiWidgets.h"
 #include "ImGui/ImGuiSceneView.h"
+#include "OpenGLTimer.h"
 
 namespace CgEngine {
     Application::Application(const std::string &settingsIni) : iniReader(settingsIni) {
@@ -67,6 +68,8 @@ namespace CgEngine {
             Scene* activeScene = sceneManager->getActiveScene();
             activeScene->onUpdate(timeStep);
             activeScene->onRender(*sceneRenderer);
+
+            CG_GPU_TIME_WRITE_RESULTS()
 
             renderImGuiWindow();
             ImGuiContext::render();
