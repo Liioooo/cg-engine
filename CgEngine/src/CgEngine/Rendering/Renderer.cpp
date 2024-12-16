@@ -98,8 +98,8 @@ namespace CgEngine {
 
         uiRectVAO = VertexArrayObject();
         auto* uiRectVertexBuffer = new VertexBuffer(0, VertexBufferUsage::Dynamic);
-        uiCircleVertexBuffer->setLayout({{ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float2, false}, {ShaderDataType::Float, false}, {ShaderDataType::Float, false}});
-        uiRectVAO.addVertexBuffer(uiCircleVertexBuffer);
+        uiRectVertexBuffer->setLayout({{ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float2, false}, {ShaderDataType::Float, false}, {ShaderDataType::Float, false}});
+        uiRectVAO.addVertexBuffer(uiRectVertexBuffer);
         uiRectVAO.setIndexBuffer(uiIndices, maxUiIndices);
 
         uiTextVAO = VertexArrayObject();
