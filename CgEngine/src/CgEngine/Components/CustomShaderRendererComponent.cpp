@@ -68,6 +68,13 @@ namespace CgEngine {
         if (params.boundingMax != glm::vec3(0.0f) || params.boundingMin != glm::vec3(0.0f)) {
             boundingBox.addBoxCoordinates(params.boundingMax, params.boundingMin);
         }
+
+        if (!shader->isForward()) {
+            CG_ASSERT(renderPassOptions.wireframe == false, "CustomShaderRendererComponent: Wireframe rendering is not supported in deferred rendering")
+            CG_ASSERT(renderPassOptions.useBlending == false, "CustomShaderRendererComponent: Blending is not supported in deferred rendering")
+            CG_ASSERT(renderPassOptions.useDirShadowMappingData == false, "CustomShaderRendererComponent: Directional Shadow Mapping is done in lighting pass")
+            CG_ASSERT(renderPassOptions.useEnvironmentMappingData == false, "CustomShaderRendererComponent: Environment Mapping is done in lighting pass")
+        }
     }
 
     ResRef<MeshVertices> CustomShaderRendererComponent::getMeshVertices() {

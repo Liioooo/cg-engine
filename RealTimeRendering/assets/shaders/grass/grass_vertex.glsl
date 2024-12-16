@@ -5,6 +5,7 @@
 #include "common/Noise.glsl"
 #include "common/Utilities.glsl"
 #include "common/PI.glsl"
+#include "common/GBuffersVertex.glsl"
 
 layout(binding = 5, std430) buffer Positions {
     vec2 positions[];
@@ -24,7 +25,6 @@ uniform mat4 u_GrassColor;
 layout (location = 0) in int vertId;
 
 out VS_OUT {
-    vec3 WorldPosition;
     vec3 Normal0;
     vec3 Normal1;
     vec3 GrassParams; // x: heightPercent, y: xSide
@@ -138,10 +138,11 @@ void main() {
     vec3 lowLODColour = mix(b1, t1, heightPercent);
     vs_out.GrassColor = mix(highLODColour, lowLODColour, highLODOut);
 
-    vs_out.WorldPosition = grassVertexPosition;
     vs_out.Normal0 = grassVertexNormal0;
     vs_out.Normal1 = grassVertexNormal1;
     vs_out.GrassParams = vec3(heightPercent, xSide, highLODOut);
 
     gl_Position = u_CameraData.viewProjection * vec4(grassVertexPosition, 1.0f);
+
+    passGBufferData();
 }

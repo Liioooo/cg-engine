@@ -27,7 +27,7 @@
         <Vertex>shaders/ocean/ocean_vertex.glsl</Vertex>
         <Fragment>shaders/ocean/ocean_fragment.glsl</Fragment>
     </Shader>
-    <Shader name="grass/render" type="render" forward="true">
+    <Shader name="grass/render" type="render" forward="false">
         <Vertex>shaders/grass/grass_vertex.glsl</Vertex>
         <Fragment>shaders/grass/grass_fragment.glsl</Fragment>
     </Shader>

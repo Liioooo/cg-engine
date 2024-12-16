@@ -63,7 +63,6 @@ namespace RTR {
             rendererLowParams.instanceCount = NUM_GRASS;
             rendererLowParams.shader = "grass/render";
             rendererLowParams.enableCulling = true;
-            rendererLowParams.renderPassOptions.useEnvironmentMappingData = true;
             auto& rendererLowComp = attachComponent<CgEngine::CustomShaderRendererComponent>(grassLowEntity, rendererLowParams);
             rendererLowComp.setInstanceBuffer1(offsetsBuffer);
 
@@ -76,7 +75,6 @@ namespace RTR {
             rendererHighParams.instanceCount = NUM_GRASS;
             rendererHighParams.shader = "grass/render";
             rendererHighParams.enableCulling = true;
-            rendererHighParams.renderPassOptions.useEnvironmentMappingData = true;
             auto& rendererHighComp = attachComponent<CgEngine::CustomShaderRendererComponent>(grassHighEntity, rendererHighParams);
             rendererHighComp.setInstanceBuffer1(offsetsBuffer);
 

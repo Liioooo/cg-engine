@@ -61,6 +61,19 @@ namespace CgEngine {
             shaderMap.gBufferShader = &gBufferRenderPass.getSpecification().shader;
         }
         {
+            RenderPassSpecification customShaderDeferredRenderPassSpec;
+            customShaderDeferredRenderPassSpec.framebuffer = gBufferRenderPass.getSpecification().framebuffer;
+            customShaderDeferredRenderPassSpec.usingExistingFramebuffer = true;
+            customShaderDeferredRenderPassSpec.depthCompareOperator = DepthCompareOperator::LessOrEqual;
+            customShaderDeferredRenderPassSpec.depthWrite = true;
+            customShaderDeferredRenderPassSpec.depthTest = true;
+            customShaderDeferredRenderPassSpec.clearColorBuffer = false;
+            customShaderDeferredRenderPassSpec.clearDepthBuffer = false;
+            customShaderDeferredRenderPassSpec.clearStencilBuffer = false;
+
+            customShaderDeferredRenderPass = RenderPass(std::move(customShaderDeferredRenderPassSpec));
+        }
+        {
             glm::uvec2 quarterSize = (glm::uvec2(viewportWidth, viewportHeight) + 3u) / 4u;
 
             hbaoDeinterleavingDepthTexture = Texture2DArray(TextureFormat::RedFloat32, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
@@ -1103,7 +1116,40 @@ namespace CgEngine {
     }
 
     void SceneRenderer::customShaderDeferredPass() {
+        CG_GPU_TIME_FN(&renderingStats.customShaderDeferredTimer)
 
+        Renderer::beginRenderPass(customShaderDeferredRenderPass, true);
+
+        const Material* lastUsedMaterial = nullptr;
+
+        for (const auto& [shader, commands]: customShaderDeferredDrawCommandQueue) {
+            shader->bind();
+
+            for (const auto& command: commands) {
+                shader->setMat4("u_Transform", command.transform);
+
+                if (command.instanceBuffers.first != nullptr) {
+                    command.instanceBuffers.first->bind(5);
+                }
+                if (command.instanceBuffers.second != nullptr) {
+                    command.instanceBuffers.second->bind(6);
+                }
+
+                const Material* material = command.material != nullptr ? command.material : &emptyMaterial;
+
+                Renderer::setFaceCulling(command.renderPassOptions.backfaceCulling, command.renderPassOptions.frontfaceCulling);
+                Renderer::setTesselationPatchSize(command.renderPassOptions.tesselationPatchSize);
+
+                if (material != lastUsedMaterial) {
+                    material->uploadToShader(*shader);
+                }
+                lastUsedMaterial = material;
+
+                Renderer::executeCustomShaderDrawCommand(*command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount, command.renderPassOptions.tesselationPatchSize);
+            }
+        }
+
+        Renderer::endRenderPass();
     }
 
     void SceneRenderer::customShaderForwardPass() {
@@ -1135,8 +1181,8 @@ namespace CgEngine {
                 lastCommandUseDirShadowMappingData = command.renderPassOptions.useDirShadowMappingData;
 
                 if (command.renderPassOptions.useEnvironmentMappingData && !lastCommandUseEnvironmentMappingData) {
-//                    shader->setTexture(currentSceneEnvironment.irradianceMapId, 5);
-//                    shader->setTexture(currentSceneEnvironment.prefilterMapId, 6);
+                    shader->setTexture(currentSceneEnvironment.irradianceMapId, 5);
+                    shader->setTexture(currentSceneEnvironment.prefilterMapId, 6);
                     shader->setTexture(Renderer::getBrdfLUTTexture().getRendererId(), 7);
                     shader->setFloat("u_EnvironmentIntensity", currentSceneEnvironment.environmentIntensity);
                 }

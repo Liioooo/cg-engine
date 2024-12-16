@@ -23,6 +23,7 @@ namespace CgEngine {
         float hbaoBlurTimer = 0.0f;
         float pbrTimer = 0.0f;
         float customShaderForwardTimer = 0.0f;
+        float customShaderDeferredTimer = 0.0f;
         float skyboxTimer = 0.0f;
         float bloomTimer = 0.0f;
         float screenTimer = 0.0f;
@@ -102,6 +103,7 @@ namespace CgEngine {
         RenderPass normalsDebugRenderPass;
         RenderPass debugLinesRenderPass;
         RenderPass customShaderForwardRenderPass;
+        RenderPass customShaderDeferredRenderPass;
 
         RenderPass hbaoDeinterleavingRenderPass;
         RenderPass hbaoReinterleavingRenderPass;
