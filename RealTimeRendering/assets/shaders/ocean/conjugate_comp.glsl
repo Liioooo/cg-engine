@@ -2,7 +2,7 @@
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-layout(rgba32f, binding = 0) uniform image2D u_h0Texture;
+layout(rgba32f, binding = 0) uniform restrict image2D u_h0Texture;
 
 uniform int u_size;
 

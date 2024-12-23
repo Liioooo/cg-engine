@@ -4,9 +4,9 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 const float PI = 3.141592653589793;
 
-layout(rgba32f, binding = 0) uniform image2D u_precomputedData;
-layout(rg32f, binding = 1) uniform image2D u_buffer0;
-layout(rg32f, binding = 2) uniform image2D u_buffer1;
+layout(rgba32f, binding = 0) uniform restrict readonly image2D u_precomputedData;
+layout(rg32f, binding = 1) uniform restrict image2D u_buffer0;
+layout(rg32f, binding = 2) uniform restrict image2D u_buffer1;
 
 uniform bool u_pingPong;
 uniform int u_step;
@@ -22,10 +22,10 @@ void main() {
     if (u_pingPong) {
         vec2 value = imageLoad(u_buffer0, ivec2(inputsIndices.x, id.y)).xy
         + ComplexMult(vec2(data.r, -data.g), imageLoad(u_buffer0, ivec2(inputsIndices.y, id.y)).xy);
-        imageStore(u_buffer1, ivec2(id.xy), vec4(value, 0, 1));
+        imageStore(u_buffer1, ivec2(id.xy), vec4(value, 0.0, 1.0));
     } else {
         vec2 value = imageLoad(u_buffer1, ivec2(inputsIndices.x, id.y)).xy
         + ComplexMult(vec2(data.r, -data.g), imageLoad(u_buffer1, ivec2(inputsIndices.y, id.y)).xy);
-        imageStore(u_buffer0, ivec2(id.xy), vec4(value, 0, 1));
+        imageStore(u_buffer0, ivec2(id.xy), vec4(value, 0.0, 1.0));
     }
 }
