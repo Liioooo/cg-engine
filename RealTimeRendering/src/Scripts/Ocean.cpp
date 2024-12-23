@@ -115,26 +115,6 @@ namespace RTR {
     }
 
     void Ocean::onKeyPressed(CgEngine::KeyPressedEvent& event) {
-        if (event.getKeyCode() == CgEngine::KeyCode::Enter) {
-            oceanCascade0->calculateInitialState();
-            oceanCascade1->calculateInitialState();
-            oceanCascade2->calculateInitialState();
-        }
-        if (event.getKeyCode() == CgEngine::KeyCode::F1) {
-            mat->setTexture2D("u_displacement", *oceanCascade0->displacement, 0);
-            mat->setTexture2D("u_derivatives", *oceanCascade0->derivatives, 1);
-            mat->setTexture2D("u_turbulence", *oceanCascade0->turbulence, 2);
-        }
-        if (event.getKeyCode() == CgEngine::KeyCode::F2) {
-            mat->setTexture2D("u_displacement", *oceanCascade1->displacement, 0);
-            mat->setTexture2D("u_derivatives", *oceanCascade1->derivatives, 1);
-            mat->setTexture2D("u_turbulence", *oceanCascade1->turbulence, 2);
-        }
-        if (event.getKeyCode() == CgEngine::KeyCode::F3) {
-            mat->setTexture2D("u_displacement", *oceanCascade2->displacement, 0);
-            mat->setTexture2D("u_derivatives", *oceanCascade2->derivatives, 1);
-            mat->setTexture2D("u_turbulence", *oceanCascade2->turbulence, 2);
-        }
     }
 
     void Ocean::onDetach() {
