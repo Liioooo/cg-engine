@@ -1,8 +1,7 @@
 #version 450 core
 
 #include "common/CameraDataBuffer.glsl"
-#include "common/DirShadowMapping.glsl"
-
+#include "common/GBuffersVertex.glsl"
 
 layout (location = 0) in vec4 a_Pos;
 layout (location = 1) in vec4 a_Normal;
@@ -14,19 +13,18 @@ uniform mat4 u_Transform;
 
 uniform layout(binding=10) sampler2D u_displacementC0;
 uniform layout(binding=11) sampler2D u_derivativesC0;
-uniform layout(binding=12) sampler2D u_turbulanceC0;
+uniform layout(binding=12) sampler2D u_turbulenceC0;
 
 uniform layout(binding=13) sampler2D u_displacementC1;
 uniform layout(binding=14) sampler2D u_derivativesC1;
-uniform layout(binding=15) sampler2D u_turbulanceC1;
+uniform layout(binding=15) sampler2D u_turbulenceC1;
 
 uniform layout(binding=16) sampler2D u_displacementC2;
 uniform layout(binding=17) sampler2D u_derivativesC2;
-uniform layout(binding=18) sampler2D u_turbulanceC2;
+uniform layout(binding=18) sampler2D u_turbulenceC2;
 
 out VS_OUT {
     vec3 WorldPosition;
-    vec4 DirShadowMapPosition[4];
     vec3 Normal;
     vec4 TexCoord;
     vec4 LodScales;
@@ -54,7 +52,6 @@ void main() {
     displacement += displacement1 * lod_c1 + displacement2 * lod_c2;
     vec4 worldPosition = u_Transform * a_Pos + displacement;
 
-    vs_out.DirShadowMapPosition = calcDirShadowMapPostion(worldPosition.xyz);
     vs_out.Normal = mat3(transpose(inverse(u_Transform))) * a_Normal.xyz;
     vs_out.WorldPosition = worldPosition.xyz;
     vs_out.TexCoord = a_TexCoord;
@@ -62,5 +59,6 @@ void main() {
     vs_out.LodScales = vec4(lod_c0, lod_c1, lod_c2, max(displacement.y - largeWaveBias * 0.8 - (-0.1), 0) / 4.8);
 
     gl_Position = u_CameraData.viewProjection * worldPosition;
+    passGBufferData();
 }
 

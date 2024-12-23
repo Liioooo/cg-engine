@@ -23,7 +23,7 @@
     <Shader name="ocean/fft/verticalStepInverseFft" type="compute">
         <Path>shaders/ocean/fft/verticalStepInverseFft_comp.glsl</Path>
     </Shader>
-    <Shader name="ocean/render" type="render" forward="true">
+    <Shader name="ocean/render" type="render" forward="false">
         <Vertex>shaders/ocean/ocean_vertex.glsl</Vertex>
         <Fragment>shaders/ocean/ocean_fragment.glsl</Fragment>
     </Shader>
