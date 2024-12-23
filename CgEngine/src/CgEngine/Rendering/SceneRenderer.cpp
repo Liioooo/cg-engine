@@ -2,6 +2,7 @@
 #include "Asserts.h"
 #include "Application.h"
 #include "OpenGLTimer.h"
+#include "OpenGLDebugGroup.h"
 
 namespace CgEngine {
     SceneRenderer::SceneRenderer(uint32_t viewportWidth, uint32_t viewportHeight) : viewportWidth(viewportWidth), viewportHeight(viewportHeight), invViewportWidth(1.0f / static_cast<float>(viewportWidth)), invViewportHeight(1.0f / static_cast<float>(viewportHeight)) {
@@ -999,6 +1000,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::skinMeshes() {
+        CG_GPU_DEBUG_GROUP("SkinMeshes")
         CG_GPU_TIME_FN(&renderingStats.skinMeshesTimer)
 
         skinningShader.bind();
@@ -1016,6 +1018,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::shadowMapPass() {
+        CG_GPU_DEBUG_GROUP("ShadowMapPass")
         CG_GPU_TIME_FN(&renderingStats.shadowMapTimer)
 
         if (!currentSceneEnvironment.dirLightCastShadows) {
@@ -1034,6 +1037,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::gBufferPass() {
+        CG_GPU_DEBUG_GROUP("GBufferPass")
         CG_GPU_TIME_FN(&renderingStats.gBufferTimer)
 
         Renderer::beginRenderPass(gBufferRenderPass);
@@ -1047,6 +1051,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::hbaoDeinterleavingPass() {
+        CG_GPU_DEBUG_GROUP("HBAODeinterleavingPass")
         CG_GPU_TIME_FN(&renderingStats.hbaoDeinterleavingTimer)
 
         auto& deinterleavingShader = hbaoDeinterleavingRenderPass.getSpecification().shader;
@@ -1066,6 +1071,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::hbaoComputePass() {
+        CG_GPU_DEBUG_GROUP("HBAOComputePass")
         CG_GPU_TIME_FN(&renderingStats.hbaoComputeTimer)
 
         hbaoShader.bind();
@@ -1079,6 +1085,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::hbaoReinterleavingPass() {
+        CG_GPU_DEBUG_GROUP("HBAOReinterleavingPass")
         CG_GPU_TIME_FN(&renderingStats.hbaoReinterleavingTimer)
 
         Renderer::beginRenderPass(hbaoReinterleavingRenderPass);
@@ -1088,6 +1095,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::hbaoBlurPass() {
+        CG_GPU_DEBUG_GROUP("HBAOBlurPass")
         CG_GPU_TIME_FN(&renderingStats.hbaoBlurTimer)
 
         auto& shader = hbaoBlurRenderPass.getSpecification().shader;
@@ -1108,6 +1116,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::pbrPass() {
+        CG_GPU_DEBUG_GROUP("PBRPass")
         CG_GPU_TIME_FN(&renderingStats.pbrTimer)
 
         Renderer::beginRenderPass(pbrRenderPass);
@@ -1116,6 +1125,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::customShaderDeferredPass() {
+        CG_GPU_DEBUG_GROUP("CustomShaderDeferredPass")
         CG_GPU_TIME_FN(&renderingStats.customShaderDeferredTimer)
 
         Renderer::beginRenderPass(customShaderDeferredRenderPass, true);
@@ -1153,6 +1163,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::customShaderForwardPass() {
+        CG_GPU_DEBUG_GROUP("CustomShaderForwardPass")
         CG_GPU_TIME_FN(&renderingStats.customShaderForwardTimer)
 
         Renderer::beginRenderPass(customShaderForwardRenderPass, true);
@@ -1208,6 +1219,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::skyboxPass() {
+        CG_GPU_DEBUG_GROUP("SkyboxPass")
         CG_GPU_TIME_FN(&renderingStats.skyboxTimer)
 
         Renderer::beginRenderPass(skyboxRenderPass);
@@ -1255,6 +1267,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::bloomPass() {
+        CG_GPU_DEBUG_GROUP("BloomPass")
         CG_GPU_TIME_FN(&renderingStats.bloomTimer)
 
         auto& downSampleShader = bloomDownSamplePass.getSpecification().shader;
@@ -1287,6 +1300,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::screenPass() {
+        CG_GPU_DEBUG_GROUP("ScreenPass")
         CG_GPU_TIME_FN(&renderingStats.screenTimer)
 
         Renderer::beginRenderPass(screenRenderPass);
@@ -1295,6 +1309,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::uiPass() {
+        CG_GPU_DEBUG_GROUP("UiPass")
         CG_GPU_TIME_FN(&renderingStats.uiTimer)
 
         for (const auto& [zIndex, drawInfo]: uiDrawInfoQueue) {
