@@ -14,6 +14,21 @@ namespace RTR {
         this->finalTexturesShader = resourceManager.getResource<CgEngine::CustomComputeShader>("ocean/compute-final");
     }
 
+    OceanCascade::~OceanCascade()
+    {
+        delete gaussianNoise;
+        delete initialSpectrum;
+        delete waveData;
+        delete dxDz;
+        delete dyDxz;
+        delete dyxDyz;
+        delete dxxDzz;
+
+        delete displacement;
+        delete derivatives;
+        delete turbulence;
+    }
+
     void OceanCascade::calculateInitialState() {
         generateGaussianNoise();
         initTextures();
@@ -29,9 +44,9 @@ namespace RTR {
         initialSpectrumShader->setFloat("u_g", oceanParams.g);
         initialSpectrumShader->setFloat("u_cutoffLow", oceanParams.spectrumParams.cutoffLow);
         initialSpectrumShader->setFloat("u_cutoffHigh", oceanParams.spectrumParams.cutoffHigh);
-        initialSpectrumShader->setImage2D(*gaussianNoise, 0, CgEngine::ShaderStorageAccess::ReadWrite, 0);
-        initialSpectrumShader->setImage2D(*initialSpectrum, 1, CgEngine::ShaderStorageAccess::ReadWrite, 0);
-        initialSpectrumShader->setImage2D(*waveData, 2, CgEngine::ShaderStorageAccess::ReadWrite, 0);
+        initialSpectrumShader->setImage2D(*gaussianNoise, 0, CgEngine::ShaderStorageAccess::ReadOnly, 0);
+        initialSpectrumShader->setImage2D(*initialSpectrum, 1, CgEngine::ShaderStorageAccess::WriteOnly, 0);
+        initialSpectrumShader->setImage2D(*waveData, 2, CgEngine::ShaderStorageAccess::WriteOnly, 0);
         initialSpectrumShader->dispatch(oceanParams.size / 8, oceanParams.size / 8, 1);
         initialSpectrumShader->waitForMemoryBarrier({CgEngine::MemoryBarrierBit::ShaderImageAccess});
         conjugateSpectrumShader->bind();
@@ -46,10 +61,10 @@ namespace RTR {
         timeSpectrumShader->setFloat("u_time", time);
         timeSpectrumShader->setImage2D(*initialSpectrum, 0, CgEngine::ShaderStorageAccess::ReadOnly);
         timeSpectrumShader->setImage2D(*waveData, 1, CgEngine::ShaderStorageAccess::ReadOnly);
-        timeSpectrumShader->setImage2D(*dxDz, 2, CgEngine::ShaderStorageAccess::ReadWrite);
-        timeSpectrumShader->setImage2D(*dyDxz, 3, CgEngine::ShaderStorageAccess::ReadWrite);
-        timeSpectrumShader->setImage2D(*dyxDyz, 4, CgEngine::ShaderStorageAccess::ReadWrite);
-        timeSpectrumShader->setImage2D(*dxxDzz, 5, CgEngine::ShaderStorageAccess::ReadWrite);
+        timeSpectrumShader->setImage2D(*dxDz, 2, CgEngine::ShaderStorageAccess::WriteOnly);
+        timeSpectrumShader->setImage2D(*dyDxz, 3, CgEngine::ShaderStorageAccess::WriteOnly);
+        timeSpectrumShader->setImage2D(*dyxDyz, 4, CgEngine::ShaderStorageAccess::WriteOnly);
+        timeSpectrumShader->setImage2D(*dxxDzz, 5, CgEngine::ShaderStorageAccess::WriteOnly);
         timeSpectrumShader->dispatch(oceanParams.size / 8, oceanParams.size / 8, 1);
         timeSpectrumShader->waitForMemoryBarrier({CgEngine::MemoryBarrierBit::ShaderImageAccess});
 
@@ -65,12 +80,13 @@ namespace RTR {
         finalTexturesShader->setImage2D(*dyDxz, 1, CgEngine::ShaderStorageAccess::ReadOnly);
         finalTexturesShader->setImage2D(*dyxDyz, 2, CgEngine::ShaderStorageAccess::ReadOnly);
         finalTexturesShader->setImage2D(*dxxDzz, 3, CgEngine::ShaderStorageAccess::ReadOnly);
-        finalTexturesShader->setImage2D(*displacement, 4, CgEngine::ShaderStorageAccess::ReadWrite);
-        finalTexturesShader->setImage2D(*derivatives, 5, CgEngine::ShaderStorageAccess::ReadWrite);
+        finalTexturesShader->setImage2D(*displacement, 4, CgEngine::ShaderStorageAccess::WriteOnly);
+        finalTexturesShader->setImage2D(*derivatives, 5, CgEngine::ShaderStorageAccess::WriteOnly);
         finalTexturesShader->setImage2D(*turbulence, 6, CgEngine::ShaderStorageAccess::ReadWrite);
         finalTexturesShader->dispatch(oceanParams.size / 8, oceanParams.size / 8, 1);
         finalTexturesShader->waitForMemoryBarrier({CgEngine::MemoryBarrierBit::ShaderImageAccess});
 
+        displacement->generateMipMaps();
         derivatives->generateMipMaps();
         turbulence->generateMipMaps();
     }
@@ -152,21 +168,23 @@ namespace RTR {
                 oceanParams.size,
                 oceanParams.size,
                 CgEngine::TextureWrap::Repeat,
-                CgEngine::MipMapFiltering::Nearest // TODO: Trilinear?
+                CgEngine::MipMapFiltering::Trilinear
         );
         derivatives = new CgEngine::Texture2D(
                 CgEngine::TextureFormat::Float32A,
                 oceanParams.size,
                 oceanParams.size,
                 CgEngine::TextureWrap::Repeat,
-                CgEngine::MipMapFiltering::Trilinear // TODO: Trilinear?
+                CgEngine::MipMapFiltering::Trilinear
         );
+        std::vector<float> zeroData(oceanParams.size * oceanParams.size * 4, 0.0);
         turbulence = new CgEngine::Texture2D(
                 CgEngine::TextureFormat::Float32A,
                 oceanParams.size,
                 oceanParams.size,
                 CgEngine::TextureWrap::Repeat,
-                CgEngine::MipMapFiltering::Trilinear // TODO: Trilinear?
+                &zeroData[0],
+                CgEngine::MipMapFiltering::Trilinear
         );
     }
 

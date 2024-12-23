@@ -29,6 +29,8 @@ namespace RTR {
         explicit OceanCascade(const OceanParams& oceanParams,
                               CgEngine::ResourceManager& resourceManager);
 
+        ~OceanCascade();
+
         void calculateInitialState();
 
         void calculateStateAtTime(float time, float deltaT);
