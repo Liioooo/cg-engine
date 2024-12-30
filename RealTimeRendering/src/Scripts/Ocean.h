@@ -23,6 +23,8 @@ namespace RTR {
 
         void createMesh();
 
+        CgEngine::CustomMesh* createPlane(glm::vec2 center, glm::vec2 size, int segments);
+
     private:
         CgEngine::CustomMesh* mesh = nullptr;
         CgEngine::CustomValMaterial* mat = nullptr;

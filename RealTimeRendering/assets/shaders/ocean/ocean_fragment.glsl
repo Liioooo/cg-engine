@@ -32,17 +32,17 @@ void main() {
     float length1 = 17;
     float length2 = 5;
     vec4 derivatives = vec4(0.0);
-    derivatives += texture(u_derivativesC0, fs_in.TexCoord.xy);
-    derivatives += texture(u_derivativesC1, fs_in.TexCoord.xy * (length0 / length1)) * fs_in.LodScales.y;
-    derivatives += texture(u_derivativesC2, fs_in.TexCoord.xy * (length0 / length2)) * fs_in.LodScales.z;
+    derivatives += texture(u_derivativesC0, fs_in.WorldPosition.xz / length0);
+    derivatives += texture(u_derivativesC1, fs_in.WorldPosition.xz / length1) * fs_in.LodScales.y;
+    derivatives += texture(u_derivativesC2, fs_in.WorldPosition.xz / length2) * fs_in.LodScales.z;
 
     vec2 slope = vec2(derivatives.x / (1 + derivatives.z), derivatives.y / (1 + derivatives.w));
     vec3 N = normalize(vec3(-slope.x, 1, -slope.y));
 
 //    #if defined(CLOSE)
-    float jacobian = texture(u_turbulenceC0, fs_in.TexCoord.xy).x
-        + texture(u_turbulenceC1, fs_in.TexCoord.xy * (length0 / length1)).x
-        + texture(u_turbulenceC2, fs_in.TexCoord.xy * (length0 / length2)).x;
+    float jacobian = texture(u_turbulenceC0, fs_in.WorldPosition.xz / length0).x
+        + texture(u_turbulenceC1, fs_in.WorldPosition.xz / length1).x
+        + texture(u_turbulenceC2, fs_in.WorldPosition.xz / length2).x;
     jacobian = min(1.0, max(0.0, (-jacobian + 2.72) * 0.3));
 //    #elif defined(MID)
 //            float jacobian = tex2D(_Turbulence_c0, IN.worldUV / LengthScale0).x

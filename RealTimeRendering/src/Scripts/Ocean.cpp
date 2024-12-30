@@ -1,62 +1,51 @@
 #include "Ocean.h"
 
+#include "OpenGLDebugGroup.h"
+
 namespace RTR {
-
-    void Ocean::createMesh() {
-        mesh = new CgEngine::CustomMesh();
-
+    CgEngine::CustomMesh* Ocean::createPlane(glm::vec2 center, glm::vec2 size, int segments) {
+        auto* _mesh = new CgEngine::CustomMesh();
         std::vector<CgEngine::MeshProps::Vertex> vertices;
         std::vector<uint32_t> indices;
 
-        // TODO: This needs to be done in a tesselation shader anyhow
-        int segmentsX = 256 - 1;
-        int segmentsY = 256 - 1;
-        float wh = 400 / 2.0;
-        float dh = 400 / 2.0;
+        float wh = size.x / 2.0;
+        float dh = size.y / 2.0;
 
-        float dx = 1.0 / segmentsX;
-        float dy = 1.0 / segmentsY;
+        float dx = 1.0 / segments;
+        float dy = 1.0 / segments;
 
-        for (int y = 0; y < segmentsY + 1; ++y) {
-            for (int x = 0; x < segmentsX + 1; ++x) {
-                vertices.emplace_back(-wh + x * dx * (2 * wh), 0, -dh + y * dy * (2 * dh), 0, 1, 0, 0 + x * dx, 0 + y * dy);
+        for (int y = 0; y < segments + 1; ++y) {
+            for (int x = 0; x < segments + 1; ++x) {
+                vertices.emplace_back(
+                    center.x -wh + x * dx * (2 * wh),
+                    0,
+                    center.y -dh + y * dy * (2 * dh),
+                    0,
+                    1,
+                    0,
+                    0 + x * dx,
+                    0 + y * dy
+                );
             }
         }
 
-        for (int y = 0; y < segmentsY; ++y) {
-            for (int x = 0; x < segmentsX; ++x) {
-                indices.push_back((x + 1) + y * (segmentsX + 1));
-                indices.push_back(x + y * (segmentsX + 1));
-                indices.push_back(x + (y + 1) * (segmentsX + 1));
-
-                indices.push_back((x + 1) + y * (segmentsX + 1));
-                indices.push_back(x + (y + 1) * (segmentsX + 1));
-                indices.push_back((x + 1) + (y + 1) * (segmentsX + 1));
+        for (int y = 0; y < segments; ++y) {
+            for (int x = 0; x < segments; ++x) {
+                indices.push_back(x + y * (segments + 1));
+                indices.push_back(x + (y + 1) * (segments + 1));
+                indices.push_back((x + 1) + y * (segments + 1));
+                indices.push_back((x + 1) + (y + 1) * (segments + 1));
             }
         }
 
-        mesh->setVertexData(vertices, indices, CgEngine::MeshProps::DEFAULT_VERT_BUFF_LAYOUT);
-        mesh->getBoundingBox().addBoxCoordinates({-wh, -0.25f, -dh}, {wh, 0.25f, dh});
+        _mesh->setVertexData(vertices, indices, CgEngine::MeshProps::DEFAULT_VERT_BUFF_LAYOUT);
+        // TODO: Better height estimation
+        _mesh->getBoundingBox().addBoxCoordinates({center.x -wh, -0.25f, center.y -dh}, {center.x + wh, 2.0f, center.y + dh});
+        return _mesh;
+    }
 
-        mat = new CgEngine::CustomValMaterial();
-        mat->setTexture2D("u_displacementC0", *oceanCascade0->displacement, 10);
-        mat->setTexture2D("u_derivativesC0", *oceanCascade0->derivatives, 11);
-        mat->setTexture2D("u_turbulenceC0", *oceanCascade0->turbulence, 12);
-        mat->setTexture2D("u_displacementC1", *oceanCascade1->displacement, 13);
-        mat->setTexture2D("u_derivativesC1", *oceanCascade1->derivatives, 14);
-        mat->setTexture2D("u_turbulenceC1", *oceanCascade1->turbulence, 15);
-        mat->setTexture2D("u_displacementC2", *oceanCascade2->displacement, 16);
-        mat->setTexture2D("u_derivativesC2", *oceanCascade2->derivatives, 17);
-        mat->setTexture2D("u_turbulenceC2", *oceanCascade2->turbulence, 18);
-
-        CgEngine::CustomShaderRendererComponentParams params;
-        params.shader = "ocean/render";
-        params.customMesh = mesh;
-        params.instanceCount = 1;
-        params.customMaterial = mat;
-        params.enableCulling = true;
-
-        auto& c = attachComponent<CgEngine::CustomShaderRendererComponent>(params);
+    void Ocean::createMesh() {
+        mesh = createPlane({0, 0}, {1500, 1500}, 750);
     }
 
     void Ocean::onAttach() {
@@ -101,6 +90,28 @@ namespace RTR {
         oceanCascade2->calculateInitialState();
         createMesh();
 
+        mat = new CgEngine::CustomValMaterial();
+        mat->setTexture2D("u_displacementC0", *oceanCascade0->displacement, 10);
+        mat->setTexture2D("u_derivativesC0", *oceanCascade0->derivatives, 11);
+        mat->setTexture2D("u_turbulenceC0", *oceanCascade0->turbulence, 12);
+        mat->setTexture2D("u_displacementC1", *oceanCascade1->displacement, 13);
+        mat->setTexture2D("u_derivativesC1", *oceanCascade1->derivatives, 14);
+        mat->setTexture2D("u_turbulenceC1", *oceanCascade1->turbulence, 15);
+        mat->setTexture2D("u_displacementC2", *oceanCascade2->displacement, 16);
+        mat->setTexture2D("u_derivativesC2", *oceanCascade2->derivatives, 17);
+        mat->setTexture2D("u_turbulenceC2", *oceanCascade2->turbulence, 18);
+
+        CgEngine::CustomShaderRendererComponentParams params;
+        params.shader = "ocean/render";
+        params.customMesh = mesh;
+        params.instanceCount = 1;
+        params.customMaterial = mat;
+        params.enableCulling = true;
+        // params.renderPassOptions.wireframe = true;
+        params.renderPassOptions.tesselationPatchSize = 4;
+
+        auto& c = attachComponent<CgEngine::CustomShaderRendererComponent>(params);
+
         onPreRenderCbUuid = addOnPreRenderCallback([](const CgEngine::CameraFrustum& camaraFrustum) {
             CG_LOGGING_DEBUG("On PreRender")
         }, true);
@@ -108,6 +119,7 @@ namespace RTR {
 
     void Ocean::update(CgEngine::TimeStep ts) {
         currentTime = currentTime + ts.getSeconds();
+        CG_GPU_DEBUG_GROUP("Ocean::update")
         oceanCascade0->calculateStateAtTime(currentTime, ts.getSeconds());
         oceanCascade1->calculateStateAtTime(currentTime, ts.getSeconds());
         oceanCascade2->calculateStateAtTime(currentTime, ts.getSeconds());

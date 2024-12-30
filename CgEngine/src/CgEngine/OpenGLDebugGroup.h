@@ -21,7 +21,7 @@ namespace CgEngine {
 }
 
 #if defined(CG_ENABLE_DEBUG_FEATURES)
-    #define CG_GPU_DEBUG_GROUP(label) OpenGLDebugGroup __cg_gpu_debug_group__(label);
+    #define CG_GPU_DEBUG_GROUP(label) CgEngine::OpenGLDebugGroup __cg_gpu_debug_group__(label);
 #else
     #define CG_GPU_DEBUG_GROUP(label)
 #endif
