@@ -3,6 +3,7 @@
 #include "AudioFile.h"
 #include "Utils/StringUtils.h"
 #include "Audio/AudioWavLoader.h"
+#include "Audio/AudioOggLoader.h"
 #include <al.h>
 
 namespace CgEngine {
@@ -26,7 +27,7 @@ namespace CgEngine {
         if (Utils::String::equalsIgnoreCase(extension, ".wav")) {
             return AudioWavLoader::loadWavFile(path);
         } else if (Utils::String::equalsIgnoreCase(extension, ".ogg")) {
-
+            return AudioOggLoader::loadOggFile(path);
         }
 
         CG_ASSERT(false, "Unsupported Audio File given")

@@ -200,9 +200,11 @@ namespace CgEngine {
             if (it->isActive()) it->update(ts);
         }
 
+        bool usePrimaryCameraAsListener = true;
         if (!componentManager->getEntitiesWithComponent<AudioListenerComponent>().empty()) {
             for (auto it = componentManager->begin<AudioListenerComponent>(); it != componentManager->end<AudioListenerComponent>(); it++) {
                 if (it->isActive()) {
+                    usePrimaryCameraAsListener = false;
                     auto& audioSystem = AudioSystem::get();
 
                     auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
@@ -217,7 +219,8 @@ namespace CgEngine {
                     break;
                 }
             }
-        } else {
+        }
+        if (usePrimaryCameraAsListener) {
             auto& primaryCamera = getPrimaryCamaraComponent();
             auto& audioSystem = AudioSystem::get();
 

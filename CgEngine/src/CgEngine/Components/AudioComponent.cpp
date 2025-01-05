@@ -85,6 +85,27 @@ namespace CgEngine {
 
     void AudioComponent::onRenderImGui() {
         if (ImGui::CollapsingHeader("AudioComponent")) {
+            ImGui::SliderFloat("Volume", &volume, 0.0f, 1.0f);
+            ImGui::SliderFloat("Pitch", &pitch, 0.0f, 2.0f);
+            ImGui::Checkbox("Looping", &looping);
+
+            ImGui::Text("IsPlaying: %s, IsPaused: %s, IsStopped %s", isPlaying() ? "true" : "false", isPaused() ? "true" : "false", isStopped() ? "true" : "false");
+
+            ImGui::BeginDisabled(true);
+            ImGui::Checkbox("Auto Destroy", &autoDestroy);
+            ImGui::EndDisabled();
+
+            if (ImGui::Button("Play")) {
+                play();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Pause")) {
+                pause();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Stop")) {
+                stop();
+            }
         }
     }
 }

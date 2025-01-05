@@ -11,10 +11,6 @@ namespace CgEngine {
         volume = params.volume;
     }
 
-    void AudioListenerComponent::onDetach(Scene& scene) {
-
-    }
-
     bool AudioListenerComponent::isActive() const {
         return active;
     }
@@ -33,6 +29,8 @@ namespace CgEngine {
 
     void AudioListenerComponent::onRenderImGui() {
         if (ImGui::CollapsingHeader("AudioListenerComponent")) {
+            ImGui::Checkbox("Is Active", &active);
+            ImGui::SliderFloat("Volume", &volume, 0.0f, 1.0f);
         }
     }
 }

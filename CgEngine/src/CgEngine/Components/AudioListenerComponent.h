@@ -19,7 +19,6 @@ namespace CgEngine {
         using Params = AudioListenerComponentParams;
 
         void onAttach(Scene& scene, AudioListenerComponentParams& params);
-        void onDetach(Scene& scene) override;
         void onRenderImGui() override;
 
         bool isActive() const;
