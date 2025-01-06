@@ -45,6 +45,7 @@ namespace CgEngine {
     // There is one node created on import/create called Mesh.
     // The "Mesh" node holds a vector of lodMeshNodes referencing the Mesh_LOD1, Mesh_LOD2, etc. nodes.
     // Mesh_LOD1, Mesh_LOD2, etc. nodes have isLodNode set to true.
+    // The Mesh_LOD1, Mesh_LOD2, etc. all have the same transform.
 
     struct MeshNode {
         aiNode* aiNode;
@@ -55,7 +56,8 @@ namespace CgEngine {
         std::vector<uint32_t> submeshIndices;
         glm::mat4 localTransform{1.0f};
         glm::mat4 transform{1.0f};
-        std::map<uint32_t, uint32_t> lodMeshNodes = {};
+        std::map<uint32_t, uint32_t> lodMeshNodesTempMap = {};
+        std::vector<uint32_t> lodMeshNodes = {};
         bool isLodNode = false;
     };
 

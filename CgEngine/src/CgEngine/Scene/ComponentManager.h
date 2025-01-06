@@ -22,6 +22,7 @@
 #include "Components/UiCanvasComponent.h"
 #include "Components/AudioListenerComponent.h"
 #include "Components/AudioComponent.h"
+#include "Components/LodDistanceComponent.h"
 #include "ComponentArray.h"
 
 namespace CgEngine {
@@ -51,6 +52,7 @@ namespace CgEngine {
             registerComponentType<CustomShaderRendererComponent>();
             registerComponentType<AudioListenerComponent>();
             registerComponentType<AudioComponent>();
+            registerComponentType<LodDistanceComponent>();
         }
 
         template<typename C>

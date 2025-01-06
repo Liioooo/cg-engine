@@ -606,6 +606,13 @@ namespace CgEngine {
         mesh->traverseNodes(scene->mRootNode, glm::mat4(1.0f), -1);
 
         for (auto& mN: mesh->meshNodes) {
+            for (const auto& [lod, lodNode]: mN.lodMeshNodesTempMap) {
+                mN.lodMeshNodes.emplace_back(lodNode);
+            }
+            mN.lodMeshNodesTempMap.clear();
+        }
+
+        for (auto& mN: mesh->meshNodes) {
             for (const auto& submeshIndex: mN.submeshIndices) {
                 const auto aiBoundingBox = scene->mMeshes[submeshIndex]->mAABB;
                 mN.aaBoundingBox.addBoxCoordinates(getVec3FromAssimpVec(aiBoundingBox.mMin), getVec3FromAssimpVec(aiBoundingBox.mMax));
@@ -1135,12 +1142,14 @@ namespace CgEngine {
             std::string lodOverviewName = aiNodeName.substr(0, aiNodeName.find_last_of('_'));
 
             if (nodeNameToNode.find(lodOverviewName) != nodeNameToNode.end()) {
-                getMeshNodes().at(getMeshNodeIndex(lodOverviewName)).lodMeshNodes.insert({Utils::String::toInt(nameParts[nameParts.size() - 1].substr(3)).value(), meshNodeIndex});
+                getMeshNodes().at(getMeshNodeIndex(lodOverviewName)).lodMeshNodesTempMap.insert({Utils::String::toInt(nameParts[nameParts.size() - 1].substr(3)).value(), meshNodeIndex});
             } else {
                 MeshNode& lodOverviewNode = meshNodes.emplace_back();
                 lodOverviewNode.aiNode = nullptr;
-                lodOverviewNode.lodMeshNodes.insert({Utils::String::toInt(nameParts[nameParts.size() - 1].substr(3)).value(), meshNodeIndex});
+                lodOverviewNode.lodMeshNodesTempMap.insert({Utils::String::toInt(nameParts[nameParts.size() - 1].substr(3)).value(), meshNodeIndex});
                 lodOverviewNode.parentNode = parentNode;
+                lodOverviewNode.localTransform = localTransform;
+                lodOverviewNode.transform = transform;
 
                 nodeNameToNode.insert({lodOverviewName, meshNodes.size() - 1});
             }

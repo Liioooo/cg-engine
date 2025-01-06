@@ -716,7 +716,7 @@ namespace CgEngine {
         activeRendering = false;
     }
 
-    void SceneRenderer::submitMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, bool enableCulling, const glm::mat4& transform) {
+    void SceneRenderer::submitMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, bool enableCulling, const glm::mat4& transform, const std::vector<float>& lodDistances) {
         auto& submeshes = mesh->getSubmeshes();
 
         for (const auto& meshNodeIndex: meshNodes) {
@@ -724,20 +724,16 @@ namespace CgEngine {
 
             // TODO: check if has lodNodes, pick correct one
 
+            glm::mat4 finalTransform = transform * meshNode.transform;
+
             if (!meshNode.lodMeshNodes.empty()) {
                 meshNode = mesh->getMeshNodes().at(meshNode.lodMeshNodes[0]);
             }
 
-            bool isInCameraFrustum = !enableCulling || cameraFrustum.testAABoundingBoxInFrustum(meshNode.aaBoundingBox, transform * meshNode.transform);
+            bool isInCameraFrustum = !enableCulling || cameraFrustum.testAABoundingBoxInFrustum(meshNode.aaBoundingBox, finalTransform);
 
             for (const auto& submeshIndex: meshNode.submeshIndices) {
                 const Submesh& submesh = submeshes.at(submeshIndex);
-
-                glm::mat4 finalTransform;
-
-                if (isInCameraFrustum || castShadows) {
-                    finalTransform = transform * meshNode.transform;
-                }
 
                 if (isInCameraFrustum) {
                     const Material* material = overrideMaterial != nullptr ? overrideMaterial : mesh->getMaterial(submesh.materialIndex);
@@ -819,8 +815,8 @@ namespace CgEngine {
         }
     }
 
-    void SceneRenderer::submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, const AABoundingBox& boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions, std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers) {
-        if (enableCulling && !cameraFrustum.testAABoundingBoxInFrustum(boundingBox, transform)) {
+    void SceneRenderer::submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, const AABoundingBox* boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions, std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers, const std::vector<float>& lodDistances) {
+        if (enableCulling && boundingBox != nullptr && !cameraFrustum.testAABoundingBoxInFrustum(*boundingBox, transform)) {
             return;
         }
 
@@ -831,35 +827,41 @@ namespace CgEngine {
 
             // TODO: check if has lodNodes, pick correct one
 
+            glm::mat4 finalTransform = transform * meshNode.transform;
+
             if (!meshNode.lodMeshNodes.empty()) {
                 meshNode = mesh->getMeshNodes().at(meshNode.lodMeshNodes[0]);
             }
 
-            for (const auto& submeshIndex: meshNode.submeshIndices) {
-                const Submesh& submesh = submeshes.at(submeshIndex);
+            bool isInCameraFrustum = !enableCulling || boundingBox != nullptr || cameraFrustum.testAABoundingBoxInFrustum(meshNode.aaBoundingBox, finalTransform);
 
-                if (shader->isForward()) {
-                    CustomShaderDrawCommand& drawCommand = customShaderForwardDrawCommandQueue[shader].emplace_back();
-                    drawCommand.instanceCount = instanceCount;
-                    drawCommand.vao = mesh->getVAO();
-                    drawCommand.material = material;
-                    drawCommand.baseIndex = submesh.baseIndex;
-                    drawCommand.baseVertex = submesh.baseVertex;
-                    drawCommand.indexCount = submesh.indexCount;
-                    drawCommand.transform = transform * meshNode.transform;
-                    drawCommand.renderPassOptions = renderPassOptions;
-                    drawCommand.instanceBuffers = instanceBuffers;
-                } else {
-                    CustomShaderDrawCommand& drawCommand = customShaderDeferredDrawCommandQueue[shader].emplace_back();
-                    drawCommand.instanceCount = instanceCount;
-                    drawCommand.vao = mesh->getVAO();
-                    drawCommand.material = material;
-                    drawCommand.baseIndex = submesh.baseIndex;
-                    drawCommand.baseVertex = submesh.baseVertex;
-                    drawCommand.indexCount = submesh.indexCount;
-                    drawCommand.transform = transform * meshNode.transform;
-                    drawCommand.renderPassOptions = renderPassOptions;
-                    drawCommand.instanceBuffers = instanceBuffers;
+            if (isInCameraFrustum) {
+                for (const auto& submeshIndex: meshNode.submeshIndices) {
+                    const Submesh& submesh = submeshes.at(submeshIndex);
+
+                    if (shader->isForward()) {
+                        CustomShaderDrawCommand& drawCommand = customShaderForwardDrawCommandQueue[shader].emplace_back();
+                        drawCommand.instanceCount = instanceCount;
+                        drawCommand.vao = mesh->getVAO();
+                        drawCommand.material = material;
+                        drawCommand.baseIndex = submesh.baseIndex;
+                        drawCommand.baseVertex = submesh.baseVertex;
+                        drawCommand.indexCount = submesh.indexCount;
+                        drawCommand.transform = finalTransform;
+                        drawCommand.renderPassOptions = renderPassOptions;
+                        drawCommand.instanceBuffers = instanceBuffers;
+                    } else {
+                        CustomShaderDrawCommand& drawCommand = customShaderDeferredDrawCommandQueue[shader].emplace_back();
+                        drawCommand.instanceCount = instanceCount;
+                        drawCommand.vao = mesh->getVAO();
+                        drawCommand.material = material;
+                        drawCommand.baseIndex = submesh.baseIndex;
+                        drawCommand.baseVertex = submesh.baseVertex;
+                        drawCommand.indexCount = submesh.indexCount;
+                        drawCommand.transform = finalTransform;
+                        drawCommand.renderPassOptions = renderPassOptions;
+                        drawCommand.instanceBuffers = instanceBuffers;
+                    }
                 }
             }
         }

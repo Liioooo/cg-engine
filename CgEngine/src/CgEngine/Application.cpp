@@ -6,6 +6,8 @@
 #include "ImGui/ImGuiWidgets.h"
 #include "ImGui/ImGuiSceneView.h"
 #include "OpenGLTimer.h"
+#include "Utils/LoaderUtils.h"
+#include "Utils/StringUtils.h"
 
 namespace CgEngine {
     Application::Application(const std::string &settingsIni) : iniReader(settingsIni) {
@@ -38,6 +40,11 @@ namespace CgEngine {
         applicationOptions.shadowMapResolution = iniReader.GetInteger("application", "shadow_map_resolution", 2048);
         applicationOptions.enableBloom = iniReader.GetBoolean("application", "enable_bloom", true);
         applicationOptions.enableHBAO = iniReader.GetBoolean("application", "enable_hbao", true);
+
+        std::vector<std::string> defaultLodDistances = Utils::LoaderUtils::getListFromString(iniReader.Get("application", "lod_distances", "10, 20, 100, 200, 400"));
+        for (const auto& lodDistance: defaultLodDistances) {
+            applicationOptions.defaultLodDistances.emplace_back(Utils::String::toFloat(lodDistance).value_or(0.0f));
+        }
 
         WindowSpecification windowSpecification;
         windowSpecification.width = iniReader.GetInteger("window", "width", 1280);

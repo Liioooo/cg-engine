@@ -337,8 +337,13 @@ namespace CgEngine {
 
         executeOnPreRenderFunctions(renderer);
 
+        auto& applicationOptions = Application::get().getApplicationOptions();
+
         for (auto it = componentManager->begin<MeshRendererComponent>(); it != componentManager->end<MeshRendererComponent>(); it++) {
-            if (it->isActive()) renderer.submitMesh(it->getRenderMesh(), it->getMeshNodes(), it->getMaterial().get(), it->getCastShadows(), it->getCullingEnabled(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix());
+            if (it->isActive()) {
+                bool hasLodDistanceComponent = componentManager->hasComponent<LodDistanceComponent>(it->getEntity());
+                renderer.submitMesh(it->getRenderMesh(), it->getMeshNodes(), it->getMaterial().get(), it->getCastShadows(), it->getCullingEnabled(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), hasLodDistanceComponent ? componentManager->getComponent<LodDistanceComponent>(it->getEntity()).getLodDistances() : applicationOptions.defaultLodDistances);
+            }
         }
 
         for (auto it = componentManager->begin<AnimatedMeshRendererComponent>(); it != componentManager->end<AnimatedMeshRendererComponent>(); it++) {
@@ -346,7 +351,10 @@ namespace CgEngine {
         }
 
         for (auto it = componentManager->begin<CustomShaderRendererComponent>(); it != componentManager->end<CustomShaderRendererComponent>(); it++) {
-            if (it->isActive()) renderer.submitCustomShaderMesh(it->getRenderMesh(), it->getMeshNodes(), it->getRenderMaterial(), it->getCullingEnabled(), it->getBoundingBox(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getShader().get(), it->getInstanceCount(), it->getRenderPassOptions(), it->getInstanceBuffers());
+            if (it->isActive()) {
+                bool hasLodDistanceComponent = componentManager->hasComponent<LodDistanceComponent>(it->getEntity());
+                renderer.submitCustomShaderMesh(it->getRenderMesh(), it->getMeshNodes(), it->getRenderMaterial(), it->getCullingEnabled(), it->getBoundingBox(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getShader().get(), it->getInstanceCount(), it->getRenderPassOptions(), it->getInstanceBuffers(), hasLodDistanceComponent ? componentManager->getComponent<LodDistanceComponent>(it->getEntity()).getLodDistances() : applicationOptions.defaultLodDistances);
+            }
         }
 
         for (auto it = componentManager->cbegin<UiCanvasComponent>(); it != componentManager->cend<UiCanvasComponent>(); it++) {
@@ -356,7 +364,6 @@ namespace CgEngine {
         executeOnRenderFunctions(renderer);
 
         #ifdef CG_ENABLE_DEBUG_FEATURES
-        auto& applicationOptions = Application::get().getApplicationOptions();
         if (applicationOptions.debugShowPhysicsColliders) {
             auto& resourceManager = Application::get().getResourceManager();
 
@@ -398,12 +405,20 @@ namespace CgEngine {
 
             auto* cubeMesh = resourceManager.getResource<MeshVertices>("CG_CubeMesh").get();
             for (auto it = componentManager->begin<MeshRendererComponent>(); it != componentManager->end<MeshRendererComponent>(); it++) {
-                auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
-                renderer.submitBoundingBoxMesh(cubeMesh, it->getRenderMesh(), it->getMeshNodes(), transform.getModelMatrix());
+                if (it->isActive()) {
+                    auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
+                    renderer.submitBoundingBoxMesh(cubeMesh, it->getRenderMesh(), it->getMeshNodes(), transform.getModelMatrix());
+                }
             }
             for (auto it = componentManager->begin<CustomShaderRendererComponent>(); it != componentManager->end<CustomShaderRendererComponent>(); it++) {
-                auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
-                renderer.submitBoundingBoxMesh(cubeMesh, it->getBoundingBox(), transform.getModelMatrix());
+                if (it->isActive()) {
+                    auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
+                    if (it->getBoundingBox() != nullptr) {
+                        renderer.submitBoundingBoxMesh(cubeMesh, *it->getBoundingBox(), transform.getModelMatrix());
+                    } else {
+                        renderer.submitBoundingBoxMesh(cubeMesh, it->getRenderMesh(), it->getMeshNodes(), transform.getModelMatrix());
+                    }
+                }
             }
         }
         #endif

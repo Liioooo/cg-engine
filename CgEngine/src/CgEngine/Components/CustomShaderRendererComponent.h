@@ -66,8 +66,9 @@ namespace CgEngine {
         void setCustomMesh(CustomMesh* mesh);
         void setCustomMaterial(Material* material);
         CustomShaderRendererComponentRenderPassOptions& getRenderPassOptions();
-        const AABoundingBox& getBoundingBox();
+        const AABoundingBox* getBoundingBox();
         void addBoundingBoxCoordinates(glm::vec3 max, glm::vec3 min);
+        void setBoundingBoxCenterAndExtents(glm::vec3 center, glm::vec3 extents);
 
         void setInstanceBuffer1(ShaderStorageBuffer* instanceBuffer);
         void setInstanceBuffer2(ShaderStorageBuffer* instanceBuffer);

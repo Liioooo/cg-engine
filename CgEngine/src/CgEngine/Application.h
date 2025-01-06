@@ -25,6 +25,8 @@ namespace CgEngine {
         uint32_t shadowMapResolution;
         bool enableBloom;
         bool enableHBAO;
+
+        std::vector<float> defaultLodDistances;
     };
 
     class Application {

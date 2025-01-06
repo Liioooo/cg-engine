@@ -2,6 +2,7 @@
 #include "pugixml.hpp"
 #include "Timer.h"
 #include "Utils/LoaderUtils.h"
+#include "Utils/StringUtils.h"
 #include "PrefabManager.h"
 
 namespace CgEngine {
@@ -94,6 +95,8 @@ namespace CgEngine {
             createAudioListenerComponent(scene, entity, node);
         } else if (name == "AudioComponent") {
             createAudioComponent(scene, entity, node);
+        } else if (name == "LodDistanceComponent") {
+            createLodDistanceComponent(scene, entity, node);
         }
     }
 
@@ -331,5 +334,18 @@ namespace CgEngine {
         if (!node.attribute("auto-destroy").empty()) params.autoDestroy = node.attribute("auto-destroy").as_bool();
 
         scene->attachComponent<AudioComponent>(entity, params);
+    }
+
+    void SceneLoader::createLodDistanceComponent(CgEngine::Scene* scene, CgEngine::Entity entity, const pugi::xml_node& node) {
+        LodDistanceComponentParams params;
+
+        if (!node.attribute("lod-distances").empty()) {
+            std::vector<std::string> lodDistances = Utils::LoaderUtils::getListFromString(node.attribute("lod-distances").as_string());
+            for (const auto& lodDistance: lodDistances) {
+                params.lodDistances.emplace_back(Utils::String::toFloat(lodDistance).value_or(0.0f));
+            }
+        }
+
+        scene->attachComponent<LodDistanceComponent>(entity, params);
     }
 }

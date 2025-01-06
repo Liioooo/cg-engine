@@ -155,20 +155,19 @@ namespace CgEngine {
         return renderPassOptions;
     }
 
-    const AABoundingBox& CustomShaderRendererComponent::getBoundingBox() {
+    const AABoundingBox* CustomShaderRendererComponent::getBoundingBox() {
         if (boundingBox.hasCoords()) {
-            return boundingBox;
+            return &boundingBox;
         }
-
-        auto* mesh = getRenderMesh();
-        if (mesh->getMeshNodes().at(0).aaBoundingBox.hasCoords()) {
-            return mesh->getMeshNodes().at(0).aaBoundingBox;
-        }
-        return boundingBox;
+        return nullptr;
     }
 
     void CustomShaderRendererComponent::addBoundingBoxCoordinates(glm::vec3 max, glm::vec3 min) {
         boundingBox.addBoxCoordinates(max, min);
+    }
+
+    void CustomShaderRendererComponent::setBoundingBoxCenterAndExtents(glm::vec3 center, glm::vec3 extents) {
+        boundingBox.setCenterAndExtents(center, extents);
     }
 
     void CustomShaderRendererComponent::setInstanceBuffer1(ShaderStorageBuffer* instanceBuffer) {
