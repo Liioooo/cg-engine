@@ -21,14 +21,16 @@ namespace CgEngine {
         if (params.customMesh != nullptr) {
             customMesh = params.customMesh;
             for (uint32_t i = 0; i < customMesh->getMeshNodes().size(); i++) {
-                if (!customMesh->getMeshNodes().at(i).submeshIndices.empty()) {
+                auto& mN = customMesh->getMeshNodes().at(i);
+                if ((!mN.submeshIndices.empty() || !mN.lodMeshNodes.empty()) && !mN.isLodNode) {
                     meshNodes.push_back(i);
                 }
             }
         } else if (!params.mesh.empty()) {
             mesh = resourceManager.getResource<MeshVertices>(params.mesh);
             for (uint32_t i = 0; i < mesh->getMeshNodes().size(); i++) {
-                if (!mesh->getMeshNodes().at(i).submeshIndices.empty()) {
+                auto& mN = mesh->getMeshNodes().at(i);
+                if ((!mN.submeshIndices.empty() || !mN.lodMeshNodes.empty()) && !mN.isLodNode) {
                     meshNodes.push_back(i);
                 }
             }
@@ -36,7 +38,8 @@ namespace CgEngine {
             mesh = resourceManager.getResource<MeshVertices>(params.assetFile);
             if (params.meshNodes.empty()) {
                 for (uint32_t i = 0; i < mesh->getMeshNodes().size(); i++) {
-                    if (!mesh->getMeshNodes().at(i).submeshIndices.empty()) {
+                    auto& mN = mesh->getMeshNodes().at(i);
+                    if ((!mN.submeshIndices.empty() || !mN.lodMeshNodes.empty()) && !mN.isLodNode) {
                         meshNodes.push_back(i);
                     }
                 }

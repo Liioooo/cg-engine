@@ -722,6 +722,11 @@ namespace CgEngine {
         for (const auto& meshNodeIndex: meshNodes) {
             auto& meshNode = mesh->getMeshNodes().at(meshNodeIndex);
 
+            // TODO: check if has lodNodes, pick correct one
+
+            if (!meshNode.lodMeshNodes.empty()) {
+                meshNode = mesh->getMeshNodes().at(meshNode.lodMeshNodes[0]);
+            }
 
             bool isInCameraFrustum = !enableCulling || cameraFrustum.testAABoundingBoxInFrustum(meshNode.aaBoundingBox, transform * meshNode.transform);
 
@@ -823,6 +828,12 @@ namespace CgEngine {
 
         for (const auto& meshNodeIndex: meshNodes) {
             auto& meshNode = mesh->getMeshNodes().at(meshNodeIndex);
+
+            // TODO: check if has lodNodes, pick correct one
+
+            if (!meshNode.lodMeshNodes.empty()) {
+                meshNode = mesh->getMeshNodes().at(meshNode.lodMeshNodes[0]);
+            }
 
             for (const auto& submeshIndex: meshNode.submeshIndices) {
                 const Submesh& submesh = submeshes.at(submeshIndex);

@@ -45,6 +45,11 @@ namespace CgEngine::Utils::String {
         return string.rfind(test, 0) == 0;
     }
 
+    bool matches(std::string_view string, const std::string& pattern) {
+        std::regex r(pattern);
+        return std::regex_match(string.begin(), string.end(), r);
+    }
+
     std::optional<int32_t> toInt(const std::string& s) {
         try {
             return std::stoi(s);

@@ -1126,15 +1126,34 @@ namespace CgEngine {
         meshNode.transform = transform;
         meshNode.parentNode = parentNode;
 
-        nodeNameToNode.insert({node->mName.C_Str(), meshNodes.size() - 1});
+        uint32_t meshNodeIndex = meshNodes.size() - 1;
+        nodeNameToNode.insert({node->mName.C_Str(), meshNodeIndex});
+
+        auto nameParts = Utils::String::splitString(node->mName.C_Str(), '_');
+        if (nameParts.size() > 1 && Utils::String::matches(nameParts[nameParts.size() - 1], "LOD\\d+")) {
+            std::string aiNodeName = node->mName.C_Str();
+            std::string lodOverviewName = aiNodeName.substr(0, aiNodeName.find_last_of('_'));
+
+            if (nodeNameToNode.find(lodOverviewName) != nodeNameToNode.end()) {
+                getMeshNodes().at(getMeshNodeIndex(lodOverviewName)).lodMeshNodes.insert({Utils::String::toInt(nameParts[nameParts.size() - 1].substr(3)).value(), meshNodeIndex});
+            } else {
+                MeshNode& lodOverviewNode = meshNodes.emplace_back();
+                lodOverviewNode.aiNode = nullptr;
+                lodOverviewNode.lodMeshNodes.insert({Utils::String::toInt(nameParts[nameParts.size() - 1].substr(3)).value(), meshNodeIndex});
+                lodOverviewNode.parentNode = parentNode;
+
+                nodeNameToNode.insert({lodOverviewName, meshNodes.size() - 1});
+            }
+            meshNodes[meshNodeIndex].isLodNode = true;
+        }
 
         for (uint32_t i = 0; i < node->mNumMeshes; i++) {
             uint32_t submeshIndex = node->mMeshes[i];
-            meshNode.submeshIndices.push_back(submeshIndex);
+            meshNodes[meshNodeIndex].submeshIndices.push_back(submeshIndex);
         }
 
         for (uint32_t i = 0; i < node->mNumChildren; i++) {
-            traverseNodes(node->mChildren[i], transform, meshNodes.size() - 1);
+            traverseNodes(node->mChildren[i], transform, meshNodeIndex);
         }
     }
 
