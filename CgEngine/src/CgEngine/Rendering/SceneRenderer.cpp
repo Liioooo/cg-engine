@@ -589,6 +589,7 @@ namespace CgEngine {
         ubCameraData.setData(cameraData);
 
         cameraFrustum.updateCameraFrustum(camera, cameraTransform[3], -cameraTransform[2]);
+        cameraPosition = cameraTransform[3];
 
         UBLightData lightData{};
         lightData.dirLightDirection = glm::vec4(lightEnvironment.dirLightDirection, 0.0f);
@@ -720,19 +721,17 @@ namespace CgEngine {
         auto& submeshes = mesh->getSubmeshes();
 
         for (const auto& meshNodeIndex: meshNodes) {
-            auto& meshNode = mesh->getMeshNodes().at(meshNodeIndex);
+            const auto* meshNode = &mesh->getMeshNodes().at(meshNodeIndex);
 
-            // TODO: check if has lodNodes, pick correct one
+            glm::mat4 finalTransform = transform * meshNode->transform;
 
-            glm::mat4 finalTransform = transform * meshNode.transform;
-
-            if (!meshNode.lodMeshNodes.empty()) {
-                meshNode = mesh->getMeshNodes().at(meshNode.lodMeshNodes[0]);
+            if (!meshNode->lodMeshNodes.empty()) {
+                meshNode = &mesh->getMeshNodes().at(meshNode->lodMeshNodes[findCorrectLodIndex(lodDistances, finalTransform, meshNode->lodMeshNodes.size())]);
             }
 
-            bool isInCameraFrustum = !enableCulling || cameraFrustum.testAABoundingBoxInFrustum(meshNode.aaBoundingBox, finalTransform);
+            bool isInCameraFrustum = !enableCulling || cameraFrustum.testAABoundingBoxInFrustum(meshNode->aaBoundingBox, finalTransform);
 
-            for (const auto& submeshIndex: meshNode.submeshIndices) {
+            for (const auto& submeshIndex: meshNode->submeshIndices) {
                 const Submesh& submesh = submeshes.at(submeshIndex);
 
                 if (isInCameraFrustum) {
@@ -823,20 +822,18 @@ namespace CgEngine {
         auto& submeshes = mesh->getSubmeshes();
 
         for (const auto& meshNodeIndex: meshNodes) {
-            auto& meshNode = mesh->getMeshNodes().at(meshNodeIndex);
+            const auto* meshNode = &mesh->getMeshNodes().at(meshNodeIndex);
 
-            // TODO: check if has lodNodes, pick correct one
+            glm::mat4 finalTransform = transform * meshNode->transform;
 
-            glm::mat4 finalTransform = transform * meshNode.transform;
-
-            if (!meshNode.lodMeshNodes.empty()) {
-                meshNode = mesh->getMeshNodes().at(meshNode.lodMeshNodes[0]);
+            if (!meshNode->lodMeshNodes.empty()) {
+                meshNode = &mesh->getMeshNodes().at(meshNode->lodMeshNodes[findCorrectLodIndex(lodDistances, finalTransform, meshNode->lodMeshNodes.size())]);
             }
 
-            bool isInCameraFrustum = !enableCulling || boundingBox != nullptr || cameraFrustum.testAABoundingBoxInFrustum(meshNode.aaBoundingBox, finalTransform);
+            bool isInCameraFrustum = !enableCulling || boundingBox != nullptr || cameraFrustum.testAABoundingBoxInFrustum(meshNode->aaBoundingBox, finalTransform);
 
             if (isInCameraFrustum) {
-                for (const auto& submeshIndex: meshNode.submeshIndices) {
+                for (const auto& submeshIndex: meshNode->submeshIndices) {
                     const Submesh& submesh = submeshes.at(submeshIndex);
 
                     if (shader->isForward()) {
@@ -1510,6 +1507,24 @@ namespace CgEngine {
         }
 
         return result;
+    }
+
+    size_t SceneRenderer::findCorrectLodIndex(const std::vector<float>& lodDistances, const glm::mat4& transform, size_t lodCount) const {
+        float distance = glm::length(cameraPosition - glm::vec3(transform[3]));
+
+        size_t out = 0;
+        for (size_t i = 0; i < lodDistances.size(); i++) {
+            if (distance < lodDistances[i]) {
+                out = i;
+                break;
+            }
+        }
+
+        if (out >= lodCount) {
+            out = lodCount - 1;
+        }
+
+        return out;
     }
 
     void SceneRenderer::resetRenderingStats() {

@@ -170,6 +170,8 @@ namespace CgEngine {
         };
         UniformBuffer<UBCameraData> ubCameraData;
 
+        glm::vec3 cameraPosition;
+
         struct UBPointLight {
             glm::vec4 position;
             glm::vec4 color;
@@ -324,6 +326,7 @@ namespace CgEngine {
 
         float findDrawInfoTextureIndex(UiDrawInfo& drawInfo, const Texture2D* texture) const;
         std::array<glm::vec4, 16> generateHBAOJitterNoise() const;
+        size_t findCorrectLodIndex(const std::vector<float>& lodDistances, const glm::mat4& transform, size_t lodCount) const;
 
         ShaderMap shaderMap;
 
