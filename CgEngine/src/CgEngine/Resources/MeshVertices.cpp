@@ -619,6 +619,12 @@ namespace CgEngine {
             }
         }
 
+        for (auto& mN: mesh->meshNodes) {
+            if (!mN.lodMeshNodes.empty()) {
+                mN.aaBoundingBox = mesh->getMeshNodes().at(mN.lodMeshNodes.at(0)).aaBoundingBox;
+            }
+        }
+
         mesh->skeleton = importSkeleton(scene, mesh);
 
         mesh->vao = new VertexArrayObject();
