@@ -4,7 +4,7 @@
 
 namespace RTR {
     CgEngine::CustomMesh* Ocean::createPlane(glm::vec2 center, glm::vec2 size, int segments) {
-        auto* _mesh = new CgEngine::CustomMesh();
+        auto* _mesh = new CgEngine::CustomMesh(CgEngine::MeshProps::DEFAULT_VERT_BUFF_LAYOUT);
         std::vector<CgEngine::MeshProps::Vertex> vertices;
         std::vector<uint32_t> indices;
 
@@ -38,9 +38,10 @@ namespace RTR {
             }
         }
 
-        _mesh->setVertexData(vertices, indices, CgEngine::MeshProps::DEFAULT_VERT_BUFF_LAYOUT);
+        _mesh->setVertexData(vertices, indices);
         // TODO: Better height estimation
         _mesh->getBoundingBox().addBoxCoordinates({center.x -wh, -0.25f, center.y -dh}, {center.x + wh, 2.0f, center.y + dh});
+        _mesh->buildMeshData();
         return _mesh;
     }
 

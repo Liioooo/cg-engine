@@ -1054,7 +1054,7 @@ namespace CgEngine {
 
         for (const auto [mk, command]: drawCommandQueue) {
             const auto& transforms = meshTransforms[mk];
-            Renderer::executeDrawCommand(*command.vao, *command.material, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
+            Renderer::executeDrawCommand(*command.vao, command.material != nullptr ? *command.material : emptyMaterial, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
         }
 
         Renderer::endRenderPass();

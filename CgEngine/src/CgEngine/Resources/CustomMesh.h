@@ -6,7 +6,8 @@ namespace CgEngine {
 
     class CustomMesh : public Mesh {
     public:
-        explicit CustomMesh();
+        explicit CustomMesh(const std::vector<VertexBufferElement>& vertexBufferLayout);
+        ~CustomMesh() override;
 
         const Material* getMaterial(size_t index) const override;
         const uint32_t getMaterialCount() const override;
@@ -14,24 +15,38 @@ namespace CgEngine {
         void setMaterial(Material* material);
         AABoundingBox& getBoundingBox();
 
+        void buildMeshData();
+
         template<typename V>
-        void setVertexData(const std::vector<V>& vertices, const std::vector<uint32_t>& indices, const std::vector<VertexBufferElement>& vertexBufferLayout) {
-            if (!vao->getVertexBuffers().empty()) {
-                vao->getVertexBuffers()[0]->setData(vertices.data(), vertices.size() * sizeof(V), VertexBufferUsage::Static);
+        void setVertexData(const std::vector<V>& vertices, std::vector<uint32_t> indices, uint32_t lodLevel = 0) {
+            if (lodMeshes.find(lodLevel) == lodMeshes.end()) {
+                lodMeshes[lodLevel] = LodMesh{std::move(indices), static_cast<uint32_t>(vertices.size()), sizeof(V), allocateVertexData(vertices.size() * sizeof(V), vertices.data())};
             } else {
-                auto* vertexBuffer = new VertexBuffer(vertices.data(), vertices.size() * sizeof(V), VertexBufferUsage::Static);
-                vertexBuffer->setLayout(vertexBufferLayout);
-                vao->addVertexBuffer(vertexBuffer);
+                freeVertexData(lodMeshes[lodLevel]);
+
+                lodMeshes[lodLevel].indices = std::move(indices);
+                lodMeshes[lodLevel].vertexCount = static_cast<uint32_t>(vertices.size());
+                lodMeshes[lodLevel].vertexSize = sizeof(V);
+                lodMeshes[lodLevel].vertexData = allocateVertexData(vertices.size() * sizeof(V), vertices.data());
             }
 
-            vao->setIndexBuffer(indices.data(), indices.size());
-
-            submeshes[0].vertexCount = vertices.size();
-            submeshes[0].indexCount = indices.size();
+            CG_ASSERT(sizeof(V) == lodMeshes.begin()->second.vertexSize, "sizeof(V) must be the same for all LODs!");
         }
 
     private:
+        struct LodMesh {
+            std::vector<uint32_t> indices;
+            uint32_t vertexCount;
+            size_t vertexSize;
+            void* vertexData = nullptr;
+        };
+
+        void* allocateVertexData(size_t size, const void* data);
+        void freeVertexData(LodMesh& lodMesh);
+
+        AABoundingBox boundingBox;
         Material* material = nullptr;
+        std::map<uint32_t, LodMesh> lodMeshes;
     };
 
 }

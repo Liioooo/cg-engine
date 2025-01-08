@@ -46,6 +46,7 @@ namespace CgEngine {
 
     class VertexBuffer {
     public:
+        VertexBuffer();
         explicit VertexBuffer(uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Dynamic);
         VertexBuffer(const void* data, uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Static);
         ~VertexBuffer();

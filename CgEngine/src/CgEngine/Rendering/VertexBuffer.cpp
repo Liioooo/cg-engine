@@ -10,6 +10,10 @@ namespace CgEngine {
         return 0;
     }
 
+    VertexBuffer::VertexBuffer() {
+        glGenBuffers(1, &vbo);
+    }
+
     VertexBuffer::VertexBuffer(uint32_t size, VertexBufferUsage usage) {
         glGenBuffers(1, &vbo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);

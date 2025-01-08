@@ -11,7 +11,7 @@ namespace RTR {
     }
 
     void CustomMeshTestScript::onAttach() {
-        mesh = new CgEngine::CustomMesh();
+        mesh = new CgEngine::CustomMesh(CgEngine::MeshProps::DEFAULT_VERT_BUFF_LAYOUT);
 
         std::vector<CgEngine::MeshProps::Vertex> vertices;
         std::vector<uint32_t> indices;
@@ -47,7 +47,7 @@ namespace RTR {
         indices.push_back(4);
         indices.push_back(2);
 
-        mesh->setVertexData(vertices, indices, CgEngine::MeshProps::DEFAULT_VERT_BUFF_LAYOUT);
+        mesh->setVertexData(vertices, indices);
         mesh->getBoundingBox().addBoxCoordinates({-0.25f, -0.25f, -0.25f}, {0.25f, 0.25f, 0.25f});
 
         getComponent<CgEngine::MeshRendererComponent>().setCustomMesh(mesh);
@@ -78,7 +78,7 @@ namespace RTR {
         c.setInstanceBuffer1(instanceBuffer);
 
 
-        auto* tessMesh = new CgEngine::CustomMesh();
+        auto* tessMesh = new CgEngine::CustomMesh({{CgEngine::ShaderDataType::Float2, false}});
 
         std::vector<glm::vec2> tessVertices;
         std::vector<uint32_t> tessIndices;
@@ -93,7 +93,7 @@ namespace RTR {
         tessIndices.push_back(2);
         tessIndices.push_back(3);
 
-        tessMesh->setVertexData(tessVertices, tessIndices, {{CgEngine::ShaderDataType::Float2, false}});
+        tessMesh->setVertexData(tessVertices, tessIndices);
 
         CgEngine::CustomShaderRendererComponentParams tessParams;
         tessParams.shader = "tess-test";

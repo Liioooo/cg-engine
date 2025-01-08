@@ -162,9 +162,10 @@ namespace RTR {
             vertId[i] = i;
         }
 
-        auto* mesh = new CgEngine::CustomMesh();
-        mesh->setVertexData(vertId, indices, {{CgEngine::ShaderDataType::Int, false}});
+        auto* mesh = new CgEngine::CustomMesh({{CgEngine::ShaderDataType::Int, false}});
+        mesh->setVertexData(vertId, indices);
         mesh->getBoundingBox().setCenterAndExtents(glm::vec3(0.0f), glm::vec3(GRASS_PATCH_SIZE / 2.0f, 200.0f, GRASS_PATCH_SIZE / 2.0f));
+        mesh->buildMeshData();
 
         return mesh;
     }
