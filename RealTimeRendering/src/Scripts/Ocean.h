@@ -12,6 +12,17 @@ namespace RTR {
             return std::make_shared<Ocean>();
         }
 
+        struct MaterialParams {
+            glm::vec3 foamColor;
+            glm::vec3 sssColor;
+            glm::vec3 color;
+            float roughness;
+            float roughnessScale;
+            float maxGloss;
+            float foamBias;
+            float foamScale;
+        };
+
     protected:
         void onAttach() override;
 
@@ -21,7 +32,13 @@ namespace RTR {
 
         void onKeyPressed(CgEngine::KeyPressedEvent& event) override;
 
+        void onRenderImGui();
+
         void createMesh();
+
+        void reinitialise();
+
+        void updateMaterial();
 
         CgEngine::CustomMesh* createPlane(glm::vec2 center, glm::vec2 size, int segments);
 
@@ -35,6 +52,12 @@ namespace RTR {
         // Custom begin
 
         float currentTime = 0;
+
+        OceanParams oceanParams0;
+        OceanParams oceanParams1;
+        OceanParams oceanParams2;
+
+        MaterialParams materialParams;
 
         OceanCascade* oceanCascade0 = nullptr;
         OceanCascade* oceanCascade1 = nullptr;

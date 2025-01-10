@@ -1,5 +1,6 @@
 #include "Ocean.h"
 
+#include "imgui.h"
 #include "OpenGLDebugGroup.h"
 
 namespace RTR {
@@ -39,48 +40,28 @@ namespace RTR {
         }
 
         _mesh->setVertexData(vertices, indices);
-        // TODO: Better height estimation
         _mesh->getBoundingBox().addBoxCoordinates({center.x -wh, -0.25f, center.y -dh}, {center.x + wh, 2.0f, center.y + dh});
         _mesh->buildMeshData();
         return _mesh;
     }
 
     void Ocean::createMesh() {
-        mesh = createPlane({0, 0}, {1500, 1500}, 750);
+        mesh = createPlane({0, 0}, {1500, 1500}, 500);
     }
 
-    void Ocean::onAttach() {
-        float length0 = 250;
-        float length1 = 17;
-        float length2 = 5;
+    void Ocean::reinitialise()
+    {
+        float boundary1 = 2 * glm::pi<float>() / oceanParams1.length * 6;
+        float boundary2 = 2 * glm::pi<float>() / oceanParams2.length * 6;
 
-        float boundary1 = 2 * glm::pi<float>() / length1 * 6;
-        float boundary2 = 2 * glm::pi<float>() / length2 * 6;
-
-        RTR::OceanParams oceanParams0 = {
-            256,
-            length0,
-            500,
-            9.81,
-            {
-                30,
-                3.3,
-                -1, // Will be calculated
-                -1, // Will be calculated
-                0.0001f,
-                boundary1,
-                {0, 0} // Currently not used
-            }
-        };
-
-        auto oceanParams1 = OceanParams(oceanParams0);
-        oceanParams1.length = length1;
+        oceanParams0.spectrumParams.cutoffHigh = boundary1;
         oceanParams1.spectrumParams.cutoffLow = boundary1;
         oceanParams1.spectrumParams.cutoffHigh = boundary2;
-        auto oceanParams2 = OceanParams(oceanParams0);
-        oceanParams2.length = length2;
         oceanParams2.spectrumParams.cutoffLow = boundary2;
-        oceanParams2.spectrumParams.cutoffHigh = 9999;
+
+        delete oceanCascade0;
+        delete oceanCascade1;
+        delete oceanCascade2;
 
         oceanCascade0 = new OceanCascade(oceanParams0, CgEngine::Application::get().getResourceManager());
         oceanCascade1 = new OceanCascade(oceanParams1, CgEngine::Application::get().getResourceManager());
@@ -89,9 +70,11 @@ namespace RTR {
         oceanCascade0->calculateInitialState();
         oceanCascade1->calculateInitialState();
         oceanCascade2->calculateInitialState();
-        createMesh();
+        updateMaterial();
+    }
 
-        mat = new CgEngine::CustomValMaterial();
+    void Ocean::updateMaterial()
+    {
         mat->setTexture2D("u_displacementC0", *oceanCascade0->displacement, 10);
         mat->setTexture2D("u_derivativesC0", *oceanCascade0->derivatives, 11);
         mat->setTexture2D("u_turbulenceC0", *oceanCascade0->turbulence, 12);
@@ -101,6 +84,55 @@ namespace RTR {
         mat->setTexture2D("u_displacementC2", *oceanCascade2->displacement, 16);
         mat->setTexture2D("u_derivativesC2", *oceanCascade2->derivatives, 17);
         mat->setTexture2D("u_turbulenceC2", *oceanCascade2->turbulence, 18);
+        mat->set("u_length0", oceanParams0.length);
+        mat->set("u_length1", oceanParams1.length);
+        mat->set("u_length2", oceanParams2.length);
+        mat->set("u_foamColor", materialParams.foamColor);
+        mat->set("u_sssColor", materialParams.sssColor);
+        mat->set("u_color", materialParams.color);
+        mat->set("u_roughness", materialParams.roughness);
+        mat->set("u_roughnessScale", materialParams.roughnessScale);
+        mat->set("u_maxGloss", materialParams.maxGloss);
+        mat->set("u_foamBias", materialParams.foamBias);
+        mat->set("u_foamScale", materialParams.foamScale);
+    }
+
+    void Ocean::onAttach() {
+        materialParams = {
+            glm::vec3(1.0),
+            glm::vec3(0.1541919, 0.8857628, 0.990566),
+            glm::vec3(0.03457636, 0.12297464, 0.1981132),
+            0.311,
+            0.0044,
+            0.91,
+            2.72,
+            0.3,
+        };
+
+        oceanParams0 = {
+            256,
+            250,
+            500,
+            9.81,
+            {
+                30,
+                3.3,
+                -1, // Will be calculated
+                -1, // Will be calculated
+                0.0001f,
+                9999,
+                {0, 0} // Currently not used
+            }
+        };
+
+        oceanParams1 = OceanParams(oceanParams0);
+        oceanParams1.length = 27;
+        oceanParams2 = OceanParams(oceanParams0);
+        oceanParams2.length = 5;
+
+        mat = new CgEngine::CustomValMaterial();
+        createMesh();
+        reinitialise();
 
         CgEngine::CustomShaderRendererComponentParams params;
         params.shader = "ocean/render";
@@ -108,7 +140,6 @@ namespace RTR {
         params.instanceCount = 1;
         params.customMaterial = mat;
         params.enableCulling = true;
-        // params.renderPassOptions.wireframe = true;
         params.renderPassOptions.tesselationPatchSize = 4;
 
         auto& c = attachComponent<CgEngine::CustomShaderRendererComponent>(params);
@@ -127,6 +158,51 @@ namespace RTR {
     }
 
     void Ocean::onKeyPressed(CgEngine::KeyPressedEvent& event) {
+    }
+
+    void Ocean::onRenderImGui() {
+        bool changed = false;
+        bool needRecaluclation = false;
+
+        ImGui::PushID("OceanCascade0");
+        ImGui::SeparatorText("Cascade 0");
+        needRecaluclation |= ImGui::DragFloat("Length", &oceanParams0.length);
+        needRecaluclation |= ImGui::DragFloat("Depth", &oceanParams0.depth);
+        needRecaluclation |= ImGui::DragFloat("Gravity", &oceanParams0.g);
+        needRecaluclation |= ImGui::DragFloat("Gamma", &oceanParams0.spectrumParams.gamma, 0.1);
+        ImGui::PopID();
+
+        ImGui::PushID("OceanCascade1");
+        ImGui::SeparatorText("Cascade 1");
+        needRecaluclation |= ImGui::DragFloat("Length", &oceanParams1.length);
+        needRecaluclation |= ImGui::DragFloat("Depth", &oceanParams1.depth);
+        needRecaluclation |= ImGui::DragFloat("Gravity", &oceanParams1.g);
+        needRecaluclation |= ImGui::DragFloat("Gamma", &oceanParams1.spectrumParams.gamma, 0.1);
+        ImGui::PopID();
+
+        ImGui::PushID("OceanCascade2");
+        ImGui::SeparatorText("Cascade 2");
+        needRecaluclation |= ImGui::DragFloat("Length", &oceanParams2.length);
+        needRecaluclation |= ImGui::DragFloat("Depth", &oceanParams2.depth);
+        needRecaluclation |= ImGui::DragFloat("Gravity", &oceanParams2.g);
+        needRecaluclation |= ImGui::DragFloat("Gamma", &oceanParams2.spectrumParams.gamma, 0.1);
+        ImGui::PopID();
+
+        ImGui::SeparatorText("Material Settings");
+        changed |= ImGui::ColorEdit3("Color", glm::value_ptr(materialParams.color), ImGuiColorEditFlags_DisplayRGB);
+        changed |= ImGui::ColorEdit3("Subsurface Color", glm::value_ptr(materialParams.sssColor), ImGuiColorEditFlags_DisplayRGB);
+        changed |= ImGui::ColorEdit3("Foam Color", glm::value_ptr(materialParams.foamColor), ImGuiColorEditFlags_DisplayRGB);
+        changed |= ImGui::SliderFloat("Roughness", &materialParams.roughness, 0, 1);
+        changed |= ImGui::SliderFloat("Roughness Scale", &materialParams.roughnessScale, 0, 0.5);
+        changed |= ImGui::SliderFloat("Max Gloss", &materialParams.maxGloss, 0, 1);
+        changed |= ImGui::DragFloat("Foam Bias", &materialParams.foamBias, 0.1);
+        changed |= ImGui::DragFloat("Foam Scale", &materialParams.foamScale, 0.05);
+
+        if (needRecaluclation) {
+            reinitialise();
+        } else if (changed) {
+            updateMaterial();
+        }
     }
 
     void Ocean::onDetach() {

@@ -6,6 +6,9 @@
 layout (quads, fractional_even_spacing, ccw) in;
 
 uniform mat4 u_Transform;
+uniform float u_length0;
+uniform float u_length1;
+uniform float u_length2;
 
 uniform layout(binding=10) sampler2D u_displacementC0;
 uniform layout(binding=11) sampler2D u_derivativesC0;
@@ -49,18 +52,15 @@ void main() {
     vec4 n = bilinearInterpolation(ts_in[0].aNormal, ts_in[1].aNormal, ts_in[2].aNormal, ts_in[3].aNormal);
     vec4 t = bilinearInterpolation(ts_in[0].aTexCoord, ts_in[1].aTexCoord, ts_in[2].aTexCoord, ts_in[3].aTexCoord);
 
-    float length0 = 250;
-    float length1 = 17;
-    float length2 = 5;
-    vec4 displacement0 = texture(u_displacementC0, (u_Transform * p).xz / length0);
-    vec4 displacement1 = texture(u_displacementC1, (u_Transform * p).xz / length1);
-    vec4 displacement2 = texture(u_displacementC2, (u_Transform * p).xz / length2);
+    vec4 displacement0 = texture(u_displacementC0, (u_Transform * p).xz / u_length0);
+    vec4 displacement1 = texture(u_displacementC1, (u_Transform * p).xz / u_length1);
+    vec4 displacement2 = texture(u_displacementC2, (u_Transform * p).xz / u_length2);
 
     vs_out.ViewVector = vec3(u_CameraData.position - u_Transform * p);
     float viewDist = length(vs_out.ViewVector);
-    float lod_c0 = min(7.13 * length0 / viewDist, 1);
-    float lod_c1 = min(7.13 * length1 / viewDist, 1);
-    float lod_c2 = min(7.13 * length2 / viewDist, 1);
+    float lod_c0 = min(7.13 * u_length0 / viewDist, 1);
+    float lod_c1 = min(7.13 * u_length1 / viewDist, 1);
+    float lod_c2 = min(7.13 * u_length2 / viewDist, 1);
 
     vec4 displacement = displacement0 * lod_c0;
     float largeWaveBias = displacement.y;
