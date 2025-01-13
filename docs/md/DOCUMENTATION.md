@@ -41,9 +41,11 @@ debug_show_bounding_boxes = false
 debug_show_normals = false
 debug_render_lines = true
 anisotropic_filtering = 16.0
+texture_compression = true
 shadow_map_resolution = 4096
 enable_bloom = true
 enable_hbao = true
+lod_distances = 5, 10, 20, 100, 200
 
 [game]
 startScene = scenes/start_scene.xml
@@ -119,7 +121,7 @@ Here you can define custom shaders that can be used in `CustomShaderRendererComp
 
 ```xml
 <Shaders>
-    <Shader name="my-shader" type="render">
+    <Shader name="my-shader" type="render" forward="false">
         <Vertex>shaders/my-shader_vertex.glsl</Vertex>
         <Fragment>shaders/my-shader_fragment.glsl</Fragment>
         <Tcs>shaders/my-shader_tcs.glsl</Tcs>
