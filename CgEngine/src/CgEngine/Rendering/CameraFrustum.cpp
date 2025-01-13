@@ -24,7 +24,7 @@ namespace CgEngine {
             float farH = camera.getPerspectiveFar() * glm::tan(glm::radians(camera.getPerspectiveFov()) * 0.5f);
             float farW = farH * camera.getAspectRatio();
 
-            glm::vec3 Z = cameraFront;
+            glm::vec3 Z = glm::normalize(cameraFront);
             glm::vec3 X = glm::normalize(glm::cross(glm::vec3({0.0f, 1.0f, 0.0f}), Z));
             glm::vec3 Y = glm::cross(Z, X);
 

@@ -29,7 +29,10 @@ namespace CgEngine {
     template<typename T>
     T AnimationChannel::interpolate(uint32_t frameIndex, float animationTime, const std::vector<AnimationKeyFrame<T>>& keyFrames, const std::function<T(const T&, const T&, float)>& interpolateFn) const {
         frameIndex = glm::min(frameIndex, static_cast<uint32_t>(keyFrames.size() - 1));
-        uint32_t previousIndex = frameIndex == 0 ? 0u : frameIndex - 1;
+        uint32_t previousIndex = frameIndex - 1;
+        if (frameIndex == 0) {
+            return keyFrames.at(frameIndex).value;
+        }
 
         float scaleFactor = 0.0f;
         float midWayLength = animationTime - keyFrames.at(previousIndex).timeStamp;

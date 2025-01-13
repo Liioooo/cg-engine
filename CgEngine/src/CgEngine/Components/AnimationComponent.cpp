@@ -75,7 +75,7 @@ namespace CgEngine {
             localRotation = glm::toMat4(currentAnimation->getChannel().getRotationForAnimationTime(animationTime));
         }
 
-        transform.setLocalModalMatrix(localPosition * localRotation * localScale * glm::inverse(currentAnimation->getAnimationTransform()));
+        transform.setLocalModalMatrix(localPosition * localRotation * localScale);
     }
 
     void AnimationComponent::onRenderImGui() {
