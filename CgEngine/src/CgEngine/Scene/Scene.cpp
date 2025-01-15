@@ -333,7 +333,8 @@ namespace CgEngine {
         }
 
         renderer.setActiveScene(this);
-        renderer.beginScene(cameraComponent.getCamera(), cameraTransform.getModelMatrix(), lightEnvironment, sceneEnvironment);
+        auto cameraTransformWithoutScale = glm::translate(glm::mat4(1.0f), cameraTransform.getGlobalPosition()) * glm::toMat4(cameraTransform.getGlobalRotationQuat());
+        renderer.beginScene(cameraComponent.getCamera(), cameraTransformWithoutScale, lightEnvironment, sceneEnvironment);
 
         executeOnPreRenderFunctions(renderer);
 
