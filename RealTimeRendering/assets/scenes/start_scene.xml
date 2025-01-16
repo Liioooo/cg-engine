@@ -43,10 +43,4 @@
             <ScriptComponent script-name="fpsCounter" />
         </Components>
     </Entity>
-    <Entity>
-        <Components>
-            <TransformComponent position="0 10 0" rotation="0 0 0" scale="1 1 1" />
-            <MeshRendererComponent asset-file="lods.fbx" />
-        </Components>
-    </Entity>
 </Scene>
