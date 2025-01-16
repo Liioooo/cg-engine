@@ -74,9 +74,22 @@ namespace RTR {
             if (!manualControl) {
                 return;
             }
-            auto q = getComponent<CgEngine::TransformComponent>().getLocalRotationQuat();
-            yaw = glm::yaw(q);
-            pitch = glm::pitch(q);
+            auto rot = getComponent<CgEngine::TransformComponent>().getLocalRotationVec();
+            yaw = rot.y;
+            pitch = rot.x;
+            if (glm::abs(glm::fmod(rot.z + glm::two_pi<float>(), glm::pi<float>()) - glm::pi<float>()) < 0.001) {
+                // glm::eulerAngles normalises yaw between -90 and 90, if this would not be possible, it compensates by
+                // using large values for pitch and yaw, i.e. setting them to 180 to flip everything, in our case we
+                // only want a roll of 0 anyway
+                // https://gamedev.stackexchange.com/questions/183771/euler-angle-and-quaternion-conversion-become-weird-when-yaw-is-bigger-than-90-de
+                if (pitch < 0) {
+                    pitch = glm::fmod(pitch + glm::two_pi<float>(), glm::pi<float>());
+                    yaw = -(yaw + glm::pi<float>());
+                } else {
+                    pitch = glm::fmod(pitch - glm::two_pi<float>(), glm::pi<float>());
+                    yaw = -(yaw - glm::pi<float>());
+                }
+            }
             prevMousePos = CgEngine::Input::getMousePosition();
         }
     }
