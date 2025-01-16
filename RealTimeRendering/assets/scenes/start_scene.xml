@@ -5,6 +5,7 @@
             <CameraComponent primary="true" projection="perspective" near="0.1" far="500" fov="80" exposure="0.75" bloom-intensity="0.1" />
             <AudioListenerComponent active="true" volume="0.8" />
             <ScriptComponent script-name="flyingCameraScript" />
+            <AnimationComponent asset-file="rtr_island.fbx" animation="Plane|CameraAction.001"/>
         </Components>
     </Entity>
     <Entity>
@@ -18,7 +19,7 @@
             <DirectionalLightComponent color="#ffffff" intensity="0.6" />
         </Components>
     </Entity>
-    <Entity>
+    <Entity id="ocean">
         <Components>
             <TransformComponent position="0 2 0" rotation="0 0 0" scale="1 1 1" />
             <ScriptComponent script-name="ocean" />

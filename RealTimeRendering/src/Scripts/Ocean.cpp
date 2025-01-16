@@ -46,7 +46,7 @@ namespace RTR {
     }
 
     void Ocean::createMesh() {
-        mesh = createPlane({0, 0}, {1500, 1500}, 500);
+        mesh = createPlane({0, 0}, {1000, 1000}, 285);
     }
 
     void Ocean::reinitialise()

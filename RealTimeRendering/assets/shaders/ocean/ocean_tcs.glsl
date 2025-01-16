@@ -43,7 +43,7 @@ void main()
         const int MIN_TESS_LEVEL = 2;
         const int MAX_TESS_LEVEL = 64;
         const float MIN_DISTANCE = 10;
-        const float MAX_DISTANCE = 130;
+        const float MAX_DISTANCE = 50;
 
         float distance00 = clamp((length(vec3(u_CameraData.position - u_Transform * ts_in[0].aPos) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)), 0.0, 1.0);
         float distance01 = clamp((length(vec3(u_CameraData.position - u_Transform * ts_in[1].aPos) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)), 0.0, 1.0);
