@@ -1515,9 +1515,9 @@ namespace CgEngine {
         size_t out = 0;
         for (size_t i = 0; i < lodDistances.size(); i++) {
             if (distance < lodDistances[i]) {
-                out = i;
                 break;
             }
+            out = i;
         }
 
         if (out >= lodCount) {
