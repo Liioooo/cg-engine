@@ -16,6 +16,10 @@ namespace RTR {
             CgEngine::Input::setCursorMode(CgEngine::CursorMode::Normal);
         }
 
+        if (!manualControl) {
+            return;
+        }
+
         auto mousePos = CgEngine::Input::getMousePosition();
 
         float mouseDeltaX = (prevMousePos.first - mousePos.first) * 0.001f;
@@ -62,4 +66,19 @@ namespace RTR {
         comp.setLocalPosition(pos);
         comp.setYawPitchRoll(yaw, pitch, 0);
     }
+
+    void FlyingCameraScript::onKeyPressed(CgEngine::KeyPressedEvent& event) {
+        if (event.getKeyCode() == CgEngine::KeyCode::F12) {
+            getComponent<CgEngine::AnimationComponent>().setAnimationPlaying(manualControl);
+            manualControl = !manualControl;
+            if (!manualControl) {
+                return;
+            }
+            auto q = getComponent<CgEngine::TransformComponent>().getLocalRotationQuat();
+            yaw = glm::yaw(q);
+            pitch = glm::pitch(q);
+            prevMousePos = CgEngine::Input::getMousePosition();
+        }
+    }
+
 }

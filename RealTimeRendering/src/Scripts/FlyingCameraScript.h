@@ -13,10 +13,13 @@ namespace RTR {
     protected:
         void update(CgEngine::TimeStep ts) override;
 
+        void onKeyPressed(CgEngine::KeyPressedEvent& event) override;
+
     private:
         std::pair<float, float> prevMousePos;
         float pitch = 0;
         float yaw = 0;
+        bool manualControl = false;
     };
 
 }
