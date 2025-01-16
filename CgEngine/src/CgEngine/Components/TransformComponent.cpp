@@ -192,32 +192,7 @@ namespace CgEngine {
         scaleTarget.z = glm::length(col[2]);
         col[2] = glm::normalize(col[2]);
 
-        float trace = col[0].x + col[1].y + col[2].z;
-        if (trace > 0.0f) {
-            float rot = glm::sqrt(trace + 1.0f);
-            rotQuatTarget.w = 0.5f * rot;
-            rot = 0.5f / rot;
-            rotQuatTarget.x = rot * (col[1].z - col[2].y);
-            rotQuatTarget.y = rot * (col[2].x - col[0].z);
-            rotQuatTarget.z = rot * (col[0].y - col[1].x);
-        } else {
-            int i, j, k = 0;
-            int next[3] = {1, 2, 0};
-            i = 0;
-            if (col[1].y > col[0].x) i = 1;
-            if (col[2].z > col[i][i]) i = 2;
-            j = next[i];
-            k = next[j];
-
-            float rot = glm::sqrt(col[i][i] - col[j][j] - col[k][k] + 1.0f);
-
-            rotQuatTarget[i] = 0.5f * rot;
-            rot = 0.5f / rot;
-            rotQuatTarget[j] = rot * (col[i][j] + col[j][i]);
-            rotQuatTarget[k] = rot * (col[i][k] + col[k][i]);
-            rotQuatTarget.w = rot * (col[j][k] - col[k][j]);
-        }
-
+        rotQuatTarget = glm::quat(glm::mat3(col[0], col[1], col[2]));
         rotVecTarget = glm::eulerAngles(rotQuatTarget);
     }
 
