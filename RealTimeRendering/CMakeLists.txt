@@ -33,6 +33,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY ${MSVC_RUN
 ################################################################################
 if (WIN32)
     target_compile_definitions(${PROJECT_NAME} PRIVATE PLATFORM_WIN32)
+    target_sources(${PROJECT_NAME} PRIVATE rtr.rc)
 endif ()
 if (UNIX)
     target_compile_definitions(${PROJECT_NAME} PRIVATE PLATFORM_UNIX)
