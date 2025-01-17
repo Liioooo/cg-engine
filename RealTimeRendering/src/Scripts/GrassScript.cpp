@@ -14,14 +14,7 @@ namespace RTR {
 
         CgEngine::Entity islandEntity = getParentEntity();
         glm::vec3 islandCenter = getComponent<CgEngine::TransformComponent>(islandEntity).getGlobalPosition();
-
-        auto& islandRenderer = getComponent<CgEngine::MeshRendererComponent>(islandEntity);
-        uint32_t islandMeshNodeIndex = islandRenderer.getRenderMesh()->getMeshNodeIndex("Plane");
-
-        auto& islandMeshNode = islandRenderer.getRenderMesh()->getMeshNodes().at(islandMeshNodeIndex);
-
-        auto [_, islandExtents] = islandMeshNode.aaBoundingBox.getTransformedAdjustedCenterAndExtents(islandMeshNode.transform);
-        glm::vec2 islandSize = glm::vec2(islandExtents.x, islandExtents.z) * 2.0f;
+        glm::vec2 islandSize = glm::vec2(400.0f, 400.0f);
 
         glm::mat4 grassColorsUniform = glm::mat4(glm::vec4(baseColor1, 0.0f), glm::vec4(baseColor2, 0.0f), glm::vec4(tipColor1, 0.0f), glm::vec4(tipColor2, 0.0f));
 
