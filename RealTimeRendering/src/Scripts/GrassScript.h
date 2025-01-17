@@ -73,6 +73,8 @@ namespace RTR {
         CgEngine::CustomMesh* geometryHigh;
         CgEngine::CustomMesh* geometryLow;
 
+        CgEngine::ResRef<CgEngine::Texture2D> heightGrassMap;
+
         void createOffsetsBuffer();
         CgEngine::CustomMesh* createGeometry(uint8_t segments);
 

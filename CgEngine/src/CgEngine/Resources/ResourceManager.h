@@ -144,6 +144,7 @@ namespace CgEngine {
                 CG_LOGGING_DEBUG("Unload Resource Info: {0} : {1} : UseCount: {2}", typeid(R).name(), it->first, it->second.use_count())
 
                 if (it->second.use_count() == 1) {
+                    CG_LOGGING_DEBUG("Unloading Resource: {0} : {1}", typeid(R).name(), it->first)
                     resourceMap.erase(it++);
                 } else {
                     ++it;

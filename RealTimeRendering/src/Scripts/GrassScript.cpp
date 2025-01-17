@@ -10,7 +10,7 @@ namespace RTR {
         geometryHigh = createGeometry(GRASS_SEGMENTS_HIGH);
         geometryLow = createGeometry(GRASS_SEGMENTS_LOW);
 
-        CgEngine::ResRef<CgEngine::Texture2D> heightGrassMap = getResource<CgEngine::Texture2D>(CgEngine::FileSystem::getAsGamePath("./textures/island_height_grass_map.png").string());
+        heightGrassMap = getResource<CgEngine::Texture2D>(CgEngine::FileSystem::getAsGamePath("./textures/island_height_grass_map.png").string());
 
         CgEngine::Entity islandEntity = getParentEntity();
         glm::vec3 islandCenter = getComponent<CgEngine::TransformComponent>(islandEntity).getGlobalPosition();
