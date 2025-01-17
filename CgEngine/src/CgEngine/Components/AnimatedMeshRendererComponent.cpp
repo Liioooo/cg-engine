@@ -40,6 +40,8 @@ namespace CgEngine {
         isAnimationPlaying = params.autoPlayAnimation;
         loopAnimation = params.loopAnimation;
         animationSpeed = params.animationSpeed;
+        animationStartTime = params.animationStartTime;
+        animationTime = animationStartTime;
 
         if (params.animation.empty()) {
             currentAnimation = &mesh->getSkeletalAnimations().cbegin()->second;
@@ -91,7 +93,7 @@ namespace CgEngine {
 
     void AnimatedMeshRendererComponent::setAnimation(const std::string& name) {
         currentAnimation = &mesh->getSkeletalAnimations().at(name);
-        animationTime = 0.0f;
+        animationTime = animationStartTime;
     }
 
     void AnimatedMeshRendererComponent::setAnimationPlaying(bool playing) {
@@ -106,8 +108,12 @@ namespace CgEngine {
         loopAnimation = loop;
     }
 
+    void AnimatedMeshRendererComponent::setAnimationStartTime(float time) {
+        animationStartTime = time;
+    }
+
     void AnimatedMeshRendererComponent::reset() {
-        animationTime = 0.0f;
+        animationTime = animationStartTime;
         calculateBoneTransforms(mesh->getSkeleton()->getBoneTransforms());
     }
 

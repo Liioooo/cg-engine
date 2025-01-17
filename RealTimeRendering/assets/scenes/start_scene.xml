@@ -37,6 +37,48 @@
             </Components>
         </Entity>
     </Entity>
+    <Entity tag="rex0">
+        <Components>
+            <TransformComponent position="-95.6 8.25 88.2" rotation="0 0.64 6.213" rotation-rads="true" scale="1 1 1" />
+            <AnimatedMeshRendererComponent asset-file="rex/rex.fbx" mesh-nodes="TRex.2" animation="skeletal.3|roar_skeletal.3" />
+        </Components>
+    </Entity>
+    <Entity tag="rex1">
+        <Components>
+            <TransformComponent position="-103.9 8.45 83.9" rotation="0 0.0111701 6.083" rotation-rads="true" scale="1 1 1" />
+            <AnimatedMeshRendererComponent asset-file="rex/rex.fbx" mesh-nodes="TRex.2" animation="skeletal.3|idle_skeletal.3" />
+        </Components>
+    </Entity>
+    <Entity tag="rex2">
+        <Components>
+            <TransformComponent position="-113.9 10.4 93.1" rotation="0 1.021 6.103" rotation-rads="true" scale="1 1 1" />
+            <AnimatedMeshRendererComponent asset-file="rex/rex.fbx" mesh-nodes="TRex.2" animation="skeletal.3|roar_skeletal.3" animation-start-time="0.4" />
+        </Components>
+    </Entity>
+    <Entity tag="bronto0">
+        <Components>
+            <TransformComponent position="-51.7 12.5 10.6" rotation="0 2.89 6.173" rotation-rads="true" scale="7 7 7" />
+            <AnimatedMeshRendererComponent asset-file="eating_bronto.glb" animation-start-time="0.5" />
+        </Components>
+    </Entity>
+    <Entity tag="bronto1">
+        <Components>
+            <TransformComponent position="-56.1 12 18.5" rotation="0 3.26 6.203" rotation-rads="true" scale="7 7 7" />
+            <AnimatedMeshRendererComponent asset-file="eating_bronto.glb" animation-start-time="0" />
+        </Components>
+    </Entity>
+    <Entity tag="bronto2">
+        <Components>
+            <TransformComponent position="-34.3 11.9 9.2" rotation="0 0.9 6.173" rotation-rads="true" scale="7 7 7" />
+            <AnimatedMeshRendererComponent asset-file="eating_bronto.glb" animation-start-time="0.8" />
+        </Components>
+    </Entity>
+    <Entity tag="stego">
+        <Components>
+            <TransformComponent position="-72.5 12.4 24.7" rotation="0 0 6.153" rotation-rads="true" scale="3 3 3" />
+            <AnimatedMeshRendererComponent asset-file="stego.glb" animation-start-time="0" />
+        </Components>
+    </Entity>
     <Entity id="canvas">
         <Components>
             <UiCanvasComponent />

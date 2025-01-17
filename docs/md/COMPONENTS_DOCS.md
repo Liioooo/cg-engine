@@ -34,16 +34,17 @@
 
 ## AnimatedMeshRendererComponent
 
-| **Property**      | **Description**                                                 | **Example**           | **Default** |
-|-------------------|-----------------------------------------------------------------|-----------------------|-------------|
-| `asset-file`      | File to load 3D-Asset                                           | `model.fbx`           | -           |
-| `material`        | Material for this mesh. Overrides materials from asset files.   | `MyMaterial`          | -           |
-| `cast-shadows`    | Defines if this object casts shadows.                           | `true`                | `true`      |
-| `mesh-nodes`      | List of Nodes to render. Nothing means: everything is rendered. | `RootNode, Node1`     | -           |
-| `animation`       | Animation to use. (Must be included in the Asset-File)          | `Armature\|Animation` | -           |
-| `animation-speed` | Animation speed. (Can also be negative)                         | `1.0`                 | `1.0`       |
-| `auto-play`       | Auto play the animation.                                        | `true`                | `true`      |
-| `loop`            | Should the animation loop?                                      | `true`                | `true`      |
+| **Property**           | **Description**                                                 | **Example**           | **Default** |
+|------------------------|-----------------------------------------------------------------|-----------------------|-------------|
+| `asset-file`           | File to load 3D-Asset                                           | `model.fbx`           | -           |
+| `material`             | Material for this mesh. Overrides materials from asset files.   | `MyMaterial`          | -           |
+| `cast-shadows`         | Defines if this object casts shadows.                           | `true`                | `true`      |
+| `mesh-nodes`           | List of Nodes to render. Nothing means: everything is rendered. | `RootNode, Node1`     | -           |
+| `animation`            | Animation to use. (Must be included in the Asset-File)          | `Armature\|Animation` | -           |
+| `animation-speed`      | Animation speed. (Can also be negative)                         | `1.0`                 | `1.0`       |
+| `animation-start-time` | Animation start time                                            | `0.5`                 | `0.0`       |
+| `auto-play`            | Auto play the animation.                                        | `true`                | `true`      |
+| `loop`                 | Should the animation loop?                                      | `true`                | `true`      |
 
 ## CustomShaderRendererComponent
 | **Property**                   | **Description**                                                          | **Example**           | **Default** |

@@ -15,6 +15,7 @@ namespace CgEngine {
         std::vector<std::string> meshNodes;
         std::string animation;
         float animationSpeed = 1.0f;
+        float animationStartTime = 0.0f;
         bool autoPlayAnimation = true;
         bool loopAnimation = true;
 
@@ -41,6 +42,8 @@ namespace CgEngine {
         void setAnimationPlaying(bool playing);
         void setAnimationSpeed(float speed);
         void setLoopAnimation(bool loop);
+        void setAnimationStartTime(float time);
+
         void reset();
 
         bool isActive() const;
@@ -64,6 +67,7 @@ namespace CgEngine {
         VertexArrayObject skinnedVAO{false};
 
         float animationTime = 0.0f;
+        float animationStartTime = 0.0f;
 
         void calculateBoneTransforms(const std::vector<glm::mat4>& localBoneTransforms);
         glm::mat4 calcSingleBoneTransform(uint32_t boneIndex, const std::vector<glm::mat4>& localBoneTransforms);

@@ -101,9 +101,17 @@ namespace CgEngine {
     }
 
      void SceneLoader::createTransformComponent(Scene *scene, Entity entity, const pugi::xml_node &node) {
+        bool rotRads = false;
+
         TransformComponentParams params;
         if (!node.attribute("position").empty()) params.position = Utils::LoaderUtils::stringTupleToVec3(node.attribute("position").as_string());
-        if (!node.attribute("rotation").empty()) params.rotation = glm::radians(Utils::LoaderUtils::stringTupleToVec3(node.attribute("rotation").as_string()));
+        if (!node.attribute("rotation-rads").empty()) rotRads = node.attribute("rotation-rads").as_bool();
+        if (!node.attribute("rotation").empty()) {
+            params.rotation = Utils::LoaderUtils::stringTupleToVec3(node.attribute("rotation").as_string());
+            if (!rotRads) {
+                params.rotation = glm::radians(params.rotation);
+            }
+        }
         if (!node.attribute("scale").empty()) params.scale = Utils::LoaderUtils::stringTupleToVec3(node.attribute("scale").as_string());
 
         scene->attachComponent<TransformComponent>(entity, params);
@@ -129,6 +137,7 @@ namespace CgEngine {
         if (!node.attribute("mesh-nodes").empty()) params.meshNodes = Utils::LoaderUtils::getListFromString(node.attribute("mesh-nodes").as_string());
         if (!node.attribute("animation").empty()) params.animation = node.attribute("animation").as_string("");
         if (!node.attribute("animation-speed").empty()) params.animationSpeed = node.attribute("animation-speed").as_float();
+        if (!node.attribute("animation-start-time").empty()) params.animationStartTime = node.attribute("animation-start-time").as_float();
         if (!node.attribute("auto-play").empty()) params.autoPlayAnimation = node.attribute("auto-play").as_bool();
         if (!node.attribute("loop").empty()) params.loopAnimation = node.attribute("loop").as_bool();
 

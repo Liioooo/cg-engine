@@ -219,6 +219,7 @@ namespace CgEngine {
             ImGuiWidgets::copyCurrentConfig("TransformComponent", [this](auto& map) {
                 map["position"] = Utils::LoaderUtils::vec3ToStringTuple(localPosition);
                 map["rotation"] = Utils::LoaderUtils::vec3ToStringTuple(localRotationVec);
+                map["rotation-rads"] = "true";
                 map["scale"] = Utils::LoaderUtils::vec3ToStringTuple(localScale);
             });
         }
