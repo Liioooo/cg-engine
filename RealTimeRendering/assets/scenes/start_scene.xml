@@ -4,19 +4,19 @@
             <TransformComponent position="1.08298 16.935 -6.05486" rotation="0 0 0" scale="1 1 1" />
             <CameraComponent primary="true" projection="perspective" near="0.1" far="500" fov="80" exposure="0.75" bloom-intensity="0.1" />
             <AudioListenerComponent active="true" volume="0.8" />
-            <ScriptComponent script-name="flyingCameraScript" />
+            <ScriptComponent script-name="flyingCameraScript" normal="10" slow="5" fast="80" />
             <AnimationComponent asset-file="rtr_island.fbx" animation="Plane|CameraAction.001"/>
         </Components>
     </Entity>
     <Entity>
         <Components>
-            <SkyboxComponent hdri-path="table_mountain_1_puresky_2k.hdr" lod="0.1" intensity="2.0" />
+            <SkyboxComponent hdri-path="table_mountain_1_puresky_2k.hdr" lod="0.1" intensity="1.0" />
         </Components>
     </Entity>
     <Entity>
         <Components>
             <TransformComponent position="0 0 0" rotation="25 0 -35" scale="1 1 1" />
-            <DirectionalLightComponent color="#ffffff" intensity="0.6" />
+            <DirectionalLightComponent color="#fff4d6" cast-shadows="true" intensity="0.6" />
         </Components>
     </Entity>
     <Entity id="ocean">

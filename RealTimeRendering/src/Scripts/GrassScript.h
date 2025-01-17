@@ -31,15 +31,15 @@ namespace RTR {
 
         float GRASS_LOD_DIST = 25.0f;
         float GRASS_MAX_DIST = 200.0f;
-        float GRASS_TERRAIN_NORMAL_RATIO = 0.25f;
+        float GRASS_TERRAIN_NORMAL_RATIO = 0.4f;
 
         float GRASS_WIDTH = 0.1f;
         float GRASS_HEIGHT = 1.5f;
 
-        glm::vec3 baseColor1 = glm::vec3(0.02f, 0.075f, 0.01f);
-        glm::vec3 baseColor2 = glm::vec3(0.025f, 0.1f, 0.01f);
-        glm::vec3 tipColor1 = glm::vec3(0.65f, 0.8f, 0.25f);
-        glm::vec3 tipColor2 = glm::vec3(0.8f, 0.9f, 0.4f);
+        glm::vec3 baseColor1 = glm::vec3(64.0f / 255.0f, 71.0f / 255.0f, 10.0f / 255.0f);
+        glm::vec3 baseColor2 = glm::vec3(18.0f / 255.0f, 40.0f / 255.0f, 5.0f / 255.0f);
+        glm::vec3 tipColor1 = glm::vec3(169.0f / 255.0f, 139.0f / 255.0f, 44.0f / 255.0f);
+        glm::vec3 tipColor2 = glm::vec3(220.0f / 255.0f, 120.0f / 255.0f, 50.0f / 255.0f);
 
         const std::array<glm::vec2, 16> GRASS_POSITIONS = {
                 glm::vec2(-62.0f, 0.0f),

@@ -36,12 +36,12 @@ namespace RTR {
         }
 
         glm::vec3 front = glm::normalize(glm::quat({pitch, yaw, 0}) * glm::vec3(0, 0, -1));
-        float factor = 10.0f;
+        float factor = getParameterMap().getAsFloat("normal").value_or(10.0f);
         if (CgEngine::Input::isKeyPressed(CgEngine::KeyCode::LeftShift)) {
-            factor = 30.0f;
+            factor = getParameterMap().getAsFloat("fast").value_or(30.0f);
         }
         if (CgEngine::Input::isKeyPressed(CgEngine::KeyCode::LeftControl)) {
-            factor = 5.0f;
+            factor = getParameterMap().getAsFloat("slow").value_or(5.0f);
         }
 
         if (CgEngine::Input::isKeyPressed(CgEngine::KeyCode::W)) {
