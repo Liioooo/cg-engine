@@ -14,7 +14,6 @@ namespace CgEngine {
         script = Application::get().getScriptManager().getScriptInstance(params.scriptName);
         script->owningEntity = entity;
         script->owningScene = &scene;
-        script->parameterMap = &parameterMap;
         script->onAttach();
     }
 
@@ -56,6 +55,10 @@ namespace CgEngine {
         dispatcher.dispatch<MouseButtonPressedEvent>(EVENT_BIND_FN(script->onMouseButtonPressed));
         dispatcher.dispatch<MouseMovedEvent>(EVENT_BIND_FN(script->onMouseMoved));
         dispatcher.dispatch<KeyPressedEvent>(EVENT_BIND_FN(script->onKeyPressed));
+    }
+
+    const ScriptParameterMap& ScriptComponent::getParameterMap() const {
+        return parameterMap;
     }
 
     void ScriptComponent::onRenderImGui() {

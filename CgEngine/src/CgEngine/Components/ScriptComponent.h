@@ -42,6 +42,8 @@ namespace CgEngine {
             return *dynamic_cast<S*>(script.get());
         }
 
+        const ScriptParameterMap& getParameterMap() const;
+
     private:
         std::shared_ptr<NativeScript> script;
         ScriptParameterMap parameterMap;

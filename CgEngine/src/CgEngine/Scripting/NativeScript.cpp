@@ -105,6 +105,6 @@ namespace CgEngine {
     }
 
     const ScriptParameterMap& NativeScript::getParameterMap() {
-        return *parameterMap;
+        return getComponent<ScriptComponent>().getParameterMap();
     }
 }
