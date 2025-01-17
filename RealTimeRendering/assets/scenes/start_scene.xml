@@ -76,7 +76,7 @@
     <Entity tag="stego">
         <Components>
             <TransformComponent position="-72.5 12.4 24.7" rotation="0 0 6.153" rotation-rads="true" scale="3 3 3" />
-            <AnimatedMeshRendererComponent asset-file="stego.glb" animation-start-time="0" />
+            <AnimatedMeshRendererComponent asset-file="stego.glb" animation-start-time="0" animation="Armature|Shake|Shake:BaseAnimation" />
         </Components>
     </Entity>
     <Entity id="canvas">
