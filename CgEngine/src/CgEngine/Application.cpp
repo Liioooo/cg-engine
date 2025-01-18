@@ -50,7 +50,7 @@ namespace CgEngine {
         windowSpecification.width = iniReader.GetInteger("window", "width", 1280);
         windowSpecification.height = iniReader.GetInteger("window", "height", 720);
         windowSpecification.title = iniReader.Get("window", "title", "CG Engine");
-        std::string icon = iniReader.Get("window", "icon", "");
+        auto icon = std::filesystem::path(iniReader.Get("window", "icon", ""));
         windowSpecification.icon = icon.empty() ? icon : FileSystem::getAsGamePath(icon);
         windowSpecification.fullScreen = iniReader.GetBoolean("window", "fullscreen", false);
         windowSpecification.refreshRate = iniReader.GetInteger("window", "refresh_rate", 60);
