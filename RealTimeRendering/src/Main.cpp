@@ -3,6 +3,8 @@
 #include <Scripts/Ocean.h>
 #include <Scripts/GrassScript.h>
 #include <Scripts/LoadingScreenScript.h>
+#include <Scripts/PlayerScript.h>
+#include <Scripts/ControlScript.h>
 #include "CgEngine/Application.h"
 
 int main(int argc, char **argv) {
@@ -13,6 +15,8 @@ int main(int argc, char **argv) {
     application->registerNativeScript<RTR::Ocean>("ocean");
     application->registerNativeScript<RTR::GrassScript>("grass");
     application->registerNativeScript<RTR::LoadingScreenScript>("loadingScreen");
+    application->registerNativeScript<RTR::ControlScript>("control");
+    application->registerNativeScript<RTR::PlayerScript>("player");
 
     application->init();
     application->run();

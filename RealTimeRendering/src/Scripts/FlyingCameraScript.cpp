@@ -8,14 +8,6 @@ namespace RTR {
             return;
         }
 
-        if (CgEngine::Input::isMouseButtonPressed(CgEngine::MouseButton::MouseButtonLeft) && CgEngine::Input::getCursorMode() == CgEngine::CursorMode::Normal) {
-            CgEngine::Input::setCursorMode(CgEngine::CursorMode::Locked);
-            prevMousePos = CgEngine::Input::getMousePosition();
-        }
-        if (CgEngine::Input::isKeyPressed(CgEngine::KeyCode::Escape)) {
-            CgEngine::Input::setCursorMode(CgEngine::CursorMode::Normal);
-        }
-
         if (!manualControl) {
             return;
         }
@@ -68,6 +60,10 @@ namespace RTR {
     }
 
     void FlyingCameraScript::onKeyPressed(CgEngine::KeyPressedEvent& event) {
+        if (!getComponent<CgEngine::CameraComponent>().isPrimary()) {
+            return;
+        }
+
         if (event.getKeyCode() == CgEngine::KeyCode::F12) {
             getComponent<CgEngine::AnimationComponent>().setAnimationPlaying(manualControl);
             manualControl = !manualControl;

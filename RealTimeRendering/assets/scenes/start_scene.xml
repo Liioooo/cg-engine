@@ -1,9 +1,14 @@
 <Scene>
+    <Entity id="control">
+        <Components>
+            <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
+            <ScriptComponent script-name="control" />
+        </Components>
+    </Entity>
     <Entity id="camera">
         <Components>
             <TransformComponent position="1.08298 16.935 -6.05486" rotation="0 0 0" scale="1 1 1" />
             <CameraComponent primary="true" projection="perspective" near="0.1" far="500" fov="80" exposure="0.75" bloom-intensity="0.1" />
-            <AudioListenerComponent active="true" volume="0.8" />
             <ScriptComponent script-name="flyingCameraScript" normal="10" slow="5" fast="80" />
             <AnimationComponent asset-file="rtr_island.fbx" animation="Plane|CameraAction.001"/>
         </Components>
@@ -29,6 +34,8 @@
         <Components>
             <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
             <MeshRendererComponent asset-file="rtr_island.fbx" />
+            <RigidBodyComponent dynamic="false" />
+            <TriangleColliderComponent asset-file="rtr_island.fbx" mesh-node="Plane" />
         </Components>
         <Entity id="grass">
             <Components>
@@ -78,6 +85,26 @@
             <TransformComponent position="-72.5 12.4 24.7" rotation="0 0 6.153" rotation-rads="true" scale="3 3 3" />
             <AnimatedMeshRendererComponent asset-file="stego.glb" animation-start-time="0" animation="Armature|Shake|Shake:BaseAnimation" />
         </Components>
+    </Entity>
+    <Entity id="human">
+        <Components>
+            <TransformComponent position="0 10 0" rotation="0 0 0" scale="1 1 1" />
+            <CapsuleColliderComponent radius="0.4" half-height="0.7" offset="0 1.2 0" />
+            <CharacterControllerComponent slope-limit="50" step-offset="0.1" step-down-offset="0.1" />
+            <ScriptComponent script-name="player" />
+        </Components>
+        <Entity id="humanCam">
+            <Components>
+                <TransformComponent position="0 0 5" rotation="0 0 0" scale="1 1 1" />
+                <CameraComponent primary="false" projection="perspective" near="0.1" far="500" fov="80" exposure="0.75" bloom-intensity="0.1" />
+            </Components>
+        </Entity>
+        <Entity id="humanMesh">
+            <Components>
+                <TransformComponent position="0 0 0" rotation="0 0 0" rotation-rads="true" scale="0.5 0.5 0.5" />
+                <AnimatedMeshRendererComponent asset-file="human/human.fbx" />
+            </Components>
+        </Entity>
     </Entity>
     <Entity id="canvas">
         <Components>

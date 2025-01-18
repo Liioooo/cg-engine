@@ -130,7 +130,6 @@ namespace CgEngine {
     private:
         Scene* owningScene;
         Entity owningEntity;
-        ScriptParameterMap* parameterMap;
     };
 
 }

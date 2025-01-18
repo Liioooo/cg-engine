@@ -1,6 +1,6 @@
 #version 450 core
 
-const int MAX_BONES = 100;
+const int MAX_BONES = 200;
 const int MAX_ANIMATED_COMPONENTS = 512;
 
 struct BoneInfluence {

@@ -77,7 +77,7 @@ namespace CgEngine {
 
 
     private:
-        static const uint32_t maxBones = 100;
+        static const uint32_t maxBones = 200;
         static const uint32_t maxAnimatedComponents = 512;
 
         Scene* activeScene;
