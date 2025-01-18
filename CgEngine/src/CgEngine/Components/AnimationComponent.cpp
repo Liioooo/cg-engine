@@ -14,6 +14,7 @@ namespace CgEngine {
         animationSource = resourceManager.getResource<MeshVertices>(params.assetFile);
 
         CG_ASSERT(!animationSource->getAnimations().empty(), "Asset file does not contain any Animations")
+        CG_ASSERT(animationSource->getAnimations().find(params.animation) != animationSource->getAnimations().end(), "Asset file does not contain animation named " + params.animation);
 
         isAnimationPlaying = params.autoPlayAnimation;
         loopAnimation = params.loopAnimation;
