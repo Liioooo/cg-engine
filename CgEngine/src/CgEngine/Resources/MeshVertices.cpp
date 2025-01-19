@@ -910,7 +910,7 @@ namespace CgEngine {
 
     std::filesystem::path MeshVertices::getTexturePath(const std::filesystem::path& modelPath, const std::string &texturePath) {
         auto directory = modelPath.parent_path();
-        return directory / texturePath;
+        return directory / CgEngine::Utils::String::replaceAll(texturePath, "\\", "/");
     }
 
     glm::mat4 MeshVertices::getTransformFromAssimpTransform(const aiMatrix4x4 &transform) {

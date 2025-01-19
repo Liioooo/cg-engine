@@ -6,6 +6,7 @@ namespace CgEngine::Utils::String {
     std::vector<std::string> splitString(std::string_view string, char delimiter);
     bool startsWith(std::string_view string, const std::string& test);
     bool matches(std::string_view string, const std::string& pattern);
+    std::string replaceAll(std::string str, const std::string& from, const std::string& to);
 
     std::optional<int32_t> toInt(const std::string& s);
     std::optional<float> toFloat(const std::string& s);
