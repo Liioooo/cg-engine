@@ -36,10 +36,10 @@ namespace RTR {
         bool back = false;
 
         if (CgEngine::Input::isKeyPressed(CgEngine::KeyCode::S)) {
-            movement = -cameraDirection * ts.getSeconds() * 7.0f;
+            movement = -cameraDirection * ts.getSeconds() * 6.0f;
             back = true;
         } else {
-            movement = (glm::length(movement) == 0.0f ? movement : normalize(movement)) * ts.getSeconds() * 7.0f;
+            movement = (glm::length(movement) == 0.0f ? movement : normalize(movement)) * ts.getSeconds() * 6.0f;
         }
 
         auto& animComp = getComponent<CgEngine::AnimatedMeshRendererComponent>(findEntityById("humanMesh"));

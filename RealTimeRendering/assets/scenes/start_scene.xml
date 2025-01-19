@@ -102,7 +102,7 @@
         <Entity id="humanMesh">
             <Components>
                 <TransformComponent position="0 0 0" rotation="0 0 0" rotation-rads="true" scale="0.5 0.5 0.5" />
-                <AnimatedMeshRendererComponent asset-file="human/human.fbx" />
+                <AnimatedMeshRendererComponent asset-file="human/human.fbx" auto-play="false" />
             </Components>
         </Entity>
     </Entity>
