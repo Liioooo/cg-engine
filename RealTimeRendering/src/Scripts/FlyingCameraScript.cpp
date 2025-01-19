@@ -73,7 +73,7 @@ namespace RTR {
             auto rot = getComponent<CgEngine::TransformComponent>().getLocalRotationVec();
             yaw = rot.y;
             pitch = rot.x;
-            if (glm::abs(glm::fmod(rot.z + glm::two_pi<float>(), glm::pi<float>()) - glm::pi<float>()) < 0.001) {
+            if (glm::abs(glm::fmod(rot.z + glm::two_pi<float>(), glm::two_pi<float>()) - glm::pi<float>()) < 0.01) {
                 // glm::eulerAngles normalises yaw between -90 and 90, if this would not be possible, it compensates by
                 // using large values for pitch and yaw, i.e. setting them to 180 to flip everything, in our case we
                 // only want a roll of 0 anyway
