@@ -82,6 +82,8 @@ namespace CgEngine {
         DescriptorSet& operator=(DescriptorSet& other) = delete;
 
         virtual bool isReady() const = 0;
+        virtual void recreate() =  0;
+        virtual void reconfigure(const DescriptorSetSpecification& spec) = 0;
     };
 
 }

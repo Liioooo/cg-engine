@@ -26,6 +26,7 @@ namespace CgEngine {
 
         virtual void clearPass(const RenderPass* renderPass, const Framebuffer* framebuffer) = 0;
 
+        virtual void bindDescriptorSet(const DescriptorSet* descriptorSet, uint32_t setIndex) = 0;
         virtual void setPushConstants(const std::array<PushConstants*, 2>& pushConstants, uint32_t pushConstantsCount) = 0;
 
         virtual void renderUnitQuad(const Material& material) = 0;

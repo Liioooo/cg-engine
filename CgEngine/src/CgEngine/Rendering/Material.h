@@ -15,8 +15,6 @@ namespace CgEngine {
 
         bool operator ==(const Material& other) const;
 
-        void setDescriptorSet(DescriptorSet* descriptorSet);
-
         DescriptorSet* getDescriptorSet() const;
         PushConstants* getPushConstants() const;
 

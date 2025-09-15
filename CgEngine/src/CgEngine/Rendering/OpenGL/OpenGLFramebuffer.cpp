@@ -5,8 +5,8 @@
 
 namespace CgEngine {
 
-    OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& spec) : width(spec.width), height(spec.height) {
-        init(spec);
+    OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& spec) : width(spec.width), height(spec.height), colorAttachments(spec.colorAttachments), depthAttachment(spec.depthAttachment) {
+        init();
     }
 
     OpenGLFramebuffer::OpenGLFramebuffer(uint32_t width, uint32_t height, bool swapChainTarget) : width(width), height(height) {
@@ -43,14 +43,17 @@ namespace CgEngine {
         return *this;
     }
 
-    void OpenGLFramebuffer::recreate(const CgEngine::FramebufferSpecification& spec) {
+    void OpenGLFramebuffer::recreate(uint32_t newWidth, uint32_t newHeight) {
         if (framebufferHandle != ~0 && framebufferHandle != 0) {
             glDeleteFramebuffers(1, &framebufferHandle);
         }
 
-        width = spec.width;
-        height = spec.height;
-        init(spec);
+        width = newWidth;
+        height = newHeight;
+
+        if (framebufferHandle != 0) {
+            init();
+        }
     }
 
     uint32_t OpenGLFramebuffer::getWidth() const {
@@ -66,24 +69,24 @@ namespace CgEngine {
         return framebufferHandle;
     }
 
-    void OpenGLFramebuffer::init(const FramebufferSpecification& spec) {
-        CG_ASSERT(spec.width > 0 && spec.height > 0, "Framebuffer width and height must be greater than 0!")
-        CG_ASSERT(spec.colorAttachments.size() > 0 || spec.depthAttachment.attachment != nullptr, "At least one attachment (color or depth) must be provided!")
+    void OpenGLFramebuffer::init() {
+        CG_ASSERT(width > 0 && height > 0, "Framebuffer width and height must be greater than 0!")
+        CG_ASSERT(colorAttachments.size() > 0 || depthAttachment.attachment != nullptr, "At least one attachment (color or depth) must be provided!")
 
         glGenFramebuffers(1, &framebufferHandle);
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferHandle);
 
         std::vector<GLenum> drawBuffers;
-        drawBuffers.reserve(spec.colorAttachments.size());
+        drawBuffers.reserve(colorAttachments.size());
 
-        for (size_t i = 0; i < spec.colorAttachments.size(); i++) {
-            const auto* attachment = static_cast<const OpenGLAttachment*>(spec.colorAttachments[i].attachment);
+        for (size_t i = 0; i < colorAttachments.size(); i++) {
+            const auto* attachment = static_cast<const OpenGLAttachment*>(colorAttachments[i].attachment);
 
-            if (spec.colorAttachments[i].allLayers) {
+            if (colorAttachments[i].allLayers) {
                 glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, attachment->getOpenGLHandle(), 0);
                 drawBuffers.push_back(GL_COLOR_ATTACHMENT0 + i);
             } else {
-                glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, attachment->getOpenGLHandle(), 0, spec.colorAttachments[i].layer);
+                glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, attachment->getOpenGLHandle(), 0, colorAttachments[i].layer);
                 drawBuffers.push_back(GL_COLOR_ATTACHMENT0 + i);
             }
         }
@@ -96,21 +99,21 @@ namespace CgEngine {
         }
 
 
-        if (spec.depthAttachment.attachment) {
-            auto* depthAttachmentGL = static_cast<const OpenGLAttachment*>(spec.depthAttachment.attachment);
+        if (depthAttachment.attachment) {
+            auto* depthAttachmentGL = static_cast<const OpenGLAttachment*>(depthAttachment.attachment);
             CG_ASSERT(depthAttachmentGL->getType() == AttachmentType::Depth || depthAttachmentGL->getType() == AttachmentType::DepthStencil, "Depth attachment must be of type Depth or DepthStencil")
 
             if (depthAttachmentGL->getType() == AttachmentType::DepthStencil) {
-                if (spec.depthAttachment.allLayers) {
+                if (depthAttachment.allLayers) {
                     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depthAttachmentGL->getOpenGLHandle(), 0);
                 } else {
-                    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depthAttachmentGL->getOpenGLHandle(), 0, spec.depthAttachment.layer);
+                    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depthAttachmentGL->getOpenGLHandle(), 0, depthAttachment.layer);
                 }
             } else {
-                if (spec.depthAttachment.allLayers) {
+                if (depthAttachment.allLayers) {
                     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthAttachmentGL->getOpenGLHandle(), 0);
                 } else {
-                    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthAttachmentGL->getOpenGLHandle(), 0, spec.depthAttachment.layer);
+                    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthAttachmentGL->getOpenGLHandle(), 0, depthAttachment.layer);
                 }
             }
         }

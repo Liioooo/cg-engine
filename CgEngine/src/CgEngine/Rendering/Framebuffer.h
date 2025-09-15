@@ -32,7 +32,7 @@ namespace CgEngine {
         Framebuffer(Framebuffer& other) = delete;
         Framebuffer& operator=(Framebuffer& other) = delete;
 
-        virtual void recreate(const FramebufferSpecification& spec) = 0;
+        virtual void recreate(uint32_t newWidth, uint32_t newHeight) = 0;
 
         virtual uint32_t getWidth() const = 0;
         virtual uint32_t getHeight() const = 0;

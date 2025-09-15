@@ -302,6 +302,11 @@ namespace CgEngine {
         }
     }
 
+    void OpenGLRenderer::bindDescriptorSet(const DescriptorSet* descriptorSet, uint32_t setIndex) {
+        const auto* glDescriptorSet = static_cast<const OpenGLDescriptorSet*>(descriptorSet);
+        glDescriptorSet->bind();
+    }
+
     void OpenGLRenderer::setPushConstants(const std::array<PushConstants*, 2>& pushConstants, uint32_t pushConstantsCount) {
         for (uint32_t i = 0; i < pushConstantsCount; i++) {
             const auto* pc = static_cast<const OpenGLPushConstants*>(pushConstants[i]);

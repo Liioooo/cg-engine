@@ -32,6 +32,15 @@ namespace CgEngine {
         return ready;
     }
 
+    void OpenGLDescriptorSet::recreate() {
+        // Nothing to do here for OpenGL, as bind uses specification directly
+    }
+
+    void OpenGLDescriptorSet::reconfigure(const DescriptorSetSpecification& spec) {
+        specification = spec;
+        ready = true;
+    }
+
     const DescriptorSetSpecification& OpenGLDescriptorSet::getSpecification() const {
         CG_ASSERT(ready, "DescriptorSet is not ready!")
         return specification;

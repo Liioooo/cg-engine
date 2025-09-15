@@ -39,6 +39,10 @@ namespace CgEngine {
         backend->clearPass(renderPass, framebuffer);
     }
 
+    void Renderer::bindDescriptorSet(const DescriptorSet* descriptorSet, uint32_t setIndex) {
+        backend->bindDescriptorSet(descriptorSet, setIndex);
+    }
+
     void Renderer::setPushConstants(const std::array<PushConstants*, 2>& pushConstants, uint32_t pushConstantsCount) {
         backend->setPushConstants(pushConstants, pushConstantsCount);
     }

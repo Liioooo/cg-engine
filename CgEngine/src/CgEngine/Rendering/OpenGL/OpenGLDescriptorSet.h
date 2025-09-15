@@ -18,6 +18,8 @@ namespace CgEngine {
         OpenGLDescriptorSet& operator=(OpenGLDescriptorSet& other) = delete;
 
         bool isReady() const override;
+        void recreate() override;
+        void reconfigure(const DescriptorSetSpecification& spec) override;
 
         const DescriptorSetSpecification& getSpecification() const;
         void bind() const;

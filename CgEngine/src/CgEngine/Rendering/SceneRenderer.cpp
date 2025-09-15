@@ -1092,7 +1092,8 @@ namespace CgEngine {
 
         for (const auto [mk, command]: drawCommandQueue) {
             transformOffsetPushConstant->setData(&command.transformsBufferOffset, sizeof(int));
-            Renderer::setPushConstants({transformOffsetPushConstant}, 1);
+            Renderer::setPushConstants({transformOffsetPushConstant, command.material->getPushConstants()}, 2);
+            Renderer::bindDescriptorSet(command.material->getDescriptorSet(), 1);
             Renderer::executeDrawCommand(command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount);
         }
 

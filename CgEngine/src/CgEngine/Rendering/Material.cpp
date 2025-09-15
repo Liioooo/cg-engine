@@ -5,6 +5,7 @@ namespace CgEngine {
 
     Material::Material() : uuid(Uuid()) {
         pushConstants = GraphicsObjectsFactory::createPushConstants("pc_material");
+        descriptorSet = GraphicsObjectsFactory::createDescriptorSet();
     }
 
     Material::~Material() {
@@ -18,13 +19,6 @@ namespace CgEngine {
 
     bool Material::operator==(const CgEngine::Material& other) const {
         return uuid == other.uuid;
-    }
-
-    void Material::setDescriptorSet(DescriptorSet* descriptorSet) {
-        if (this->descriptorSet) {
-            delete this->descriptorSet;
-        }
-        this->descriptorSet = descriptorSet;
     }
 
     DescriptorSet* Material::getDescriptorSet() const {

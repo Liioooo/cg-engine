@@ -37,21 +37,22 @@ namespace CgEngine {
             void setUniform(const void* obj, uint32_t location) const override {
                 const auto& value = reinterpret_cast<const T*>(obj)->*member;
 
-
                 if constexpr (std::is_same_v<MemberType, int>) {
                     setOpenGLUniformInt(location, value);
                 } else if constexpr (std::is_same_v<MemberType, float>) {
-
+                    setOpenGLUniformFloat(location, value);
                 } else if constexpr (std::is_same_v<MemberType, glm::vec2>) {
-
+                    setOpenGLUniformVec2(location, value);
                 } else if constexpr (std::is_same_v<MemberType, glm::vec3>) {
-
+                    setOpenGLUniformVec3(location, value);
                 } else if constexpr (std::is_same_v<MemberType, glm::vec4>) {
-
+                    setOpenGLUniformVec4(location, value);
+                } else if constexpr (std::is_same_v<MemberType, bool>) {
+                    setOpenGLUniformBool(location, value);
                 } else if constexpr (std::is_same_v<MemberType, glm::mat3>) {
-
+                    setOpenGLUniformMat3(location, value);
                 } else if constexpr (std::is_same_v<MemberType, glm::mat4>) {
-
+                    setOpenGLUniformMat4(location, value);
                 } else {
                     CG_LOGGING_ERROR("Unsupported push constant type")
                 }
@@ -67,5 +68,12 @@ namespace CgEngine {
         std::string prefix;
 
         static void setOpenGLUniformInt(uint32_t location, int value);
+        static void setOpenGLUniformFloat(uint32_t location, float value);
+        static void setOpenGLUniformBool(uint32_t location, bool value);
+        static void setOpenGLUniformVec2(uint32_t location, glm::vec2 value);
+        static void setOpenGLUniformVec3(uint32_t location, glm::vec3 value);
+        static void setOpenGLUniformVec4(uint32_t location, glm::vec4 value);
+        static void setOpenGLUniformMat3(uint32_t location, glm::mat3 value);
+        static void setOpenGLUniformMat4(uint32_t location, glm::mat4 value);
     };
 }

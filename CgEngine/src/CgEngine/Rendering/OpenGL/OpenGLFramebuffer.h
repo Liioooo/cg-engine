@@ -19,7 +19,7 @@ namespace CgEngine {
         OpenGLFramebuffer(OpenGLFramebuffer& other) = delete;
         OpenGLFramebuffer& operator=(OpenGLFramebuffer& other) = delete;
 
-        void recreate(const FramebufferSpecification& spec) override;
+        void recreate(uint32_t newWidth, uint32_t newHeight) override;
 
         uint32_t getWidth() const override;
         uint32_t getHeight() const override;
@@ -32,6 +32,9 @@ namespace CgEngine {
         uint32_t width = 0;
         uint32_t height = 0;
 
-        void init(const FramebufferSpecification& spec);
+        std::vector<FramebufferAttachment> colorAttachments;
+        FramebufferAttachment depthAttachment;
+
+        void init();
     };
 }
