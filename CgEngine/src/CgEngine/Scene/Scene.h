@@ -4,7 +4,7 @@
 #include "Entity.h"
 #include "ComponentManager.h"
 #include "TimeStep.h"
-#include "Rendering/Texture.h"
+#include "Rendering/TextureCube.h"
 #include "Physics/PhysicsScene.h"
 #include "Rendering/CameraFrustum.h"
 

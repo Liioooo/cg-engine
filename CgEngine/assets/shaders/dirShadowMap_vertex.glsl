@@ -1,5 +1,7 @@
 #version 450 core
 
+#include "TransformsOffsetPC.glsl"
+
 layout(binding = 0, std430) buffer Transforms {
     mat4 transforms[];
 } b_Transforms;
@@ -11,6 +13,6 @@ layout (location = 3) in vec4 a_Bitangent;
 layout (location = 4) in vec4 a_TexCoord;
 
 void main() {
-    mat4 model = b_Transforms.transforms[gl_InstanceID];
+    mat4 model = b_Transforms.transforms[pc_transformsOffset.transformsOffset + gl_InstanceID];
     gl_Position = model * a_Pos;
 }

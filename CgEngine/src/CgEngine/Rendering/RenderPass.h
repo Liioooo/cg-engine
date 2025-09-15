@@ -1,55 +1,29 @@
 #pragma once
 
-#include "Shader.h"
-#include "Framebuffer.h"
+#include "Enums.h"
+#include "DescriptorSetLayout.h"
+#include "VertexBuffer.h"
 
 namespace CgEngine {
 
-    enum class DepthCompareOperator {
-        Never =             0x0200, // GL_NEVER
-        Less =              0x0201, // GL_LESS
-        Equal =             0x0202, // GL_EQUAL
-        LessOrEqual =       0x0203, // GL_LEQUAL
-        Greater =           0x0204, // GL_GREATER
-        NotEqual =          0x0205, // GL_NOTEQUAL
-        GreaterOrEqual =    0x0206, // GL_GEQUAL
-        Always =            0x0207, // GL_ALWAYS
-    };
-
-    enum class BlendingEquation {
-         Add =              0x8006, // GL_FUNC_ADD
-         ReverseSubtract =  0x800B, // GL_FUNC_REVERSE_SUBTRACT
-         Subtract =         0x800A, // GL_FUNC_SUBTRACT
-         Min =              0x8007, // GL_MIN
-         Max =              0x8008 // GL_MAX
-    };
-
-    enum class BlendingFunction {
-        Zero =              0, // GL_ZERO
-        One =               1, // GL_ONE
-        SrcColor =          0x0300, // GL_SRC_COLOR
-        OneMinusSrcColor =  0x0301, // GL_ONE_MINUS_SRC_COLOR
-        SrcAlpha =          0x0302, // GL_SRC_ALPHA
-        OneMinusSrcAlpha =  0x0303, // GL_ONE_MINUS_SRC_ALPHA
-        DestAlpha =         0x0304, // GL_DST_ALPHA
-        OneMinusDestAlpha = 0x0305, // GL_ONE_MINUS_DST_ALPHA
-        DestColor =         0x0306, // GL_DST_COLOR
-        OneMinusDestColor = 0x0307, // GL_ONE_MINUS_DST_COLOR
-    };
-
     struct RenderPassSpecification {
-        Shader shader;
         DepthCompareOperator depthCompareOperator = DepthCompareOperator::Less;
-        Framebuffer* framebuffer = nullptr;
-        bool usingExistingFramebuffer = false;
-        bool clearDepthBuffer = true;
-        bool clearColorBuffer = true;
+        bool clearDepthAttachment = true;
+        bool clearColorAttachments = true;
         bool clearStencilBuffer = false;
-        bool backfaceCulling = true;
-        bool frontfaceCulling = false;
         bool depthTest = true;
         bool depthWrite = true;
         bool wireframe = false;
+        bool backfaceCulling = true;
+        bool frontfaceCulling = false;
+        std::vector<AttachmentType> colorAttachments;
+        bool queryColorAttachmentFormatFromSwapChain = false;
+        bool hasDepthStencilAttachment = false;
+        DepthAttachmentFormat depthAttachmentFormat;
+        glm::vec4 clearColor;
+        std::vector<VertexBufferLayout> vertexInputLayout;
+        const DescriptorSetLayout* descriptorSetLayout = nullptr;
+        std::string engineShaderName;
         bool useBlending = false;
         BlendingEquation blendingEquation = BlendingEquation::Add;
         BlendingFunction srcBlendingFunction = BlendingFunction::SrcAlpha;
@@ -60,19 +34,16 @@ namespace CgEngine {
     class RenderPass {
     public:
         RenderPass() = default;
-        explicit RenderPass(RenderPassSpecification spec);
-        ~RenderPass();
 
-        RenderPass(RenderPass&& other) noexcept;
-        RenderPass& operator= (RenderPass&& other) noexcept;
+        virtual ~RenderPass() = default;
 
-        RenderPassSpecification& getSpecification();
+        RenderPass(RenderPass&& other) noexcept = default;
+        RenderPass& operator= (RenderPass&& other) noexcept = default;
 
-        bool isReady() const;
-        unsigned int getDrawMode() const;
+        RenderPass(RenderPass& other) = delete;
+        RenderPass& operator=(RenderPass& other) = delete;
 
-    private:
-        RenderPassSpecification specification;
+        virtual bool isReady() const = 0;
     };
 
 }

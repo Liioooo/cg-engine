@@ -1,14 +1,15 @@
 #include <Asserts.h>
 
 #include <utility>
+#include <Rendering/GraphicsObjectsFactory.h>
 #include "CustomMesh.h"
 
 namespace CgEngine {
 
     CustomMesh::CustomMesh(const std::vector<VertexBufferElement>& vertexBufferLayout) {
-        vao = new VertexArrayObject();
+        vao = GraphicsObjectsFactory::createVertexArrayObject();
 
-        auto* vertexBuffer = new VertexBuffer();
+        auto* vertexBuffer = GraphicsObjectsFactory::createVertexBuffer(VertexBufferUsage::Static);
         vertexBuffer->setLayout(vertexBufferLayout);
 
         vao->addVertexBuffer(vertexBuffer);
@@ -57,8 +58,8 @@ namespace CgEngine {
             meshNode.localTransform = glm::mat4(1.0f);
             meshNode.aaBoundingBox = boundingBox;
 
-            vao->getVertexBuffers()[0]->setData(lodMeshes[0].vertexData, lodMeshes[0].vertexCount * lodMeshes[0].vertexSize, VertexBufferUsage::Static);
-            vao->setIndexBuffer(lodMeshes[0].indices.data(), lodMeshes[0].indices.size());
+            vao->getVertexBuffer(0)->setData(lodMeshes[0].vertexData, lodMeshes[0].vertexCount * lodMeshes[0].vertexSize);
+            vao->setIndexBuffer(GraphicsObjectsFactory::createIndexBuffer(lodMeshes[0].indices.data(), lodMeshes[0].indices.size()));
         } else {
             MeshNode& lodOverviewNode = meshNodes.emplace_back();
             lodOverviewNode.aiNode = nullptr;
@@ -109,8 +110,8 @@ namespace CgEngine {
                 indexOffset += lodMesh.indices.size();
             }
 
-            vao->getVertexBuffers()[0]->setData(vertexData, vertexCount * lodMeshes[0].vertexSize, VertexBufferUsage::Static);
-            vao->setIndexBuffer(indexData, indexCount);
+            vao->getVertexBuffer(0)->setData(vertexData, vertexCount * lodMeshes[0].vertexSize);
+            vao->setIndexBuffer(GraphicsObjectsFactory::createIndexBuffer(indexData, indexCount));
 
             free(vertexData);
             free(indexData);

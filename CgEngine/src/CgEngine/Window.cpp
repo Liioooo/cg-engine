@@ -1,5 +1,6 @@
 #include "Window.h"
 #include <glad/glad.h>
+#include "Rendering/Helpers.h"
 #include "Logging.h"
 #include "Events/KeyPressedEvent.h"
 #include "Events/KeyReleasedEvent.h"
@@ -10,7 +11,6 @@
 #include "Events/WindowCloseEvent.h"
 #include "Events/WindowResizeEvent.h"
 #include "Rendering/Renderer.h"
-#include "ImGui/ImGuiContext.h"
 #include "FileSystem.h"
 
 namespace CgEngine {
@@ -21,21 +21,28 @@ namespace CgEngine {
 
         glfwSetErrorCallback(&Window::errorCallback);
 
-#ifdef CG_ENABLE_DEBUG_FEATURES
-            glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
-#endif
+        if (spec.graphicsApi == GraphicsAPI::OpenGL) {
+            #ifdef CG_ENABLE_DEBUG_FEATURES
+                glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+            #endif
 
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);}
+        else if (spec.graphicsApi == GraphicsAPI::Vulkan) {
+            glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        }
 
         if (spec.fullScreen) {
             GLFWmonitor* monitor = glfwGetPrimaryMonitor();
             const GLFWvidmode* vidMode = glfwGetVideoMode(monitor);
-            glfwWindowHint(GLFW_RED_BITS, vidMode->redBits);
-            glfwWindowHint(GLFW_GREEN_BITS, vidMode->greenBits);
-            glfwWindowHint(GLFW_BLUE_BITS, vidMode->blueBits);
+
+            if (spec.graphicsApi == GraphicsAPI::OpenGL) {
+                glfwWindowHint(GLFW_RED_BITS, vidMode->redBits);
+                glfwWindowHint(GLFW_GREEN_BITS, vidMode->greenBits);
+                glfwWindowHint(GLFW_BLUE_BITS, vidMode->blueBits);
+            }
+
             glfwWindowHint(GLFW_REFRESH_RATE, vidMode->refreshRate);
 
             window = glfwCreateWindow(vidMode->width, vidMode->height, spec.title.c_str(), monitor, nullptr);
@@ -55,28 +62,24 @@ namespace CgEngine {
             CG_LOGGING_ERROR("Failed to create Window");
         }
 
+        glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
+
         if (!spec.icon.empty() && FileSystem::checkFileExists(spec.icon)) {
             GLFWimage icon;
-            auto iconData = TextureUtils::loadImageData(spec.icon);
+            auto iconData = Helpers::loadImageData(spec.icon);
             icon.pixels = std::get<0>(iconData);
             icon.width = std::get<1>(iconData);
             icon.height = std::get<2>(iconData);
             glfwSetWindowIcon(window, 1, &icon);
-            TextureUtils::freeImageData(std::get<0>(iconData));
+            Helpers::freeImageData(std::get<0>(iconData));
         }
 
-        glfwMakeContextCurrent(window);
+        if (spec.graphicsApi == GraphicsAPI::OpenGL) {
+            glfwMakeContextCurrent(window);
+            gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
+        }
+
         setVsync(spec.vSync);
-
-        gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
-
-        #ifdef CG_ENABLE_DEBUG_FEATURES
-            glDebugMessageCallback(&Window::debugCallback, nullptr);
-            glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-        #endif
-
-
-        Renderer::init();
 
         glfwSetWindowUserPointer(window, this);
 
@@ -90,6 +93,7 @@ namespace CgEngine {
 
             self->windowWidth = width;
             self->windowHeight = height;
+            glfwGetFramebufferSize(w, &self->framebufferWidth, &self->framebufferHeight);
 
             WindowResizeEvent e(width, height);
             self->eventCallback(e);
@@ -139,18 +143,10 @@ namespace CgEngine {
             }
         });
 
-        #ifdef CG_ENABLE_DEBUG_FEATURES
-            float xscale, yscale;
-            glfwGetWindowContentScale(window, &xscale, &yscale);
-            ImGuiContext::init(window, glm::max(xscale, yscale));
-        #endif
+        Renderer::init(*this);
     }
 
     Window::~Window() {
-        #ifdef CG_ENABLE_DEBUG_FEATURES
-            ImGuiContext::shutdown();
-        #endif
-
         glfwDestroyWindow(window);
         glfwTerminate();
     }
@@ -168,20 +164,30 @@ namespace CgEngine {
         glfwPollEvents();
     }
 
-    void Window::swapBuffers() {
-        glfwSwapBuffers(window);
-    }
-
-    uint32_t Window::getWidth() {
+    int Window::getWidth() {
         return windowWidth;
     }
 
-    uint32_t Window::getHeight() {
+    int Window::getHeight() {
         return windowHeight;
     }
 
-    GLFWwindow &Window::getWindowHandle() {
+    int Window::getFramebufferWidth() const {
+        return framebufferWidth;
+    }
+
+    int Window::getFramebufferHeight() const {
+        return framebufferHeight;
+    }
+
+    GLFWwindow& Window::getWindowHandle() const {
         return *window;
+    }
+
+    glm::vec2 Window::getContentScale() const {
+        glm::vec2 out;
+        glfwGetWindowContentScale(window, &out.x, &out.y);
+        return out;
     }
 
     void Window::setClipboardText(const char* string) {
@@ -190,102 +196,6 @@ namespace CgEngine {
 
     void Window::errorCallback(int error, const char *description) {
         CG_LOGGING_ERROR("GlFW ERROR {0}: {1}", error, description);
-    }
-
-    void Window::debugCallback(unsigned int source, unsigned int type, unsigned int id, unsigned int severity, int length, const char *message, const void* userParam) {
-        if (id == 131185 || id == 131218 || (source == GL_DEBUG_SOURCE_APPLICATION && id == 0)) {
-            return; // ignore performance warnings (buffer uses GPU memory, shader recompilation) from nvidia
-        }
-
-        std::stringstream stringStream;
-        std::string sourceString;
-        std::string typeString;
-        std::string severityString;
-
-        switch (source) {
-            case GL_DEBUG_SOURCE_API: {
-                sourceString = "API";
-                break;
-            }
-            case GL_DEBUG_SOURCE_APPLICATION: {
-                sourceString = "Application";
-                break;
-            }
-            case GL_DEBUG_SOURCE_WINDOW_SYSTEM: {
-                sourceString = "Window System";
-                break;
-            }
-            case GL_DEBUG_SOURCE_SHADER_COMPILER: {
-                sourceString = "Shader Compiler";
-                break;
-            }
-            case GL_DEBUG_SOURCE_THIRD_PARTY: {
-                sourceString = "Third Party";
-                break;
-            }
-            case GL_DEBUG_SOURCE_OTHER: {
-                sourceString = "Other";
-                break;
-            }
-            default: {
-                sourceString = "Unknown";
-                break;
-            }
-        }
-
-        switch (type) {
-            case GL_DEBUG_TYPE_ERROR: {
-                typeString = "Error";
-                break;
-            }
-            case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: {
-                typeString = "Deprecated Behavior";
-                break;
-            }
-            case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR: {
-                typeString = "Undefined Behavior";
-                break;
-            }
-            case GL_DEBUG_TYPE_PERFORMANCE: {
-                typeString = "Performance";
-                break;
-            }
-            case GL_DEBUG_TYPE_OTHER: {
-                typeString = "Other";
-                break;
-            }
-            default: {
-                typeString = "Unknown";
-                break;
-            }
-        }
-
-        switch (severity) {
-            case GL_DEBUG_SEVERITY_HIGH: {
-                severityString = "High";
-                break;
-            }
-            case GL_DEBUG_SEVERITY_MEDIUM: {
-                severityString = "Medium";
-                break;
-            }
-            case GL_DEBUG_SEVERITY_LOW: {
-                severityString = "Low";
-                break;
-            }
-            default: {
-                severityString = "Unknown";
-                break;
-            }
-        }
-
-        stringStream << "OpenGL Error: " << message;
-        stringStream << " [Source = " << sourceString;
-        stringStream << ", Type = " << typeString;
-        stringStream << ", Severity = " << severityString;
-        stringStream << ", ID = " << id << "]";
-
-        CG_LOGGING_WARNING(stringStream.str());
     }
 
 }

@@ -6,18 +6,18 @@ From https://github.com/nvpro-samples/gl_ssao/blob/master/hbao_blur.frag.glsl
 
 #pragma optionNV(unroll all)
 
-in VS_OUT {
+layout(location = 10) in VS_OUT {
     vec2 TexCoord;
 } fs_in;
 
 const float KERNEL_RADIUS = 3;
 
-uniform float u_Sharpness;
-uniform vec2 u_InvResolutionDirection; // either set x to 1/width or y to 1/height
+layout(location = 0) uniform float u_Sharpness;
+layout(location = 1) uniform vec2 u_InvResolutionDirection; // either set x to 1/width or y to 1/height
 
 layout(binding = 0) uniform sampler2D u_InputTex;
 
-out vec4 out_Color;
+layout(location = 0) out vec4 out_Color;
 
 float BlurFunction(vec2 uv, float r, float center_c, float center_d, inout float w_total) {
     vec2 aoz = texture(u_InputTex, uv).xy;

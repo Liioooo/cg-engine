@@ -1,54 +1,41 @@
 #pragma once
 
+#include "Attachment.h"
+
 namespace CgEngine {
 
-    enum class FramebufferFormat {
-        RGBA8, RGBA16F, RGB8, RGB16F, RG8, RG16F
-    };
+    struct FramebufferAttachment {
+        const Attachment* attachment = nullptr;
+        uint32_t layer = ~0;
+        bool allLayers = true;
 
-    namespace FramebufferUtils {
-        int getOpenGLFramebufferInternalFormat(FramebufferFormat format);
-    }
+        FramebufferAttachment() = default;
+        FramebufferAttachment(Attachment* attachment, uint32_t layer = ~0, bool allLayers = true) : attachment(attachment), layer(layer), allLayers(allLayers) {}
+    };
 
     struct FramebufferSpecification {
         uint32_t width;
         uint32_t height;
-        glm::vec4 clearColor;
-        bool hasDepthStencilAttachment = true; // creates a new Texture and attaches it, if true, else does nothing
-        bool hasDepthAttachment = false; // creates a new Texture and attaches it, if true, else does nothing
-        bool useExistingDepthStencilAttachment = false; // attaches 'existingDepthAttachment' as DepthStencilAttachment
-        bool useExistingDepthAttachment = false; // attaches 'existingDepthAttachment' as DepthAttachment
-        uint32_t existingDepthAttachment;
-        uint32_t existingDepthAttachmentLevel = 0;
-        std::vector<FramebufferFormat> colorAttachments; // creates new Textures and attaches them
-        bool useExistingColorAttachment = false; // attaches 'existingColorAttachment' as ColorAttachment0
-        std::vector<uint32_t> existingColorAttachments;
-        uint32_t existingColorAttachmentLevel = 0;
-        uint32_t samples = 1;
-        bool screenTarget = false;
+        std::vector<FramebufferAttachment> colorAttachments;
+        FramebufferAttachment depthAttachment;
     };
 
     class Framebuffer {
     public:
-        explicit Framebuffer(FramebufferSpecification spec);
-        ~Framebuffer();
+        Framebuffer() = default;
 
-        void bind();
-        void unbind();
-        void resize(uint32_t width, uint32_t height, bool forceRecreate);
-        void setColorAttachments(const std::vector<uint32_t>& attachments, uint32_t level, uint32_t width, uint32_t height);
-        void setDepthAttachment(uint32_t attachment, uint32_t level, uint32_t width, uint32_t height);
-        void setDepthStencilAttachment(uint32_t attachment, uint32_t level, uint32_t width, uint32_t height);
-        uint32_t getRendererId() const;
-        uint32_t getColorAttachmentRendererId(size_t index) const;
-        uint32_t getDepthAttachmentRendererId() const;
-        const FramebufferSpecification& getSpecification();
+        virtual ~Framebuffer() = default;
 
-    private:
-        FramebufferSpecification specification;
-        uint32_t id = 0;
-        std::vector<uint32_t> colorAttachments;
-        uint32_t depthAttachment = 0;
+        Framebuffer(Framebuffer&& other) noexcept = default;
+        Framebuffer& operator=(Framebuffer&& other) noexcept = default;
+
+        Framebuffer(Framebuffer& other) = delete;
+        Framebuffer& operator=(Framebuffer& other) = delete;
+
+        virtual void recreate(const FramebufferSpecification& spec) = 0;
+
+        virtual uint32_t getWidth() const = 0;
+        virtual uint32_t getHeight() const = 0;
     };
 
 }

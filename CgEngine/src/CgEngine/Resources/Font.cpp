@@ -1,6 +1,7 @@
 #include "Font.h"
 #include "Asserts.h"
 #include "FileSystem.h"
+#include "Rendering/GraphicsObjectsFactory.h"
 
 namespace CgEngine {
     Font* Font::createResource(const std::string& name) {
@@ -35,8 +36,7 @@ namespace CgEngine {
             atlasHeight = glm::max(atlasHeight, glyphSlot->bitmap.rows);
         }
 
-        fontAtlas = new Texture2D(TextureFormat::R, atlasWidth, atlasHeight, TextureWrap::Clamp, MipMapFiltering::Bilinear);
-        fontAtlas->setUnpackAlignment(1);
+        fontAtlas = GraphicsObjectsFactory::createTexture2D(TextureFormat::R, atlasWidth, atlasHeight, TextureWrap::Clamp, MipMapFiltering::Bilinear);
 
         int currentAtlasOffset = 0;
 
@@ -54,7 +54,7 @@ namespace CgEngine {
             fontCharacterInfos[i].textureCoord = static_cast<float>(currentAtlasOffset) / static_cast<float>(atlasWidth);
             fontCharacterInfos[i].glyphIndex = FT_Get_Char_Index(ftFace, i);
 
-            fontAtlas->bufferSubData(currentAtlasOffset, 0, glyphSlot->bitmap.width, glyphSlot->bitmap.rows, glyphSlot->bitmap.buffer);
+            fontAtlas->bufferSubData(currentAtlasOffset, 0, glyphSlot->bitmap.width, glyphSlot->bitmap.rows, glyphSlot->bitmap.buffer, 1);
 
             currentAtlasOffset += static_cast<int>(glyphSlot->bitmap.width) + 2;
         }

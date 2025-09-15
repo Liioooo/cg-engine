@@ -1,6 +1,6 @@
 #version 450 core
 
-#include "common/CameraDataBuffer.glsl"
+#include "CameraDataBuffer.glsl"
 
 layout(binding = 0, std430) buffer Transforms {
     mat4 transforms[];
@@ -12,7 +12,7 @@ layout (location = 2) in vec4 a_Tangent;
 layout (location = 3) in vec4 a_Bitangent;
 layout (location = 4) in vec4 a_TexCoord;
 
-out VS_OUT {
+layout(location = 10) out VS_OUT {
     vec3 Normal;
 } vs_out;
 

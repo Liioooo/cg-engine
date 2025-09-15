@@ -2,9 +2,9 @@
 
 layout(early_fragment_tests) in;
 
-out vec4 o_FragColor;
+layout(location = 0) out vec4 o_FragColor;
 
-in VS_OUT {
+layout(location = 10) in VS_OUT {
     vec3 Color;
 } fs_in;
 

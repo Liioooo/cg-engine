@@ -1,9 +1,9 @@
 #version 450 core
 
-#include "common/PBRMaterialUniforms.glsl"
-#include "common/GBuffersFragment.glsl"
+#include "PBRMaterialUniforms.glsl"
+#include "GBuffersFragment.glsl"
 
-in VS_OUT {
+layout(location = 10) in VS_OUT {
     vec2 TexCoord;
     mat3 TBN;
     vec3 Normal;

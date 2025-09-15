@@ -39,7 +39,7 @@ namespace CgEngine {
         const Skeleton* getSkeleton() const;
         const std::vector<BoneInfo>& getBoneInfos() const;
         const std::unordered_map<std::string, SkeletalAnimation>& getSkeletalAnimations() const;
-        const ShaderStorageBuffer& getBoneInfluencesBuffer() const;
+        const ImmutableShaderStorageBuffer* getBoneInfluencesBuffer() const;
 
         const std::unordered_map<std::string, Animation>& getAnimations() const;
 
@@ -78,7 +78,7 @@ namespace CgEngine {
         std::vector<ResRef<PBRMaterial>> materials;
         Skeleton* skeleton = nullptr;
         std::vector<BoneInfluence> boneInfluences{};
-        ShaderStorageBuffer boneInfluencesBuffer{false};
+        ImmutableShaderStorageBuffer* boneInfluencesBuffer;
         std::vector<BoneInfo> boneInfos{};
         std::unordered_map<std::string, SkeletalAnimation> skeletalAnimations;
         std::unordered_map<std::string, Animation> animations;

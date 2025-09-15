@@ -3,7 +3,7 @@
 layout(binding = 0) uniform samplerCube u_cubeMap;
 layout(binding = 1, rgba32f) restrict writeonly uniform imageCube o_prefilterMap;
 
-uniform float u_Roughness;
+layout(location = 0) uniform float u_Roughness;
 
 const uint SAMPLE_COUNT = 1024u;
 const float INVERSE_SAMPLE_COUNT = 1.0f / float(SAMPLE_COUNT);

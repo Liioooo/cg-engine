@@ -1,3 +1,4 @@
+#include "Rendering/GraphicsObjectsFactory.h"
 #include "AnimatedMeshRendererComponent.h"
 #include "Application.h"
 #include "imgui.h"
@@ -49,12 +50,12 @@ namespace CgEngine {
             currentAnimation = &mesh->getSkeletalAnimations().at(params.animation);
         }
 
-        skinnedVAO = VertexArrayObject();
+        skinnedVAO = GraphicsObjectsFactory::createVertexArrayObject();
 
-        auto* vertexBuffer = new VertexBuffer(mesh->getVertices().size() * sizeof(MeshProps::Vertex), VertexBufferUsage::Dynamic);
-        vertexBuffer->setLayout(mesh->getVAO()->getVertexBuffers()[0]->getLayout());
-        skinnedVAO.addVertexBuffer(vertexBuffer);
-        skinnedVAO.useExistingIndexBuffer(mesh->getVAO()->getIndexBufferRendererId(), mesh->getVAO()->getIndexCount());
+        auto* vertexBuffer = GraphicsObjectsFactory::createVertexBuffer(mesh->getVertices().size() * sizeof(MeshProps::Vertex), VertexBufferUsage::Dynamic);
+        vertexBuffer->setLayout(mesh->getVAO()->getVertexBuffer(0)->getLayout());
+        skinnedVAO->addVertexBuffer(vertexBuffer);
+        skinnedVAO->useExistingIndexBuffer(mesh->getVAO()->getIndexBuffer());
 
         boneTransforms.resize(mesh->getBoneInfos().size());
 
@@ -88,7 +89,7 @@ namespace CgEngine {
     }
 
     VertexArrayObject* AnimatedMeshRendererComponent::getSkinnedVAO() {
-        return &skinnedVAO;
+        return skinnedVAO;
     }
 
     void AnimatedMeshRendererComponent::setAnimation(const std::string& name) {

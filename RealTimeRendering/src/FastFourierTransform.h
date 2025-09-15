@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Rendering/Texture.h>
+#include <Rendering/TextureCube.h>
 #include <Rendering/CustomShaders.h>
 #include <Resources/ResRef.h>
 #include <Resources/ResourceManager.h>

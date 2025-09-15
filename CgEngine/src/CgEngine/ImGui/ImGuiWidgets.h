@@ -7,7 +7,6 @@
 namespace CgEngine::ImGuiWidgets {
     void applicationOptions(ApplicationOptions& applicationOptions);
     void performanceStats(float ts, const RenderingStats& renderingStats);
-    void shaders(ShaderMap& shaderMap, ResourceManager& resourceManager);
     void copyCurrentConfig(const std::string& compName, const std::function<void(std::unordered_map<std::string, std::string>&)>& getConfigMap);
 
     template <typename T, typename Getter, typename Setter>

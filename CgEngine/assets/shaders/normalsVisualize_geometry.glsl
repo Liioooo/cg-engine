@@ -1,11 +1,11 @@
 #version 450 core
 
-#include "common/CameraDataBuffer.glsl"
+#include "CameraDataBuffer.glsl"
 
 layout (triangles) in;
 layout (line_strip, max_vertices = 6) out;
 
-in VS_OUT {
+layout(location = 10) in VS_OUT {
     vec3 Normal;
 } fs_in[];
 

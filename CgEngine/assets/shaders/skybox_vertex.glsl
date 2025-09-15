@@ -1,10 +1,10 @@
 #version 450 core
 
-#include "common/CameraDataBuffer.glsl"
+#include "CameraDataBuffer.glsl"
 
 layout (location = 0) in vec3 a_Pos;
 
-out VS_OUT {
+layout(location = 10) out VS_OUT {
     vec3 TexCoord;
 } vs_out;
 

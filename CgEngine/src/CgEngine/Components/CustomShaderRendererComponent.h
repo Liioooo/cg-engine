@@ -1,95 +1,94 @@
-#pragma once
-
-#include "Rendering/RenderPass.h"
-#include "Rendering/CustomShaders.h"
-#include "Rendering/CustomValMaterial.h"
-#include "Resources/Mesh.h"
-#include "Resources/CustomMesh.h"
-#include "Rendering/PBRMaterial.h"
-#include "Component.h"
-#include "Resources/ResRef.h"
-#include "Rendering/ShaderStorageBuffer.h"
-
-namespace CgEngine {
-
-    struct CustomShaderRendererComponentRenderPassOptions {
-        bool useDirShadowMappingData = false;
-        bool useEnvironmentMappingData = false;
-        bool backfaceCulling = true;
-        bool frontfaceCulling = false;
-        bool useBlending = false;
-        bool wireframe = false;
-        BlendingEquation blendingEquation = BlendingEquation::Add;
-        BlendingFunction srcBlendingFunction = BlendingFunction::SrcAlpha;
-        BlendingFunction destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
-        int tesselationPatchSize = ~0;
-    };
-
-    struct CustomShaderRendererComponentParams {
-        std::string assetFile;
-        std::string mesh;
-        CustomMesh* customMesh = nullptr;
-        Material* customMaterial = nullptr;
-        std::string material;
-        bool enableCulling = true;
-        glm::vec3 boundingMin = glm::vec3(0.0f);
-        glm::vec3 boundingMax = glm::vec3(0.0f);
-        std::vector<std::string> meshNodes;
-        uint32_t instanceCount = 1;
-        std::string shader;
-        CustomShaderRendererComponentRenderPassOptions renderPassOptions;
-
-        void verifyParams() const;
-    };
-
-    class CustomShaderRendererComponent : public Component {
-    public:
-        using Component::Component;
-        using Params = CustomShaderRendererComponentParams;
-
-        void onAttach(Scene& scene, CustomShaderRendererComponentParams& params);
-        void onRenderImGui() override;
-
-        ResRef<MeshVertices> getMeshVertices();
-        CustomMesh* getCustomMesh();
-        Mesh* getRenderMesh();
-        ResRef<PBRMaterial> getPBRMaterial();
-        Material* getCustomMaterial();
-        Material* getRenderMaterial();
-        bool getCullingEnabled() const;
-        void setCullingEnabled(bool value);
-        const std::vector<uint32_t>& getMeshNodes();
-        void setInstanceCount(uint32_t value);
-        uint32_t getInstanceCount() const;
-        ResRef<CustomShader> getShader();
-
-        void setCustomMesh(CustomMesh* mesh);
-        void setCustomMaterial(Material* material);
-        CustomShaderRendererComponentRenderPassOptions& getRenderPassOptions();
-        const AABoundingBox* getBoundingBox();
-        void addBoundingBoxCoordinates(glm::vec3 max, glm::vec3 min);
-        void setBoundingBoxCenterAndExtents(glm::vec3 center, glm::vec3 extents);
-
-        void setInstanceBuffer1(ShaderStorageBuffer* instanceBuffer);
-        void setInstanceBuffer2(ShaderStorageBuffer* instanceBuffer);
-        std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> getInstanceBuffers();
-
-        bool isActive() const;
-        void setActive(bool a);
-
-    private:
-        ResRef<MeshVertices> mesh;
-        CustomMesh* customMesh = nullptr;
-        ResRef<PBRMaterial> pbrMaterial;
-        Material* customMaterial = nullptr;
-        bool enableCulling;
-        std::vector<uint32_t> meshNodes;
-        uint32_t instanceCount;
-        ResRef<CustomShader> shader;
-        CustomShaderRendererComponentRenderPassOptions renderPassOptions;
-        AABoundingBox boundingBox;
-        std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers = {nullptr, nullptr};
-        bool active = true;
-    };
-
-}
+//#pragma once
+//
+//#include "Rendering/RenderPass.h"
+//#include "Rendering/CustomShaders.h"
+//#include "Resources/Mesh.h"
+//#include "Resources/CustomMesh.h"
+//#include "Rendering/PBRMaterial.h"
+//#include "Component.h"
+//#include "Resources/ResRef.h"
+//#include "Rendering/ShaderStorageBuffer.h"
+//
+//namespace CgEngine {
+//
+//    struct CustomShaderRendererComponentRenderPassOptions {
+//        bool useDirShadowMappingData = false;
+//        bool useEnvironmentMappingData = false;
+//        bool backfaceCulling = true;
+//        bool frontfaceCulling = false;
+//        bool useBlending = false;
+//        bool wireframe = false;
+//        BlendingEquation blendingEquation = BlendingEquation::Add;
+//        BlendingFunction srcBlendingFunction = BlendingFunction::SrcAlpha;
+//        BlendingFunction destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
+//        int tesselationPatchSize = ~0;
+//    };
+//
+//    struct CustomShaderRendererComponentParams {
+//        std::string assetFile;
+//        std::string mesh;
+//        CustomMesh* customMesh = nullptr;
+//        Material* customMaterial = nullptr;
+//        std::string material;
+//        bool enableCulling = true;
+//        glm::vec3 boundingMin = glm::vec3(0.0f);
+//        glm::vec3 boundingMax = glm::vec3(0.0f);
+//        std::vector<std::string> meshNodes;
+//        uint32_t instanceCount = 1;
+//        std::string shader;
+//        CustomShaderRendererComponentRenderPassOptions renderPassOptions;
+//
+//        void verifyParams() const;
+//    };
+//
+//    class CustomShaderRendererComponent : public Component {
+//    public:
+//        using Component::Component;
+//        using Params = CustomShaderRendererComponentParams;
+//
+//        void onAttach(Scene& scene, CustomShaderRendererComponentParams& params);
+//        void onRenderImGui() override;
+//
+//        ResRef<MeshVertices> getMeshVertices();
+//        CustomMesh* getCustomMesh();
+//        Mesh* getRenderMesh();
+//        ResRef<PBRMaterial> getPBRMaterial();
+//        Material* getCustomMaterial();
+//        Material* getRenderMaterial();
+//        bool getCullingEnabled() const;
+//        void setCullingEnabled(bool value);
+//        const std::vector<uint32_t>& getMeshNodes();
+//        void setInstanceCount(uint32_t value);
+//        uint32_t getInstanceCount() const;
+//        ResRef<CustomShader> getShader();
+//
+//        void setCustomMesh(CustomMesh* mesh);
+//        void setCustomMaterial(Material* material);
+//        CustomShaderRendererComponentRenderPassOptions& getRenderPassOptions();
+//        const AABoundingBox* getBoundingBox();
+//        void addBoundingBoxCoordinates(glm::vec3 max, glm::vec3 min);
+//        void setBoundingBoxCenterAndExtents(glm::vec3 center, glm::vec3 extents);
+//
+//        void setInstanceBuffer1(ShaderStorageBuffer* instanceBuffer);
+//        void setInstanceBuffer2(ShaderStorageBuffer* instanceBuffer);
+//        std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> getInstanceBuffers();
+//
+//        bool isActive() const;
+//        void setActive(bool a);
+//
+//    private:
+//        ResRef<MeshVertices> mesh;
+//        CustomMesh* customMesh = nullptr;
+//        ResRef<PBRMaterial> pbrMaterial;
+//        Material* customMaterial = nullptr;
+//        bool enableCulling;
+//        std::vector<uint32_t> meshNodes;
+//        uint32_t instanceCount;
+//        ResRef<CustomShader> shader;
+//        CustomShaderRendererComponentRenderPassOptions renderPassOptions;
+//        AABoundingBox boundingBox;
+//        std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers = {nullptr, nullptr};
+//        bool active = true;
+//    };
+//
+//}

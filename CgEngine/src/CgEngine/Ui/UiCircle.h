@@ -1,7 +1,7 @@
 #pragma once
 
 #include "UiElement.h"
-#include "Rendering/Texture.h"
+#include "Rendering/Texture2D.h"
 #include "Resources/ResRef.h"
 
 namespace CgEngine {

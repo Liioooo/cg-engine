@@ -2,7 +2,7 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
-#include "Rendering/Texture.h"
+#include "Rendering/Texture2D.h"
 
 namespace CgEngine {
 

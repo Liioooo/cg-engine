@@ -1,16 +1,16 @@
 #version 450 core
 
-#include "common/CameraDataBuffer.glsl"
+#include "CameraDataBuffer.glsl"
 
-in VS_OUT {
+layout(location = 10) in VS_OUT {
     vec2 TexCoord;
 } fs_in;
 
 layout (binding = 0) uniform sampler2D u_BloomTexture;
 
-out vec3 o_FragColor;
+layout(location = 0) out vec3 o_FragColor;
 
-uniform bool u_UseThreshold;
+layout(location = 0) uniform bool u_UseThreshold;
 
 vec3 prefilter(vec3 color) {
     // https://catlikecoding.com/unity/tutorials/advanced-rendering/bloom/ (3.2 Bloom Threshold)

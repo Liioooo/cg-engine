@@ -2,7 +2,6 @@
 
 #include "Entity.h"
 #include "Components/AnimationComponent.h"
-#include "Components/CustomShaderRendererComponent.h"
 #include "Components/TransformComponent.h"
 #include "Components/ScriptComponent.h"
 #include "Components/MeshRendererComponent.h"
@@ -49,7 +48,7 @@ namespace CgEngine {
             registerComponentType<CharacterControllerComponent>();
             registerComponentType<UiCanvasComponent>();
             registerComponentType<AnimationComponent>();
-            registerComponentType<CustomShaderRendererComponent>();
+//            registerComponentType<CustomShaderRendererComponent>();
             registerComponentType<AudioListenerComponent>();
             registerComponentType<AudioComponent>();
             registerComponentType<LodDistanceComponent>();

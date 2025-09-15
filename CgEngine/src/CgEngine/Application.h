@@ -11,6 +11,7 @@
 #include "Events/KeyPressedEvent.h"
 #include "Scene/SceneManager.h"
 #include "TimeStep.h"
+#include "GraphicsApi.h"
 
 namespace CgEngine {
 
@@ -25,6 +26,7 @@ namespace CgEngine {
         uint32_t shadowMapResolution;
         bool enableBloom;
         bool enableHBAO;
+        GraphicsAPI graphicsApi;
 
         std::vector<float> defaultLodDistances;
     };

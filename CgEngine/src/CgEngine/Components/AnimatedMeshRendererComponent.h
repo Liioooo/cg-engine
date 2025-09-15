@@ -64,7 +64,7 @@ namespace CgEngine {
         bool loopAnimation = true;
 
         std::vector<glm::mat4> boneTransforms;
-        VertexArrayObject skinnedVAO{false};
+        VertexArrayObject* skinnedVAO = nullptr;
 
         float animationTime = 0.0f;
         float animationStartTime = 0.0f;

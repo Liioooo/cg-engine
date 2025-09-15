@@ -6,23 +6,34 @@
 
 namespace CgEngine {
 
+    struct PBRMaterialSpecification {
+        glm::vec3 albedoColor = {1.0f, 1.0f, 1.0f};
+        float metalness = 0.0f;
+        float roughness = 1.0f;
+        glm::vec3 emission = {0.0f, 0.0f, 0.0f};
+        ResRef<Texture2D> emissionTexture;
+        ResRef<Texture2D> albedoTexture;
+        ResRef<Texture2D> metalnessTexture;
+        ResRef<Texture2D> roughnessTexture;
+        ResRef<Texture2D> normalTexture;
+    };
+
+    struct PBRMaterialPushConstants {
+        glm::vec3 albedoColor;
+        float metalness;
+        float roughness;
+        glm::vec3 emission;
+        bool useNormals;
+    };
+
     class PBRMaterial : public Material {
     public:
         static PBRMaterial* createResource(const std::string& name);
 
-        explicit PBRMaterial();
-
-        void setAlbedoColor(glm::vec3 value);
-        void setMetalness(float value);
-        void setRoughness(float value);
-        void setEmission(glm::vec3 value);
-        void setEmissionTexture(ResRef<Texture2D> texture);
-        void setAlbedoTexture(ResRef<Texture2D> texture);
-        void setMetalnessTexture(ResRef<Texture2D> texture);
-        void setRoughnessTexture(ResRef<Texture2D> texture);
-        void setNormalTexture(ResRef<Texture2D> texture);
+        explicit PBRMaterial(PBRMaterialSpecification spec);
 
     private:
+        PBRMaterialPushConstants pushConstantsData;
         ResRef<Texture2D> emissionTexture;
         ResRef<Texture2D> albedoTexture;
         ResRef<Texture2D> metalnessTexture;

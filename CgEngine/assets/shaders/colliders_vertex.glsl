@@ -1,6 +1,7 @@
 #version 450 core
 
-#include "common/CameraDataBuffer.glsl"
+#include "CameraDataBuffer.glsl"
+#include "TransformsOffsetPC.glsl"
 
 layout(binding = 0, std430) buffer Transforms {
     mat4 transforms[];

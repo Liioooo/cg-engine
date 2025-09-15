@@ -6,6 +6,7 @@
 #include "Application.h"
 #include "Utils/StringUtils.h"
 #include <filesystem>
+#include <Rendering/GraphicsObjectsFactory.h>
 
 namespace CgEngine {
     MeshVertices* MeshVertices::createResource(const std::string &name) {
@@ -51,13 +52,13 @@ namespace CgEngine {
             mesh->vertices.emplace_back(vertices[i].x, vertices[i].y, vertices[i].z);
         }
 
-        mesh->vao = new VertexArrayObject();
+        mesh->vao = GraphicsObjectsFactory::createVertexArrayObject();
 
-        auto* vertexBuffer = new VertexBuffer(mesh->vertices.data(), mesh->vertices.size() * sizeof(MeshProps::Vertex));
+        auto* vertexBuffer = GraphicsObjectsFactory::createVertexBuffer(mesh->vertices.data(), mesh->vertices.size() * sizeof(MeshProps::Vertex));
         vertexBuffer->setLayout(MeshProps::DEFAULT_VERT_BUFF_LAYOUT);
 
         mesh->vao->addVertexBuffer(vertexBuffer);
-        mesh->vao->setIndexBuffer(indices, numIndices);
+        mesh->vao->setIndexBuffer(GraphicsObjectsFactory::createIndexBuffer(indices, numIndices));
 
         Submesh& submesh = mesh->submeshes.emplace_back();
         submesh.baseVertex = 0;
@@ -173,7 +174,7 @@ namespace CgEngine {
         return skeletalAnimations;
     }
 
-    const ShaderStorageBuffer& MeshVertices::getBoneInfluencesBuffer() const {
+    const ImmutableShaderStorageBuffer* MeshVertices::getBoneInfluencesBuffer() const {
         return boneInfluencesBuffer;
     }
 
@@ -268,14 +269,13 @@ namespace CgEngine {
         mesh->indexBuffer.push_back(21);
         mesh->indexBuffer.push_back(23);
 
-        mesh->vao = new VertexArrayObject();
+        mesh->vao = GraphicsObjectsFactory::createVertexArrayObject();
 
-        auto* vertexBuffer = new VertexBuffer(mesh->vertices.data(),
-                                                           mesh->vertices.size() * sizeof(MeshProps::Vertex));
+        auto* vertexBuffer = GraphicsObjectsFactory::createVertexBuffer(mesh->vertices.data(), mesh->vertices.size() * sizeof(MeshProps::Vertex));
         vertexBuffer->setLayout(MeshProps::DEFAULT_VERT_BUFF_LAYOUT);
 
         mesh->vao->addVertexBuffer(vertexBuffer);
-        mesh->vao->setIndexBuffer(mesh->indexBuffer.data(), mesh->indexBuffer.size());
+        mesh->vao->setIndexBuffer(GraphicsObjectsFactory::createIndexBuffer(mesh->indexBuffer.data(), mesh->indexBuffer.size()));
 
         Submesh& submesh = mesh->submeshes.emplace_back();
         submesh.baseVertex = 0;
@@ -362,13 +362,13 @@ namespace CgEngine {
             }
         }
 
-        mesh->vao = new VertexArrayObject();
+        mesh->vao = GraphicsObjectsFactory::createVertexArrayObject();
 
-        auto* vertexBuffer = new VertexBuffer(mesh->vertices.data(),mesh->vertices.size() * sizeof(MeshProps::Vertex));
+        auto* vertexBuffer = GraphicsObjectsFactory::createVertexBuffer(mesh->vertices.data(),mesh->vertices.size() * sizeof(MeshProps::Vertex));
         vertexBuffer->setLayout(MeshProps::DEFAULT_VERT_BUFF_LAYOUT);
 
         mesh->vao->addVertexBuffer(vertexBuffer);
-        mesh->vao->setIndexBuffer(mesh->indexBuffer.data(), mesh->indexBuffer.size());
+        mesh->vao->setIndexBuffer(GraphicsObjectsFactory::createIndexBuffer(mesh->indexBuffer.data(), mesh->indexBuffer.size()));
 
         Submesh &submesh = mesh->submeshes.emplace_back();
         submesh.baseVertex = 0;
@@ -523,13 +523,13 @@ namespace CgEngine {
             }
         }
 
-        mesh->vao = new VertexArrayObject();
+        mesh->vao = GraphicsObjectsFactory::createVertexArrayObject();
 
-        auto* vertexBuffer = new VertexBuffer(mesh->vertices.data(), mesh->vertices.size() * sizeof(MeshProps::Vertex));
+        auto* vertexBuffer = GraphicsObjectsFactory::createVertexBuffer(mesh->vertices.data(), mesh->vertices.size() * sizeof(MeshProps::Vertex));
         vertexBuffer->setLayout(MeshProps::DEFAULT_VERT_BUFF_LAYOUT);
 
         mesh->vao->addVertexBuffer(vertexBuffer);
-        mesh->vao->setIndexBuffer(mesh->indexBuffer.data(), mesh->indexBuffer.size());
+        mesh->vao->setIndexBuffer(GraphicsObjectsFactory::createIndexBuffer(mesh->indexBuffer.data(), mesh->indexBuffer.size()));
 
         Submesh &submesh = mesh->submeshes.emplace_back();
         submesh.baseVertex = 0;
@@ -627,13 +627,13 @@ namespace CgEngine {
 
         mesh->skeleton = importSkeleton(scene, mesh);
 
-        mesh->vao = new VertexArrayObject();
+        mesh->vao = GraphicsObjectsFactory::createVertexArrayObject();
 
-        auto* vertexBuffer = new VertexBuffer(mesh->vertices.data(), mesh->vertices.size() * sizeof(MeshProps::Vertex));
+        auto* vertexBuffer = GraphicsObjectsFactory::createVertexBuffer(mesh->vertices.data(), mesh->vertices.size() * sizeof(MeshProps::Vertex));
         vertexBuffer->setLayout(MeshProps::DEFAULT_VERT_BUFF_LAYOUT);
 
         mesh->vao->addVertexBuffer(vertexBuffer);
-        mesh->vao->setIndexBuffer(mesh->indexBuffer.data(), mesh->indexBuffer.size());
+        mesh->vao->setIndexBuffer(GraphicsObjectsFactory::createIndexBuffer(mesh->indexBuffer.data(), mesh->indexBuffer.size()));
 
         if (mesh->hasSkeleton()) {
             mesh->importSkeletalAnimations(scene);
@@ -681,8 +681,7 @@ namespace CgEngine {
                 item.normalizeWeights();
             }
 
-            mesh->boneInfluencesBuffer = ShaderStorageBuffer();
-            mesh->boneInfluencesBuffer.setData(mesh->boneInfluences.data(), mesh->boneInfluences.size() * sizeof(BoneInfluence));
+            mesh->boneInfluencesBuffer = GraphicsObjectsFactory::createImmutableShaderStorageBuffer(mesh->boneInfluences.size() * sizeof(BoneInfluence), mesh->boneInfluences.data());
         }
 
         mesh->importAnimations(scene);
@@ -695,7 +694,7 @@ namespace CgEngine {
             for (uint32_t m = 0; m < scene->mNumMaterials; m++) {
                 aiMaterial *aiMaterial = scene->mMaterials[m];
 
-                auto& material = mesh->materials.emplace_back(std::make_shared<PBRMaterial>());
+                PBRMaterialSpecification materialSpec{};
 
                 float aiEmissionIntensity;
                 bool hasEmissionIntensity = aiMaterial->Get(AI_MATKEY_EMISSIVE_INTENSITY, aiEmissionIntensity) == AI_SUCCESS;
@@ -708,12 +707,12 @@ namespace CgEngine {
                     if (Utils::String::startsWith(aiEmissiveTexPath.C_Str(), "*")) {
                         const auto* tex = scene->GetEmbeddedTexture(aiEmissiveTexPath.C_Str());
                         if (tex->mHeight == 0) {
-                            auto* texture = new Texture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, true, getTextureWrapFromAssimp(aiEmissiveWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
+                            auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, true, getTextureWrapFromAssimp(aiEmissiveWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
 
                             std::string resId = path.string() + "/" + std::string(aiEmissiveTexPath.C_Str());
 
                             resourceManager.insertResource<Texture2D>(resId, texture);
-                            material->setEmissionTexture(resourceManager.getResource<Texture2D>(resId));
+                            materialSpec.emissionTexture = resourceManager.getResource<Texture2D>(resId);
                         }
                     } else {
                         std::filesystem::path texturePath = getTexturePath(path, aiEmissiveTexPath.C_Str());
@@ -725,17 +724,17 @@ namespace CgEngine {
                         spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
                         spec.compression = applicationOptions.useTextureCompression;
 
-                        material->setEmissionTexture(resourceManager.getResource<Texture2D>(texturePath.string(), spec));
+                        materialSpec.emissionTexture = resourceManager.getResource<Texture2D>(texturePath.string(), spec);
                     }
 
                     if (hasEmissionIntensity) {
-                        material->setEmission({aiEmissionIntensity, aiEmissionIntensity, aiEmissionIntensity});
+                        materialSpec.emission = {aiEmissionIntensity, aiEmissionIntensity, aiEmissionIntensity};
                     }
                 } else if (hasEmissionColor) {
                     if (hasEmissionIntensity) {
-                        material->setEmission(glm::vec3(aiEmissionColor.r, aiEmissionColor.g, aiEmissionColor.b) * aiEmissionIntensity);
+                        materialSpec.emission = (glm::vec3(aiEmissionColor.r, aiEmissionColor.g, aiEmissionColor.b) * aiEmissionIntensity);
                     } else {
-                        material->setEmission({aiEmissionColor.r, aiEmissionColor.g, aiEmissionColor.b});
+                        materialSpec.emission = {aiEmissionColor.r, aiEmissionColor.g, aiEmissionColor.b};
                     }
                 }
 
@@ -750,12 +749,12 @@ namespace CgEngine {
                     if (Utils::String::startsWith(aiAlbedoTexPath.C_Str(), "*")) {
                         const auto* tex = scene->GetEmbeddedTexture(aiAlbedoTexPath.C_Str());
                         if (tex->mHeight == 0) {
-                            auto* texture = new Texture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, true, getTextureWrapFromAssimp(aiAlbedoWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
+                            auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, true, getTextureWrapFromAssimp(aiAlbedoWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
 
                             std::string resId = path.string() + "/" + std::string(aiAlbedoTexPath.C_Str());
 
                             resourceManager.insertResource<Texture2D>(resId, texture);
-                            material->setAlbedoTexture(resourceManager.getResource<Texture2D>(resId));
+                            materialSpec.albedoTexture = resourceManager.getResource<Texture2D>(resId);
                         }
                     } else {
                         std::filesystem::path texturePath = getTexturePath(path, aiAlbedoTexPath.C_Str());
@@ -767,10 +766,10 @@ namespace CgEngine {
                         spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
                         spec.compression = applicationOptions.useTextureCompression;
 
-                        material->setAlbedoTexture(resourceManager.getResource<Texture2D>(texturePath.string(), spec));
+                        materialSpec.albedoTexture = resourceManager.getResource<Texture2D>(texturePath.string(), spec);
                     }
                 } else {
-                    material->setAlbedoColor({aiAlbedo.r, aiAlbedo.g, aiAlbedo.b});
+                    materialSpec.albedoColor = {aiAlbedo.r, aiAlbedo.g, aiAlbedo.b};
                 }
 
                 float shininess, roughness;
@@ -789,12 +788,12 @@ namespace CgEngine {
                     if (Utils::String::startsWith(aiRoughnessTexPath.C_Str(), "*")) {
                         const auto* tex = scene->GetEmbeddedTexture(aiRoughnessTexPath.C_Str());
                         if (tex->mHeight == 0) {
-                            auto* texture = new Texture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiRoughnessWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
+                            auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiRoughnessWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
 
                             std::string resId = path.string() + "/" + std::string(aiRoughnessTexPath.C_Str());
 
                             resourceManager.insertResource<Texture2D>(resId, texture);
-                            material->setRoughnessTexture(resourceManager.getResource<Texture2D>(resId));
+                            materialSpec.roughnessTexture = resourceManager.getResource<Texture2D>(resId);
                         }
                     } else {
                         std::filesystem::path texturePath = getTexturePath(path, aiRoughnessTexPath.C_Str());
@@ -806,18 +805,18 @@ namespace CgEngine {
                         spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
                         spec.compression = applicationOptions.useTextureCompression;
 
-                        material->setRoughnessTexture(resourceManager.getResource<Texture2D>(texturePath.string(), spec));
+                        materialSpec.roughnessTexture = resourceManager.getResource<Texture2D>(texturePath.string(), spec);
                     }
                 } else if (hasSpecularTexture) {
                     if (Utils::String::startsWith(aiSpecularTexPath.C_Str(), "*")) {
                         const auto* tex = scene->GetEmbeddedTexture(aiSpecularTexPath.C_Str());
                         if (tex->mHeight == 0) {
-                            auto* texture = new Texture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiSpecularWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
+                            auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiSpecularWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
 
                             std::string resId = path.string() + "/" + std::string(aiSpecularTexPath.C_Str());
 
                             resourceManager.insertResource<Texture2D>(resId, texture);
-                            material->setRoughnessTexture(resourceManager.getResource<Texture2D>(resId));
+                            materialSpec.roughnessTexture = resourceManager.getResource<Texture2D>(resId);
                         }
                     } else {
                         std::filesystem::path texturePath = getTexturePath(path, aiSpecularTexPath.C_Str());
@@ -829,10 +828,10 @@ namespace CgEngine {
                         spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
                         spec.compression = applicationOptions.useTextureCompression;
 
-                        material->setRoughnessTexture(resourceManager.getResource<Texture2D>(texturePath.string(), spec));
+                        materialSpec.roughnessTexture = resourceManager.getResource<Texture2D>(texturePath.string(), spec);
                     }
                 } else {
-                    material->setRoughness(roughness);
+                    materialSpec.roughness = roughness;
                 }
 
                 aiString aiNormalTexPath;
@@ -842,12 +841,12 @@ namespace CgEngine {
                     if (Utils::String::startsWith(aiNormalTexPath.C_Str(), "*")) {
                         const auto* tex = scene->GetEmbeddedTexture(aiNormalTexPath.C_Str());
                         if (tex->mHeight == 0) {
-                            auto* texture = new Texture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiNormalWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, false);
+                            auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiNormalWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, false);
 
                             std::string resId = path.string() + "/" + std::string(aiNormalTexPath.C_Str());
 
                             resourceManager.insertResource<Texture2D>(resId, texture);
-                            material->setNormalTexture(resourceManager.getResource<Texture2D>(resId));
+                            materialSpec.normalTexture = resourceManager.getResource<Texture2D>(resId);
                         }
                     } else {
                         std::filesystem::path texturePath = getTexturePath(path, aiNormalTexPath.C_Str());
@@ -859,7 +858,7 @@ namespace CgEngine {
                         spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
                         spec.compression = false;
 
-                        material->setNormalTexture(resourceManager.getResource<Texture2D>(texturePath.string(), spec));
+                        materialSpec.normalTexture = resourceManager.getResource<Texture2D>(texturePath.string(), spec);
                     }
                 }
 
@@ -875,12 +874,12 @@ namespace CgEngine {
                     if (Utils::String::startsWith(aiMetalnessTexPath.C_Str(), "*")) {
                         const auto* tex = scene->GetEmbeddedTexture(aiMetalnessTexPath.C_Str());
                         if (tex->mHeight == 0) {
-                            auto* texture = new Texture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiMetalnessWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
+                            auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiMetalnessWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
 
                             std::string resId = path.string() + "/" + std::string(aiMetalnessTexPath.C_Str());
 
                             resourceManager.insertResource<Texture2D>(resId, texture);
-                            material->setMetalnessTexture(resourceManager.getResource<Texture2D>(resId));
+                            materialSpec.metalnessTexture = resourceManager.getResource<Texture2D>(resId);
                         }
                     } else {
                         std::filesystem::path texturePath = getTexturePath(path, aiMetalnessTexPath.C_Str());
@@ -892,12 +891,14 @@ namespace CgEngine {
                         spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
                         spec.compression = applicationOptions.useTextureCompression;
 
-                        material->setMetalnessTexture(resourceManager.getResource<Texture2D>(texturePath.string(), spec));
+                        materialSpec.metalnessTexture = resourceManager.getResource<Texture2D>(texturePath.string(), spec);
                     }
 
                 } else {
-                    material->setMetalness(metalness);
+                    materialSpec.metalness = metalness;
                 }
+
+                auto& material = mesh->materials.emplace_back(std::make_shared<PBRMaterial>(materialSpec));
             }
         } else {
             mesh->materials.emplace_back(Application::get().getResourceManager().getResource<PBRMaterial>("default-pbr-material"));

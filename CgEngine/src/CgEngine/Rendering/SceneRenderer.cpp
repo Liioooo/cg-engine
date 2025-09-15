@@ -3,64 +3,125 @@
 #include "Application.h"
 #include "OpenGLTimer.h"
 #include "OpenGLDebugGroup.h"
+#include "GraphicsObjectsFactory.h"
 
 namespace CgEngine {
     SceneRenderer::SceneRenderer(uint32_t viewportWidth, uint32_t viewportHeight) : viewportWidth(viewportWidth), viewportHeight(viewportHeight), invViewportWidth(1.0f / static_cast<float>(viewportWidth)), invViewportHeight(1.0f / static_cast<float>(viewportHeight)) {
+        ubCameraData = GraphicsObjectsFactory::createUniformBuffer(sizeof(UBCameraData));
+        ubLightData = GraphicsObjectsFactory::createUniformBuffer(sizeof(UBLightData));
+        ubDirShadowData = GraphicsObjectsFactory::createUniformBuffer(sizeof(UBDirShadowData));
+        ubScreenData = GraphicsObjectsFactory::createUniformBuffer(sizeof(UBScreenData));
+        ubHBAOData = GraphicsObjectsFactory::createUniformBuffer(sizeof(UBHBAOData));
+
+        transformOffsetPushConstant = GraphicsObjectsFactory::createPushConstants("pc_transformsOffset");
+        transformOffsetPushConstant->init<TransformsOffsetPushConstants>();
+        transformOffsetPushConstant->mapUniform(&TransformsOffsetPushConstants::transformsOffset, "transformsOffset");
+
         {
             ApplicationOptions& applicationOptions = Application::get().getApplicationOptions();
 
-            dirShadowMaps = Texture2DArray(TextureFormat::Depth, applicationOptions.shadowMapResolution, applicationOptions.shadowMapResolution, TextureWrap::ClampBorder, 4, MipMapFiltering::Bilinear);
-            dirShadowMaps.setClampBorderColor({1.0f, 1.0f, 1.0f, 1.0f});
+            AttachmentSpecification dirShadowMapAttachmentSpec{};
+            dirShadowMapAttachmentSpec.height = applicationOptions.shadowMapResolution;
+            dirShadowMapAttachmentSpec.width = applicationOptions.shadowMapResolution;
+            dirShadowMapAttachmentSpec.type = AttachmentType::Depth;
+            dirShadowMapAttachmentSpec.usableAsTexture = true;
+            dirShadowMapAttachmentSpec.textureWrap = TextureWrap::ClampBorder;
+            dirShadowMapAttachmentSpec.mipMapFiltering = MipMapFiltering::Bilinear;
+            dirShadowMapAttachmentSpec.layerCount = 4;
+            dirShadowMapAttachmentSpec.textureBorderColor = TextureBorderColor::OpaqueWhite;
+
+            dirShadowMaps = GraphicsObjectsFactory::createAttachment(dirShadowMapAttachmentSpec);
 
             FramebufferSpecification shadowMapFramebufferSpec;
             shadowMapFramebufferSpec.height = applicationOptions.shadowMapResolution;
             shadowMapFramebufferSpec.width = applicationOptions.shadowMapResolution;
-            shadowMapFramebufferSpec.clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
-            shadowMapFramebufferSpec.hasDepthStencilAttachment = false;
-            shadowMapFramebufferSpec.hasDepthAttachment = false;
-            shadowMapFramebufferSpec.useExistingDepthAttachment = true;
-            shadowMapFramebufferSpec.existingDepthAttachment = dirShadowMaps.getRendererId();
+            shadowMapFramebufferSpec.depthAttachment.allLayers = true;
+            shadowMapFramebufferSpec.depthAttachment.attachment = dirShadowMaps;
 
-            auto* framebuffer = new Framebuffer(shadowMapFramebufferSpec);
+            dirShadowMapFramebuffer = GraphicsObjectsFactory::createFramebuffer(shadowMapFramebufferSpec);
 
             RenderPassSpecification shadowMapRenderPassSpec;
-            shadowMapRenderPassSpec.shader = Shader("dirShadowMap");
-            shadowMapRenderPassSpec.framebuffer = framebuffer;
-            shadowMapRenderPassSpec.clearColorBuffer = false;
-            shadowMapRenderPassSpec.clearDepthBuffer = true;
+            shadowMapRenderPassSpec.engineShaderName = "dirShadowMap";
+            shadowMapRenderPassSpec.clearColorAttachments = false;
+            shadowMapRenderPassSpec.clearDepthAttachment = true;
             shadowMapRenderPassSpec.clearStencilBuffer = false;
             shadowMapRenderPassSpec.frontfaceCulling = false;
             shadowMapRenderPassSpec.backfaceCulling = true;
+            shadowMapRenderPassSpec.clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
 
-            shadowMapRenderPass = RenderPass(std::move(shadowMapRenderPassSpec));
-            shaderMap.dirShadowMapShader = &shadowMapRenderPass.getSpecification().shader;
+            dirShadowMapRenderPass = GraphicsObjectsFactory::createRenderPass(shadowMapRenderPassSpec);
+            dirShadowMapTransformsBuffer = GraphicsObjectsFactory::createShaderStorageBuffer(MAX_OBJECTS * sizeof(glm::mat4));
+
+            DescriptorSetSpecification dirShadowMapDescriptorSetSpec{};
+            dirShadowMapDescriptorSetSpec.uboBindings = {
+                {2, ubDirShadowData}
+            };
+            dirShadowMapDescriptorSetSpec.ssboBindings = {
+                {0, dirShadowMapTransformsBuffer}
+            };
+
+            dirShadowMapDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(dirShadowMapDescriptorSetSpec);
         }
         {
+            AttachmentSpecification gBufferAttachmentSpec{};
+            gBufferAttachmentSpec.width = viewportWidth;
+            gBufferAttachmentSpec.height = viewportHeight;
+            gBufferAttachmentSpec.type = AttachmentType::RGBA16F;
+            gBufferAttachmentSpec.usableAsTexture = true;
+            gBufferAttachmentSpec.textureWrap = TextureWrap::Clamp;
+            gBufferAttachmentSpec.mipMapFiltering = MipMapFiltering::Bilinear;
+            gBufferAttachmentSpec.layerCount = 1;
+
+            gBufferAlbedoRoughnessAttachment = GraphicsObjectsFactory::createAttachment(gBufferAttachmentSpec);
+            gBufferEmissionMetallicAttachment = GraphicsObjectsFactory::createAttachment(gBufferAttachmentSpec);
+            gBufferWorldNormalsAttachment = GraphicsObjectsFactory::createAttachment(gBufferAttachmentSpec);
+            gBufferViewNormalsAttachment = GraphicsObjectsFactory::createAttachment(gBufferAttachmentSpec);
+
+            AttachmentSpecification gBufferDepthAttachmentSpec{};
+            gBufferDepthAttachmentSpec.width = viewportWidth;
+            gBufferDepthAttachmentSpec.height = viewportHeight;
+            gBufferDepthAttachmentSpec.type = AttachmentType::Depth;
+            gBufferDepthAttachmentSpec.usableAsTexture = true;
+            gBufferDepthAttachmentSpec.textureWrap = TextureWrap::Clamp;
+            gBufferDepthAttachmentSpec.mipMapFiltering = MipMapFiltering::Bilinear;
+            gBufferDepthAttachmentSpec.layerCount = 1;
+
+            gBufferDepthAttachment = GraphicsObjectsFactory::createAttachment(gBufferDepthAttachmentSpec);
+
             FramebufferSpecification gBufferFramebufferSpec;
             gBufferFramebufferSpec.height = viewportHeight;
             gBufferFramebufferSpec.width = viewportWidth;
-            gBufferFramebufferSpec.clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
-            gBufferFramebufferSpec.hasDepthStencilAttachment = false;
             gBufferFramebufferSpec.colorAttachments = {
-                    FramebufferFormat::RGBA16F, // rgb: albedo, a: roughness
-                    FramebufferFormat::RGBA16F, // rgb: emission, a: metallic
-                    FramebufferFormat::RGB16F, // worldNormals (normal-mapped)
-                    FramebufferFormat::RGB16F // viewNormals (for HBAO)
+                    {gBufferAlbedoRoughnessAttachment},
+                    {gBufferEmissionMetallicAttachment},
+                    {gBufferWorldNormalsAttachment},
+                    {gBufferViewNormalsAttachment}
             };
-            gBufferFramebufferSpec.hasDepthAttachment = true;
+            gBufferFramebufferSpec.depthAttachment.attachment = gBufferDepthAttachment;
 
-            auto* framebuffer = new Framebuffer(gBufferFramebufferSpec);
+            gBufferFramebuffer = GraphicsObjectsFactory::createFramebuffer(gBufferFramebufferSpec);
 
             RenderPassSpecification gBufferRenderPassSpec;
-            gBufferRenderPassSpec.shader = Shader("gBuffer");
-            gBufferRenderPassSpec.framebuffer = framebuffer;
-            gBufferRenderPassSpec.clearColorBuffer = true;
-            gBufferRenderPassSpec.clearDepthBuffer = true;
+            gBufferRenderPassSpec.engineShaderName = "gBuffer";
+            gBufferRenderPassSpec.clearColorAttachments = true;
+            gBufferRenderPassSpec.clearDepthAttachment = true;
+            gBufferRenderPassSpec.clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
             gBufferRenderPassSpec.depthCompareOperator = DepthCompareOperator::Less;
 
-            gBufferRenderPass = RenderPass(std::move(gBufferRenderPassSpec));
-            shaderMap.gBufferShader = &gBufferRenderPass.getSpecification().shader;
+            gBufferRenderPass = GraphicsObjectsFactory::createRenderPass(gBufferRenderPassSpec);
+            gBufferTransformsBuffer = GraphicsObjectsFactory::createShaderStorageBuffer(MAX_OBJECTS * sizeof(glm::mat4));
+
+            DescriptorSetSpecification gBufferDescriptorSetSpec{};
+            gBufferDescriptorSetSpec.uboBindings = {
+                    {0, ubCameraData}
+            };
+            gBufferDescriptorSetSpec.ssboBindings = {
+                    {0, gBufferTransformsBuffer}
+            };
+
+            gBufferDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(gBufferDescriptorSetSpec);
         }
+        /*
         {
             RenderPassSpecification customShaderDeferredRenderPassSpec;
             customShaderDeferredRenderPassSpec.framebuffer = gBufferRenderPass.getSpecification().framebuffer;
@@ -138,10 +199,8 @@ namespace CgEngine {
             hbaoDeinterleavingRenderPassSpec.depthTest = false;
 
             hbaoDeinterleavingRenderPass = RenderPass(std::move(hbaoDeinterleavingRenderPassSpec));
-            shaderMap.hbaoDeinterleavingShader = &hbaoDeinterleavingRenderPass.getSpecification().shader;
 
             hbaoShader = ComputeShader("hbao");
-            shaderMap.hbaoShader = &hbaoShader;
 
             for (int i = 0; i < 16; i++) {
                 hbaoData.float2Offsets[i] = glm::vec4((float)(i % 4) + 0.5f, (float)(i / 4.0f) + 0.5f, 0.0f, 1.f);
@@ -173,7 +232,6 @@ namespace CgEngine {
             hbaoReinterleavingRenderPassSpec.depthWrite = false;
 
             hbaoReinterleavingRenderPass = RenderPass(std::move(hbaoReinterleavingRenderPassSpec));
-            shaderMap.hbaoReinterleavingShader = &hbaoReinterleavingRenderPass.getSpecification().shader;
 
             FramebufferSpecification hbaoBlurFramebufferSpec;
             hbaoBlurFramebufferSpec.width = viewportWidth;
@@ -198,7 +256,6 @@ namespace CgEngine {
             hbaoBlurRenderPassSpec.depthWrite = false;
 
             hbaoBlurRenderPass = RenderPass(std::move(hbaoBlurRenderPassSpec));
-            shaderMap.hbaoBlurShader = &hbaoBlurRenderPass.getSpecification().shader;
         }
         {
             FramebufferSpecification pbrFramebufferSpec;
@@ -222,7 +279,6 @@ namespace CgEngine {
             pbrRenderPassSpec.depthTest = false;
 
             pbrRenderPass = RenderPass(std::move(pbrRenderPassSpec));
-            shaderMap.pbrShader = &pbrRenderPass.getSpecification().shader;
 
             pbrPassMaterial.setTexture("u_DirShadowMap", dirShadowMaps.getRendererId(), 8);
             pbrPassMaterial.setTexture("u_BrdfLUT", Renderer::getBrdfLUTTexture().getRendererId(), 7);
@@ -251,7 +307,6 @@ namespace CgEngine {
             skyboxRenderPassSpec.clearStencilBuffer = false;
 
             skyboxRenderPass = RenderPass(std::move(skyboxRenderPassSpec));
-            shaderMap.skyboxShader = &skyboxRenderPass.getSpecification().shader;
         }
         {
             float bloomWidth = static_cast<float>(viewportWidth) / 2.0f;
@@ -281,7 +336,6 @@ namespace CgEngine {
             bloomDownSamplePassSpec.framebuffer = framebuffer;
 
             bloomDownSamplePass = RenderPass(std::move(bloomDownSamplePassSpec));
-            shaderMap.bloomDownSampleShader = &bloomDownSamplePass.getSpecification().shader;
 
             RenderPassSpecification bloomUpSamplePassSpec;
             bloomUpSamplePassSpec.shader = Shader("bloomUpSample");
@@ -297,7 +351,6 @@ namespace CgEngine {
             bloomUpSamplePassSpec.usingExistingFramebuffer = true;
 
             bloomUpSamplePass = RenderPass(std::move(bloomUpSamplePassSpec));
-            shaderMap.bloomUpSampleShader = &bloomUpSamplePass.getSpecification().shader;
         }
         {
             RenderPassSpecification physicsCollidersRenderPassSpec;
@@ -312,7 +365,6 @@ namespace CgEngine {
             physicsCollidersRenderPassSpec.wireframe = true;
 
             physicsCollidersRenderPass = RenderPass(std::move(physicsCollidersRenderPassSpec));
-            shaderMap.physicsCollidersShader = &physicsCollidersRenderPass.getSpecification().shader;
 
             physicsCollidersMaterial.set("u_Color", {0.0f, 1.0f, 0.0f});
         }
@@ -330,7 +382,6 @@ namespace CgEngine {
             boundingBoxRenderPassSpec.backfaceCulling = false;
 
             boundingBoxRenderPass = RenderPass(std::move(boundingBoxRenderPassSpec));
-            shaderMap.boundingBoxShader = &boundingBoxRenderPass.getSpecification().shader;
 
             boundingBoxMaterial.set("u_Color", {1.0f, 1.0f, 0.0f});
         }
@@ -346,7 +397,6 @@ namespace CgEngine {
             mormalsDebugRenderPassSpec.clearStencilBuffer = false;
 
             normalsDebugRenderPass = RenderPass(std::move(mormalsDebugRenderPassSpec));
-            shaderMap.normalsDebugShader = &normalsDebugRenderPass.getSpecification().shader;
 
             normalsDebugMaterial.set("u_Color", {1.0f, 0.0f, 0.0f});
         }
@@ -362,7 +412,6 @@ namespace CgEngine {
             debugLinesRenderPassSpec.clearStencilBuffer = false;
 
             debugLinesRenderPass = RenderPass(std::move(debugLinesRenderPassSpec));
-            shaderMap.debugLinesShader = &debugLinesRenderPass.getSpecification().shader;
         }
         {
             FramebufferSpecification screenFramebufferSpec;
@@ -380,7 +429,6 @@ namespace CgEngine {
             screenRenderPassSpec.depthTest = false;
 
             screenRenderPass = RenderPass(std::move(screenRenderPassSpec));
-            shaderMap.screenShader = &screenRenderPass.getSpecification().shader;
 
             screenMaterial.setTexture("u_FinalImage", pbrRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
             screenMaterial.setTexture("u_BloomTexture", bloomTextures[0].getRendererId(), 1);
@@ -400,7 +448,6 @@ namespace CgEngine {
             uiCircleRenderPassSpec.usingExistingFramebuffer = true;
 
             uiCirclePass = RenderPass(std::move(uiCircleRenderPassSpec));
-            shaderMap.uiCircleShader = &uiCirclePass.getSpecification().shader;
 
             RenderPassSpecification uiRectRenderPassSpec;
             uiRectRenderPassSpec.shader = Shader("uiRect");
@@ -416,7 +463,6 @@ namespace CgEngine {
             uiRectRenderPassSpec.usingExistingFramebuffer = true;
 
             uiRectPass = RenderPass(std::move(uiRectRenderPassSpec));
-            shaderMap.uiRectShader = &uiRectPass.getSpecification().shader;
 
             RenderPassSpecification uiTextRenderPassSpec;
             uiTextRenderPassSpec.shader = Shader("uiText");
@@ -432,7 +478,6 @@ namespace CgEngine {
             uiTextRenderPassSpec.usingExistingFramebuffer = true;
 
             uiTextPass = RenderPass(std::move(uiTextRenderPassSpec));
-            shaderMap.uiTextShader = &uiTextPass.getSpecification().shader;
 
 
             uiProjectionMatrix = glm::ortho(0.0f, static_cast<float>(viewportWidth), 0.0f, static_cast<float>(viewportHeight));
@@ -441,18 +486,12 @@ namespace CgEngine {
         for (uint32_t i = 0; i < Renderer::maxTextureSlots; i++) {
             Renderer::getWhiteTexture().bind(i);
         }
+         */
 
-        ubCameraData = UniformBuffer<UBCameraData>("CameraData", 0, pbrRenderPass.getSpecification().shader);
-        ubLightData = UniformBuffer<UBLightData>("LightData", 1, pbrRenderPass.getSpecification().shader);
-        ubDirShadowData = UniformBuffer<UBDirShadowData>("DirShadowData", 2, shadowMapRenderPass.getSpecification().shader);
-        ubScreenData = UniformBuffer<UBScreenData>("ScreenData", 3, hbaoDeinterleavingRenderPass.getSpecification().shader);
-        ubHBAOData = UniformBuffer<UBHBAOData>("HBAOData", 4, hbaoShader);
-
-        boneTransformsBuffer = ShaderStorageBuffer();
-        boneTransformsBuffer.setData(nullptr, maxBones * maxAnimatedComponents * sizeof(glm::mat4));
-
-        skinningShader = ComputeShader("skinning");
-        shaderMap.skinningShader = &skinningShader;
+//        boneTransformsBuffer = ShaderStorageBuffer();
+//        boneTransformsBuffer.setData(nullptr, maxBones * maxAnimatedComponents * sizeof(glm::mat4));
+//
+//        skinningShader = ComputeShader("skinning");
     }
 
     SceneRenderer::~SceneRenderer() {
@@ -493,51 +532,51 @@ namespace CgEngine {
             screenData.invFullResolution = { invViewportWidth, invViewportHeight};
             screenData.halfResolution = glm::ivec2{ viewportWidth,  viewportHeight } / 2;
             screenData.invHalfResolution = { invViewportWidth * 2.0f,  invViewportHeight * 2.0f };
-            ubScreenData.setData(screenData);
+            ubScreenData->setData(&screenData, sizeof(UBScreenData));
 
-            gBufferRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
-            pbrRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
-            pbrRenderPass.getSpecification().framebuffer->setDepthAttachment(gBufferRenderPass.getSpecification().framebuffer->getDepthAttachmentRendererId(), 0, viewportWidth, viewportHeight);
-            screenRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
+//            gBufferRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
+//            pbrRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
+//            pbrRenderPass.getSpecification().framebuffer->setDepthAttachment(gBufferRenderPass.getSpecification().framebuffer->getDepthAttachmentRendererId(), 0, viewportWidth, viewportHeight);
+//            screenRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
 
             glm::uvec2 quarterSize = (glm::uvec2(viewportWidth, viewportHeight) + 3u) / 4u;
 
-            hbaoDeinterleavingDepthTexture = Texture2DArray(TextureFormat::RedFloat32, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
+//            hbaoDeinterleavingDepthTexture = Texture2DArray(TextureFormat::RedFloat32, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
 
-            for (int i = 0; i < hbaoDeinterleavingDepthTextureViews.size(); i++) {
-                hbaoDeinterleavingDepthTextureViews[i] = Texture2DView(
-                        hbaoDeinterleavingDepthTexture.getRendererId(),
-                        false,
-                        hbaoDeinterleavingDepthTexture.getFormat(),
-                        TextureWrap::Clamp,
-                        0, 1, i, 1,
-                        MipMapFiltering::Nearest
-                );
-            }
+//            for (int i = 0; i < hbaoDeinterleavingDepthTextureViews.size(); i++) {
+//                hbaoDeinterleavingDepthTextureViews[i] = Texture2DView(
+//                        hbaoDeinterleavingDepthTexture.getRendererId(),
+//                        false,
+//                        hbaoDeinterleavingDepthTexture.getFormat(),
+//                        TextureWrap::Clamp,
+//                        0, 1, i, 1,
+//                        MipMapFiltering::Nearest
+//                );
+//            }
 
-            hbaoDeinterleavingFramebuffers[0]->resize(quarterSize.x, quarterSize.y, false);
-            hbaoDeinterleavingFramebuffers[0]->setColorAttachments({
-                hbaoDeinterleavingDepthTextureViews[0].getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[1].getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[2].getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[3].getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[4].getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[5].getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[6].getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[7].getRendererId()
-            }, 0, quarterSize.x, quarterSize.y);
-
-            hbaoDeinterleavingFramebuffers[1]->resize(quarterSize.x, quarterSize.y, false);
-            hbaoDeinterleavingFramebuffers[1]->setColorAttachments({
-                hbaoDeinterleavingDepthTextureViews[8].getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[9].getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[10].getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[11].getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[12].getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[13].getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[14].getRendererId(),
-                hbaoDeinterleavingDepthTextureViews[15].getRendererId()
-            }, 0, quarterSize.x, quarterSize.y);
+//            hbaoDeinterleavingFramebuffers[0]->resize(quarterSize.x, quarterSize.y, false);
+//            hbaoDeinterleavingFramebuffers[0]->setColorAttachments({
+//                hbaoDeinterleavingDepthTextureViews[0].getRendererId(),
+//                hbaoDeinterleavingDepthTextureViews[1].getRendererId(),
+//                hbaoDeinterleavingDepthTextureViews[2].getRendererId(),
+//                hbaoDeinterleavingDepthTextureViews[3].getRendererId(),
+//                hbaoDeinterleavingDepthTextureViews[4].getRendererId(),
+//                hbaoDeinterleavingDepthTextureViews[5].getRendererId(),
+//                hbaoDeinterleavingDepthTextureViews[6].getRendererId(),
+//                hbaoDeinterleavingDepthTextureViews[7].getRendererId()
+//            }, 0, quarterSize.x, quarterSize.y);
+//
+//            hbaoDeinterleavingFramebuffers[1]->resize(quarterSize.x, quarterSize.y, false);
+//            hbaoDeinterleavingFramebuffers[1]->setColorAttachments({
+//                hbaoDeinterleavingDepthTextureViews[8].getRendererId(),
+//                hbaoDeinterleavingDepthTextureViews[9].getRendererId(),
+//                hbaoDeinterleavingDepthTextureViews[10].getRendererId(),
+//                hbaoDeinterleavingDepthTextureViews[11].getRendererId(),
+//                hbaoDeinterleavingDepthTextureViews[12].getRendererId(),
+//                hbaoDeinterleavingDepthTextureViews[13].getRendererId(),
+//                hbaoDeinterleavingDepthTextureViews[14].getRendererId(),
+//                hbaoDeinterleavingDepthTextureViews[15].getRendererId()
+//            }, 0, quarterSize.x, quarterSize.y);
 
             constexpr uint32_t HBAO_WORK_GROUP_SIZE = 16u;
             glm::uvec2 quarterSizeWorkGroups = quarterSize + (HBAO_WORK_GROUP_SIZE - quarterSize % HBAO_WORK_GROUP_SIZE);
@@ -545,30 +584,30 @@ namespace CgEngine {
             hbaoWorkGroupSize.y = quarterSizeWorkGroups.y / 16u;
             hbaoWorkGroupSize.z = 16u;
 
-            hbaoResultTexture = Texture2DArray(TextureFormat::RedGreenFloat16, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
+//            hbaoResultTexture = Texture2DArray(TextureFormat::RedGreenFloat16, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
 
-            hbaoReinterleavingRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
-            hbaoBlurRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
+//            hbaoReinterleavingRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
+//            hbaoBlurRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
 
-            float bloomWidth = static_cast<float>(viewportWidth) / 2.0f;
-            float bloomHeight = static_cast<float>(viewportHeight) / 2.0f;
-            for (int i = 0; i < bloomTextures.size(); i++) {
-                bloomTextures[i] = Texture2D(TextureFormat::Float32, static_cast<uint32_t>(bloomWidth), static_cast<uint32_t>(bloomHeight), TextureWrap::Clamp, MipMapFiltering::Bilinear);
-                bloomWidth /= 2.0f;
-                bloomHeight /= 2.0f;
+//            float bloomWidth = static_cast<float>(viewportWidth) / 2.0f;
+//            float bloomHeight = static_cast<float>(viewportHeight) / 2.0f;
+//            for (int i = 0; i < bloomTextures.size(); i++) {
+//                bloomTextures[i] = Texture2D(TextureFormat::Float32, static_cast<uint32_t>(bloomWidth), static_cast<uint32_t>(bloomHeight), TextureWrap::Clamp, MipMapFiltering::Bilinear);
+//                bloomWidth /= 2.0f;
+//                bloomHeight /= 2.0f;
             }
 
-            screenMaterial.setTexture("u_FinalImage", pbrRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
-            screenMaterial.setTexture("u_BloomTexture", bloomTextures[0].getRendererId(), 1);
-
-            pbrPassMaterial.setTexture("u_HBAO_Tex", hbaoBlurRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 9);
-            pbrPassMaterial.setTexture("u_gBuffer_AlbedoRoughness", gBufferRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
-            pbrPassMaterial.setTexture("u_gBuffer_EmissionMetallic", gBufferRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(1), 1);
-            pbrPassMaterial.setTexture("u_gBuffer_WorldNormal", gBufferRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(2), 2);
-            pbrPassMaterial.setTexture("u_Depth", gBufferRenderPass.getSpecification().framebuffer->getDepthAttachmentRendererId(), 3);
+//            screenMaterial.setTexture("u_FinalImage", pbrRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
+//            screenMaterial.setTexture("u_BloomTexture", bloomTextures[0].getRendererId(), 1);
+//
+//            pbrPassMaterial.setTexture("u_HBAO_Tex", hbaoBlurRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 9);
+//            pbrPassMaterial.setTexture("u_gBuffer_AlbedoRoughness", gBufferRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
+//            pbrPassMaterial.setTexture("u_gBuffer_EmissionMetallic", gBufferRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(1), 1);
+//            pbrPassMaterial.setTexture("u_gBuffer_WorldNormal", gBufferRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(2), 2);
+//            pbrPassMaterial.setTexture("u_Depth", gBufferRenderPass.getSpecification().framebuffer->getDepthAttachmentRendererId(), 3);
 
             uiProjectionMatrix = glm::ortho(0.0f, static_cast<float>(viewportWidth), 0.0f, static_cast<float>(viewportHeight));
-        }
+//        }
 
         UBCameraData cameraData{};
         cameraData.projection = camera.getProjectionMatrix();
@@ -586,7 +625,7 @@ namespace CgEngine {
         cameraData.exposure = camera.getExposure();
         cameraData.bloomIntensity = applicationOptions.enableBloom ? camera.getBloomIntensity() : 0.0f;
         cameraData.bloomThreshold = camera.getBloomThreshold();
-        ubCameraData.setData(cameraData);
+        ubCameraData->setData(&cameraData, sizeof(UBCameraData));
 
         cameraFrustum.updateCameraFrustum(camera, cameraTransform[3], -cameraTransform[2]);
         cameraPosition = cameraTransform[3];
@@ -622,20 +661,20 @@ namespace CgEngine {
             indexSL++;
         }
 
-        ubLightData.setData(lightData);
+        ubLightData->setData(&lightData, sizeof(UBLightData));
 
-        skyboxMaterial.setTextureCube("u_Texture", *sceneEnvironment.prefilterMap, 0);
-        skyboxMaterial.set("u_Intensity", sceneEnvironment.environmentIntensity);
-        skyboxMaterial.set("u_Lod", sceneEnvironment.environmentLod);
+//        skyboxMaterial.setTextureCube("u_Texture", *sceneEnvironment.prefilterMap, 0);
+//        skyboxMaterial.set("u_Intensity", sceneEnvironment.environmentIntensity);
+//        skyboxMaterial.set("u_Lod", sceneEnvironment.environmentLod);
 
         currentSceneEnvironment.environmentIntensity = sceneEnvironment.environmentIntensity;
-        currentSceneEnvironment.irradianceMapId = sceneEnvironment.irradianceMap->getRendererId();
-        currentSceneEnvironment.prefilterMapId = sceneEnvironment.prefilterMap->getRendererId();
+//        currentSceneEnvironment.irradianceMapId = sceneEnvironment.irradianceMap->getRendererId();
+//        currentSceneEnvironment.prefilterMapId = sceneEnvironment.prefilterMap->getRendererId();
         currentSceneEnvironment.dirLightCastShadows = lightEnvironment.dirLightCastShadows && lightEnvironment.dirLightIntensity != 0.0f;
 
-        pbrPassMaterial.setTexture("u_IrradianceMap", currentSceneEnvironment.irradianceMapId, 5);
-        pbrPassMaterial.setTexture("u_PrefilterMap", currentSceneEnvironment.prefilterMapId, 6);
-        pbrPassMaterial.set("u_EnvironmentIntensity", currentSceneEnvironment.environmentIntensity);
+//        pbrPassMaterial.setTexture("u_IrradianceMap", currentSceneEnvironment.irradianceMapId, 5);
+//        pbrPassMaterial.setTexture("u_PrefilterMap", currentSceneEnvironment.prefilterMapId, 6);
+//        pbrPassMaterial.set("u_EnvironmentIntensity", currentSceneEnvironment.environmentIntensity);
 
 
         setupShadowMapData(lightEnvironment.dirLightDirection, cameraData.viewProjection, camera);
@@ -651,6 +690,8 @@ namespace CgEngine {
 
         ApplicationOptions& applicationOptions = Application::get().getApplicationOptions();
 
+        buildTransformBuffers();
+
         skinMeshes();
         shadowMapPass();
         gBufferPass();
@@ -662,7 +703,7 @@ namespace CgEngine {
             hbaoReinterleavingPass();
             hbaoBlurPass();
         } else {
-            clearPass(hbaoBlurRenderPass);
+//            clearPass(hbaoBlurRenderPass);
         }
 
         pbrPass();
@@ -696,8 +737,8 @@ namespace CgEngine {
         drawCommandQueue.clear();
         meshTransforms.clear();
 
-        customShaderDeferredDrawCommandQueue.clear();
-        customShaderForwardDrawCommandQueue.clear();
+//        customShaderDeferredDrawCommandQueue.clear();
+//        customShaderForwardDrawCommandQueue.clear();
 
         shadowMapDrawCommandQueue.clear();
         shadowMapMeshTransforms.clear();
@@ -736,7 +777,7 @@ namespace CgEngine {
 
                 if (isInCameraFrustum) {
                     const Material* material = overrideMaterial != nullptr ? overrideMaterial : mesh->getMaterial(submesh.materialIndex);
-                    MeshKey mk = {mesh->getVAO()->getRendererId(), submeshIndex, material->getUuid().getUuid()};
+                    MeshKey mk = {mesh->getVAO(), submeshIndex, material->getUuid().getUuid()};
 
                     meshTransforms[mk].emplace_back(finalTransform);
 
@@ -750,7 +791,7 @@ namespace CgEngine {
                 }
 
                 if (castShadows) {
-                    MeshKey mk = {mesh->getVAO()->getRendererId(), submeshIndex, 0};
+                    MeshKey mk = {mesh->getVAO(), submeshIndex, 0};
 
                     shadowMapMeshTransforms[mk].emplace_back(finalTransform);
 
@@ -767,102 +808,102 @@ namespace CgEngine {
     }
 
     void SceneRenderer::submitAnimatedMesh(MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms, VertexArrayObject* skinnedVAO) {
-        CG_ASSERT(boneTransforms.size() <= maxBones, "Mesh contains to many bones")
-        CG_ASSERT(skinningQueue.size() < maxAnimatedComponents, "Cannot render that many AnimatedMeshRendererComponents")
-
-        uint32_t boneTransformOffset = skinningQueue.size() * maxBones * sizeof(glm::mat4);
-        boneTransformsBuffer.setSubData(boneTransformOffset, boneTransforms.data(), boneTransforms.size() * sizeof(glm::mat4));
-
-        SkinningInfo& skinningInfo = skinningQueue.emplace_back();
-        skinningInfo.originalVertexBuffer = mesh->getVAO()->getVertexBuffers()[0];
-        skinningInfo.skinnedVertexBuffer = skinnedVAO->getVertexBuffers()[0];
-        skinningInfo.boneInfluencesBuffer = &mesh->getBoneInfluencesBuffer();
-        skinningInfo.numVertices = mesh->getVertices().size();
-
-        auto& submeshes = mesh->getSubmeshes();
-
-        for (const auto& meshNodeIndex: meshNodes) {
-            const auto& meshNode = mesh->getMeshNodes().at(meshNodeIndex);
-
-            for (const auto& submeshIndex: meshNode.submeshIndices) {
-                const Submesh& submesh = submeshes.at(submeshIndex);
-                const Material* material = overrideMaterial != nullptr ? overrideMaterial : mesh->getMaterial(submesh.materialIndex);
-                MeshKey mk = {skinnedVAO->getRendererId(), submeshIndex, material->getUuid().getUuid()};
-
-                meshTransforms[mk].emplace_back(transform);
-
-                DrawCommand& drawCommand = drawCommandQueue[mk];
-                drawCommand.vao = skinnedVAO;
-                drawCommand.material = material;
-                drawCommand.baseIndex = submesh.baseIndex;
-                drawCommand.baseVertex = submesh.baseVertex;
-                drawCommand.indexCount = submesh.indexCount;
-                drawCommand.instanceCount++;
-
-                if (castShadows) {
-                    shadowMapMeshTransforms[mk].emplace_back(transform);
-
-                    DrawCommand& shadowMapDrawCommand = shadowMapDrawCommandQueue[mk];
-                    shadowMapDrawCommand.vao = skinnedVAO;
-                    shadowMapDrawCommand.material = material;
-                    shadowMapDrawCommand.baseIndex = submesh.baseIndex;
-                    shadowMapDrawCommand.baseVertex = submesh.baseVertex;
-                    shadowMapDrawCommand.indexCount = submesh.indexCount;
-                    shadowMapDrawCommand.instanceCount++;
-                }
-            }
-        }
+//        CG_ASSERT(boneTransforms.size() <= maxBones, "Mesh contains to many bones")
+//        CG_ASSERT(skinningQueue.size() < maxAnimatedComponents, "Cannot render that many AnimatedMeshRendererComponents")
+//
+//        uint32_t boneTransformOffset = skinningQueue.size() * maxBones * sizeof(glm::mat4);
+//        boneTransformsBuffer.setSubData(boneTransformOffset, boneTransforms.data(), boneTransforms.size() * sizeof(glm::mat4));
+//
+//        SkinningInfo& skinningInfo = skinningQueue.emplace_back();
+//        skinningInfo.originalVertexBuffer = mesh->getVAO()->getVertexBuffers()[0];
+//        skinningInfo.skinnedVertexBuffer = skinnedVAO->getVertexBuffers()[0];
+//        skinningInfo.boneInfluencesBuffer = &mesh->getBoneInfluencesBuffer();
+//        skinningInfo.numVertices = mesh->getVertices().size();
+//
+//        auto& submeshes = mesh->getSubmeshes();
+//
+//        for (const auto& meshNodeIndex: meshNodes) {
+//            const auto& meshNode = mesh->getMeshNodes().at(meshNodeIndex);
+//
+//            for (const auto& submeshIndex: meshNode.submeshIndices) {
+//                const Submesh& submesh = submeshes.at(submeshIndex);
+//                const Material* material = overrideMaterial != nullptr ? overrideMaterial : mesh->getMaterial(submesh.materialIndex);
+//                MeshKey mk = {skinnedVAO->getRendererId(), submeshIndex, material->getUuid().getUuid()};
+//
+//                meshTransforms[mk].emplace_back(transform);
+//
+//                DrawCommand& drawCommand = drawCommandQueue[mk];
+//                drawCommand.vao = skinnedVAO;
+//                drawCommand.material = material;
+//                drawCommand.baseIndex = submesh.baseIndex;
+//                drawCommand.baseVertex = submesh.baseVertex;
+//                drawCommand.indexCount = submesh.indexCount;
+//                drawCommand.instanceCount++;
+//
+//                if (castShadows) {
+//                    shadowMapMeshTransforms[mk].emplace_back(transform);
+//
+//                    DrawCommand& shadowMapDrawCommand = shadowMapDrawCommandQueue[mk];
+//                    shadowMapDrawCommand.vao = skinnedVAO;
+//                    shadowMapDrawCommand.material = material;
+//                    shadowMapDrawCommand.baseIndex = submesh.baseIndex;
+//                    shadowMapDrawCommand.baseVertex = submesh.baseVertex;
+//                    shadowMapDrawCommand.indexCount = submesh.indexCount;
+//                    shadowMapDrawCommand.instanceCount++;
+//                }
+//            }
+//        }
     }
 
-    void SceneRenderer::submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, const AABoundingBox* boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions, std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers, const std::vector<float>& lodDistances) {
-        if (enableCulling && boundingBox != nullptr && !cameraFrustum.testAABoundingBoxInFrustum(*boundingBox, transform)) {
-            return;
-        }
-
-        auto& submeshes = mesh->getSubmeshes();
-
-        for (const auto& meshNodeIndex: meshNodes) {
-            const auto* meshNode = &mesh->getMeshNodes().at(meshNodeIndex);
-
-            glm::mat4 finalTransform = transform * meshNode->transform;
-
-            if (!meshNode->lodMeshNodes.empty()) {
-                meshNode = &mesh->getMeshNodes().at(meshNode->lodMeshNodes[findCorrectLodIndex(lodDistances, finalTransform, meshNode->lodMeshNodes.size())]);
-            }
-
-            bool isInCameraFrustum = !enableCulling || boundingBox != nullptr || cameraFrustum.testAABoundingBoxInFrustum(meshNode->aaBoundingBox, finalTransform);
-
-            if (isInCameraFrustum) {
-                for (const auto& submeshIndex: meshNode->submeshIndices) {
-                    const Submesh& submesh = submeshes.at(submeshIndex);
-
-                    if (shader->isForward()) {
-                        CustomShaderDrawCommand& drawCommand = customShaderForwardDrawCommandQueue[shader].emplace_back();
-                        drawCommand.instanceCount = instanceCount;
-                        drawCommand.vao = mesh->getVAO();
-                        drawCommand.material = material;
-                        drawCommand.baseIndex = submesh.baseIndex;
-                        drawCommand.baseVertex = submesh.baseVertex;
-                        drawCommand.indexCount = submesh.indexCount;
-                        drawCommand.transform = finalTransform;
-                        drawCommand.renderPassOptions = renderPassOptions;
-                        drawCommand.instanceBuffers = instanceBuffers;
-                    } else {
-                        CustomShaderDrawCommand& drawCommand = customShaderDeferredDrawCommandQueue[shader].emplace_back();
-                        drawCommand.instanceCount = instanceCount;
-                        drawCommand.vao = mesh->getVAO();
-                        drawCommand.material = material;
-                        drawCommand.baseIndex = submesh.baseIndex;
-                        drawCommand.baseVertex = submesh.baseVertex;
-                        drawCommand.indexCount = submesh.indexCount;
-                        drawCommand.transform = finalTransform;
-                        drawCommand.renderPassOptions = renderPassOptions;
-                        drawCommand.instanceBuffers = instanceBuffers;
-                    }
-                }
-            }
-        }
-    }
+//    void SceneRenderer::submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, const AABoundingBox* boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions, std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers, const std::vector<float>& lodDistances) {
+//        if (enableCulling && boundingBox != nullptr && !cameraFrustum.testAABoundingBoxInFrustum(*boundingBox, transform)) {
+//            return;
+//        }
+//
+//        auto& submeshes = mesh->getSubmeshes();
+//
+//        for (const auto& meshNodeIndex: meshNodes) {
+//            const auto* meshNode = &mesh->getMeshNodes().at(meshNodeIndex);
+//
+//            glm::mat4 finalTransform = transform * meshNode->transform;
+//
+//            if (!meshNode->lodMeshNodes.empty()) {
+//                meshNode = &mesh->getMeshNodes().at(meshNode->lodMeshNodes[findCorrectLodIndex(lodDistances, finalTransform, meshNode->lodMeshNodes.size())]);
+//            }
+//
+//            bool isInCameraFrustum = !enableCulling || boundingBox != nullptr || cameraFrustum.testAABoundingBoxInFrustum(meshNode->aaBoundingBox, finalTransform);
+//
+//            if (isInCameraFrustum) {
+//                for (const auto& submeshIndex: meshNode->submeshIndices) {
+//                    const Submesh& submesh = submeshes.at(submeshIndex);
+//
+//                    if (shader->isForward()) {
+//                        CustomShaderDrawCommand& drawCommand = customShaderForwardDrawCommandQueue[shader].emplace_back();
+//                        drawCommand.instanceCount = instanceCount;
+//                        drawCommand.vao = mesh->getVAO();
+//                        drawCommand.material = material;
+//                        drawCommand.baseIndex = submesh.baseIndex;
+//                        drawCommand.baseVertex = submesh.baseVertex;
+//                        drawCommand.indexCount = submesh.indexCount;
+//                        drawCommand.transform = finalTransform;
+//                        drawCommand.renderPassOptions = renderPassOptions;
+//                        drawCommand.instanceBuffers = instanceBuffers;
+//                    } else {
+//                        CustomShaderDrawCommand& drawCommand = customShaderDeferredDrawCommandQueue[shader].emplace_back();
+//                        drawCommand.instanceCount = instanceCount;
+//                        drawCommand.vao = mesh->getVAO();
+//                        drawCommand.material = material;
+//                        drawCommand.baseIndex = submesh.baseIndex;
+//                        drawCommand.baseVertex = submesh.baseVertex;
+//                        drawCommand.indexCount = submesh.indexCount;
+//                        drawCommand.transform = finalTransform;
+//                        drawCommand.renderPassOptions = renderPassOptions;
+//                        drawCommand.instanceBuffers = instanceBuffers;
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     void SceneRenderer::submitUiElements(const std::unordered_map<std::string, UiElement*>& uiElements) {
         for (const auto& [_, element]: uiElements) {
@@ -904,7 +945,7 @@ namespace CgEngine {
 
                 float fontAtlasIndex = -1;
                 for (uint32_t i = 0; i < drawInfo.filledFontAtlases; i++) {
-                    if (*drawInfo.fontAtlases[i] == *fontAtlas) {
+                    if (drawInfo.fontAtlases[i] == fontAtlas) {
                         fontAtlasIndex = static_cast<float>(i);
                         break;
                     }
@@ -934,60 +975,60 @@ namespace CgEngine {
     }
 
     void SceneRenderer::submitPhysicsColliderMesh(MeshVertices* mesh, const glm::mat4& transform) {
-        const auto& submeshes = mesh->getSubmeshes();
-
-        for (const auto& meshNode: mesh->getMeshNodes()) {
-            for (const auto& submeshIndex: meshNode.submeshIndices) {
-                const Submesh& submesh = submeshes.at(submeshIndex);
-                MeshKey mk = {mesh->getVAO()->getRendererId(), submeshIndex, physicsCollidersMaterial.getUuid().getUuid()};
-
-                physicsCollidersMeshTransforms[mk].emplace_back(transform * meshNode.transform);
-
-                DrawCommand& drawCommand = physicsCollidersDrawCommandQueue[mk];
-                drawCommand.vao = mesh->getVAO();
-                drawCommand.material = &physicsCollidersMaterial;
-                drawCommand.baseIndex = submesh.baseIndex;
-                drawCommand.baseVertex = submesh.baseVertex;
-                drawCommand.indexCount = submesh.indexCount;
-                drawCommand.instanceCount++;
-            }
-        }
+//        const auto& submeshes = mesh->getSubmeshes();
+//
+//        for (const auto& meshNode: mesh->getMeshNodes()) {
+//            for (const auto& submeshIndex: meshNode.submeshIndices) {
+//                const Submesh& submesh = submeshes.at(submeshIndex);
+//                MeshKey mk = {mesh->getVAO()->getRendererId(), submeshIndex, physicsCollidersMaterial.getUuid().getUuid()};
+//
+//                physicsCollidersMeshTransforms[mk].emplace_back(transform * meshNode.transform);
+//
+//                DrawCommand& drawCommand = physicsCollidersDrawCommandQueue[mk];
+//                drawCommand.vao = mesh->getVAO();
+//                drawCommand.material = &physicsCollidersMaterial;
+//                drawCommand.baseIndex = submesh.baseIndex;
+//                drawCommand.baseVertex = submesh.baseVertex;
+//                drawCommand.indexCount = submesh.indexCount;
+//                drawCommand.instanceCount++;
+//            }
+//        }
     }
 
     void SceneRenderer::submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, Mesh* mesh, const std::vector<uint32_t>& meshNodes, const glm::mat4& transform) {
-        for (const auto& meshNodeIndex: meshNodes) {
-            const auto& meshNode = mesh->getMeshNodes().at(meshNodeIndex);
-            auto [center, extents] = meshNode.aaBoundingBox.getTransformedAdjustedCenterAndExtents(transform * meshNode.transform);
-            const auto& boundingBoxSubmesh = boundingBoxMesh->getSubmeshes().at(0);
-
-            MeshKey mk = {boundingBoxMesh->getVAO()->getRendererId(), 0, boundingBoxMaterial.getUuid().getUuid()};
-            boundingBoxMeshTransforms[mk].emplace_back(glm::translate(glm::mat4(1.0f), center) * glm::scale(glm::mat4(1.0f), extents * 2.0f));
-
-            DrawCommand& drawCommand = boundingBoxDrawCommandQueue[mk];
-            drawCommand.vao = boundingBoxMesh->getVAO();
-            drawCommand.material = &boundingBoxMaterial;
-            drawCommand.baseIndex = boundingBoxSubmesh.baseIndex;
-            drawCommand.baseVertex = boundingBoxSubmesh.baseVertex;
-            drawCommand.indexCount = boundingBoxSubmesh.indexCount;
-            drawCommand.instanceCount++;
-        }
+//        for (const auto& meshNodeIndex: meshNodes) {
+//            const auto& meshNode = mesh->getMeshNodes().at(meshNodeIndex);
+//            auto [center, extents] = meshNode.aaBoundingBox.getTransformedAdjustedCenterAndExtents(transform * meshNode.transform);
+//            const auto& boundingBoxSubmesh = boundingBoxMesh->getSubmeshes().at(0);
+//
+//            MeshKey mk = {boundingBoxMesh->getVAO()->getRendererId(), 0, boundingBoxMaterial.getUuid().getUuid()};
+//            boundingBoxMeshTransforms[mk].emplace_back(glm::translate(glm::mat4(1.0f), center) * glm::scale(glm::mat4(1.0f), extents * 2.0f));
+//
+//            DrawCommand& drawCommand = boundingBoxDrawCommandQueue[mk];
+//            drawCommand.vao = boundingBoxMesh->getVAO();
+//            drawCommand.material = &boundingBoxMaterial;
+//            drawCommand.baseIndex = boundingBoxSubmesh.baseIndex;
+//            drawCommand.baseVertex = boundingBoxSubmesh.baseVertex;
+//            drawCommand.indexCount = boundingBoxSubmesh.indexCount;
+//            drawCommand.instanceCount++;
+//        }
     }
 
     void SceneRenderer::submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, const AABoundingBox& boundingBox, const glm::mat4& transform) {
-        auto [center, extents] = boundingBox.getTransformedAdjustedCenterAndExtents(transform);
-
-        const auto& boundingBoxSubmesh = boundingBoxMesh->getSubmeshes().at(0);
-
-        MeshKey mk = {boundingBoxMesh->getVAO()->getRendererId(), 0, boundingBoxMaterial.getUuid().getUuid()};
-        boundingBoxMeshTransforms[mk].emplace_back(glm::translate(glm::mat4(1.0f), center) * glm::scale(glm::mat4(1.0f), extents * 2.0f));
-
-        DrawCommand& drawCommand = boundingBoxDrawCommandQueue[mk];
-        drawCommand.vao = boundingBoxMesh->getVAO();
-        drawCommand.material = &boundingBoxMaterial;
-        drawCommand.baseIndex = boundingBoxSubmesh.baseIndex;
-        drawCommand.baseVertex = boundingBoxSubmesh.baseVertex;
-        drawCommand.indexCount = boundingBoxSubmesh.indexCount;
-        drawCommand.instanceCount++;
+//        auto [center, extents] = boundingBox.getTransformedAdjustedCenterAndExtents(transform);
+//
+//        const auto& boundingBoxSubmesh = boundingBoxMesh->getSubmeshes().at(0);
+//
+//        MeshKey mk = {boundingBoxMesh->getVAO()->getRendererId(), 0, boundingBoxMaterial.getUuid().getUuid()};
+//        boundingBoxMeshTransforms[mk].emplace_back(glm::translate(glm::mat4(1.0f), center) * glm::scale(glm::mat4(1.0f), extents * 2.0f));
+//
+//        DrawCommand& drawCommand = boundingBoxDrawCommandQueue[mk];
+//        drawCommand.vao = boundingBoxMesh->getVAO();
+//        drawCommand.material = &boundingBoxMaterial;
+//        drawCommand.baseIndex = boundingBoxSubmesh.baseIndex;
+//        drawCommand.baseVertex = boundingBoxSubmesh.baseVertex;
+//        drawCommand.indexCount = boundingBoxSubmesh.indexCount;
+//        drawCommand.instanceCount++;
     }
 
     void SceneRenderer::submitDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color) {
@@ -1005,26 +1046,22 @@ namespace CgEngine {
         return renderingStats;
     }
 
-    ShaderMap& SceneRenderer::getShaderMap() {
-        return shaderMap;
-    }
-
     void SceneRenderer::skinMeshes() {
-        CG_GPU_DEBUG_GROUP("SkinMeshes")
-        CG_GPU_TIME_FN(&renderingStats.skinMeshesTimer)
-
-        skinningShader.bind();
-        boneTransformsBuffer.bind(2);
-
-        for (uint32_t i = 0; i < skinningQueue.size(); i++) {
-            skinningQueue[i].originalVertexBuffer->bindAsSSBO(3);
-            skinningQueue[i].skinnedVertexBuffer->bindAsSSBO(4);
-            skinningQueue[i].boneInfluencesBuffer->bind(1);
-
-            skinningShader.setInt("u_ComponentIndex", i);
-            skinningShader.dispatch((skinningQueue[i].numVertices / 32) + 1, 1, 1);
-            skinningShader.waitForMemoryBarrier({MemoryBarrierBit::All});
-        }
+//        CG_GPU_DEBUG_GROUP("SkinMeshes")
+//        CG_GPU_TIME_FN(&renderingStats.skinMeshesTimer)
+//
+//        skinningShader.bind();
+//        boneTransformsBuffer.bind(2);
+//
+//        for (uint32_t i = 0; i < skinningQueue.size(); i++) {
+//            skinningQueue[i].originalVertexBuffer->bindAsSSBO(3);
+//            skinningQueue[i].skinnedVertexBuffer->bindAsSSBO(4);
+//            skinningQueue[i].boneInfluencesBuffer->bind(1);
+//
+//            skinningShader.setInt("u_ComponentIndex", i);
+//            skinningShader.dispatch((skinningQueue[i].numVertices / 32) + 1, 1, 1);
+//            skinningShader.waitForMemoryBarrier({MemoryBarrierBit::All});
+//        }
     }
 
     void SceneRenderer::shadowMapPass() {
@@ -1032,15 +1069,16 @@ namespace CgEngine {
         CG_GPU_TIME_FN(&renderingStats.shadowMapTimer)
 
         if (!currentSceneEnvironment.dirLightCastShadows) {
-            clearPass(shadowMapRenderPass);
+            Renderer::clearPass(dirShadowMapRenderPass, dirShadowMapFramebuffer);
             return;
         }
 
-        Renderer::beginRenderPass(shadowMapRenderPass);
+        Renderer::beginRenderPass(dirShadowMapRenderPass, dirShadowMapFramebuffer, dirShadowMapDescriptorSet);
 
         for (const auto [mk, command]: shadowMapDrawCommandQueue) {
-            const auto& transforms = shadowMapMeshTransforms[mk];
-            Renderer::executeDrawCommand(*command.vao, emptyMaterial, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
+            transformOffsetPushConstant->setData(&command.transformsBufferOffset, sizeof(int));
+            Renderer::setPushConstants({transformOffsetPushConstant}, 1);
+            Renderer::executeDrawCommand(command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount);
         }
 
         Renderer::endRenderPass();
@@ -1050,309 +1088,305 @@ namespace CgEngine {
         CG_GPU_DEBUG_GROUP("GBufferPass")
         CG_GPU_TIME_FN(&renderingStats.gBufferTimer)
 
-        Renderer::beginRenderPass(gBufferRenderPass);
+        Renderer::beginRenderPass(gBufferRenderPass, gBufferFramebuffer, gBufferDescriptorSet);
 
         for (const auto [mk, command]: drawCommandQueue) {
-            const auto& transforms = meshTransforms[mk];
-            Renderer::executeDrawCommand(*command.vao, command.material != nullptr ? *command.material : emptyMaterial, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
+            transformOffsetPushConstant->setData(&command.transformsBufferOffset, sizeof(int));
+            Renderer::setPushConstants({transformOffsetPushConstant}, 1);
+            Renderer::executeDrawCommand(command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount);
         }
 
         Renderer::endRenderPass();
     }
 
     void SceneRenderer::hbaoDeinterleavingPass() {
-        CG_GPU_DEBUG_GROUP("HBAODeinterleavingPass")
-        CG_GPU_TIME_FN(&renderingStats.hbaoDeinterleavingTimer)
-
-        auto& deinterleavingShader = hbaoDeinterleavingRenderPass.getSpecification().shader;
-
-        hbaoDeinterleavingRenderPass.getSpecification().framebuffer = hbaoDeinterleavingFramebuffers[0];
-        Renderer::beginRenderPass(hbaoDeinterleavingRenderPass);
-        deinterleavingShader.setTexture(gBufferRenderPass.getSpecification().framebuffer->getDepthAttachmentRendererId(), 0);
-        deinterleavingShader.setInt("u_UVOffsetIndex", 0);
-        Renderer::renderUnitQuad(emptyMaterial);
-        Renderer::endRenderPass();
-
-        hbaoDeinterleavingRenderPass.getSpecification().framebuffer = hbaoDeinterleavingFramebuffers[1];
-        Renderer::beginRenderPass(hbaoDeinterleavingRenderPass);
-        deinterleavingShader.setInt("u_UVOffsetIndex", 1);
-        Renderer::renderUnitQuad(emptyMaterial);
-        Renderer::endRenderPass();
+//        CG_GPU_DEBUG_GROUP("HBAODeinterleavingPass")
+//        CG_GPU_TIME_FN(&renderingStats.hbaoDeinterleavingTimer)
+//
+//        auto& deinterleavingShader = hbaoDeinterleavingRenderPass.getSpecification().shader;
+//
+//        hbaoDeinterleavingRenderPass.getSpecification().framebuffer = hbaoDeinterleavingFramebuffers[0];
+//        Renderer::beginRenderPass(hbaoDeinterleavingRenderPass);
+//        deinterleavingShader.setTexture(gBufferRenderPass.getSpecification().framebuffer->getDepthAttachmentRendererId(), 0);
+//        deinterleavingShader.setInt("u_UVOffsetIndex", 0);
+//        Renderer::renderUnitQuad(emptyMaterial);
+//        Renderer::endRenderPass();
+//
+//        hbaoDeinterleavingRenderPass.getSpecification().framebuffer = hbaoDeinterleavingFramebuffers[1];
+//        Renderer::beginRenderPass(hbaoDeinterleavingRenderPass);
+//        deinterleavingShader.setInt("u_UVOffsetIndex", 1);
+//        Renderer::renderUnitQuad(emptyMaterial);
+//        Renderer::endRenderPass();
     }
 
     void SceneRenderer::hbaoComputePass() {
-        CG_GPU_DEBUG_GROUP("HBAOComputePass")
-        CG_GPU_TIME_FN(&renderingStats.hbaoComputeTimer)
-
-        hbaoShader.bind();
-
-        hbaoShader.setTexture2D(hbaoDeinterleavingDepthTexture.getRendererId(), 0);
-        hbaoShader.setTexture2D(gBufferRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(3), 1); // ViewSpaceNormals
-        hbaoShader.setImageArray(hbaoResultTexture, 2, ShaderStorageAccess::WriteOnly);
-
-        hbaoShader.dispatch(hbaoWorkGroupSize.x, hbaoWorkGroupSize.y, hbaoWorkGroupSize.z);
-        hbaoShader.waitForMemoryBarrier({MemoryBarrierBit::TextureFetch, MemoryBarrierBit::ShaderImageAccess});
+//        CG_GPU_DEBUG_GROUP("HBAOComputePass")
+//        CG_GPU_TIME_FN(&renderingStats.hbaoComputeTimer)
+//
+//        hbaoShader.bind();
+//
+//        hbaoShader.setTexture2D(hbaoDeinterleavingDepthTexture.getRendererId(), 0);
+//        hbaoShader.setTexture2D(gBufferRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(3), 1); // ViewSpaceNormals
+//        hbaoShader.setImageArray(hbaoResultTexture, 2, ShaderStorageAccess::WriteOnly);
+//
+//        hbaoShader.dispatch(hbaoWorkGroupSize.x, hbaoWorkGroupSize.y, hbaoWorkGroupSize.z);
+//        hbaoShader.waitForMemoryBarrier({MemoryBarrierBit::TextureFetch, MemoryBarrierBit::ShaderImageAccess});
     }
 
     void SceneRenderer::hbaoReinterleavingPass() {
-        CG_GPU_DEBUG_GROUP("HBAOReinterleavingPass")
-        CG_GPU_TIME_FN(&renderingStats.hbaoReinterleavingTimer)
-
-        Renderer::beginRenderPass(hbaoReinterleavingRenderPass);
-        hbaoReinterleavingRenderPass.getSpecification().shader.setTexture(hbaoResultTexture.getRendererId(), 0);
-        Renderer::renderUnitQuad(emptyMaterial);
-        Renderer::endRenderPass();
+//        CG_GPU_DEBUG_GROUP("HBAOReinterleavingPass")
+//        CG_GPU_TIME_FN(&renderingStats.hbaoReinterleavingTimer)
+//
+//        Renderer::beginRenderPass(hbaoReinterleavingRenderPass);
+//        hbaoReinterleavingRenderPass.getSpecification().shader.setTexture(hbaoResultTexture.getRendererId(), 0);
+//        Renderer::renderUnitQuad(emptyMaterial);
+//        Renderer::endRenderPass();
     }
 
     void SceneRenderer::hbaoBlurPass() {
-        CG_GPU_DEBUG_GROUP("HBAOBlurPass")
-        CG_GPU_TIME_FN(&renderingStats.hbaoBlurTimer)
-
-        auto& shader = hbaoBlurRenderPass.getSpecification().shader;
-
-        Renderer::beginRenderPass(hbaoBlurRenderPass);
-
-        shader.setFloat("u_Sharpness", hbaoSharpness);
-
-        shader.setTexture(hbaoReinterleavingRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
-        shader.setVec2("u_InvResolutionDirection", glm::vec2(invViewportWidth, 0.0f));
-        Renderer::renderUnitQuad(emptyMaterial);
-
-        shader.setTexture(hbaoBlurRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
-        shader.setVec2("u_InvResolutionDirection", glm::vec2(0.0f, invViewportHeight));
-        Renderer::renderUnitQuad(emptyMaterial);
-
-        Renderer::endRenderPass();
+//        CG_GPU_DEBUG_GROUP("HBAOBlurPass")
+//        CG_GPU_TIME_FN(&renderingStats.hbaoBlurTimer)
+//
+//        auto& shader = hbaoBlurRenderPass.getSpecification().shader;
+//
+//        Renderer::beginRenderPass(hbaoBlurRenderPass);
+//
+//        shader.setFloat("u_Sharpness", hbaoSharpness);
+//
+//        shader.setTexture(hbaoReinterleavingRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
+//        shader.setVec2("u_InvResolutionDirection", glm::vec2(invViewportWidth, 0.0f));
+//        Renderer::renderUnitQuad(emptyMaterial);
+//
+//        shader.setTexture(hbaoBlurRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
+//        shader.setVec2("u_InvResolutionDirection", glm::vec2(0.0f, invViewportHeight));
+//        Renderer::renderUnitQuad(emptyMaterial);
+//
+//        Renderer::endRenderPass();
     }
 
     void SceneRenderer::pbrPass() {
-        CG_GPU_DEBUG_GROUP("PBRPass")
-        CG_GPU_TIME_FN(&renderingStats.pbrTimer)
-
-        Renderer::beginRenderPass(pbrRenderPass);
-        Renderer::renderUnitQuad(pbrPassMaterial);
-        Renderer::endRenderPass();
+//        CG_GPU_DEBUG_GROUP("PBRPass")
+//        CG_GPU_TIME_FN(&renderingStats.pbrTimer)
+//
+//        Renderer::beginRenderPass(pbrRenderPass);
+//        Renderer::renderUnitQuad(pbrPassMaterial);
+//        Renderer::endRenderPass();
     }
 
     void SceneRenderer::customShaderDeferredPass() {
-        CG_GPU_DEBUG_GROUP("CustomShaderDeferredPass")
-        CG_GPU_TIME_FN(&renderingStats.customShaderDeferredTimer)
-
-        Renderer::beginRenderPass(customShaderDeferredRenderPass, true);
-
-        const Material* lastUsedMaterial = nullptr;
-
-        for (const auto& [shader, commands]: customShaderDeferredDrawCommandQueue) {
-            shader->bind();
-
-            for (const auto& command: commands) {
-                shader->setMat4("u_Transform", command.transform);
-
-                if (command.instanceBuffers.first != nullptr) {
-                    command.instanceBuffers.first->bind(5);
-                }
-                if (command.instanceBuffers.second != nullptr) {
-                    command.instanceBuffers.second->bind(6);
-                }
-
-                const Material* material = command.material != nullptr ? command.material : &emptyMaterial;
-
-                Renderer::setFaceCulling(command.renderPassOptions.backfaceCulling, command.renderPassOptions.frontfaceCulling);
-                Renderer::setTesselationPatchSize(command.renderPassOptions.tesselationPatchSize);
-
-                if (material != lastUsedMaterial) {
-                    material->uploadToShader(*shader);
-                }
-                lastUsedMaterial = material;
-
-                Renderer::executeCustomShaderDrawCommand(*command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount, command.renderPassOptions.tesselationPatchSize);
-            }
-        }
-
-        Renderer::endRenderPass();
+//        CG_GPU_DEBUG_GROUP("CustomShaderDeferredPass")
+//        CG_GPU_TIME_FN(&renderingStats.customShaderDeferredTimer)
+//
+//        Renderer::beginRenderPass(customShaderDeferredRenderPass, true);
+//
+//        const Material* lastUsedMaterial = nullptr;
+//
+//        for (const auto& [shader, commands]: customShaderDeferredDrawCommandQueue) {
+//            shader->bind();
+//
+//            for (const auto& command: commands) {
+//                shader->setMat4("u_Transform", command.transform);
+//
+//                if (command.instanceBuffers.first != nullptr) {
+//                    command.instanceBuffers.first->bind(5);
+//                }
+//                if (command.instanceBuffers.second != nullptr) {
+//                    command.instanceBuffers.second->bind(6);
+//                }
+//
+//                const Material* material = command.material != nullptr ? command.material : &emptyMaterial;
+//
+//                Renderer::setFaceCulling(command.renderPassOptions.backfaceCulling, command.renderPassOptions.frontfaceCulling);
+//                Renderer::setTesselationPatchSize(command.renderPassOptions.tesselationPatchSize);
+//
+//                if (material != lastUsedMaterial) {
+//                    material->uploadToShader(*shader);
+//                }
+//                lastUsedMaterial = material;
+//
+//                Renderer::executeCustomShaderDrawCommand(*command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount, command.renderPassOptions.tesselationPatchSize);
+//            }
+//        }
+//
+//        Renderer::endRenderPass();
     }
 
     void SceneRenderer::customShaderForwardPass() {
-        CG_GPU_DEBUG_GROUP("CustomShaderForwardPass")
-        CG_GPU_TIME_FN(&renderingStats.customShaderForwardTimer)
-
-        Renderer::beginRenderPass(customShaderForwardRenderPass, true);
-
-        bool lastCommandUseDirShadowMappingData = false;
-        bool lastCommandUseEnvironmentMappingData = false;
-
-        const Material* lastUsedMaterial = nullptr;
-
-        for (const auto& [shader, commands]: customShaderForwardDrawCommandQueue) {
-            shader->bind();
-
-            for (const auto& command: commands) {
-                shader->setMat4("u_Transform", command.transform);
-
-                if (command.instanceBuffers.first != nullptr) {
-                    command.instanceBuffers.first->bind(5);
-                }
-                if (command.instanceBuffers.second != nullptr) {
-                    command.instanceBuffers.second->bind(6);
-                }
-
-                if (command.renderPassOptions.useDirShadowMappingData && !lastCommandUseDirShadowMappingData) {
-                    shader->setTexture(dirShadowMaps.getRendererId(), 8);
-                }
-                lastCommandUseDirShadowMappingData = command.renderPassOptions.useDirShadowMappingData;
-
-                if (command.renderPassOptions.useEnvironmentMappingData && !lastCommandUseEnvironmentMappingData) {
-                    shader->setTexture(currentSceneEnvironment.irradianceMapId, 5);
-                    shader->setTexture(currentSceneEnvironment.prefilterMapId, 6);
-                    shader->setTexture(Renderer::getBrdfLUTTexture().getRendererId(), 7);
-                    shader->setFloat("u_EnvironmentIntensity", currentSceneEnvironment.environmentIntensity);
-                }
-                lastCommandUseEnvironmentMappingData = command.renderPassOptions.useEnvironmentMappingData;
-
-                const Material* material = command.material != nullptr ? command.material : &emptyMaterial;
-
-                Renderer::setFaceCulling(command.renderPassOptions.backfaceCulling, command.renderPassOptions.frontfaceCulling);
-                Renderer::setBlending(command.renderPassOptions.useBlending, command.renderPassOptions.blendingEquation, command.renderPassOptions.srcBlendingFunction, command.renderPassOptions.destBlendingFunction);
-                Renderer::setWireframe(command.renderPassOptions.wireframe);
-                Renderer::setTesselationPatchSize(command.renderPassOptions.tesselationPatchSize);
-
-                if (material != lastUsedMaterial) {
-                    material->uploadToShader(*shader);
-                }
-                lastUsedMaterial = material;
-
-                Renderer::executeCustomShaderDrawCommand(*command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount, command.renderPassOptions.tesselationPatchSize);
-            }
-        }
-
-        Renderer::endRenderPass();
+//        CG_GPU_DEBUG_GROUP("CustomShaderForwardPass")
+//        CG_GPU_TIME_FN(&renderingStats.customShaderForwardTimer)
+//
+//        Renderer::beginRenderPass(customShaderForwardRenderPass, true);
+//
+//        bool lastCommandUseDirShadowMappingData = false;
+//        bool lastCommandUseEnvironmentMappingData = false;
+//
+//        const Material* lastUsedMaterial = nullptr;
+//
+//        for (const auto& [shader, commands]: customShaderForwardDrawCommandQueue) {
+//            shader->bind();
+//
+//            for (const auto& command: commands) {
+//                shader->setMat4("u_Transform", command.transform);
+//
+//                if (command.instanceBuffers.first != nullptr) {
+//                    command.instanceBuffers.first->bind(5);
+//                }
+//                if (command.instanceBuffers.second != nullptr) {
+//                    command.instanceBuffers.second->bind(6);
+//                }
+//
+//                if (command.renderPassOptions.useDirShadowMappingData && !lastCommandUseDirShadowMappingData) {
+//                    shader->setTexture(dirShadowMaps.getRendererId(), 8);
+//                }
+//                lastCommandUseDirShadowMappingData = command.renderPassOptions.useDirShadowMappingData;
+//
+//                if (command.renderPassOptions.useEnvironmentMappingData && !lastCommandUseEnvironmentMappingData) {
+//                    shader->setTexture(currentSceneEnvironment.irradianceMapId, 5);
+//                    shader->setTexture(currentSceneEnvironment.prefilterMapId, 6);
+//                    shader->setTexture(Renderer::getBrdfLUTTexture().getRendererId(), 7);
+//                    shader->setFloat("u_EnvironmentIntensity", currentSceneEnvironment.environmentIntensity);
+//                }
+//                lastCommandUseEnvironmentMappingData = command.renderPassOptions.useEnvironmentMappingData;
+//
+//                const Material* material = command.material != nullptr ? command.material : &emptyMaterial;
+//
+//                Renderer::setFaceCulling(command.renderPassOptions.backfaceCulling, command.renderPassOptions.frontfaceCulling);
+//                Renderer::setBlending(command.renderPassOptions.useBlending, command.renderPassOptions.blendingEquation, command.renderPassOptions.srcBlendingFunction, command.renderPassOptions.destBlendingFunction);
+//                Renderer::setWireframe(command.renderPassOptions.wireframe);
+//                Renderer::setTesselationPatchSize(command.renderPassOptions.tesselationPatchSize);
+//
+//                if (material != lastUsedMaterial) {
+//                    material->uploadToShader(*shader);
+//                }
+//                lastUsedMaterial = material;
+//
+//                Renderer::executeCustomShaderDrawCommand(*command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount, command.renderPassOptions.tesselationPatchSize);
+//            }
+//        }
+//
+//        Renderer::endRenderPass();
     }
 
     void SceneRenderer::skyboxPass() {
-        CG_GPU_DEBUG_GROUP("SkyboxPass")
-        CG_GPU_TIME_FN(&renderingStats.skyboxTimer)
-
-        Renderer::beginRenderPass(skyboxRenderPass);
-        Renderer::renderUnitCube(skyboxMaterial);
-        Renderer::endRenderPass();
+//        CG_GPU_DEBUG_GROUP("SkyboxPass")
+//        CG_GPU_TIME_FN(&renderingStats.skyboxTimer)
+//
+//        Renderer::beginRenderPass(skyboxRenderPass);
+//        Renderer::renderUnitCube(skyboxMaterial);
+//        Renderer::endRenderPass();
     }
 
     void SceneRenderer::physicsCollidersPass() {
-        Renderer::beginRenderPass(physicsCollidersRenderPass);
-
-        for (const auto [mk, command]: physicsCollidersDrawCommandQueue) {
-            const auto& transforms = physicsCollidersMeshTransforms[mk];
-            Renderer::executeDrawCommand(*command.vao, *command.material, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
-        }
-
-        Renderer::endRenderPass();
+//        Renderer::beginRenderPass(physicsCollidersRenderPass);
+//
+//        for (const auto [mk, command]: physicsCollidersDrawCommandQueue) {
+//            const auto& transforms = physicsCollidersMeshTransforms[mk];
+//            Renderer::executeDrawCommand(*command.vao, *command.material, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
+//        }
+//
+//        Renderer::endRenderPass();
     }
 
     void SceneRenderer::boundingBoxPass() {
-        Renderer::beginRenderPass(boundingBoxRenderPass);
-
-        for (const auto [mk, command]: boundingBoxDrawCommandQueue) {
-            const auto& transforms = boundingBoxMeshTransforms[mk];
-            Renderer::executeDrawCommand(*command.vao, *command.material, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
-        }
-
-        Renderer::endRenderPass();
+//        Renderer::beginRenderPass(boundingBoxRenderPass);
+//
+//        for (const auto [mk, command]: boundingBoxDrawCommandQueue) {
+//            const auto& transforms = boundingBoxMeshTransforms[mk];
+//            Renderer::executeDrawCommand(*command.vao, *command.material, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
+//        }
+//
+//        Renderer::endRenderPass();
     }
 
     void SceneRenderer::normalsDebugPass() {
-        Renderer::beginRenderPass(normalsDebugRenderPass);
-
-        for (const auto [mk, command]: drawCommandQueue) {
-            const auto& transforms = meshTransforms[mk];
-            Renderer::executeDrawCommand(*command.vao, normalsDebugMaterial, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
-        }
-
-        Renderer::endRenderPass();
+//        Renderer::beginRenderPass(normalsDebugRenderPass);
+//
+//        for (const auto [mk, command]: drawCommandQueue) {
+//            const auto& transforms = meshTransforms[mk];
+//            Renderer::executeDrawCommand(*command.vao, normalsDebugMaterial, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
+//        }
+//
+//        Renderer::endRenderPass();
     }
 
     void SceneRenderer::debugLinesPass() {
-        Renderer::beginRenderPass(debugLinesRenderPass);
-        Renderer::renderLines(debugLinesDrawInfoQueue);
-        Renderer::endRenderPass();
+//        Renderer::beginRenderPass(debugLinesRenderPass);
+//        Renderer::renderLines(debugLinesDrawInfoQueue);
+//        Renderer::endRenderPass();
     }
 
     void SceneRenderer::bloomPass() {
-        CG_GPU_DEBUG_GROUP("BloomPass")
-        CG_GPU_TIME_FN(&renderingStats.bloomTimer)
-
-        auto& downSampleShader = bloomDownSamplePass.getSpecification().shader;
-
-        bloomDownSamplePass.getSpecification().framebuffer->setColorAttachments({bloomTextures[0].getRendererId()}, 0, viewportWidth / 2, viewportHeight / 2);
-        Renderer::beginRenderPass(bloomDownSamplePass);
-        downSampleShader.setTexture(pbrRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
-        downSampleShader.setBool("u_UseThreshold", true);
-        Renderer::renderUnitQuad(emptyMaterial);
-        Renderer::endRenderPass();
-
-        downSampleShader.setBool("u_UseThreshold", false);
-        for (uint32_t i = 0; i < bloomTextures.size() - 1; ++i) {
-            bloomDownSamplePass.getSpecification().framebuffer->setColorAttachments({bloomTextures[i + 1].getRendererId()}, 0, bloomTextures[i + 1].getWidth(), bloomTextures[i + 1].getHeight());
-            Renderer::beginRenderPass(bloomDownSamplePass);
-            downSampleShader.setTexture(bloomTextures[i].getRendererId(), 0);
-            Renderer::renderUnitQuad(emptyMaterial);
-            Renderer::endRenderPass();
-        }
-
-        auto& upSampleShader = bloomUpSamplePass.getSpecification().shader;
-
-        for (uint32_t i = bloomTextures.size() - 1; i > 0; i--) {
-            bloomUpSamplePass.getSpecification().framebuffer->setColorAttachments({bloomTextures[i - 1].getRendererId()}, 0, bloomTextures[i - 1].getWidth(), bloomTextures[i - 1].getHeight());
-            Renderer::beginRenderPass(bloomUpSamplePass);
-            upSampleShader.setTexture(bloomTextures[i].getRendererId(), 0);
-            Renderer::renderUnitQuad(emptyMaterial);
-            Renderer::endRenderPass();
-        }
+//        CG_GPU_DEBUG_GROUP("BloomPass")
+//        CG_GPU_TIME_FN(&renderingStats.bloomTimer)
+//
+//        auto& downSampleShader = bloomDownSamplePass.getSpecification().shader;
+//
+//        bloomDownSamplePass.getSpecification().framebuffer->setColorAttachments({bloomTextures[0].getRendererId()}, 0, viewportWidth / 2, viewportHeight / 2);
+//        Renderer::beginRenderPass(bloomDownSamplePass);
+//        downSampleShader.setTexture(pbrRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
+//        downSampleShader.setBool("u_UseThreshold", true);
+//        Renderer::renderUnitQuad(emptyMaterial);
+//        Renderer::endRenderPass();
+//
+//        downSampleShader.setBool("u_UseThreshold", false);
+//        for (uint32_t i = 0; i < bloomTextures.size() - 1; ++i) {
+//            bloomDownSamplePass.getSpecification().framebuffer->setColorAttachments({bloomTextures[i + 1].getRendererId()}, 0, bloomTextures[i + 1].getWidth(), bloomTextures[i + 1].getHeight());
+//            Renderer::beginRenderPass(bloomDownSamplePass);
+//            downSampleShader.setTexture(bloomTextures[i].getRendererId(), 0);
+//            Renderer::renderUnitQuad(emptyMaterial);
+//            Renderer::endRenderPass();
+//        }
+//
+//        auto& upSampleShader = bloomUpSamplePass.getSpecification().shader;
+//
+//        for (uint32_t i = bloomTextures.size() - 1; i > 0; i--) {
+//            bloomUpSamplePass.getSpecification().framebuffer->setColorAttachments({bloomTextures[i - 1].getRendererId()}, 0, bloomTextures[i - 1].getWidth(), bloomTextures[i - 1].getHeight());
+//            Renderer::beginRenderPass(bloomUpSamplePass);
+//            upSampleShader.setTexture(bloomTextures[i].getRendererId(), 0);
+//            Renderer::renderUnitQuad(emptyMaterial);
+//            Renderer::endRenderPass();
+//        }
     }
 
     void SceneRenderer::screenPass() {
-        CG_GPU_DEBUG_GROUP("ScreenPass")
-        CG_GPU_TIME_FN(&renderingStats.screenTimer)
-
-        Renderer::beginRenderPass(screenRenderPass);
-        Renderer::renderUnitQuad(screenMaterial);
-        Renderer::endRenderPass();
+//        CG_GPU_DEBUG_GROUP("ScreenPass")
+//        CG_GPU_TIME_FN(&renderingStats.screenTimer)
+//
+//        Renderer::beginRenderPass(screenRenderPass);
+//        Renderer::renderUnitQuad(screenMaterial);
+//        Renderer::endRenderPass();
     }
 
     void SceneRenderer::uiPass() {
-        CG_GPU_DEBUG_GROUP("UiPass")
-        CG_GPU_TIME_FN(&renderingStats.uiTimer)
-
-        for (const auto& [zIndex, drawInfo]: uiDrawInfoQueue) {
-
-            for (uint32_t i = 0; i < drawInfo.filledTextureSlots; i++) {
-                drawInfo.textureSlots[i]->bind(i);
-            }
-            if (drawInfo.circleIndexCount > 0) {
-                Renderer::beginRenderPass(uiCirclePass);
-                Renderer::renderUiCircles(drawInfo.circleVertices, drawInfo.circleIndexCount);
-                Renderer::endRenderPass();
-            }
-            if (drawInfo.rectIndexCount > 0) {
-                Renderer::beginRenderPass(uiRectPass);
-                Renderer::renderUiRects(drawInfo.rectVertices, drawInfo.rectIndexCount);
-                Renderer::endRenderPass();
-            }
-
-
-            for (uint32_t i = 0; i < drawInfo.filledFontAtlases; i++) {
-                drawInfo.fontAtlases[i]->bind(i);
-            }
-            if (drawInfo.textIndexCount > 0) {
-                Renderer::beginRenderPass(uiTextPass);
-                Renderer::renderUiText(drawInfo.textVertices, drawInfo.textIndexCount);
-                Renderer::endRenderPass();
-            }
-        }
-    }
-
-    void SceneRenderer::clearPass(RenderPass& renderPass) {
-        Renderer::beginRenderPass(renderPass);
-        Renderer::endRenderPass();
+//        CG_GPU_DEBUG_GROUP("UiPass")
+//        CG_GPU_TIME_FN(&renderingStats.uiTimer)
+//
+//        for (const auto& [zIndex, drawInfo]: uiDrawInfoQueue) {
+//
+//            for (uint32_t i = 0; i < drawInfo.filledTextureSlots; i++) {
+//                drawInfo.textureSlots[i]->bind(i);
+//            }
+//            if (drawInfo.circleIndexCount > 0) {
+//                Renderer::beginRenderPass(uiCirclePass);
+//                Renderer::renderUiCircles(drawInfo.circleVertices, drawInfo.circleIndexCount);
+//                Renderer::endRenderPass();
+//            }
+//            if (drawInfo.rectIndexCount > 0) {
+//                Renderer::beginRenderPass(uiRectPass);
+//                Renderer::renderUiRects(drawInfo.rectVertices, drawInfo.rectIndexCount);
+//                Renderer::endRenderPass();
+//            }
+//
+//
+//            for (uint32_t i = 0; i < drawInfo.filledFontAtlases; i++) {
+//                drawInfo.fontAtlases[i]->bind(i);
+//            }
+//            if (drawInfo.textIndexCount > 0) {
+//                Renderer::beginRenderPass(uiTextPass);
+//                Renderer::renderUiText(drawInfo.textVertices, drawInfo.textIndexCount);
+//                Renderer::endRenderPass();
+//            }
+//        }
     }
 
     void SceneRenderer::setupShadowMapData(glm::vec3 dirLightDirection, const glm::mat4& cameraViewProjection, const Camera& camera) {
@@ -1415,7 +1449,7 @@ namespace CgEngine {
             glm::mat4 lightProjection = glm::ortho(minOrtho.x, maxOrtho.x, minOrtho.y, maxOrtho.y, -50.0f, maxOrtho.z - minOrtho.z + 50.0f);
 
             glm::mat4 shadowMatrix = lightProjection * lightView;
-            float shadowMapResolution = static_cast<float>(dirShadowMaps.getWidth());
+            float shadowMapResolution = static_cast<float>(dirShadowMapFramebuffer->getWidth());
             glm::vec4 shadowOrigin = (shadowMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)) * shadowMapResolution / 2.0f;
             glm::vec4 roundedOrigin = glm::round(shadowOrigin);
             glm::vec4 roundOffset = roundedOrigin - shadowOrigin;
@@ -1428,7 +1462,7 @@ namespace CgEngine {
             dirShadowData.lightSpaceMat[i] = lightProjection * lightView;
         }
 
-        ubDirShadowData.setData(dirShadowData);
+        ubDirShadowData->setData(&dirShadowData, sizeof(UBDirShadowData));
     }
 
     void SceneRenderer::setupHBAOData(const glm::mat4& cameraProjection, const Camera& camera) {
@@ -1465,14 +1499,14 @@ namespace CgEngine {
 
         hbaoData.invQuarterResolution = 1.0f / glm::vec2{ static_cast<float>(viewportWidth) / 4, static_cast<float>(viewportHeight) / 4 };
 
-        ubHBAOData.setData(hbaoData);
+        ubHBAOData->setData(&hbaoData, sizeof(UBHBAOData));
     }
 
     float SceneRenderer::findDrawInfoTextureIndex(UiDrawInfo& drawInfo, const Texture2D* texture) const {
         float textureIndex = -1;
         if (texture != nullptr) {
             for (uint32_t i = 0; i < drawInfo.filledTextureSlots; i++) {
-                if (*drawInfo.textureSlots[i] == *texture) {
+                if (drawInfo.textureSlots[i] == texture) {
                     textureIndex = static_cast<float>(i);
                     break;
                 }
@@ -1525,6 +1559,33 @@ namespace CgEngine {
         }
 
         return out;
+    }
+
+    void SceneRenderer::buildTransformBuffers() {
+        {
+            int currentOffset = 0;
+            for (auto& [mk, command]: shadowMapDrawCommandQueue) {
+                const auto& transforms = shadowMapMeshTransforms.at(mk);
+                uint32_t instanceCount = command.instanceCount;
+
+                command.transformsBufferOffset = currentOffset;
+                dirShadowMapTransformsBuffer->setSubData(currentOffset * sizeof(glm::mat4), transforms.data(), instanceCount * sizeof(glm::mat4));
+
+                currentOffset += static_cast<int>(instanceCount);
+            }
+        }
+        {
+            int currentOffset = 0;
+            for (auto& [mk, command]: drawCommandQueue) {
+                const auto& transforms = meshTransforms.at(mk);
+                uint32_t instanceCount = command.instanceCount;
+
+                command.transformsBufferOffset = currentOffset;
+                gBufferTransformsBuffer->setSubData(currentOffset * sizeof(glm::mat4), transforms.data(), instanceCount * sizeof(glm::mat4));
+
+                currentOffset += static_cast<int>(instanceCount);
+            }
+        }
     }
 
     void SceneRenderer::resetRenderingStats() {

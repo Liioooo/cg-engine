@@ -6,6 +6,8 @@
 #include "ShaderStorageBuffer.h"
 #include "Resources/ResRef.h"
 #include "CustomShaders.h"
+#include "Window.h"
+#include "RendererBackendBase.h"
 
 namespace CgEngine {
 
@@ -41,27 +43,32 @@ namespace CgEngine {
 
     class Renderer {
     public:
-        static void init();
+        static void init(Window& window);
         static void shutdown();
-        static void beginRenderPass(RenderPass& renderPass, bool omitShaderBinding = false);
+
+        static void beginFrame(const Window& window);
+        static void endFrame(const Window& window);
+
+        static void beginRenderPass(const RenderPass* renderPass, const Framebuffer* framebuffer, const DescriptorSet* descriptorSet = nullptr);
         static void endRenderPass();
-        static void setFaceCulling(bool backfaceCulling, bool frontFaceCulling);
-        static void setBlending(bool enable, BlendingEquation blendingEq, BlendingFunction srcBlendingFn, BlendingFunction destBlendingFn);
-        static void setWireframe(bool enable);
-        static void setTesselationPatchSize(int patchSize);
+
+        static void clearPass(const RenderPass* renderPass, const Framebuffer* framebuffer);
+
+        static void setPushConstants(const std::array<PushConstants*, 2>& pushConstants, uint32_t pushConstantsCount);
+
         static void renderUnitQuad(const Material& material);
         static void renderUnitCube(const Material& material);
-        static void renderLines(const std::vector<LineDrawInfo>& lines);
-        static void executeDrawCommand(const VertexArrayObject& vao, const Material& material, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, const std::vector<glm::mat4>& transforms, uint32_t instanceCount);
-        static void executeCustomShaderDrawCommand(const VertexArrayObject& vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, uint32_t instanceCount, int tessellationPatchSize);
-        static void renderUiCircles(const std::vector<UiCircleVertex>& vertices, uint32_t indexCount);
-        static void renderUiRects(const std::vector<UiRectVertex>& vertices, uint32_t indexCount);
-        static void renderUiText(const std::vector<UiTextVertex>& vertices, uint32_t indexCount);
+//        static void renderLines(const std::vector<LineDrawInfo>& lines);
+        static void executeDrawCommand(const VertexArrayObject* vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, uint32_t instanceCount);
+//        static void executeCustomShaderDrawCommand(const VertexArrayObject& vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, uint32_t instanceCount, int tessellationPatchSize);
 
-        static Texture2D& getWhiteTexture();
-        static Texture2D& getBrdfLUTTexture();
-        static TextureCube& getBlackCubeTexture();
+        static Texture2D* getWhiteTexture();
+        static Texture2D* getBrdfLUTTexture();
+        static TextureCube* getBlackCubeTexture();
         static std::pair<ResRef<TextureCube>, ResRef<TextureCube>> createEnvironmentMap(const std::string& hdriPath);
+
+        static void beginImGuiFrame();
+        static void renderImGuiFrame();
 
         static const uint32_t maxUiQuads = 5000;
         static const uint32_t maxUiIndices = maxUiQuads * 6;
@@ -69,36 +76,7 @@ namespace CgEngine {
         static const uint32_t maxTextureSlots = 16;
 
     private:
-        static inline RenderPass* currentRenderPass;
-        static inline bool isWireframe;
-        static inline bool isBackFaceCulling;
-        static inline bool isFrontFaceCulling;
-        static inline DepthCompareOperator depthCompareOperator;
-        static inline bool depthTest;
-        static inline bool depthWrite;
-        static inline bool useBlending;
-        static inline BlendingEquation blendingEquation;
-        static inline BlendingFunction srcBlendingFunction;
-        static inline BlendingFunction destBlendingFunction;
-        static inline int tessellationPatchSize;
-
-        static inline Texture2D* whiteTexture;
-        static inline Texture2D* brdfLUT;
-        static inline TextureCube* blackCubeTexture;
-
-        static inline VertexArrayObject quadVAO{false};
-        static inline VertexArrayObject unitCubeVAO{false};
-        static inline VertexArrayObject linesVAO{false};
-
-        static inline VertexArrayObject uiCircleVAO{false};
-        static inline VertexArrayObject uiRectVAO{false};
-        static inline VertexArrayObject uiTextVAO{false};
-
-        static inline ShaderStorageBuffer transformsBuffer{false};
-
-        static inline ComputeShader environmentMapSphereToCube;
-        static inline ComputeShader environmentMapPrefilterMap;
-        static inline ComputeShader environmentMapIrradianceMap;
+        static inline RendererBackendBase* backend;
     };
 
 }

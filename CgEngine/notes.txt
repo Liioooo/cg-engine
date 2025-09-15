@@ -4,6 +4,7 @@ UniformBuffers:
 2: DirShadowData
 3: ScreenData
 4: HBAOData
+Normal uniforms: >10
 
 SSBO:
 0: Transforms
@@ -60,3 +61,13 @@ Hazel Shader
 GTAO:
 https://blog.selfshadow.com/publications/s2016-shading-course/
 https://blog.selfshadow.com/publications/s2016-shading-course/activision/s2016_pbs_activision_occlusion.pdf
+
+Vulkan:
+Dynamic Vertex Buffers:
+create one per frame in flight
+
+DynamicHost, DynamicDevice, Static
+
+UI: max ui z layers
+create buffer for each layer -> dynamic host
+before each frame fill buffers with ui data

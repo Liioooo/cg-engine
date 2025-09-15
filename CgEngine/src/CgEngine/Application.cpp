@@ -8,6 +8,7 @@
 #include "OpenGLTimer.h"
 #include "Utils/LoaderUtils.h"
 #include "Utils/StringUtils.h"
+#include "Rendering/GraphicsObjectsFactory.h"
 
 namespace CgEngine {
     Application::Application(const std::string &settingsIni) : iniReader(settingsIni) {
@@ -40,11 +41,14 @@ namespace CgEngine {
         applicationOptions.shadowMapResolution = iniReader.GetInteger("application", "shadow_map_resolution", 2048);
         applicationOptions.enableBloom = iniReader.GetBoolean("application", "enable_bloom", true);
         applicationOptions.enableHBAO = iniReader.GetBoolean("application", "enable_hbao", true);
+        applicationOptions.graphicsApi = iniReader.GetBoolean("application", "use_vulkan", true) ? GraphicsAPI::Vulkan : GraphicsAPI::OpenGL;
 
         std::vector<std::string> defaultLodDistances = Utils::LoaderUtils::getListFromString(iniReader.Get("application", "lod_distances", "10, 20, 100, 200, 400"));
         for (const auto& lodDistance: defaultLodDistances) {
             applicationOptions.defaultLodDistances.emplace_back(Utils::String::toFloat(lodDistance).value_or(0.0f));
         }
+
+        GraphicsObjectsFactory::setGraphicsAPI(applicationOptions.graphicsApi);
 
         WindowSpecification windowSpecification;
         windowSpecification.width = iniReader.GetInteger("window", "width", 1280);
@@ -55,6 +59,7 @@ namespace CgEngine {
         windowSpecification.fullScreen = iniReader.GetBoolean("window", "fullscreen", false);
         windowSpecification.refreshRate = iniReader.GetInteger("window", "refresh_rate", 60);
         windowSpecification.vSync = iniReader.GetBoolean("window", "v_sync", true);
+        windowSpecification.graphicsApi = applicationOptions.graphicsApi;
 
         window = new Window(windowSpecification, EVENT_BIND_FN(onEvent));
 
@@ -70,7 +75,8 @@ namespace CgEngine {
 
         while (isRunning) {
             window->pollEvents();
-            ImGuiContext::newFrame();
+            Renderer::beginFrame(*window);
+            Renderer::beginImGuiFrame();
 
             Scene* activeScene = sceneManager->getActiveScene();
             activeScene->onUpdate(timeStep);
@@ -79,9 +85,8 @@ namespace CgEngine {
             CG_GPU_TIME_WRITE_RESULTS()
 
             renderImGuiWindow();
-            ImGuiContext::render();
-
-            window->swapBuffers();
+            Renderer::renderImGuiFrame();
+            Renderer::endFrame(*window);
 
             float time = getTime();
             timeStep = time - lastFrameTime;
@@ -183,10 +188,6 @@ namespace CgEngine {
                         ImGuiWidgets::applicationOptions(applicationOptions);
                         ImGui::Separator();
                         ImGuiWidgets::performanceStats(timeStep.getSeconds(), sceneRenderer->getRenderingStats());
-                        ImGui::EndTabItem();
-                    }
-                    if (ImGui::BeginTabItem("Shaders")) {
-                        ImGuiWidgets::shaders(sceneRenderer->getShaderMap(), resourceManager);
                         ImGui::EndTabItem();
                     }
 

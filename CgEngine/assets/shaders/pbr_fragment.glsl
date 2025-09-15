@@ -1,25 +1,25 @@
 #version 450 core
 
-#include "common/CameraDataBuffer.glsl"
-#include "common/LightDataBuffer.glsl"
-#include "common/DirShadowMapping.glsl"
-#include "common/DirLightCalculationsFragment.glsl"
-#include "common/PointLightsCalculationsFragment.glsl"
-#include "common/SpotLightsCalculationsFragment.glsl"
-#include "common/IBLCalculationsFragment.glsl"
-#include "common/LightCalculationsHelperFragment.glsl"
-#include "common/HBAOSampling.glsl"
+#include "CameraDataBuffer.glsl"
+#include "LightDataBuffer.glsl"
+#include "DirShadowMapping.glsl"
+#include "DirLightCalculationsFragment.glsl"
+#include "PointLightsCalculationsFragment.glsl"
+#include "SpotLightsCalculationsFragment.glsl"
+#include "IBLCalculationsFragment.glsl"
+#include "LightCalculationsHelperFragment.glsl"
+#include "HBAOSampling.glsl"
 
 layout(binding = 0) uniform sampler2D u_gBuffer_AlbedoRoughness;
 layout(binding = 1) uniform sampler2D u_gBuffer_EmissionMetallic;
 layout(binding = 2) uniform sampler2D u_gBuffer_WorldNormal;
 layout(binding = 3) uniform sampler2D u_Depth;
 
-in VS_OUT {
+layout(location = 10) in VS_OUT {
     vec2 TexCoord;
 } fs_in;
 
-out vec4 o_FragColor;
+layout(location = 0) out vec4 o_FragColor;
 
 void main() {
     vec4 albedoRoughnessSample = texture(u_gBuffer_AlbedoRoughness, fs_in.TexCoord);

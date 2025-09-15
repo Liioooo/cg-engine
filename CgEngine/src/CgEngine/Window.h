@@ -2,6 +2,7 @@
 
 #include <GLFW/glfw3.h>
 #include "Events/Event.h"
+#include "GraphicsApi.h"
 
 namespace CgEngine {
 
@@ -13,6 +14,7 @@ namespace CgEngine {
         uint32_t refreshRate = 60;
         bool fullScreen = false;
         bool vSync = true;
+        GraphicsAPI graphicsApi;
     };
 
     class Window {
@@ -23,22 +25,25 @@ namespace CgEngine {
         void setVsync(bool enabled);
         inline bool isVsync();
         void pollEvents();
-        void swapBuffers();
-        uint32_t getWidth();
-        uint32_t getHeight();
-        GLFWwindow& getWindowHandle();
+        int getWidth();
+        int getHeight();
+        int getFramebufferWidth() const;
+        int getFramebufferHeight() const;
+        GLFWwindow& getWindowHandle() const;
+        glm::vec2 getContentScale() const;
 
         void setClipboardText(const char* string);
 
     private:
         bool vsync = false;
-        uint32_t windowWidth;
-        uint32_t windowHeight;
+        int windowWidth;
+        int windowHeight;
+        int framebufferWidth;
+        int framebufferHeight;
         GLFWwindow* window;
         const std::function<void(Event&)> eventCallback;
 
         static void errorCallback(int error, const char* description);
-        static void debugCallback(unsigned int source, unsigned int type, unsigned int id, unsigned int severity, int length, const char* message, const void* userParam);
     };
 
 }

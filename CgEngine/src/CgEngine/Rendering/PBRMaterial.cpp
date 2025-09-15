@@ -3,11 +3,12 @@
 #include "FileSystem.h"
 #include "Utils/StringUtils.h"
 #include "Utils/LoaderUtils.h"
+#include "GraphicsObjectsFactory.h"
 
 namespace CgEngine {
     PBRMaterial* PBRMaterial::createResource(const std::string& name) {
         if (name == "default-pbr-material") {
-            return new PBRMaterial();
+            return new PBRMaterial(PBRMaterialSpecification());
         }
 
        if (!xmlMaterialFile.isLoaded()) {
@@ -33,27 +34,27 @@ namespace CgEngine {
 
         ApplicationOptions& applicationOptions = Application::get().getApplicationOptions();
 
-        auto* material = new PBRMaterial();
+        PBRMaterialSpecification materialSpecification;
 
         if (!albedo.empty()) {
-            material->setAlbedoColor(Utils::LoaderUtils::hexStringToColor(albedo));
+            materialSpecification.albedoColor = Utils::LoaderUtils::hexStringToColor(albedo);
         }
         if (!metalness.empty()) {
-            material->setMetalness(Utils::String::toFloat(metalness).value_or(0.0f));
+            materialSpecification.metalness = Utils::String::toFloat(metalness).value_or(0.0f);
         }
         if (!roughness.empty()) {
-            material->setRoughness(Utils::String::toFloat(roughness).value_or(1.0f));
+            materialSpecification.roughness = Utils::String::toFloat(roughness).value_or(1.0f);
         }
         if (!emissionTexture.empty()) {
             Texture2DResourceSpecification spec{};
             spec.compression = applicationOptions.useTextureCompression;
 
-            material->setEmissionTexture(resourceManager.getResource<Texture2D>(FileSystem::getAsGamePath(emissionTexture).string(), spec));
+            materialSpecification.emissionTexture = resourceManager.getResource<Texture2D>(FileSystem::getAsGamePath(emissionTexture).string(), spec);
             float emissionIntensity = emission.empty() ? 1.0f : Utils::String::toFloat(emission).value_or(1.0f);
-            material->setEmission({emissionIntensity, emissionIntensity, emissionIntensity});
+            materialSpecification.emission = {emissionIntensity, emissionIntensity, emissionIntensity};
         } else if (!emissionColor.empty()) {
             float emissionIntensity = emission.empty() ? 1.0f : Utils::String::toFloat(emission).value_or(1.0f);
-            material->setEmission(Utils::LoaderUtils::hexStringToColor(emissionColor) * emissionIntensity);
+            materialSpecification.emission = Utils::LoaderUtils::hexStringToColor(emissionColor) * emissionIntensity;
         }
         if (!albedoTexture.empty()) {
             std::string albedoTexturePath = FileSystem::getAsGamePath(albedoTexture).string();
@@ -65,107 +66,83 @@ namespace CgEngine {
             spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
             spec.compression = applicationOptions.useTextureCompression;
 
-            material->setAlbedoTexture(resourceManager.getResource<Texture2D>(albedoTexturePath, spec));
+            materialSpecification.albedoTexture = resourceManager.getResource<Texture2D>(albedoTexturePath, spec);
         }
         if (!metalnessTexture.empty()) {
             Texture2DResourceSpecification spec{};
             spec.compression = applicationOptions.useTextureCompression;
 
-            material->setMetalnessTexture(resourceManager.getResource<Texture2D>(FileSystem::getAsGamePath(metalnessTexture).string(), spec));
+            materialSpecification.metalnessTexture = resourceManager.getResource<Texture2D>(FileSystem::getAsGamePath(metalnessTexture).string(), spec);
         }
         if (!roughnessTexture.empty()) {
             Texture2DResourceSpecification spec{};
             spec.compression = applicationOptions.useTextureCompression;
 
-            material->setRoughnessTexture(resourceManager.getResource<Texture2D>(FileSystem::getAsGamePath(roughnessTexture).string(), spec));
+           materialSpecification.roughnessTexture = resourceManager.getResource<Texture2D>(FileSystem::getAsGamePath(roughnessTexture).string(), spec);
         }
         if (!normalTexture.empty()) {
             Texture2DResourceSpecification spec{};
             spec.compression = false;
 
-            material->setNormalTexture(resourceManager.getResource<Texture2D>(FileSystem::getAsGamePath(normalTexture).string(), spec));
+            materialSpecification.normalTexture = resourceManager.getResource<Texture2D>(FileSystem::getAsGamePath(normalTexture).string(), spec);
         }
 
-        return material;
+        return new PBRMaterial(materialSpecification);
     }
 
-    PBRMaterial::PBRMaterial() : Material() {
-        setAlbedoColor({1.0f, 1.0f, 1.0f});
-        setMetalness(0.0f);
-        setRoughness(1.0f);
-        setEmission({0.0f, 0.0f, 0.0f});
-        setEmissionTexture(nullptr);
-        setAlbedoTexture(nullptr);
-        setMetalnessTexture(nullptr);
-        setRoughnessTexture(nullptr);
-        setNormalTexture(nullptr);
-    }
+    PBRMaterial::PBRMaterial(PBRMaterialSpecification spec) : Material() {
+        pushConstantsData.roughness = spec.roughness;
+        pushConstantsData.metalness = spec.metalness;
+        pushConstantsData.albedoColor = spec.albedoColor;
+        pushConstantsData.emission = spec.emission;
 
-    void PBRMaterial::setAlbedoColor(glm::vec3 value) {
-        vec3Values["u_Mat_AlbedoColor"] = value;
-    }
+        pushConstants->init<PBRMaterialPushConstants>();
+        pushConstants->mapUniform(&PBRMaterialPushConstants::roughness, "roughness");
+        pushConstants->mapUniform(&PBRMaterialPushConstants::metalness, "metalness");
+        pushConstants->mapUniform(&PBRMaterialPushConstants::albedoColor, "albedoColor");
+        pushConstants->mapUniform(&PBRMaterialPushConstants::emission, "emission");
+        pushConstants->mapUniform(&PBRMaterialPushConstants::useNormals, "useNormals");
+        pushConstants->setData(&pushConstantsData, sizeof(PBRMaterialPushConstants));
 
-    void PBRMaterial::setMetalness(float value) {
-        floatValues["u_Mat_Metalness"] = value;
-    }
+        DescriptorSetSpecification descriptorSetSpec{};
+        descriptorSetSpec.texture2DBindings = {
+            {0, spec.albedoTexture ? spec.albedoTexture.get() : Renderer::getWhiteTexture()},
+            {1, spec.normalTexture ? spec.normalTexture.get() : Renderer::getWhiteTexture()},
+            {2, spec.metalnessTexture ? spec.metalnessTexture.get() : Renderer::getWhiteTexture()},
+            {3, spec.roughnessTexture ? spec.roughnessTexture.get() : Renderer::getWhiteTexture()},
+            {4, spec.emissionTexture ? spec.emissionTexture.get() : Renderer::getWhiteTexture()}
+        };
 
-    void PBRMaterial::setRoughness(float value) {
-        floatValues["u_Mat_Roughness"] = value;
-    }
+        descriptorSet = GraphicsObjectsFactory::createDescriptorSet(descriptorSetSpec);
 
-    void PBRMaterial::setEmission(glm::vec3 value) {
-        vec3Values["u_Mat_Emission"] = value;
-    }
-
-    void PBRMaterial::setEmissionTexture(ResRef<Texture2D> texture) {
-        if (!texture) {
-            texValues["u_Mat_EmissionTexture"] = {Renderer::getWhiteTexture().getRendererId(), 4};
-            emissionTexture = nullptr;
+        if (spec.albedoTexture) {
+           albedoTexture = spec.albedoTexture;
         } else {
-            texValues["u_Mat_EmissionTexture"] = {texture->getRendererId(), 4};
-            emissionTexture = texture;
-        }
-    }
-
-    void PBRMaterial::setAlbedoTexture(ResRef<Texture2D> texture) {
-        if (!texture) {
-            texValues["u_Mat_AlbedoTexture"] = {Renderer::getWhiteTexture().getRendererId(), 0};
             albedoTexture = nullptr;
-        } else {
-            texValues["u_Mat_AlbedoTexture"] = {texture->getRendererId(), 0};
-            albedoTexture = texture;
         }
-    }
 
-    void PBRMaterial::setMetalnessTexture(ResRef<Texture2D> texture) {
-        if (!texture) {
-            texValues["u_Mat_MetalnessTexture"] = {Renderer::getWhiteTexture().getRendererId(), 2};
-            metalnessTexture = nullptr;
+        if (spec.normalTexture) {
+            normalTexture = spec.normalTexture;
         } else {
-            texValues["u_Mat_MetalnessTexture"] = {texture->getRendererId(), 2};
-            metalnessTexture = texture;
-        }
-    }
-
-    void PBRMaterial::setRoughnessTexture(ResRef<Texture2D> texture) {
-        if (!texture) {
-            texValues["u_Mat_RoughnessTexture"] = {Renderer::getWhiteTexture().getRendererId(), 3};
-            roughnessTexture = nullptr;
-        } else {
-            texValues["u_Mat_RoughnessTexture"] = {texture->getRendererId(), 3};
-            roughnessTexture = texture;
-        }
-    }
-
-    void PBRMaterial::setNormalTexture(ResRef<Texture2D> texture) {
-        if (!texture) {
-            texValues["u_Mat_NormalTexture"] = {Renderer::getWhiteTexture().getRendererId(), 1};
-            boolValues["u_Mat_UseNormals"] = false;
             normalTexture = nullptr;
+        }
+
+        if (spec.metalnessTexture) {
+            metalnessTexture = spec.metalnessTexture;
         } else {
-            texValues["u_Mat_NormalTexture"] = {texture->getRendererId(), 1};
-            boolValues["u_Mat_UseNormals"] = true;
-            normalTexture = texture;
+            metalnessTexture = nullptr;
+        }
+
+        if (spec.roughnessTexture) {
+            roughnessTexture = spec.roughnessTexture;
+        } else {
+            roughnessTexture = nullptr;
+        }
+
+        if (spec.emissionTexture) {
+            emissionTexture = spec.emissionTexture;
+        } else {
+            emissionTexture = nullptr;
         }
     }
 }

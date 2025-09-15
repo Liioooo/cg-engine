@@ -4,12 +4,12 @@ From https://github.com/nvpro-samples/gl_ssao/blob/master/hbao_deinterleave.frag
 
 #version 450 core
 
-#include "common/CameraDataBuffer.glsl"
-#include "common/ScreenDataBuffer.glsl"
+#include "CameraDataBuffer.glsl"
+#include "ScreenDataBuffer.glsl"
 
 layout(binding = 0) uniform sampler2D u_Depth;
 
-uniform int u_UVOffsetIndex;
+layout(location = 0) uniform int u_UVOffsetIndex;
 
 layout(location = 0) out float out_Color[8];
 

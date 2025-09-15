@@ -1,42 +1,39 @@
 #include "Material.h"
-#include "Renderer.h"
-#include "FileSystem.h"
-#include "Application.h"
+#include "GraphicsObjectsFactory.h"
 
 namespace CgEngine {
-    Material::Material() : uuid(Uuid()) {}
 
-    const Uuid &Material::getUuid() const {
+    Material::Material() : uuid(Uuid()) {
+        pushConstants = GraphicsObjectsFactory::createPushConstants("pc_material");
+    }
+
+    Material::~Material() {
+        delete descriptorSet;
+        delete pushConstants;
+    }
+
+    const Uuid& Material::getUuid() const {
         return uuid;
     }
 
-    void Material::uploadToShader(Shader& shader) const {
-        for (const auto &item: boolValues) {
-            shader.setBool(item.first, item.second);
-        }
-        for (const auto &item: intValues) {
-            shader.setInt(item.first, item.second);
-        }
-        for (const auto &item: floatValues) {
-            shader.setFloat(item.first, item.second);
-        }
-        for (const auto &item: vec2Values) {
-            shader.setVec2(item.first, item.second);
-        }
-        for (const auto &item: vec3Values) {
-            shader.setVec3(item.first, item.second);
-        }
-        for (const auto &item: vec4Values) {
-            shader.setVec4(item.first, item.second);
-        }
-        for (const auto &item: mat3Values) {
-            shader.setMat3(item.first, item.second);
-        }
-        for (const auto &item: mat4Values) {
-            shader.setMat4(item.first, item.second);
-        }
-        for (const auto &item: texValues) {
-            shader.setTexture(item.second.textureRendererId, item.second.textureSlot);
-        }
+    bool Material::operator==(const CgEngine::Material& other) const {
+        return uuid == other.uuid;
     }
+
+    void Material::setDescriptorSet(DescriptorSet* descriptorSet) {
+        if (this->descriptorSet) {
+            delete this->descriptorSet;
+        }
+        this->descriptorSet = descriptorSet;
+    }
+
+    DescriptorSet* Material::getDescriptorSet() const {
+        return descriptorSet;
+    }
+
+    PushConstants* Material::getPushConstants() const {
+        return pushConstants;
+    }
+
+
 }

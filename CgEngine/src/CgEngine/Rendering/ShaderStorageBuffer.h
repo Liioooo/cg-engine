@@ -4,24 +4,20 @@ namespace CgEngine {
 
     class ShaderStorageBuffer {
     public:
-        explicit ShaderStorageBuffer(bool initBuffer = true);
-        ~ShaderStorageBuffer();
+        ShaderStorageBuffer() = default;
+        virtual ~ShaderStorageBuffer() = default;
 
-        ShaderStorageBuffer(ShaderStorageBuffer&& other) noexcept;
-        ShaderStorageBuffer& operator=(ShaderStorageBuffer&& other) noexcept;
+        ShaderStorageBuffer(ShaderStorageBuffer&& other) noexcept = default;
+        ShaderStorageBuffer& operator=(ShaderStorageBuffer&& other) noexcept = default;
 
         ShaderStorageBuffer(ShaderStorageBuffer& other) = delete;
         ShaderStorageBuffer& operator=(ShaderStorageBuffer& other) = delete;
 
-        bool isReady() const;
+        virtual bool isReady() const = 0;
+        virtual size_t getSize() const = 0;
 
-        void setData(const void* data, size_t size);
-        void setSubData(size_t offset, const void* data, size_t size);
-        void bind(uint32_t binding) const;
-
-    private:
-        uint32_t bufferId = ~0;
-
+        virtual void setData(const void* data, size_t size) = 0;
+        virtual void setSubData(size_t offset, const void* data, size_t size) = 0;
     };
 
 }

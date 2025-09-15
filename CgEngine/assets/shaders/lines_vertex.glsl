@@ -1,11 +1,11 @@
 #version 450 core
 
-#include "common/CameraDataBuffer.glsl"
+#include "CameraDataBuffer.glsl"
 
 layout (location = 0) in vec3 a_Pos;
 layout (location = 1) in vec3 a_Color;
 
-out VS_OUT {
+layout(location = 10) out VS_OUT {
     vec3 Color;
 } vs_out;
 

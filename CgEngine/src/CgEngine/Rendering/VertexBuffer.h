@@ -1,17 +1,8 @@
 #pragma once
 
-#include "Shader.h"
+#include "Enums.h"
 
 namespace CgEngine {
-
-    enum class VertexBufferUsage {
-        Static, Dynamic
-    };
-
-    namespace VertexBufferUtils {
-        unsigned int openGLUsage(VertexBufferUsage usage);
-    }
-
 
     struct VertexBufferElement {
         ShaderDataType dataType;
@@ -19,7 +10,7 @@ namespace CgEngine {
         size_t offset{};
         bool normalized;
 
-        VertexBufferElement(ShaderDataType dataType, bool normalized) : dataType(dataType), normalized(normalized), size(ShaderUtils::getSizeForShaderDataType(dataType)) {};
+        VertexBufferElement(ShaderDataType dataType, bool normalized);
 
         bool operator ==(const VertexBufferElement& other) const {
             return dataType == other.dataType && normalized == other.normalized;
@@ -44,26 +35,39 @@ namespace CgEngine {
         }
     };
 
-    class VertexBuffer {
-    public:
-        VertexBuffer();
-        explicit VertexBuffer(uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Dynamic);
-        VertexBuffer(const void* data, uint32_t size, VertexBufferUsage usage = VertexBufferUsage::Static);
-        ~VertexBuffer();
+    struct VertexBufferLayout {
+        VertexBufferLayout() = default;
+        explicit VertexBufferLayout(std::vector<VertexBufferElement> elements) : bufferElements(std::move(elements)) {
+            size_t offset = 0;
+            stride = 0;
+            for (auto& e : bufferElements) {
+                e.offset = offset;
+                offset += e.size;
+                stride += e.size;
+            }
+        }
 
-        void bind() const;
-        void bindAsSSBO(uint32_t binding) const;
-        void unbind() const;
-        void setData(const void* data, uint32_t size, VertexBufferUsage usage);
-        void setLayout(std::vector<VertexBufferElement> bufferElements);
-
-        const std::vector<VertexBufferElement>& getLayout() const;
-        int getStride() const;
-
-    private:
-        uint32_t vbo{};
         std::vector<VertexBufferElement> bufferElements;
         int stride = 0;
+    };
+
+    class VertexBuffer {
+    public:
+        VertexBuffer() = default;
+
+        virtual ~VertexBuffer() = default;
+
+        VertexBuffer(VertexBuffer&& other) noexcept = default;
+        VertexBuffer& operator=(VertexBuffer&& other) noexcept = default;
+
+        VertexBuffer(VertexBuffer& other) = delete;
+        VertexBuffer& operator=(VertexBuffer& other) = delete;
+
+        virtual void setData(const void* data, size_t size) = 0;
+        virtual void setLayout(VertexBufferLayout layout) = 0;
+        virtual void setLayout(std::vector<VertexBufferElement> elements) = 0;
+
+        virtual const VertexBufferLayout& getLayout() const = 0;
     };
 
 }

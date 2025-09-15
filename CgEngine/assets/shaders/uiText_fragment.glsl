@@ -1,13 +1,13 @@
 #version 450 core
 
-in VS_OUT {
+layout(location = 10) in VS_OUT {
     vec2 TexCoord;
     vec4 Color;
 } fs_in;
 
-in flat float FontAtlasIndex;
+layout(location = 20) in flat float FontAtlasIndex;
 
-out vec4 o_FragColor;
+layout(location = 0) out vec4 o_FragColor;
 
 layout(binding = 0) uniform sampler2D u_Textures[4];
 

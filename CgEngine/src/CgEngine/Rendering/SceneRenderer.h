@@ -1,10 +1,10 @@
 #pragma once
 
 #include "RenderPass.h"
-#include "CustomValMaterial.h"
 #include "Camera.h"
 #include "UniformBuffer.h"
 #include "VertexArrayObject.h"
+#include "ShaderStorageBuffer.h"
 #include "Scene/Scene.h"
 #include "Renderer.h"
 #include "CameraFrustum.h"
@@ -30,29 +30,6 @@ namespace CgEngine {
         float uiTimer = 0.0f;
     };
 
-    struct ShaderMap {
-        Shader* dirShadowMapShader;
-        Shader* gBufferShader;
-        Shader* hbaoDeinterleavingShader;
-        ComputeShader* hbaoShader;
-        Shader* hbaoReinterleavingShader;
-        Shader* hbaoBlurShader;
-        Shader* pbrShader;
-        Shader* skyboxShader;
-        Shader* bloomDownSampleShader;
-        Shader* bloomUpSampleShader;
-        Shader* physicsCollidersShader;
-        Shader* boundingBoxShader;
-        Shader* normalsDebugShader;
-        Shader* debugLinesShader;
-        Shader* screenShader;
-        Shader* uiCircleShader;
-        Shader* uiRectShader;
-        Shader* uiTextShader;
-        ComputeShader* skinningShader;
-
-    };
-
     class SceneRenderer {
     public:
         explicit SceneRenderer(uint32_t viewportWidth, uint32_t viewportHeight);
@@ -64,7 +41,7 @@ namespace CgEngine {
         void endScene();
         void submitMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, bool enableCulling, const glm::mat4& transform, const std::vector<float>& lodDistances);
         void submitAnimatedMesh(MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms, VertexArrayObject* skinnedVAO);
-        void submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, const AABoundingBox* boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions, std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers, const std::vector<float>& lodDistances);
+//        void submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, const AABoundingBox* boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions, std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers, const std::vector<float>& lodDistances);
         void submitUiElements(const std::unordered_map<std::string, UiElement*>& uiElements);
         void submitPhysicsColliderMesh(MeshVertices* mesh, const glm::mat4& transform);
         void submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, Mesh* mesh, const std::vector<uint32_t>& meshNodes, const glm::mat4& transform);
@@ -73,10 +50,11 @@ namespace CgEngine {
         const CameraFrustum& getCamaraFrustum() const;
 
         const RenderingStats& getRenderingStats();
-        ShaderMap& getShaderMap();
 
 
     private:
+        static const uint32_t MAX_OBJECTS = 20000;
+
         static const uint32_t maxBones = 200;
         static const uint32_t maxAnimatedComponents = 512;
 
@@ -88,47 +66,68 @@ namespace CgEngine {
         bool needsResize = true;
         bool activeRendering = false;
 
-        RenderPass shadowMapRenderPass;
-        RenderPass gBufferRenderPass;
-        RenderPass pbrRenderPass;
-        RenderPass screenRenderPass;
-        RenderPass skyboxRenderPass;
-        RenderPass bloomDownSamplePass;
-        RenderPass bloomUpSamplePass;
-        RenderPass uiCirclePass;
-        RenderPass uiRectPass;
-        RenderPass uiTextPass;
-        RenderPass physicsCollidersRenderPass;
-        RenderPass boundingBoxRenderPass;
-        RenderPass normalsDebugRenderPass;
-        RenderPass debugLinesRenderPass;
-        RenderPass customShaderForwardRenderPass;
-        RenderPass customShaderDeferredRenderPass;
+        struct TransformsOffsetPushConstants {
+            int transformsOffset;
+        };
 
-        RenderPass hbaoDeinterleavingRenderPass;
-        RenderPass hbaoReinterleavingRenderPass;
-        RenderPass hbaoBlurRenderPass;
+        PushConstants* transformOffsetPushConstant;
 
-        ComputeShader hbaoShader;
+        RenderPass* dirShadowMapRenderPass;
+        Attachment* dirShadowMaps;
+        Framebuffer* dirShadowMapFramebuffer;
+        ShaderStorageBuffer* dirShadowMapTransformsBuffer;
+        DescriptorSet* dirShadowMapDescriptorSet;
 
-        CustomValMaterial pbrPassMaterial;
-        CustomValMaterial screenMaterial;
-        CustomValMaterial skyboxMaterial;
-        CustomValMaterial physicsCollidersMaterial;
-        CustomValMaterial boundingBoxMaterial;
-        CustomValMaterial normalsDebugMaterial;
-        CustomValMaterial emptyMaterial;
 
-        ComputeShader skinningShader;
+        RenderPass* gBufferRenderPass;
+        Attachment* gBufferAlbedoRoughnessAttachment;
+        Attachment* gBufferEmissionMetallicAttachment;
+        Attachment* gBufferWorldNormalsAttachment;
+        Attachment* gBufferViewNormalsAttachment;
+        Attachment* gBufferDepthAttachment;
+        Framebuffer* gBufferFramebuffer;
+        ShaderStorageBuffer* gBufferTransformsBuffer;
+        DescriptorSet* gBufferDescriptorSet;
 
-        Texture2DArray dirShadowMaps;
-        std::array<Texture2D, 7> bloomTextures;
+        RenderPass* pbrRenderPass;
+        RenderPass* screenRenderPass;
+        RenderPass* skyboxRenderPass;
+        RenderPass* bloomDownSamplePass;
+        RenderPass* bloomUpSamplePass;
+        RenderPass* uiCirclePass;
+        RenderPass* uiRectPass;
+        RenderPass* uiTextPass;
+        RenderPass* physicsCollidersRenderPass;
+        RenderPass* boundingBoxRenderPass;
+        RenderPass* normalsDebugRenderPass;
+        RenderPass* debugLinesRenderPass;
+        RenderPass* customShaderForwardRenderPass;
+        RenderPass* customShaderDeferredRenderPass;
 
-        Texture2DArray hbaoDeinterleavingDepthTexture;
-        std::array<Texture2DView, 16> hbaoDeinterleavingDepthTextureViews;
+        RenderPass* hbaoDeinterleavingRenderPass;
+        RenderPass* hbaoReinterleavingRenderPass;
+        RenderPass* hbaoBlurRenderPass;
+
+
+//        ComputeShader hbaoShader;
+
+        Material pbrPassMaterial;
+        Material screenMaterial;
+        Material skyboxMaterial;
+        Material physicsCollidersMaterial;
+        Material boundingBoxMaterial;
+        Material normalsDebugMaterial;
+        Material emptyMaterial;
+
+//        ComputeShader skinningShader;
+
+        std::array<Texture2D*, 7> bloomTextures;
+
+//        Texture2DArray hbaoDeinterleavingDepthTexture;
+//        std::array<Texture2DView, 16> hbaoDeinterleavingDepthTextureViews;
         std::array<Framebuffer*, 2> hbaoDeinterleavingFramebuffers;
         glm::uvec3 hbaoWorkGroupSize;
-        Texture2DArray hbaoResultTexture;
+//        Texture2DArray hbaoResultTexture;
 
         CameraFrustum cameraFrustum;
 
@@ -150,7 +149,6 @@ namespace CgEngine {
         void bloomPass();
         void screenPass();
         void uiPass();
-        void clearPass(RenderPass& renderPass);
 
         void setupShadowMapData(glm::vec3 dirLightDirection, const glm::mat4& cameraViewProjection, const Camera& camera);
         void setupHBAOData(const glm::mat4& cameraProjection, const Camera& camera);
@@ -168,7 +166,7 @@ namespace CgEngine {
             float bloomThreshold;
             float _padding0_;
         };
-        UniformBuffer<UBCameraData> ubCameraData;
+        UniformBuffer* ubCameraData;
 
         glm::vec3 cameraPosition;
 
@@ -203,13 +201,13 @@ namespace CgEngine {
             UBPointLight pointLights[100];
             UBSpotLight spotLights[100];
         };
-        UniformBuffer<UBLightData> ubLightData;
+        UniformBuffer* ubLightData;
 
         struct UBDirShadowData {
             glm::mat4 lightSpaceMat[4];
             glm::vec4 cascadeSplits;
         };
-        UniformBuffer<UBDirShadowData> ubDirShadowData;
+        UniformBuffer* ubDirShadowData;
 
         struct UBScreenData {
             glm::vec2 invFullResolution;
@@ -217,7 +215,7 @@ namespace CgEngine {
             glm::vec2 invHalfResolution;
             glm::vec2 halfResolution;
         };
-        UniformBuffer<UBScreenData> ubScreenData;
+        UniformBuffer* ubScreenData;
 
         struct UBHBAOData {
             glm::vec4 perspectiveInfo;
@@ -233,18 +231,18 @@ namespace CgEngine {
             glm::vec4 float2Offsets[16];
             glm::vec4 jitters[16];
         } hbaoData;
-        UniformBuffer<UBHBAOData> ubHBAOData;
+        UniformBuffer* ubHBAOData;
 
         float hbaoSharpness = 1.0f;
 
         struct MeshKey {
-            const uint32_t voaId;
+            const VertexArrayObject* voa;
             const uint32_t submeshIndex;
             const uint32_t materialUuid;
 
             bool operator<(const MeshKey& other) const {
-                if (voaId < other.voaId) return true;
-                if (voaId > other.voaId) return false;
+                if (voa < other.voa) return true;
+                if (voa > other.voa) return false;
                 if (submeshIndex < other.submeshIndex) return true;
                 if (submeshIndex > other.submeshIndex) return false;
                 return materialUuid < other.materialUuid;
@@ -258,10 +256,12 @@ namespace CgEngine {
             uint32_t baseVertex;
             uint32_t indexCount;
             uint32_t instanceCount;
+            int transformsBufferOffset;
         };
 
         std::map<MeshKey, DrawCommand> drawCommandQueue;
         std::map<MeshKey, std::vector<glm::mat4>> meshTransforms;
+
         std::map<MeshKey, DrawCommand> shadowMapDrawCommandQueue;
         std::map<MeshKey, std::vector<glm::mat4>> shadowMapMeshTransforms;
 
@@ -307,28 +307,27 @@ namespace CgEngine {
 
         glm::mat4 uiProjectionMatrix;
 
-        ShaderStorageBuffer boneTransformsBuffer{false};
+//        ShaderStorageBuffer boneTransformsBuffer{false};
 
-        struct CustomShaderDrawCommand {
-            uint32_t instanceCount;
-            VertexArrayObject* vao;
-            const Material* material;
-            uint32_t baseIndex;
-            uint32_t baseVertex;
-            uint32_t indexCount;
-            glm::mat4 transform;
-            CustomShaderRendererComponentRenderPassOptions renderPassOptions;
-            std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers = {nullptr, nullptr};
-        };
+//        struct CustomShaderDrawCommand {
+//            uint32_t instanceCount;
+//            VertexArrayObject* vao;
+//            const Material* material;
+//            uint32_t baseIndex;
+//            uint32_t baseVertex;
+//            uint32_t indexCount;
+//            glm::mat4 transform;
+//            CustomShaderRendererComponentRenderPassOptions renderPassOptions;
+//            std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers = {nullptr, nullptr};
+//        };
 
-        std::unordered_map<CustomShader*, std::vector<CustomShaderDrawCommand>> customShaderDeferredDrawCommandQueue;
-        std::unordered_map<CustomShader*, std::vector<CustomShaderDrawCommand>> customShaderForwardDrawCommandQueue;
+//        std::unordered_map<CustomShader*, std::vector<CustomShaderDrawCommand>> customShaderDeferredDrawCommandQueue;
+//        std::unordered_map<CustomShader*, std::vector<CustomShaderDrawCommand>> customShaderForwardDrawCommandQueue;
 
         float findDrawInfoTextureIndex(UiDrawInfo& drawInfo, const Texture2D* texture) const;
         std::array<glm::vec4, 16> generateHBAOJitterNoise() const;
         size_t findCorrectLodIndex(const std::vector<float>& lodDistances, const glm::mat4& transform, size_t lodCount) const;
-
-        ShaderMap shaderMap;
+        void buildTransformBuffers();
 
         RenderingStats renderingStats;
         void resetRenderingStats();

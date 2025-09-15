@@ -1,0 +1,8 @@
+<Scene>
+    <Entity id="camera">
+        <Components>
+            <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
+            <CameraComponent primary="true" projection="perspective" />
+        </Components>
+    </Entity>
+</Scene>

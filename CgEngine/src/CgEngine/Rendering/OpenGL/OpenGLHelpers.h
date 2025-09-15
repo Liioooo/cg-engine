@@ -1,0 +1,28 @@
+#pragma once
+
+#include "Rendering/Enums.h"
+
+namespace CgEngine {
+
+    namespace OpenGLHelpers {
+        unsigned int shaderDataTypeToOpenGLBaseType(ShaderDataType type);
+        int depthCompareOperatorToOpenGL(DepthCompareOperator op);
+        int blendingEquationToOpenGL(BlendingEquation eq);
+        int blendingFunctionToOpenGL(BlendingFunction fn);
+        int getOpenGLTextureInternalFormat(TextureFormat format, bool compression);
+        int getOpenGLTextureType(TextureFormat format);
+        int getOpenGLTextureFormat(TextureFormat format);
+        int getOpenGLWrapMode(TextureWrap wrap);
+        void applyMipMapFiltering(MipMapFiltering mipMapFiltering, unsigned int textureType);
+        int attachmentTypeToOpenGLInternalFormat(AttachmentType type);
+        int shaderImageAccessToOpenGL(ShaderImageAccess access);
+        int getOpenGLTextureFormatForImageBind(TextureFormat format);
+        uint32_t loadOpenGLGraphicsShader(const std::string& name, ShaderEnv env);
+        uint32_t loadOpenGLComputeShader(const std::string& name, ShaderEnv env);
+        bool checkShaderErrors(uint32_t shaderHandle, const std::string& type);
+        int getShaderUniformLocation(uint32_t programHandle, const std::string& name);
+        bool createShaderType(unsigned int type, const std::string& sType, const std::vector<char>& source, unsigned int attachTo);
+        glm::vec3 textureBorderColorToGLMVec3(TextureBorderColor color);
+    }
+
+}

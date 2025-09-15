@@ -1,16 +1,16 @@
 #version 450 core
 
-#include "common/CameraDataBuffer.glsl"
-#include "private_common/Bloom.glsl"
+#include "CameraDataBuffer.glsl"
+#include "Bloom.glsl"
 
-in VS_OUT {
+layout(location = 10) in VS_OUT {
     vec2 TexCoord;
 } fs_in;
 
 layout (binding = 0) uniform sampler2D u_FinalImage;
 layout (binding = 1) uniform sampler2D u_BloomTexture;
 
-out vec4 o_FragColor;
+layout(location = 0) out vec4 o_FragColor;
 
 vec3 gammaCorrect(vec3 color, float gamma) {
     return pow(color, vec3(1.0f / gamma));

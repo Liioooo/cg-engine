@@ -1,10 +1,9 @@
 #pragma once
 
-#include "Rendering/CustomShaders.h"
 #include "Resources/MeshVertices.h"
 #include "Resources/AudioFile.h"
 #include "Rendering/PBRMaterial.h"
-#include "Rendering/Texture.h"
+#include "Rendering/TextureCube.h"
 #include "Physics/PhysicsMaterial.h"
 #include "Font.h"
 #include "Timer.h"
@@ -57,8 +56,8 @@ namespace CgEngine {
             registerResourceType<TextureCube>();
             registerResourceType<PhysicsMaterial>();
             registerResourceType<Font>();
-            registerResourceType<CustomShader>();
-            registerResourceType<CustomComputeShader>();
+//            registerResourceType<CustomShader>();
+//            registerResourceType<CustomComputeShader>();
             registerResourceType<AudioFile>();
         }
 
@@ -117,8 +116,8 @@ namespace CgEngine {
             unloadUnusedResourceType<TextureCube>();
             unloadUnusedResourceType<PhysicsMaterial>();
             unloadUnusedResourceType<Font>();
-            unloadUnusedResourceType<CustomShader>();
-            unloadUnusedResourceType<CustomComputeShader>();
+//            unloadUnusedResourceType<CustomShader>();
+//            unloadUnusedResourceType<CustomComputeShader>();
             unloadUnusedResourceType<AudioFile>();
         }
 

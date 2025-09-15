@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.23)
+include(../CMakeAssetHandling.cmake)
 
 project(GAME VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 17)
@@ -111,9 +112,5 @@ target_precompile_headers(${PROJECT_NAME} REUSE_FROM CG_ENGINE)
 ################################################################################
 # Assets handling
 ################################################################################
-add_custom_target(copy_assets_cg_engine_game COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/../CgEngine/assets ${PROJECT_BINARY_DIR}/assets/engine)
-add_dependencies(${PROJECT_NAME} copy_assets_cg_engine_game)
-
-add_custom_target(copy_assets_game COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/assets ${PROJECT_BINARY_DIR}/assets/game)
-add_dependencies(${PROJECT_NAME} copy_assets_game)
+handle_assets()
 

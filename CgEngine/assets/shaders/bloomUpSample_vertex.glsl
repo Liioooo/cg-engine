@@ -3,7 +3,7 @@
 layout (location = 0) in vec3 a_Pos;
 layout (location = 1) in vec2 a_TexCoord;
 
-out VS_OUT {
+layout(location = 10) out VS_OUT {
     vec2 TexCoord;
 } vs_out;
 

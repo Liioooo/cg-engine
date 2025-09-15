@@ -18,6 +18,22 @@ namespace CgEngine {
         return "";
     }
 
+    std::vector<char> FileSystem::readFileBinary(const std::filesystem::path& path) {
+        std::ifstream file(path, std::ios::ate | std::ios::binary);
+        if (!file.is_open()) {
+            CG_LOGGING_ERROR("Unable to load File: {0}", path.string());
+            return {};
+        }
+
+        size_t fileSize = (size_t) file.tellg();
+        std::vector<char> buffer(fileSize);
+        file.seekg(0);
+        file.read(buffer.data(), fileSize);
+        file.close();
+
+        return buffer;
+    }
+
     bool FileSystem::checkFileExists(const std::filesystem::path& path) {
         return std::filesystem::exists(path) && std::filesystem::is_regular_file(path);
     }
@@ -30,7 +46,7 @@ namespace CgEngine {
     }
 
     std::filesystem::path FileSystem::getAsEnginePath(const std::filesystem::path& path) {
-        if (!isSubpath(path, relativeGame)) {
+        if (!isSubpath(path, relativeEngine)) {
             return relativeEngine / path;
         }
         return path;

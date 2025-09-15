@@ -34,7 +34,7 @@ layout(binding = 4, std430) writeonly buffer VertexBufferOut {
 
 layout(local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
 
-uniform int u_ComponentIndex;
+layout(location = 0) uniform int u_ComponentIndex;
 
 void main() {
     BoneInfluence boneInfluence = b_BoneInfluences.boneInfluences[gl_GlobalInvocationID.x];

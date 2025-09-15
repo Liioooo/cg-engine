@@ -31,7 +31,7 @@ namespace CgEngine {
         static void createCharacterControllerComponent(Scene* scene, Entity entity, const pugi::xml_node& node);
         static void createUiCanvasComponent(Scene* scene, Entity entity, const pugi::xml_node& node);
         static void createAnimationComponent(Scene* scene, Entity entity, const pugi::xml_node& node);
-        static void createCustomShaderRendererComponent(Scene* scene, Entity entity, const pugi::xml_node& node);
+//        static void createCustomShaderRendererComponent(Scene* scene, Entity entity, const pugi::xml_node& node);
         static void createAudioListenerComponent(Scene* scene, Entity entity, const pugi::xml_node& node);
         static void createAudioComponent(Scene* scene, Entity entity, const pugi::xml_node& node);
         static void createLodDistanceComponent(Scene* scene, Entity entity, const pugi::xml_node& node);
