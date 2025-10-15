@@ -71,6 +71,10 @@ namespace CgEngine {
         backend->transitionImageLayoutFromComputeToShaderReadOnly(attachment, stageUsingAttachmentAfterTransition);
     }
 
+    void Renderer::memoryBarrierForVertexBufferAfterCompute(const VertexBuffer* vertexBuffer) {
+        backend->memoryBarrierForVertexBufferAfterCompute(vertexBuffer);
+    }
+
     void Renderer::renderUnitQuad() {
         backend->renderUnitQuad();
     }
@@ -78,37 +82,6 @@ namespace CgEngine {
     void Renderer::renderUnitCube() {
         backend->renderUnitCube();
     }
-
-//    void Renderer::renderLines(const std::vector<LineDrawInfo>& lines) {
-//        if (lines.size() == 0) {
-//            return;
-//        }
-//
-//        linesVAO.bind();
-//        auto& vertexBuffer = linesVAO.getVertexBuffers()[0];
-//        auto vertices = std::vector<float>();
-//
-//        for (const auto& line: lines) {
-//            vertices.push_back(line.from.x);
-//            vertices.push_back(line.from.y);
-//            vertices.push_back(line.from.z);
-//
-//            vertices.push_back(line.color.x);
-//            vertices.push_back(line.color.y);
-//            vertices.push_back(line.color.z);
-//
-//            vertices.push_back(line.to.x);
-//            vertices.push_back(line.to.y);
-//            vertices.push_back(line.to.z);
-//
-//            vertices.push_back(line.color.x);
-//            vertices.push_back(line.color.y);
-//            vertices.push_back(line.color.z);
-//        }
-//
-//        vertexBuffer->setData(vertices.data(), vertices.size() * sizeof(float), VertexBufferUsage::Dynamic);
-//        glDrawArrays(GL_LINES, 0, lines.size() * 2);
-//    }
 
     void Renderer::executeDrawCommand(const VertexArrayObject* vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, uint32_t instanceCount) {
         backend->executeDrawCommand(vao, indexCount, baseIndex, baseVertex, instanceCount);

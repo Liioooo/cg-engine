@@ -56,7 +56,7 @@ namespace CgEngine {
     }
 
     uint32_t OpenGLGraphicsPipeline::getOpenGLShaderHandle() const {
-        CG_ASSERT(ready, "RenderPass is not ready!")
+        CG_ASSERT(ready, "GraphicsPipeline is not ready!")
         return shaderHandle;
     }
 

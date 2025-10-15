@@ -6,6 +6,7 @@
 #include "OpenGLTexture2D.h"
 #include "OpenGLAttachment.h"
 #include "OpenGLTextureCube.h"
+#include "OpenGLVertexBuffer.h"
 #include "OpenGLHelpers.h"
 
 namespace CgEngine {
@@ -80,6 +81,9 @@ namespace CgEngine {
             } else {
                 glBindImageTexture(attachmentImageBinding.bindingPoint, static_cast<const OpenGLAttachment*>(attachmentImageBinding.attachment)->getOpenGLHandle(), 0, GL_FALSE, attachmentImageBinding.layer, OpenGLHelpers::shaderImageAccessToOpenGL(attachmentImageBinding.access), OpenGLHelpers::attachmentTypeToOpenGLInternalFormat(attachmentImageBinding.attachment->getType()));
             }
+        }
+        for (auto vb : specification.vertexBufferSSBOBindings) {
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, vb.bindingPoint, static_cast<const OpenGLVertexBuffer*>(vb.vertexBuffer)->getOpenGLHandle());
         }
     }
 

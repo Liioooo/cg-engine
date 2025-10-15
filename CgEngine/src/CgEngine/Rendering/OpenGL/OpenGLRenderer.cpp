@@ -195,16 +195,18 @@ namespace CgEngine {
     void OpenGLRenderer::endRenderPass() {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
         currentRenderPass = nullptr;
-        currentGraphicsPipeline = nullptr;
+        currentPipelineHandle = ~0;
     }
 
     void OpenGLRenderer::bindGraphicsPipeline(const GraphicsPipeline* graphicsPipeline) {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
 
-        currentGraphicsPipeline = static_cast<const OpenGLGraphicsPipeline*>(graphicsPipeline);
-        const GraphicsPipelineSpecification& spec = currentGraphicsPipeline->getSpecification();
+        auto* glGraphicsPipeline = static_cast<const OpenGLGraphicsPipeline*>(graphicsPipeline);
+        const GraphicsPipelineSpecification& spec = glGraphicsPipeline->getSpecification();
+        currentPipelineHandle = glGraphicsPipeline->getOpenGLShaderHandle();
+        drawMode = glGraphicsPipeline->getDrawMode();
 
-        glUseProgram(currentGraphicsPipeline->getOpenGLShaderHandle());
+        glUseProgram(glGraphicsPipeline->getOpenGLShaderHandle());
 
         if (isWireframe != spec.wireframe) {
             isWireframe = spec.wireframe;
@@ -276,6 +278,7 @@ namespace CgEngine {
     void OpenGLRenderer::bindComputePipeline(const ComputePipeline* computePipeline) {
         auto* glComputePipeline = static_cast<const OpenGLComputePipeline*>(computePipeline);
         glUseProgram(glComputePipeline->getOpenGLShaderHandle());
+        currentPipelineHandle = glComputePipeline->getOpenGLShaderHandle();
     }
 
     void OpenGLRenderer::dispatchCompute(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
@@ -312,9 +315,10 @@ namespace CgEngine {
     }
 
     void OpenGLRenderer::setPushConstants(const std::array<PushConstants*, 2>& pushConstants, uint32_t pushConstantsCount) {
+        CG_ASSERT(currentPipelineHandle != ~0, "There is no active Pipeline!")
         for (uint32_t i = 0; i < pushConstantsCount; i++) {
             const auto* pc = static_cast<const OpenGLPushConstants*>(pushConstants[i]);
-            pc->upload(currentGraphicsPipeline->getOpenGLShaderHandle());
+            pc->upload(currentPipelineHandle);
         }
     }
 
@@ -322,9 +326,13 @@ namespace CgEngine {
         glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
     }
 
+    void OpenGLRenderer::memoryBarrierForVertexBufferAfterCompute(const VertexBuffer* vertexBuffer) {
+        glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+    }
+
     void OpenGLRenderer::renderUnitQuad() {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
-        CG_ASSERT(currentGraphicsPipeline != nullptr, "There is no active GraphicsPipeline!")
+        CG_ASSERT(currentPipelineHandle != ~0, "There is no active GraphicsPipeline!")
 
         quadVAO.bind();
         glDrawElements(GL_TRIANGLES, quadVAO.getIndexBuffer()->getIndexCount(), OpenGLHelpers::getOpenGLIndexType(quadVAO.getIndexBuffer()->getDataType()), nullptr);
@@ -332,7 +340,7 @@ namespace CgEngine {
 
     void OpenGLRenderer::renderUnitCube() {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
-        CG_ASSERT(currentGraphicsPipeline != nullptr, "There is no active GraphicsPipeline!")
+        CG_ASSERT(currentPipelineHandle != ~0, "There is no active GraphicsPipeline!")
 
         unitCubeVAO.bind();
         glDrawElements(GL_TRIANGLES, unitCubeVAO.getIndexBuffer()->getIndexCount(), OpenGLHelpers::getOpenGLIndexType(unitCubeVAO.getIndexBuffer()->getDataType()), nullptr);
@@ -340,32 +348,32 @@ namespace CgEngine {
 
     void OpenGLRenderer::executeDrawCommand(const VertexArrayObject* vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, uint32_t instanceCount) {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
-        CG_ASSERT(currentGraphicsPipeline != nullptr, "There is no active GraphicsPipeline!")
+        CG_ASSERT(currentPipelineHandle != ~0, "There is no active GraphicsPipeline!")
 
         auto* glVao = static_cast<const OpenGLVertexArrayObject*>(vao);
 
         glVao->bind();
-        glDrawElementsInstancedBaseVertex(currentGraphicsPipeline->getDrawMode(), indexCount, OpenGLHelpers::getOpenGLIndexType(glVao->getIndexBuffer()->getDataType()), (void*)(baseIndex * sizeof(uint32_t)), instanceCount, baseVertex);
+        glDrawElementsInstancedBaseVertex(drawMode, indexCount, OpenGLHelpers::getOpenGLIndexType(glVao->getIndexBuffer()->getDataType()), (void*)(baseIndex * sizeof(uint32_t)), instanceCount, baseVertex);
     }
 
     void OpenGLRenderer::executeDrawCommand(const CgEngine::VertexArrayObject* vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex) {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
-        CG_ASSERT(currentGraphicsPipeline != nullptr, "There is no active GraphicsPipeline!")
+        CG_ASSERT(currentPipelineHandle != ~0, "There is no active GraphicsPipeline!")
 
         auto* glVao = static_cast<const OpenGLVertexArrayObject*>(vao);
 
         glVao->bind();
-        glDrawElementsBaseVertex(currentGraphicsPipeline->getDrawMode(), indexCount, OpenGLHelpers::getOpenGLIndexType(glVao->getIndexBuffer()->getDataType()), (void*)(baseIndex * sizeof(uint32_t)), baseVertex);
+        glDrawElementsBaseVertex(drawMode, indexCount, OpenGLHelpers::getOpenGLIndexType(glVao->getIndexBuffer()->getDataType()), (void*)(baseIndex * sizeof(uint32_t)), baseVertex);
     }
 
     void OpenGLRenderer::drawArrays(const VertexArrayObject* vao, uint32_t vertexCount) {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
-        CG_ASSERT(currentGraphicsPipeline != nullptr, "There is no active GraphicsPipeline!")
+        CG_ASSERT(currentPipelineHandle != ~0, "There is no active GraphicsPipeline!")
 
         auto* glVao = static_cast<const OpenGLVertexArrayObject*>(vao);
 
         glVao->bind();
-        glDrawArrays(currentGraphicsPipeline->getDrawMode(), 0, vertexCount);
+        glDrawArrays(drawMode, 0, vertexCount);
     }
 
     Texture2D* OpenGLRenderer::getWhiteTexture() {

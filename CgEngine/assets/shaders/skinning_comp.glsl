@@ -1,5 +1,7 @@
 #version 450 core
 
+#include "Macros.glsl"
+
 const int MAX_BONES = 200;
 const int MAX_ANIMATED_COMPONENTS = 512;
 
@@ -34,15 +36,18 @@ layout(binding = 4, std430) writeonly buffer VertexBufferOut {
 
 layout(local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
 
-layout(location = 0) uniform int u_ComponentIndex;
+
+PUSH_CONSTANT(SkinningPC, 10) {
+    int componentIndex;
+} pc_skinning;
 
 void main() {
     BoneInfluence boneInfluence = b_BoneInfluences.boneInfluences[gl_GlobalInvocationID.x];
 
-    mat4 boneTransform = b_BoneTransforms.boneTransforms[boneInfluence.boneIndices[0] + u_ComponentIndex * MAX_BONES] * boneInfluence.weights[0];
-    boneTransform += b_BoneTransforms.boneTransforms[boneInfluence.boneIndices[1] + u_ComponentIndex * MAX_BONES] * boneInfluence.weights[1];
-    boneTransform += b_BoneTransforms.boneTransforms[boneInfluence.boneIndices[2] + u_ComponentIndex * MAX_BONES] * boneInfluence.weights[2];
-    boneTransform += b_BoneTransforms.boneTransforms[boneInfluence.boneIndices[3] + u_ComponentIndex * MAX_BONES] * boneInfluence.weights[3];
+    mat4 boneTransform = b_BoneTransforms.boneTransforms[boneInfluence.boneIndices[0] + pc_skinning.componentIndex * MAX_BONES] * boneInfluence.weights[0];
+    boneTransform += b_BoneTransforms.boneTransforms[boneInfluence.boneIndices[1] + pc_skinning.componentIndex * MAX_BONES] * boneInfluence.weights[1];
+    boneTransform += b_BoneTransforms.boneTransforms[boneInfluence.boneIndices[2] + pc_skinning.componentIndex * MAX_BONES] * boneInfluence.weights[2];
+    boneTransform += b_BoneTransforms.boneTransforms[boneInfluence.boneIndices[3] + pc_skinning.componentIndex * MAX_BONES] * boneInfluence.weights[3];
 
     b_VertexBufferOut.vertices[gl_GlobalInvocationID.x].pos = boneTransform * b_VertexBufferIn.vertices[gl_GlobalInvocationID.x].pos;
     b_VertexBufferOut.vertices[gl_GlobalInvocationID.x].normal = boneTransform * b_VertexBufferIn.vertices[gl_GlobalInvocationID.x].normal;

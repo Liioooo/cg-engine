@@ -62,6 +62,22 @@ namespace CgEngine {
         if (!params.autoPlayAnimation) {
             calculateBoneTransforms(mesh->getSkeleton()->getBoneTransforms());
         }
+
+        DescriptorSetSpecification skinningDescriptorSetSpecification{};
+        skinningDescriptorSetSpecification.immutableSsboBindings = {
+            {1, mesh->getBoneInfluencesBuffer()}
+        };
+        skinningDescriptorSetSpecification.vertexBufferSSBOBindings = {
+            {3, mesh->getVAO()->getVertexBuffer(0)},
+            {4, skinnedVAO->getVertexBuffer(0)}
+        };
+
+        skinningDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(skinningDescriptorSetSpecification);
+    }
+
+    void AnimatedMeshRendererComponent::onDetach(Scene& scene) {
+        delete skinnedVAO;
+        delete skinningDescriptorSet;
     }
 
     ResRef<MeshVertices> AnimatedMeshRendererComponent::getMeshVertices() {
@@ -90,6 +106,10 @@ namespace CgEngine {
 
     VertexArrayObject* AnimatedMeshRendererComponent::getSkinnedVAO() {
         return skinnedVAO;
+    }
+
+    DescriptorSet* AnimatedMeshRendererComponent::getSkinningDescriptorSet() {
+        return skinningDescriptorSet;
     }
 
     void AnimatedMeshRendererComponent::setAnimation(const std::string& name) {

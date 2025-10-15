@@ -28,6 +28,7 @@ namespace CgEngine {
         using Params = AnimatedMeshRendererComponentParams;
 
         void onAttach(Scene& scene, AnimatedMeshRendererComponentParams& params);
+        void onDetach(Scene& scene) override;
         void onRenderImGui() override;
 
         ResRef<MeshVertices> getMeshVertices();
@@ -37,6 +38,7 @@ namespace CgEngine {
         const std::vector<uint32_t>& getMeshNodes();
         const std::vector<glm::mat4>& getBoneTransforms();
         VertexArrayObject* getSkinnedVAO();
+        DescriptorSet* getSkinningDescriptorSet();
 
         void setAnimation(const std::string& name);
         void setAnimationPlaying(bool playing);
@@ -65,6 +67,7 @@ namespace CgEngine {
 
         std::vector<glm::mat4> boneTransforms;
         VertexArrayObject* skinnedVAO = nullptr;
+        DescriptorSet* skinningDescriptorSet = nullptr;
 
         float animationTime = 0.0f;
         float animationStartTime = 0.0f;

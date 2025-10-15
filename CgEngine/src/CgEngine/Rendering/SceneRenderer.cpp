@@ -491,21 +491,6 @@ namespace CgEngine {
             pbrPushConstants->init<PbrPushConstants>();
             pbrPushConstants->mapUniform(&PbrPushConstants::environmentIntensity, "environmentIntensity");
         }
-        /*
-        {
-            RenderPassSpecification customShaderForwardRenderPassSpec;
-            customShaderForwardRenderPassSpec.framebuffer = pbrRenderPass.getSpecification().framebuffer;
-            customShaderForwardRenderPassSpec.usingExistingFramebuffer = true;
-            customShaderForwardRenderPassSpec.depthCompareOperator = DepthCompareOperator::LessOrEqual;
-            customShaderForwardRenderPassSpec.depthWrite = true;
-            customShaderForwardRenderPassSpec.depthTest = true;
-            customShaderForwardRenderPassSpec.clearColorBuffer = false;
-            customShaderForwardRenderPassSpec.clearDepthBuffer = false;
-            customShaderForwardRenderPassSpec.clearStencilBuffer = false;
-
-            customShaderForwardRenderPass = RenderPass(std::move(customShaderForwardRenderPassSpec));
-        }
-         */
         {
             RenderPassSpecification afterPbrRenderPassSpec{};
             afterPbrRenderPassSpec.clearColorAttachments = false;
@@ -828,11 +813,25 @@ namespace CgEngine {
 
             uiProjectionMatrix = glm::ortho(0.0f, static_cast<float>(viewportWidth), 0.0f, static_cast<float>(viewportHeight));
         }
+        {
+            boneTransformsBuffer = GraphicsObjectsFactory::createShaderStorageBuffer(MAX_BONES * MAX_ANIMATED_COMPONENTS * sizeof(glm::mat4));
 
-//        boneTransformsBuffer = ShaderStorageBuffer();
-//        boneTransformsBuffer.setData(nullptr, maxBones * maxAnimatedComponents * sizeof(glm::mat4));
-//
-//        skinningShader = ComputeShader("skinning");
+            ComputePipelineSpecification skinningPipelineSpec{};
+            skinningPipelineSpec.engineShaderName = "skinning";
+
+            skinningComputePipeline = GraphicsObjectsFactory::createComputePipeline(skinningPipelineSpec);
+
+            skinningPushConstants = GraphicsObjectsFactory::createPushConstants("pc_skinning");
+            skinningPushConstants->init<SkinningPushConstants>();
+            skinningPushConstants->mapUniform(&SkinningPushConstants::componentIndex, "componentIndex");
+
+            DescriptorSetSpecification skinningDescriptorSetSpec{};
+            skinningDescriptorSetSpec.ssboBindings = {
+                    {2, boneTransformsBuffer}
+            };
+
+            skinningDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(skinningDescriptorSetSpec);
+        }
     }
 
     SceneRenderer::~SceneRenderer() {
@@ -1030,7 +1029,6 @@ namespace CgEngine {
         }
 
         pbrPass();
-        customShaderForwardPass();
 
         Renderer::beginRenderPass(afterPbrRenderPass, afterPbrFramebuffer);
 
@@ -1138,52 +1136,51 @@ namespace CgEngine {
         }
     }
 
-    void SceneRenderer::submitAnimatedMesh(MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms, VertexArrayObject* skinnedVAO) {
-//        CG_ASSERT(boneTransforms.size() <= maxBones, "Mesh contains to many bones")
-//        CG_ASSERT(skinningQueue.size() < maxAnimatedComponents, "Cannot render that many AnimatedMeshRendererComponents")
-//
-//        uint32_t boneTransformOffset = skinningQueue.size() * maxBones * sizeof(glm::mat4);
-//        boneTransformsBuffer.setSubData(boneTransformOffset, boneTransforms.data(), boneTransforms.size() * sizeof(glm::mat4));
-//
-//        SkinningInfo& skinningInfo = skinningQueue.emplace_back();
-//        skinningInfo.originalVertexBuffer = mesh->getVAO()->getVertexBuffers()[0];
-//        skinningInfo.skinnedVertexBuffer = skinnedVAO->getVertexBuffers()[0];
-//        skinningInfo.boneInfluencesBuffer = &mesh->getBoneInfluencesBuffer();
-//        skinningInfo.numVertices = mesh->getVertices().size();
-//
-//        auto& submeshes = mesh->getSubmeshes();
-//
-//        for (const auto& meshNodeIndex: meshNodes) {
-//            const auto& meshNode = mesh->getMeshNodes().at(meshNodeIndex);
-//
-//            for (const auto& submeshIndex: meshNode.submeshIndices) {
-//                const Submesh& submesh = submeshes.at(submeshIndex);
-//                const Material* material = overrideMaterial != nullptr ? overrideMaterial : mesh->getMaterial(submesh.materialIndex);
-//                MeshKey mk = {skinnedVAO->getRendererId(), submeshIndex, material->getUuid().getUuid()};
-//
-//                meshTransforms[mk].emplace_back(transform);
-//
-//                DrawCommand& drawCommand = drawCommandQueue[mk];
-//                drawCommand.vao = skinnedVAO;
-//                drawCommand.material = material;
-//                drawCommand.baseIndex = submesh.baseIndex;
-//                drawCommand.baseVertex = submesh.baseVertex;
-//                drawCommand.indexCount = submesh.indexCount;
-//                drawCommand.instanceCount++;
-//
-//                if (castShadows) {
-//                    shadowMapMeshTransforms[mk].emplace_back(transform);
-//
-//                    DrawCommand& shadowMapDrawCommand = shadowMapDrawCommandQueue[mk];
-//                    shadowMapDrawCommand.vao = skinnedVAO;
-//                    shadowMapDrawCommand.material = material;
-//                    shadowMapDrawCommand.baseIndex = submesh.baseIndex;
-//                    shadowMapDrawCommand.baseVertex = submesh.baseVertex;
-//                    shadowMapDrawCommand.indexCount = submesh.indexCount;
-//                    shadowMapDrawCommand.instanceCount++;
-//                }
-//            }
-//        }
+    void SceneRenderer::submitAnimatedMesh(MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms, VertexArrayObject* skinnedVAO, const DescriptorSet* descriptorSet) {
+        CG_ASSERT(boneTransforms.size() <= MAX_BONES, "Mesh contains to many bones")
+        CG_ASSERT(skinningQueue.size() < MAX_ANIMATED_COMPONENTS, "Cannot render that many AnimatedMeshRendererComponents")
+
+        uint32_t boneTransformOffset = skinningQueue.size() * MAX_BONES * sizeof(glm::mat4);
+        boneTransformsBuffer->setSubData(boneTransformOffset, boneTransforms.data(), boneTransforms.size() * sizeof(glm::mat4));
+
+        SkinningInfo& skinningInfo = skinningQueue.emplace_back();
+        skinningInfo.descriptorSet = descriptorSet;
+        skinningInfo.numVertices = mesh->getVertices().size();
+        skinningInfo.skinnedVertexBuffer = skinnedVAO->getVertexBuffer(0);
+
+        auto& submeshes = mesh->getSubmeshes();
+
+        for (const auto& meshNodeIndex: meshNodes) {
+            const auto& meshNode = mesh->getMeshNodes().at(meshNodeIndex);
+
+            for (const auto& submeshIndex: meshNode.submeshIndices) {
+                const Submesh& submesh = submeshes.at(submeshIndex);
+                const Material* material = overrideMaterial != nullptr ? overrideMaterial : mesh->getMaterial(submesh.materialIndex);
+                MeshKey mk = {skinnedVAO, submeshIndex, material->getUuid().getUuid()};
+
+                meshTransforms[mk].emplace_back(transform);
+
+                DrawCommand& drawCommand = drawCommandQueue[mk];
+                drawCommand.vao = skinnedVAO;
+                drawCommand.material = material;
+                drawCommand.baseIndex = submesh.baseIndex;
+                drawCommand.baseVertex = submesh.baseVertex;
+                drawCommand.indexCount = submesh.indexCount;
+                drawCommand.instanceCount++;
+
+                if (castShadows) {
+                    shadowMapMeshTransforms[mk].emplace_back(transform);
+
+                    DrawCommand& shadowMapDrawCommand = shadowMapDrawCommandQueue[mk];
+                    shadowMapDrawCommand.vao = skinnedVAO;
+                    shadowMapDrawCommand.material = material;
+                    shadowMapDrawCommand.baseIndex = submesh.baseIndex;
+                    shadowMapDrawCommand.baseVertex = submesh.baseVertex;
+                    shadowMapDrawCommand.indexCount = submesh.indexCount;
+                    shadowMapDrawCommand.instanceCount++;
+                }
+            }
+        }
     }
 
 //    void SceneRenderer::submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, const AABoundingBox* boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions, std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers, const std::vector<float>& lodDistances) {
@@ -1379,21 +1376,22 @@ namespace CgEngine {
     }
 
     void SceneRenderer::skinMeshes() {
-//        CG_GPU_DEBUG_GROUP("SkinMeshes")
-//        CG_GPU_TIME_FN(&renderingStats.skinMeshesTimer)
-//
-//        skinningShader.bind();
-//        boneTransformsBuffer.bind(2);
-//
-//        for (uint32_t i = 0; i < skinningQueue.size(); i++) {
-//            skinningQueue[i].originalVertexBuffer->bindAsSSBO(3);
-//            skinningQueue[i].skinnedVertexBuffer->bindAsSSBO(4);
-//            skinningQueue[i].boneInfluencesBuffer->bind(1);
-//
-//            skinningShader.setInt("u_ComponentIndex", i);
-//            skinningShader.dispatch((skinningQueue[i].numVertices / 32) + 1, 1, 1);
-//            skinningShader.waitForMemoryBarrier({MemoryBarrierBit::All});
-//        }
+        CG_GPU_DEBUG_GROUP("SkinMeshes")
+        CG_GPU_TIME_FN(&renderingStats.skinMeshesTimer)
+
+        SkinningPushConstants pc{};
+
+        Renderer::bindComputePipeline(skinningComputePipeline);
+        Renderer::bindDescriptorSet(skinningDescriptorSet, 0);
+
+        for (uint32_t i = 0; i < skinningQueue.size(); i++) {
+            Renderer::bindDescriptorSet(skinningQueue[i].descriptorSet, 1);
+            pc.componentIndex = i;
+            skinningPushConstants->setData(&pc, sizeof(SkinningPushConstants));
+            Renderer::setPushConstants({skinningPushConstants}, 1);
+            Renderer::dispatchCompute((skinningQueue[i].numVertices / 32) + 1, 1, 1);
+            Renderer::memoryBarrierForVertexBufferAfterCompute(skinningQueue[i].skinnedVertexBuffer);
+        }
     }
 
     void SceneRenderer::shadowMapPass() {
@@ -1545,62 +1543,6 @@ namespace CgEngine {
 //                const Material* material = command.material != nullptr ? command.material : &emptyMaterial;
 //
 //                Renderer::setFaceCulling(command.renderPassOptions.backfaceCulling, command.renderPassOptions.frontfaceCulling);
-//                Renderer::setTesselationPatchSize(command.renderPassOptions.tesselationPatchSize);
-//
-//                if (material != lastUsedMaterial) {
-//                    material->uploadToShader(*shader);
-//                }
-//                lastUsedMaterial = material;
-//
-//                Renderer::executeCustomShaderDrawCommand(*command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount, command.renderPassOptions.tesselationPatchSize);
-//            }
-//        }
-//
-//        Renderer::endRenderPass();
-    }
-
-    void SceneRenderer::customShaderForwardPass() {
-//        CG_GPU_DEBUG_GROUP("CustomShaderForwardPass")
-//        CG_GPU_TIME_FN(&renderingStats.customShaderForwardTimer)
-//
-//        Renderer::beginRenderPass(customShaderForwardRenderPass, true);
-//
-//        bool lastCommandUseDirShadowMappingData = false;
-//        bool lastCommandUseEnvironmentMappingData = false;
-//
-//        const Material* lastUsedMaterial = nullptr;
-//
-//        for (const auto& [shader, commands]: customShaderForwardDrawCommandQueue) {
-//            shader->bind();
-//
-//            for (const auto& command: commands) {
-//                shader->setMat4("u_Transform", command.transform);
-//
-//                if (command.instanceBuffers.first != nullptr) {
-//                    command.instanceBuffers.first->bind(5);
-//                }
-//                if (command.instanceBuffers.second != nullptr) {
-//                    command.instanceBuffers.second->bind(6);
-//                }
-//
-//                if (command.renderPassOptions.useDirShadowMappingData && !lastCommandUseDirShadowMappingData) {
-//                    shader->setTexture(dirShadowMaps.getRendererId(), 8);
-//                }
-//                lastCommandUseDirShadowMappingData = command.renderPassOptions.useDirShadowMappingData;
-//
-//                if (command.renderPassOptions.useEnvironmentMappingData && !lastCommandUseEnvironmentMappingData) {
-//                    shader->setTexture(currentSceneEnvironment.irradianceMapId, 5);
-//                    shader->setTexture(currentSceneEnvironment.prefilterMapId, 6);
-//                    shader->setTexture(Renderer::getBrdfLUTTexture().getRendererId(), 7);
-//                    shader->setFloat("u_EnvironmentIntensity", currentSceneEnvironment.environmentIntensity);
-//                }
-//                lastCommandUseEnvironmentMappingData = command.renderPassOptions.useEnvironmentMappingData;
-//
-//                const Material* material = command.material != nullptr ? command.material : &emptyMaterial;
-//
-//                Renderer::setFaceCulling(command.renderPassOptions.backfaceCulling, command.renderPassOptions.frontfaceCulling);
-//                Renderer::setBlending(command.renderPassOptions.useBlending, command.renderPassOptions.blendingEquation, command.renderPassOptions.srcBlendingFunction, command.renderPassOptions.destBlendingFunction);
-//                Renderer::setWireframe(command.renderPassOptions.wireframe);
 //                Renderer::setTesselationPatchSize(command.renderPassOptions.tesselationPatchSize);
 //
 //                if (material != lastUsedMaterial) {

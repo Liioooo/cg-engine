@@ -39,6 +39,7 @@ namespace CgEngine {
         virtual void setPushConstants(const std::array<PushConstants*, 2>& pushConstants, uint32_t pushConstantsCount) = 0;
 
         virtual void transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition) = 0;
+        virtual void memoryBarrierForVertexBufferAfterCompute(const VertexBuffer* vertexBuffer) = 0;
 
         virtual void renderUnitQuad() = 0;
         virtual void renderUnitCube() = 0;

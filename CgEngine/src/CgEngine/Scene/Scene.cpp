@@ -346,7 +346,7 @@ namespace CgEngine {
         }
 
         for (auto it = componentManager->begin<AnimatedMeshRendererComponent>(); it != componentManager->end<AnimatedMeshRendererComponent>(); it++) {
-            if (it->isActive()) renderer.submitAnimatedMesh(it->getMeshVertices().get(), it->getMeshNodes(), it->getMaterial().get(), it->getCastShadows(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getBoneTransforms(), it->getSkinnedVAO());
+            if (it->isActive()) renderer.submitAnimatedMesh(it->getMeshVertices().get(), it->getMeshNodes(), it->getMaterial().get(), it->getCastShadows(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getBoneTransforms(), it->getSkinnedVAO(), it->getSkinningDescriptorSet());
         }
 
 //        for (auto it = componentManager->begin<CustomShaderRendererComponent>(); it != componentManager->end<CustomShaderRendererComponent>(); it++) {

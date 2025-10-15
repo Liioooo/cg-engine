@@ -36,6 +36,7 @@ namespace CgEngine {
         static void setPushConstants(const std::array<PushConstants*, 2>& pushConstants, uint32_t pushConstantsCount);
 
         static void transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition);
+        static void memoryBarrierForVertexBufferAfterCompute(const VertexBuffer* vertexBuffer);
 
         static void renderUnitQuad();
         static void renderUnitCube();

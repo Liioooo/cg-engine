@@ -7,6 +7,7 @@
 #include "ImmutableShaderStorageBuffer.h"
 #include "ShaderStorageBuffer.h"
 #include "UniformBuffer.h"
+#include "VertexBuffer.h"
 
 namespace CgEngine {
 
@@ -57,6 +58,11 @@ namespace CgEngine {
         const Attachment* attachment;
     };
 
+    struct DescSetVertexBufferSSBOBinding {
+        uint32_t bindingPoint;
+        const VertexBuffer* vertexBuffer;
+    };
+
     struct DescriptorSetSpecification {
         const DescriptorSetLayout* layout;
         std::vector<DescSetUBOBinding> uboBindings;
@@ -67,6 +73,7 @@ namespace CgEngine {
         std::vector<DescSetAttachmentTextureBinding> attachmentTextureBindings;
         std::vector<DescSetImageCubeBinding> imageCubeBindings;
         std::vector<DescSetAttachmentImageBinding> attachmentImageBindings;
+        std::vector<DescSetVertexBufferSSBOBinding> vertexBufferSSBOBindings;
     };
 
     class DescriptorSet {

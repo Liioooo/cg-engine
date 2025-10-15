@@ -42,7 +42,7 @@ namespace CgEngine {
         void beginScene(const Camera& camera, glm::mat4 cameraTransform, const SceneLightEnvironment& lightEnvironment, const SceneEnvironment& sceneEnvironment);
         void endScene();
         void submitMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, bool enableCulling, const glm::mat4& transform, const std::vector<float>& lodDistances);
-        void submitAnimatedMesh(MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms, VertexArrayObject* skinnedVAO);
+        void submitAnimatedMesh(MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms, VertexArrayObject* skinnedVAO, const DescriptorSet* descriptorSet);
 //        void submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, const AABoundingBox* boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions, std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers, const std::vector<float>& lodDistances);
         void submitUiElements(const std::unordered_map<std::string, UiElement*>& uiElements);
         void submitPhysicsColliderMesh(MeshVertices* mesh, const glm::mat4& transform);
@@ -61,8 +61,8 @@ namespace CgEngine {
         static const uint32_t MAX_UI_Z_LAYERS = 10;
         static const uint32_t MAX_DEBUG_LINES = 1000;
 
-        static const uint32_t maxBones = 200;
-        static const uint32_t maxAnimatedComponents = 512;
+        static const uint32_t MAX_BONES = 200;
+        static const uint32_t MAX_ANIMATED_COMPONENTS = 512;
 
         Scene* activeScene;
         uint32_t viewportWidth;
@@ -204,10 +204,15 @@ namespace CgEngine {
         GraphicsPipeline* debugLinesPipeline;
         DescriptorSet* debugLinesDescriptorSet;
 
-        RenderPass* customShaderForwardRenderPass;
         RenderPass* customShaderDeferredRenderPass;
 
-//        ComputeShader skinningShader;
+        struct SkinningPushConstants {
+            int componentIndex;
+        };
+        ShaderStorageBuffer* boneTransformsBuffer;
+        ComputePipeline* skinningComputePipeline;
+        PushConstants* skinningPushConstants;
+        DescriptorSet* skinningDescriptorSet;
 
         CameraFrustum cameraFrustum;
 
@@ -220,7 +225,6 @@ namespace CgEngine {
         void hbaoBlurPass();
         void pbrPass();
         void customShaderDeferredPass();
-        void customShaderForwardPass();
         void skyboxPass();
         void physicsCollidersPass();
         void boundingBoxPass();
@@ -316,13 +320,13 @@ namespace CgEngine {
         float hbaoSharpness = 1.0f;
 
         struct MeshKey {
-            const VertexArrayObject* voa;
+            const VertexArrayObject* vao;
             const uint32_t submeshIndex;
             const uint32_t materialUuid;
 
             bool operator<(const MeshKey& other) const {
-                if (voa < other.voa) return true;
-                if (voa > other.voa) return false;
+                if (vao < other.vao) return true;
+                if (vao > other.vao) return false;
                 if (submeshIndex < other.submeshIndex) return true;
                 if (submeshIndex > other.submeshIndex) return false;
                 return materialUuid < other.materialUuid;
@@ -360,9 +364,8 @@ namespace CgEngine {
         std::vector<DebugLineDrawInfo> debugLinesDrawInfoQueue;
 
         struct SkinningInfo {
-            const VertexBuffer* originalVertexBuffer;
+            const DescriptorSet* descriptorSet;
             const VertexBuffer* skinnedVertexBuffer;
-            const ShaderStorageBuffer* boneInfluencesBuffer;
             uint32_t numVertices;
         };
 
@@ -416,8 +419,6 @@ namespace CgEngine {
 
         glm::mat4 uiProjectionMatrix;
 
-//        ShaderStorageBuffer boneTransformsBuffer{false};
-
 //        struct CustomShaderDrawCommand {
 //            uint32_t instanceCount;
 //            VertexArrayObject* vao;
@@ -431,7 +432,6 @@ namespace CgEngine {
 //        };
 
 //        std::unordered_map<CustomShader*, std::vector<CustomShaderDrawCommand>> customShaderDeferredDrawCommandQueue;
-//        std::unordered_map<CustomShader*, std::vector<CustomShaderDrawCommand>> customShaderForwardDrawCommandQueue;
 
         IndexBuffer* uiIndexBuffer;
         VertexArrayObject* uiCircleVAO;

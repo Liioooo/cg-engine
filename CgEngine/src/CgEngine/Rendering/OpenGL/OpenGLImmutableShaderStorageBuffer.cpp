@@ -6,7 +6,7 @@
 
 namespace CgEngine {
 
-    OpenGLImmutableShaderStorageBuffer::OpenGLImmutableShaderStorageBuffer(size_t size, const void* data) {
+    OpenGLImmutableShaderStorageBuffer::OpenGLImmutableShaderStorageBuffer(size_t size, const void* data) : size(size) {
         glCreateBuffers(1, &bufferHandle);
         glNamedBufferStorage(bufferHandle, size, data, 0);
     }

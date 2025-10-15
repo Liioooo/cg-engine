@@ -36,6 +36,7 @@ namespace CgEngine {
         void setPushConstants(const std::array<PushConstants*, 2>& pushConstants, uint32_t pushConstantsCount) override;
 
         void transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition) override;
+        void memoryBarrierForVertexBufferAfterCompute(const VertexBuffer* vertexBuffer) override;
 
         void renderUnitQuad() override;
         void renderUnitCube() override;
@@ -57,7 +58,8 @@ namespace CgEngine {
 
     private:
         const OpenGLRenderPass* currentRenderPass;
-        const OpenGLGraphicsPipeline* currentGraphicsPipeline;
+        uint32_t currentPipelineHandle = ~0;
+        unsigned int drawMode;
         bool isWireframe;
         bool isBackFaceCulling;
         bool isFrontFaceCulling;
