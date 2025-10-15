@@ -150,6 +150,27 @@ namespace CgEngine {
             return 0;
         }
 
+        int getOpenGLIndexType(IndexBufferDataType type) {
+            switch (type) {
+                case IndexBufferDataType::UInt8:
+                    return GL_UNSIGNED_BYTE;
+                case IndexBufferDataType::UInt16:
+                    return GL_UNSIGNED_SHORT;
+                case IndexBufferDataType::UInt32:
+                    return GL_UNSIGNED_INT;
+            }
+            return GL_UNSIGNED_INT;
+        }
+
+        unsigned int getOpenGLDrawMode(DrawMode mode) {
+            switch (mode) {
+                case DrawMode::Lines:      return GL_LINES;
+                case DrawMode::Triangles:  return GL_TRIANGLES;
+                case DrawMode::Patches:    return GL_PATCHES;
+            }
+            return GL_TRIANGLES;
+        }
+
         void applyMipMapFiltering(MipMapFiltering mipMapFiltering, unsigned int textureType) {
             switch (mipMapFiltering) {
                 case MipMapFiltering::Nearest: {
@@ -180,6 +201,8 @@ namespace CgEngine {
                     return GL_RG8;
                 case AttachmentType::RG16F:
                     return GL_RG16F;
+                case AttachmentType::R16F:
+                    return GL_R16F;
             }
             CG_LOGGING_ERROR("Given attachment type is not a color attachment!")
             return GL_RGBA8;
@@ -266,7 +289,7 @@ namespace CgEngine {
         uint32_t loadOpenGLComputeShader(const std::string& name, ShaderEnv env) {
             CG_LOGGING_DEBUG("Loading ComputeShader: {0}", name)
 
-            std::vector<char> source = Helpers::loadShaderBinaryWithType(name, "compute", env);
+            std::vector<char> source = Helpers::loadShaderBinaryWithType(name, "comp", env);
 
             uint32_t handle = glCreateProgram();
             bool error = OpenGLHelpers::createShaderType(GL_COMPUTE_SHADER, "COMPUTE", source, handle);

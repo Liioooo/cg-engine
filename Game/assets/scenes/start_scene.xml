@@ -12,6 +12,13 @@
     </Entity>
     <Entity>
         <Components>
+            <TransformComponent position="0 -0.25 7.75" rotation="0 0 0" scale="66 0.5 82.5" />
+            <BoxColliderComponent />
+            <RigidBodyComponent dynamic="false" />
+        </Components>
+    </Entity>
+    <Entity>
+        <Components>
             <SkyboxComponent hdri-path="kloppenheim_02_2k.hdr" lod="0.1" intensity="0.3" />
         </Components>
     </Entity>

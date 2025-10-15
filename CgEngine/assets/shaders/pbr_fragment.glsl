@@ -9,11 +9,16 @@
 #include "IBLCalculationsFragment.glsl"
 #include "LightCalculationsHelperFragment.glsl"
 #include "HBAOSampling.glsl"
+#include "Macros.glsl"
 
 layout(binding = 0) uniform sampler2D u_gBuffer_AlbedoRoughness;
 layout(binding = 1) uniform sampler2D u_gBuffer_EmissionMetallic;
 layout(binding = 2) uniform sampler2D u_gBuffer_WorldNormal;
 layout(binding = 3) uniform sampler2D u_Depth;
+
+PUSH_CONSTANT(PbrPC, 10) {
+    float environmentIntensity;
+} pc_pbr;
 
 layout(location = 10) in VS_OUT {
     vec2 TexCoord;
@@ -47,7 +52,7 @@ void main() {
     light += calcSpotLights(F0, mat_AlbedoColor, mat_Metalness, mat_Roughness, worldPosition, mat_Normal, V, NdotV);
     light += mat_Emission;
 
-    vec3 ibl = calcIBL(F0, mat_AlbedoColor, mat_Metalness, mat_Roughness, mat_Normal, V, NdotV) * u_EnvironmentIntensity * texture(u_HBAO_Tex, fs_in.TexCoord).r;
+    vec3 ibl = calcIBL(F0, mat_AlbedoColor, mat_Metalness, mat_Roughness, mat_Normal, V, NdotV) * pc_pbr.environmentIntensity * texture(u_HBAO_Tex, fs_in.TexCoord).r;
 
     o_FragColor = vec4(light + ibl, 1.0f);
 }

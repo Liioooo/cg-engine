@@ -160,12 +160,13 @@ namespace CgEngine {
     void Application::onWindowResize(WindowResizeEvent &event) {
         sceneManager->setViewportSize(event.getWidth(), event.getHeight());
         sceneRenderer->setViewportSize(event.getWidth(), event.getHeight());
+        Renderer::setFramebufferResized();
     }
 
     void Application::onKeyPressed(KeyPressedEvent& event) {
         switch (event.getKeyCode()) {
             #ifdef CG_ENABLE_DEBUG_FEATURES
-            case KeyCode::F11: {
+            case KeyCode::F1: {
                 showImGuiWindow = !showImGuiWindow;
                 event.stopPropagation();
                 break;

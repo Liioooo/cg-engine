@@ -19,6 +19,10 @@ namespace CgEngine {
         delete backend;
     }
 
+    void Renderer::setFramebufferResized() {
+        backend->setFramebufferResized();
+    }
+
     void Renderer::beginFrame(const Window& window) {
         backend->beginFrame(window);
     }
@@ -27,15 +31,31 @@ namespace CgEngine {
         backend->endFrame(window);
     }
 
-    void Renderer::beginRenderPass(const RenderPass* renderPass, const Framebuffer* framebuffer, const DescriptorSet* descriptorSet) {
-        backend->beginRenderPass(renderPass, framebuffer, descriptorSet);
+    void Renderer::beginRenderPass(const RenderPass* renderPass, const Framebuffer* framebuffer) {
+        backend->beginRenderPass(renderPass, framebuffer);
+    }
+
+    void Renderer::beginSwapChainRenderPass() {
+        backend->beginSwapChainRenderPass();
     }
 
     void Renderer::endRenderPass() {
         backend->endRenderPass();
     }
 
-    void Renderer::clearPass(const CgEngine::RenderPass* renderPass, const CgEngine::Framebuffer* framebuffer) {
+    void Renderer::bindGraphicsPipeline(const GraphicsPipeline* graphicsPipeline) {
+        backend->bindGraphicsPipeline(graphicsPipeline);
+    }
+
+    void Renderer::bindComputePipeline(const ComputePipeline* computePipeline) {
+        backend->bindComputePipeline(computePipeline);
+    }
+
+    void Renderer::dispatchCompute(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
+        backend->dispatchCompute(groupCountX, groupCountY, groupCountZ);
+    }
+
+    void Renderer::clearPass(const RenderPass* renderPass, const Framebuffer* framebuffer) {
         backend->clearPass(renderPass, framebuffer);
     }
 
@@ -47,12 +67,16 @@ namespace CgEngine {
         backend->setPushConstants(pushConstants, pushConstantsCount);
     }
 
-    void Renderer::renderUnitQuad(const Material &material) {
-        backend->renderUnitQuad(material);
+    void Renderer::transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition) {
+        backend->transitionImageLayoutFromComputeToShaderReadOnly(attachment, stageUsingAttachmentAfterTransition);
     }
 
-    void Renderer::renderUnitCube(const Material &material) {
-        backend->renderUnitCube(material);
+    void Renderer::renderUnitQuad() {
+        backend->renderUnitQuad();
+    }
+
+    void Renderer::renderUnitCube() {
+        backend->renderUnitCube();
     }
 
 //    void Renderer::renderLines(const std::vector<LineDrawInfo>& lines) {
@@ -90,6 +114,14 @@ namespace CgEngine {
         backend->executeDrawCommand(vao, indexCount, baseIndex, baseVertex, instanceCount);
     }
 
+    void Renderer::executeDrawCommand(const VertexArrayObject* vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex) {
+        backend->executeDrawCommand(vao, indexCount, baseIndex, baseVertex);
+    }
+
+    void Renderer::drawArrays(const VertexArrayObject* vao, uint32_t vertexCount) {
+        backend->drawArrays(vao, vertexCount);
+    }
+
 //    void Renderer::executeCustomShaderDrawCommand(const VertexArrayObject& vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, uint32_t instanceCount, int tesselationPatchSize)  {
 //        CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
 //
@@ -125,6 +157,18 @@ namespace CgEngine {
 
         CG_LOGGING_DEBUG("Created Environment Map from: {0}", hdriPath)
         return {resourceManager.getResource<TextureCube>(hdriPath + "-irradiance"), resourceManager.getResource<TextureCube>(hdriPath + "-prefilter")};
+    }
+
+    const std::vector<VertexBufferLayout> Renderer::getUnitQuadVertexInputLayout() {
+        return backend->getUnitQuadVertexInputLayout();
+    }
+
+    const std::vector<VertexBufferLayout> Renderer::getUnitCubeVertexInputLayout() {
+        return backend->getUnitCubeVertexInputLayout();
+    }
+
+    const RenderPass* Renderer::getSwapChainRenderPass() {
+        return backend->getSwapChainRenderPass();
     }
 
     void Renderer::beginImGuiFrame() {

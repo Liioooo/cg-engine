@@ -64,6 +64,7 @@ namespace CgEngine {
         VertexBuffer& operator=(VertexBuffer& other) = delete;
 
         virtual void setData(const void* data, size_t size) = 0;
+        virtual void setSubData(size_t offset, const void* data, size_t size) = 0;
         virtual void setLayout(VertexBufferLayout layout) = 0;
         virtual void setLayout(std::vector<VertexBufferElement> elements) = 0;
 

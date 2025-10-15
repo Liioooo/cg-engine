@@ -1,4 +1,5 @@
 #include <FileSystem.h>
+#include <Asserts.h>
 #include "Helpers.h"
 #include "stbi_image.h"
 

@@ -1,6 +1,7 @@
 #version 450 core
 
 #include "CameraDataBuffer.glsl"
+#include "Macros.glsl"
 
 layout(location = 10) in VS_OUT {
     vec2 TexCoord;
@@ -10,7 +11,9 @@ layout (binding = 0) uniform sampler2D u_BloomTexture;
 
 layout(location = 0) out vec3 o_FragColor;
 
-layout(location = 0) uniform bool u_UseThreshold;
+PUSH_CONSTANT(BloomDownsamplePC, 10) {
+    bool useThreshold;
+} pc_bloomDownsample;
 
 vec3 prefilter(vec3 color) {
     // https://catlikecoding.com/unity/tutorials/advanced-rendering/bloom/ (3.2 Bloom Threshold)
@@ -67,7 +70,7 @@ void main() {
 
     o_FragColor *= 0.25f;
 
-    if (u_UseThreshold) {
+    if (pc_bloomDownsample.useThreshold) {
         o_FragColor = prefilter(o_FragColor);
     }
 

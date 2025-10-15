@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Rendering/TextureCube.h"
+#include "Rendering/DescriptorSet.h"
 #include "Component.h"
 #include "Resources/ResRef.h"
 
@@ -20,16 +21,19 @@ namespace CgEngine {
         using Params = SkyboxComponentParams;
 
         void onAttach(Scene& scene, SkyboxComponentParams& params);
+        void onDetach(Scene& scene) override;
         void onRenderImGui() override;
 
         const ResRef<TextureCube> getIrradianceMap() const;
         const ResRef<TextureCube> getPrefilterMap() const;
+        const DescriptorSet* getDescriptorSet() const;
         float getIntensity() const;
         float getLod() const;
 
     private:
         ResRef<TextureCube> irradianceMap;
         ResRef<TextureCube> prefilterMap;
+        DescriptorSet* descriptorSet = nullptr;
         float intensity;
         float lod;
     };

@@ -8,6 +8,8 @@
 #include "Scene/Scene.h"
 #include "Renderer.h"
 #include "CameraFrustum.h"
+#include "ComputePipeline.h"
+#include "GraphicsPipeline.h"
 
 namespace CgEngine {
 
@@ -51,9 +53,13 @@ namespace CgEngine {
 
         const RenderingStats& getRenderingStats();
 
-
     private:
         static const uint32_t MAX_OBJECTS = 20000;
+        static const uint32_t MAX_UI_QUADS = 5000;
+        static const uint32_t MAX_UI_INDICES = MAX_UI_QUADS * 6;
+        static const uint32_t MAX_UI_VERTICES = MAX_UI_QUADS * 4 * 2;
+        static const uint32_t MAX_UI_Z_LAYERS = 10;
+        static const uint32_t MAX_DEBUG_LINES = 1000;
 
         static const uint32_t maxBones = 200;
         static const uint32_t maxAnimatedComponents = 512;
@@ -72,14 +78,17 @@ namespace CgEngine {
 
         PushConstants* transformOffsetPushConstant;
 
+        DescriptorSet* environmentMapDescriptorSetBlack;
+
         RenderPass* dirShadowMapRenderPass;
+        GraphicsPipeline* dirShadowMapPipeline;
         Attachment* dirShadowMaps;
         Framebuffer* dirShadowMapFramebuffer;
         ShaderStorageBuffer* dirShadowMapTransformsBuffer;
         DescriptorSet* dirShadowMapDescriptorSet;
 
-
         RenderPass* gBufferRenderPass;
+        GraphicsPipeline* gBufferPipeline;
         Attachment* gBufferAlbedoRoughnessAttachment;
         Attachment* gBufferEmissionMetallicAttachment;
         Attachment* gBufferWorldNormalsAttachment;
@@ -89,45 +98,116 @@ namespace CgEngine {
         ShaderStorageBuffer* gBufferTransformsBuffer;
         DescriptorSet* gBufferDescriptorSet;
 
+        glm::uvec3 hbaoWorkGroupSize;
+
+        struct HbaoUVOffsetPushConstants {
+            int uvOffset;
+        };
+
+        PushConstants* hbaoUVOffsetPushConstants;
+
+        RenderPass* hbaoDeinterleavingRenderPass;
+        GraphicsPipeline* hbaoDeinterleavingPipeline;
+        Attachment* hbaoDeinterleavingAttachment;
+        std::array<Framebuffer*, 2> hbaoDeinterleavingFramebuffers;
+        DescriptorSet* hbaoDeinterleavingDescriptorSet;
+
+        ComputePipeline* hbaoComputePipeline;
+        Attachment* hbaoResult;
+        DescriptorSet* hbaoComputeDescriptorSet;
+
+        RenderPass* hbaoReinterleavingRenderPass;
+        GraphicsPipeline* hbaoReinterleavingPipeline;
+        Attachment* hbaoReinterleavingAttachment;
+        Framebuffer* hbaoReinterleavingFramebuffer;
+        DescriptorSet* hbaoReinterleavingDescriptorSet;
+
+        struct HbaoBlurPushConstants {
+            float sharpness;
+            glm::vec2 invResolutionDirection;
+        };
+
+        PushConstants* hbaoBlurPushConstants;
+
+        RenderPass* hbaoBlurRenderPass0;
+        RenderPass* hbaoBlurRenderPass1;
+        GraphicsPipeline* hbaoBlurPipeline0;
+        GraphicsPipeline* hbaoBlurPipeline1;
+        Attachment* hbaoBlurAttachment0;
+        Attachment* hbaoBlurAttachment1;
+        Framebuffer* hbaoBlurFramebuffer0;
+        Framebuffer* hbaoBlurFramebuffer1;
+        DescriptorSet* hbaoBlurDescriptorSet0;
+        DescriptorSet* hbaoBlurDescriptorSet1;
+
+        struct PbrPushConstants {
+            float environmentIntensity;
+        };
+
         RenderPass* pbrRenderPass;
-        RenderPass* screenRenderPass;
-        RenderPass* skyboxRenderPass;
+        GraphicsPipeline* pbrPipeline;
+        Attachment* pbrColorAttachment;
+        Framebuffer* pbrFramebuffer;
+        DescriptorSet* pbrDescriptorSet;
+        PushConstants* pbrPushConstants;
+
+        struct SkyboxPushConstants {
+            float intensity;
+            float lod;
+        };
+
+        RenderPass* afterPbrRenderPass;
+        Framebuffer* afterPbrFramebuffer;
+
+        GraphicsPipeline* skyboxPipeline;
+        PushConstants* skyboxPushConstants;
+
+        struct CollidersPushConstants {
+            glm::vec3 color;
+            int transformsOffset;
+        };
+        PushConstants* collidersPushConstants;
+
+        GraphicsPipeline* boundingBoxPipeline;
+        ShaderStorageBuffer* boundingBoxTransformsBuffer;
+        DescriptorSet* boundingBoxDescriptorSet;
+
+        GraphicsPipeline* physicsCollidersPipeline;
+        ShaderStorageBuffer* physicsCollidersTransformsBuffer;
+        DescriptorSet* physicsCollidersDescriptorSet;
+
+        GraphicsPipeline* normalsDebugPipeline;
+
+        struct BloomDownsamplePushConstants {
+            bool useThreshold;
+        };
         RenderPass* bloomDownSamplePass;
         RenderPass* bloomUpSamplePass;
-        RenderPass* uiCirclePass;
-        RenderPass* uiRectPass;
-        RenderPass* uiTextPass;
-        RenderPass* physicsCollidersRenderPass;
-        RenderPass* boundingBoxRenderPass;
-        RenderPass* normalsDebugRenderPass;
-        RenderPass* debugLinesRenderPass;
+        GraphicsPipeline* bloomDownsamplePipeline;
+        GraphicsPipeline* bloomUpsamplePipeline;
+        std::array<Attachment*, 7> bloomAttachments;
+        std::array<Framebuffer*, 7> bloomDownsampleFramebuffers;
+        std::array<Framebuffer*, 6> bloomUpsampleFramebuffers;
+        std::array<DescriptorSet*, 8> bloomDescriptorSets;
+        PushConstants* bloomDownsamplePushConstants;
+
+        GraphicsPipeline* screenPipeline;
+        DescriptorSet* screenDescriptorSet;
+
+        GraphicsPipeline* uiCirclePipeline;
+        GraphicsPipeline* uiRectPipeline;
+        std::array<DescriptorSet*, MAX_UI_Z_LAYERS> uiDescriptorSets;
+
+        GraphicsPipeline* uiTextPipeline;
+        std::array<DescriptorSet*, MAX_UI_Z_LAYERS> uiTextDescriptorSets;
+
+        GraphicsPipeline* debugLinesPipeline;
+        DescriptorSet* debugLinesDescriptorSet;
+
         RenderPass* customShaderForwardRenderPass;
         RenderPass* customShaderDeferredRenderPass;
 
-        RenderPass* hbaoDeinterleavingRenderPass;
-        RenderPass* hbaoReinterleavingRenderPass;
-        RenderPass* hbaoBlurRenderPass;
-
-
-//        ComputeShader hbaoShader;
-
-        Material pbrPassMaterial;
-        Material screenMaterial;
-        Material skyboxMaterial;
-        Material physicsCollidersMaterial;
-        Material boundingBoxMaterial;
-        Material normalsDebugMaterial;
-        Material emptyMaterial;
-
 //        ComputeShader skinningShader;
-
-        std::array<Texture2D*, 7> bloomTextures;
-
-//        Texture2DArray hbaoDeinterleavingDepthTexture;
-//        std::array<Texture2DView, 16> hbaoDeinterleavingDepthTextureViews;
-        std::array<Framebuffer*, 2> hbaoDeinterleavingFramebuffers;
-        glm::uvec3 hbaoWorkGroupSize;
-//        Texture2DArray hbaoResultTexture;
 
         CameraFrustum cameraFrustum;
 
@@ -259,6 +339,12 @@ namespace CgEngine {
             int transformsBufferOffset;
         };
 
+        struct DebugLineDrawInfo {
+            glm::vec3 from;
+            glm::vec3 to;
+            glm::vec3 color;
+        };
+
         std::map<MeshKey, DrawCommand> drawCommandQueue;
         std::map<MeshKey, std::vector<glm::mat4>> meshTransforms;
 
@@ -271,7 +357,7 @@ namespace CgEngine {
         std::map<MeshKey, DrawCommand> boundingBoxDrawCommandQueue;
         std::map<MeshKey, std::vector<glm::mat4>> boundingBoxMeshTransforms;
 
-        std::vector<LineDrawInfo> debugLinesDrawInfoQueue;
+        std::vector<DebugLineDrawInfo> debugLinesDrawInfoQueue;
 
         struct SkinningInfo {
             const VertexBuffer* originalVertexBuffer;
@@ -283,18 +369,41 @@ namespace CgEngine {
         std::vector<SkinningInfo> skinningQueue;
 
         struct CurrentSceneEnvironment {
-            uint32_t prefilterMapId;
-            uint32_t irradianceMapId;
+            const DescriptorSet* environmentMapDescriptorSet;
             float environmentIntensity;
             bool dirLightCastShadows;
         } currentSceneEnvironment;
+
+        struct UiCircleVertex {
+            glm::vec4 posUV;
+            glm::vec4 lineColor;
+            glm::vec4 fillColor;
+            float width;
+            float lineWidth;
+            float textureIndex;
+        };
+
+        struct UiRectVertex {
+            glm::vec4 posUV;
+            glm::vec4 lineColor;
+            glm::vec4 fillColor;
+            glm::vec2 size;
+            float lineWidth;
+            float textureIndex;
+        };
+
+        struct UiTextVertex {
+            glm::vec4 posUV;
+            glm::vec4 color;
+            float fontAtlasIndex;
+        };
 
         struct UiDrawInfo {
             uint32_t circleIndexCount = 0;
             std::vector<UiCircleVertex> circleVertices;
             uint32_t rectIndexCount = 0;
             std::vector<UiRectVertex> rectVertices;
-            std::array<const Texture2D*, Renderer::maxTextureSlots> textureSlots{};
+            std::array<const Texture2D*, 16> textureSlots{};
             uint32_t filledTextureSlots = 0;
 
             std::vector<UiTextVertex> textVertices;
@@ -324,10 +433,19 @@ namespace CgEngine {
 //        std::unordered_map<CustomShader*, std::vector<CustomShaderDrawCommand>> customShaderDeferredDrawCommandQueue;
 //        std::unordered_map<CustomShader*, std::vector<CustomShaderDrawCommand>> customShaderForwardDrawCommandQueue;
 
+        IndexBuffer* uiIndexBuffer;
+        VertexArrayObject* uiCircleVAO;
+        VertexArrayObject* uiRectVAO;
+        VertexArrayObject* uiTextVAO;
+
+        VertexArrayObject* debugLinesVAO;
+
         float findDrawInfoTextureIndex(UiDrawInfo& drawInfo, const Texture2D* texture) const;
         std::array<glm::vec4, 16> generateHBAOJitterNoise() const;
         size_t findCorrectLodIndex(const std::vector<float>& lodDistances, const glm::mat4& transform, size_t lodCount) const;
         void buildTransformBuffers();
+        void buildUiVertexBuffers();
+        void fillDebugLinesVertexBuffer();
 
         RenderingStats renderingStats;
         void resetRenderingStats();

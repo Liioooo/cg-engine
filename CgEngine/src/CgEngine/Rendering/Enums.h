@@ -55,7 +55,7 @@ namespace CgEngine {
     };
 
     enum class AttachmentType {
-        Depth, DepthStencil, RGBA8, RGBA16F, RG8, RG16F
+        Depth, DepthStencil, RGBA8, RGBA16F, RG8, RG16F, R16F
     };
 
     enum class DepthAttachmentFormat {
@@ -76,6 +76,17 @@ namespace CgEngine {
 
     enum class IndexBufferDataType {
         UInt8, UInt16, UInt32
+    };
+
+    enum class ShaderStage {
+        Undefined,
+        Fragment,
+        Compute,
+        FragmentAndCompute
+    };
+
+    enum class DrawMode {
+        Triangles, Patches, Lines
     };
 
 }

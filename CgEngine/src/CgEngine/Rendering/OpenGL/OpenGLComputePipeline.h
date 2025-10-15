@@ -18,9 +18,8 @@ namespace CgEngine {
         OpenGLComputePipeline& operator=(OpenGLComputePipeline& other) = delete;
 
         bool isReady() const override;
-        void dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) const override;
 
-        void bind() const;
+        uint32_t getOpenGLShaderHandle() const;
 
     private:
         uint32_t shaderHandle = ~0;

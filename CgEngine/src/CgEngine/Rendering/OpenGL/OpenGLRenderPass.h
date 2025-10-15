@@ -9,7 +9,7 @@ namespace CgEngine {
         OpenGLRenderPass() = default;
         explicit OpenGLRenderPass(const RenderPassSpecification& spec);
 
-        ~OpenGLRenderPass() override;
+        ~OpenGLRenderPass() override = default;
 
         OpenGLRenderPass(OpenGLRenderPass&& other) noexcept;
         OpenGLRenderPass& operator= (OpenGLRenderPass&& other) noexcept;
@@ -20,12 +20,9 @@ namespace CgEngine {
         bool isReady() const override;
 
         const RenderPassSpecification& getSpecification() const;
-        uint32_t getOpenGLShaderHandle() const;
-        unsigned int getDrawMode() const;
 
     private:
         RenderPassSpecification specification;
-        uint32_t shaderHandle = ~0;
         bool ready = false;
     };
 }

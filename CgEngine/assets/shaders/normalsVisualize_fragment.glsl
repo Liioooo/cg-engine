@@ -2,10 +2,15 @@
 
 layout(early_fragment_tests) in;
 
-layout(location = 0) uniform vec3 u_Color;
+#include "Macros.glsl"
+
+PUSH_CONSTANT(CollidersPC, 10) {
+    vec3 color;
+    int transformsOffset;
+} pc_colliders;
 
 layout(location = 0) out vec4 o_FragColor;
 
 void main() {
-    o_FragColor = vec4(u_Color.rgb, 1.0f);
+    o_FragColor = vec4(pc_colliders.color.rgb, 1.0f);
 }

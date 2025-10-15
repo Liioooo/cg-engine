@@ -1,9 +1,13 @@
 #version 450 core
 
+#include "Macros.glsl"
+
 layout(binding = 0) uniform samplerCube u_cubeMap;
 layout(binding = 1, rgba32f) restrict writeonly uniform imageCube o_prefilterMap;
 
-layout(location = 0) uniform float u_Roughness;
+PUSH_CONSTANT(PrefilterMapRoughnessPC, 10) {
+    float roughness;
+} pc_Roughness;
 
 const uint SAMPLE_COUNT = 1024u;
 const float INVERSE_SAMPLE_COUNT = 1.0f / float(SAMPLE_COUNT);
@@ -83,17 +87,17 @@ void main() {
 
     for (uint i = 0u; i < SAMPLE_COUNT; i++) {
         vec2 Xi = hammersley(i);
-        vec3 H = importanceSampleGGX(Xi, N, u_Roughness);
+        vec3 H = importanceSampleGGX(Xi, N, pc_Roughness.roughness);
         vec3 L = normalize(2.0f * dot(V, H) * H - V);
 
         float NdotL = max(dot(N, L), 0.0f);
         float NdotH = max(dot(N, H), 0.0f);
-        float D = distributionGGX(NdotH, u_Roughness);
+        float D = distributionGGX(NdotH, pc_Roughness.roughness);
         float HdotV = max(dot(H, V), 0.0f);
         float pdf = D * NdotH / (4.0f * HdotV) + 0.0001f;
 
         float saSample = 1.0f / (float(SAMPLE_COUNT) * pdf);
-        float mipLevel = u_Roughness == 0.0f ? 0.0f : 0.5f * log2(saSample / saTexel);
+        float mipLevel = pc_Roughness.roughness == 0.0f ? 0.0f : 0.5f * log2(saSample / saTexel);
 
         prefilteredColor += textureLod(u_cubeMap, L, mipLevel).rgb * NdotL;
         totalWeight += NdotL;

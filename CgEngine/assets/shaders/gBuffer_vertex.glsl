@@ -4,7 +4,7 @@
 #include "GBuffersVertex.glsl"
 #include "TransformsOffsetPC.glsl"
 
-layout(binding = 0, std430) buffer Transforms {
+layout(binding = 1, std430) buffer Transforms {
     mat4 transforms[];
 } b_Transforms;
 

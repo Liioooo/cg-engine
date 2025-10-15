@@ -5,7 +5,7 @@
 
 namespace CgEngine {
 
-    OpenGLAttachment::OpenGLAttachment(const AttachmentSpecification& spec) : usableAsTexture(spec.usableAsTexture), type(spec.type), mipMapFiltering(spec.mipMapFiltering), textureWrap(spec.textureWrap), textureBorderColor(spec.textureBorderColor), layerCount(spec.layerCount) {
+    OpenGLAttachment::OpenGLAttachment(const AttachmentSpecification& spec) : usableAsTexture(spec.usableAsTexture), type(spec.type), mipMapFiltering(spec.mipMapFiltering), textureWrap(spec.textureWrap), textureBorderColor(spec.textureBorderColor), layerCount(spec.layerCount), width(spec.width), height(spec.height) {
         GLenum target = (spec.layerCount > 1) ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
 
         glCreateTextures(target, 1, &attachmentHandle);
@@ -137,6 +137,14 @@ namespace CgEngine {
         return layerCount;
     }
 
+    uint32_t OpenGLAttachment::getWidth() const {
+        return width;
+    }
+
+    uint32_t OpenGLAttachment::getHeight() const {
+        return height;
+    }
+
     void OpenGLAttachment::resize(uint32_t newWidth, uint32_t newHeight) {
         if (attachmentHandle != ~0) {
             glDeleteTextures(1, &attachmentHandle);
@@ -144,6 +152,9 @@ namespace CgEngine {
         for (auto handle : layerViewHandles) {
             glDeleteTextures(1, &handle);
         }
+
+        width = newWidth;
+        height = newHeight;
 
         GLenum target = (layerCount > 1) ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
 

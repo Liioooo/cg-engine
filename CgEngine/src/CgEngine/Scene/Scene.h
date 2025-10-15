@@ -41,8 +41,7 @@ namespace CgEngine {
     };
 
     struct SceneEnvironment {
-        const TextureCube* irradianceMap;
-        const TextureCube* prefilterMap;
+        const DescriptorSet* environmentMapDescriptorSet = nullptr;
         float environmentLod;
         float environmentIntensity;
     };

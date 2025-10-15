@@ -23,7 +23,6 @@ namespace CgEngine {
         ComputePipeline& operator=(ComputePipeline& other) = delete;
 
         virtual bool isReady() const = 0;
-        virtual void dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) const = 0;
     };
 
 }

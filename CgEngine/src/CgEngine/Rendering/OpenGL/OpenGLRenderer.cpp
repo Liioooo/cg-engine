@@ -86,46 +86,6 @@ namespace CgEngine {
         unitCubeVAO.addVertexBuffer(unitCubeVertexBuffer);
         unitCubeVAO.setIndexBuffer(new OpenGLIndexBuffer(unitCubeIndices, 36));
 
-        linesVAO = OpenGLVertexArrayObject();
-        auto* linesVertexBuffer = new OpenGLVertexBuffer(0, VertexBufferUsage::Dynamic);
-        linesVertexBuffer->setLayout({{ShaderDataType::Float3, false}, {ShaderDataType::Float3, false}});
-        linesVAO.addVertexBuffer(linesVertexBuffer);
-
-        auto* uiIndices = new uint32_t[MAX_UI_INDICES];
-
-        uint32_t offset = 0;
-        for (uint32_t i = 0; i < MAX_UI_INDICES; i += 6) {
-            uiIndices[i + 0] = offset + 0;
-            uiIndices[i + 1] = offset + 1;
-            uiIndices[i + 2] = offset + 2;
-
-            uiIndices[i + 3] = offset + 2;
-            uiIndices[i + 4] = offset + 3;
-            uiIndices[i + 5] = offset + 0;
-
-            offset += 4;
-        }
-
-        uiIndexBuffer = OpenGLIndexBuffer(uiIndices, MAX_UI_INDICES, IndexBufferDataType::UInt32);
-
-        uiCircleVAO = OpenGLVertexArrayObject();
-        auto* uiCircleVertexBuffer = new OpenGLVertexBuffer(0, VertexBufferUsage::Dynamic);
-        uiCircleVertexBuffer->setLayout({{ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float, false}, {ShaderDataType::Float, false}, {ShaderDataType::Float, false}});
-        uiCircleVAO.addVertexBuffer(uiCircleVertexBuffer);
-        uiCircleVAO.useExistingIndexBuffer(&uiIndexBuffer);
-
-        uiRectVAO = OpenGLVertexArrayObject();
-        auto* uiRectVertexBuffer = new OpenGLVertexBuffer(0, VertexBufferUsage::Dynamic);
-        uiRectVertexBuffer->setLayout({{ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float2, false}, {ShaderDataType::Float, false}, {ShaderDataType::Float, false}});
-        uiRectVAO.addVertexBuffer(uiRectVertexBuffer);
-        uiRectVAO.useExistingIndexBuffer(&uiIndexBuffer);
-
-        uiTextVAO = OpenGLVertexArrayObject();
-        auto* uiTextVertexBuffer = new OpenGLVertexBuffer(0, VertexBufferUsage::Dynamic);
-        uiTextVertexBuffer->setLayout({{ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float, false}});
-        uiTextVAO.addVertexBuffer(uiTextVertexBuffer);
-        uiTextVAO.useExistingIndexBuffer(&uiIndexBuffer);
-
         isWireframe = false;
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         isBackFaceCulling = true;
@@ -160,41 +120,91 @@ namespace CgEngine {
 
         brdfLUT = OpenGLTexture2D(FileSystem::getAsEnginePath("ibl_brdf_lut.png"), false, TextureWrap::Clamp, MipMapFiltering::Bilinear);
 
-//        transformsBuffer = ShaderStorageBuffer();
-//        transformsBuffer.bind(0);
-//
-//        environmentMapSphereToCube = ComputeShader("sphereToCube");
-//        environmentMapPrefilterMap = ComputeShader("prefilterMap");
-//        environmentMapIrradianceMap = ComputeShader("irradianceMap");
+        ComputePipelineSpecification environmentMapSphereToCubeSpec{};
+        environmentMapSphereToCubeSpec.engineShaderName = "sphereToCube";
+        computeEnvironmentMapSphereToCube = OpenGLComputePipeline(environmentMapSphereToCubeSpec);
+
+        ComputePipelineSpecification environmentMapPrefilterMapSpec{};
+        environmentMapPrefilterMapSpec.engineShaderName = "prefilterMap";
+        computeEnvironmentMapPrefilterMap = OpenGLComputePipeline(environmentMapPrefilterMapSpec);
+
+        ComputePipelineSpecification environmentMapIrradianceMapSpec{};
+        environmentMapIrradianceMapSpec.engineShaderName = "irradianceMap";
+        computeEnvironmentMapIrradianceMap = OpenGLComputePipeline(environmentMapIrradianceMapSpec);
+
+        RenderPassSpecification swapChainRenderPassSpec{};
+        swapChainRenderPassSpec.clearDepthAttachment = true;
+        swapChainRenderPassSpec.clearColorAttachments = true;
+        swapChainRenderPassSpec.clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
+        swapChainRenderPassSpec.hasDepthStencilAttachment = true;
+
+        swapChainRenderPass = OpenGLRenderPass(swapChainRenderPassSpec);
+
+        swapChainFramebuffer = OpenGLFramebuffer(window.getFramebufferWidth(), window.getFramebufferHeight(), true);
     }
 
     void OpenGLRenderer::shutdown() {
         shutdownImGui();
     }
 
-    void OpenGLRenderer::beginFrame(const Window& window) {
+    void OpenGLRenderer::setFramebufferResized() {
+        framebufferResized = true;
+    }
 
+    void OpenGLRenderer::beginFrame(const Window& window) {
+        if (framebufferResized && window.getFramebufferWidth() > 0 && window.getFramebufferHeight() > 0) {
+           swapChainFramebuffer.recreate(window.getFramebufferWidth(), window.getFramebufferHeight());
+        }
+
+        framebufferResized = false;
     }
 
     void OpenGLRenderer::endFrame(const Window& window) {
         glfwSwapBuffers(&window.getWindowHandle());
     }
 
-    void OpenGLRenderer::beginRenderPass(const RenderPass* renderPass, const Framebuffer* framebuffer, const DescriptorSet* descriptorSet) {
+    void OpenGLRenderer::beginRenderPass(const RenderPass* renderPass, const Framebuffer* framebuffer) {
         CG_ASSERT(currentRenderPass == nullptr, "There already is an active RenderPass!")
 
         currentRenderPass = static_cast<const OpenGLRenderPass*>(renderPass);
         const RenderPassSpecification& spec = currentRenderPass->getSpecification();
 
-        glUseProgram(currentRenderPass->getOpenGLShaderHandle());
-
-        if (descriptorSet) {
-            static_cast<const OpenGLDescriptorSet*>(descriptorSet)->bind();
-        }
-
         auto* fb = static_cast<const OpenGLFramebuffer*>(framebuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, fb->getOpenGLHandle());
         glViewport(0, 0, static_cast<int>(fb->getWidth()), static_cast<int>(fb->getHeight()));
+
+        if (spec.clearColorAttachments) {
+            const glm::vec4& clearColor = spec.clearColor;
+            glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+            glClear(GL_COLOR_BUFFER_BIT);
+        }
+        if (spec.clearDepthAttachment) {
+            glDepthMask(GL_TRUE);
+            glClear(GL_DEPTH_BUFFER_BIT);
+            depthWrite = true;
+        }
+        if (spec.clearStencilBuffer) {
+            glClear(GL_STENCIL_BUFFER_BIT);
+        }
+    }
+
+    void OpenGLRenderer::beginSwapChainRenderPass() {
+        beginRenderPass(&swapChainRenderPass, &swapChainFramebuffer);
+    }
+
+    void OpenGLRenderer::endRenderPass() {
+        CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
+        currentRenderPass = nullptr;
+        currentGraphicsPipeline = nullptr;
+    }
+
+    void OpenGLRenderer::bindGraphicsPipeline(const GraphicsPipeline* graphicsPipeline) {
+        CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
+
+        currentGraphicsPipeline = static_cast<const OpenGLGraphicsPipeline*>(graphicsPipeline);
+        const GraphicsPipelineSpecification& spec = currentGraphicsPipeline->getSpecification();
+
+        glUseProgram(currentGraphicsPipeline->getOpenGLShaderHandle());
 
         if (isWireframe != spec.wireframe) {
             isWireframe = spec.wireframe;
@@ -237,7 +247,7 @@ namespace CgEngine {
         }
         if (depthCompareOperator != spec.depthCompareOperator) {
             depthCompareOperator = spec.depthCompareOperator;
-            glDepthFunc(static_cast<GLint>(depthCompareOperator));
+            glDepthFunc(OpenGLHelpers::depthCompareOperatorToOpenGL(spec.depthCompareOperator));
         }
         if (useBlending != spec.useBlending) {
             useBlending = spec.useBlending;
@@ -249,35 +259,27 @@ namespace CgEngine {
         }
         if (blendingEquation != spec.blendingEquation) {
             blendingEquation = spec.blendingEquation;
-            glBlendEquation(static_cast<GLint>(blendingEquation));
+            glBlendEquation(OpenGLHelpers::blendingEquationToOpenGL(blendingEquation));
         }
         if (srcBlendingFunction != spec.srcBlendingFunction || destBlendingFunction != spec.destBlendingFunction) {
             srcBlendingFunction = spec.srcBlendingFunction;
             destBlendingFunction = spec.destBlendingFunction;
-            glBlendFunc(static_cast<GLint>(srcBlendingFunction), static_cast<GLint>(destBlendingFunction));
+            glBlendFunc(OpenGLHelpers::blendingFunctionToOpenGL(srcBlendingFunction), OpenGLHelpers::blendingFunctionToOpenGL(destBlendingFunction));
         }
 
-        if (spec.clearColorAttachments) {
-            const glm::vec4& clearColor = spec.clearColor;
-            glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-            glClear(GL_COLOR_BUFFER_BIT);
-        }
-        if (spec.clearDepthAttachment) {
-            glClear(GL_DEPTH_BUFFER_BIT);
-        }
-        if (spec.clearStencilBuffer) {
-            glClear(GL_STENCIL_BUFFER_BIT);
-        }
-
-        if (spec.tesselationPatchSize != ~0 && spec.tesselationPatchSize != tessellationPatchSize) {
+        if (spec.drawMode == DrawMode::Patches && spec.tesselationPatchSize != tessellationPatchSize) {
             tessellationPatchSize = spec.tesselationPatchSize;
             glPatchParameteri(GL_PATCH_VERTICES, tessellationPatchSize);
         }
     }
 
-    void OpenGLRenderer::endRenderPass() {
-        CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
-        currentRenderPass = nullptr;
+    void OpenGLRenderer::bindComputePipeline(const ComputePipeline* computePipeline) {
+        auto* glComputePipeline = static_cast<const OpenGLComputePipeline*>(computePipeline);
+        glUseProgram(glComputePipeline->getOpenGLShaderHandle());
+    }
+
+    void OpenGLRenderer::dispatchCompute(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
+        glDispatchCompute(groupCountX, groupCountY, groupCountZ);
     }
 
     void OpenGLRenderer::clearPass(const RenderPass* renderPass, const Framebuffer* framebuffer) {
@@ -295,7 +297,9 @@ namespace CgEngine {
             glClear(GL_COLOR_BUFFER_BIT);
         }
         if (spec.clearDepthAttachment) {
+            glDepthMask(GL_TRUE);
             glClear(GL_DEPTH_BUFFER_BIT);
+            depthWrite = true;
         }
         if (spec.clearStencilBuffer) {
             glClear(GL_STENCIL_BUFFER_BIT);
@@ -310,31 +314,58 @@ namespace CgEngine {
     void OpenGLRenderer::setPushConstants(const std::array<PushConstants*, 2>& pushConstants, uint32_t pushConstantsCount) {
         for (uint32_t i = 0; i < pushConstantsCount; i++) {
             const auto* pc = static_cast<const OpenGLPushConstants*>(pushConstants[i]);
-            pc->upload(currentRenderPass->getOpenGLShaderHandle());
+            pc->upload(currentGraphicsPipeline->getOpenGLShaderHandle());
         }
     }
 
-    void OpenGLRenderer::renderUnitQuad(const Material& material) {
-        CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
-
-        quadVAO.bind();
-        glDrawElements(GL_TRIANGLES, quadVAO.getIndexBuffer()->getIndexCount(), GL_UNSIGNED_INT, nullptr);
+    void OpenGLRenderer::transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition) {
+        glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
     }
 
-    void OpenGLRenderer::renderUnitCube(const Material& material) {
+    void OpenGLRenderer::renderUnitQuad() {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
+        CG_ASSERT(currentGraphicsPipeline != nullptr, "There is no active GraphicsPipeline!")
+
+        quadVAO.bind();
+        glDrawElements(GL_TRIANGLES, quadVAO.getIndexBuffer()->getIndexCount(), OpenGLHelpers::getOpenGLIndexType(quadVAO.getIndexBuffer()->getDataType()), nullptr);
+    }
+
+    void OpenGLRenderer::renderUnitCube() {
+        CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
+        CG_ASSERT(currentGraphicsPipeline != nullptr, "There is no active GraphicsPipeline!")
 
         unitCubeVAO.bind();
-        glDrawElements(GL_TRIANGLES, unitCubeVAO.getIndexBuffer()->getIndexCount(), GL_UNSIGNED_INT, nullptr);
+        glDrawElements(GL_TRIANGLES, unitCubeVAO.getIndexBuffer()->getIndexCount(), OpenGLHelpers::getOpenGLIndexType(unitCubeVAO.getIndexBuffer()->getDataType()), nullptr);
     }
 
     void OpenGLRenderer::executeDrawCommand(const VertexArrayObject* vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, uint32_t instanceCount) {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
+        CG_ASSERT(currentGraphicsPipeline != nullptr, "There is no active GraphicsPipeline!")
 
         auto* glVao = static_cast<const OpenGLVertexArrayObject*>(vao);
 
         glVao->bind();
-        glDrawElementsInstancedBaseVertex(currentRenderPass->getDrawMode(), indexCount, GL_UNSIGNED_INT, (void*)(baseIndex * sizeof(uint32_t)), instanceCount, baseVertex);
+        glDrawElementsInstancedBaseVertex(currentGraphicsPipeline->getDrawMode(), indexCount, OpenGLHelpers::getOpenGLIndexType(glVao->getIndexBuffer()->getDataType()), (void*)(baseIndex * sizeof(uint32_t)), instanceCount, baseVertex);
+    }
+
+    void OpenGLRenderer::executeDrawCommand(const CgEngine::VertexArrayObject* vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex) {
+        CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
+        CG_ASSERT(currentGraphicsPipeline != nullptr, "There is no active GraphicsPipeline!")
+
+        auto* glVao = static_cast<const OpenGLVertexArrayObject*>(vao);
+
+        glVao->bind();
+        glDrawElementsBaseVertex(currentGraphicsPipeline->getDrawMode(), indexCount, OpenGLHelpers::getOpenGLIndexType(glVao->getIndexBuffer()->getDataType()), (void*)(baseIndex * sizeof(uint32_t)), baseVertex);
+    }
+
+    void OpenGLRenderer::drawArrays(const VertexArrayObject* vao, uint32_t vertexCount) {
+        CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
+        CG_ASSERT(currentGraphicsPipeline != nullptr, "There is no active GraphicsPipeline!")
+
+        auto* glVao = static_cast<const OpenGLVertexArrayObject*>(vao);
+
+        glVao->bind();
+        glDrawArrays(currentGraphicsPipeline->getDrawMode(), 0, vertexCount);
     }
 
     Texture2D* OpenGLRenderer::getWhiteTexture() {
@@ -358,41 +389,62 @@ namespace CgEngine {
 
         OpenGLTextureCube cubeMap(TextureFormat::Float32A, MAP_SIZE, MAP_SIZE, MipMapFiltering::Bilinear);
 
-//        environmentMapSphereToCube.bind();
-//        environmentMapSphereToCube.setTexture2D(sphereMap, 0);
-//        environmentMapSphereToCube.setImageCube(cubeMap, 1, ShaderStorageAccess::WriteOnly, 0);
-//        environmentMapSphereToCube.dispatch(MAP_SIZE / 32, MAP_SIZE / 32, 6);
-//        environmentMapSphereToCube.waitForMemoryBarrier({MemoryBarrierBit::All});
-//
-//        cubeMap.generateMipMaps();
-//        TextureUtils::applyMipMapFiltering(MipMapFiltering::Trilinear, GL_TEXTURE_CUBE_MAP);
+        glUseProgram(computeEnvironmentMapSphereToCube.getOpenGLShaderHandle());
+        glBindTextureUnit(0, sphereMap.getOpenGLHandle());
+        glBindImageTexture(1, cubeMap.getOpenGLHandle(), 0, GL_TRUE, 0, OpenGLHelpers::shaderImageAccessToOpenGL(ShaderImageAccess::WriteOnly), OpenGLHelpers::getOpenGLTextureFormatForImageBind(cubeMap.getFormat()));
+        glDispatchCompute(MAP_SIZE / 32, MAP_SIZE / 32, 6);
+        glMemoryBarrier(GL_ALL_BARRIER_BITS);
+        cubeMap.generateMipMaps();
+        OpenGLHelpers::applyMipMapFiltering(MipMapFiltering::Trilinear, GL_TEXTURE_CUBE_MAP);
 
         uint32_t mipCount = Helpers::calculateMipCount(MAP_SIZE, MAP_SIZE);
 
         auto* prefilterMap = new OpenGLTextureCube(TextureFormat::Float32A, MAP_SIZE, MAP_SIZE, MipMapFiltering::Trilinear);
         prefilterMap->generateMipMaps();
 
-//        environmentMapPrefilterMap.bind();
-//        environmentMapPrefilterMap.setTextureCube(cubeMap, 0);
+        struct PrefilterPushConstants {
+            float roughness;
+        } prefilterPushConstantsData{};
 
-//        for (uint32_t i = 0, size = MAP_SIZE; i < mipCount; i++, size /= 2) {
-//            uint32_t numGroups = glm::max(1u, size / 32);
-//            float roughness = static_cast<float>(i) / static_cast<float>(mipCount - 1);
-//            environmentMapPrefilterMap.setFloat("u_Roughness", roughness);
-//            environmentMapPrefilterMap.setImageCube(*prefilterMap, 1, ShaderStorageAccess::WriteOnly, i);
-//            environmentMapPrefilterMap.dispatch(numGroups, numGroups, 6);
-//            environmentMapPrefilterMap.waitForMemoryBarrier({MemoryBarrierBit::All});
-//        }
+        OpenGLPushConstants pushConstants("pc_Roughness");
+        pushConstants.init<PrefilterPushConstants>();
+        pushConstants.mapUniform(&PrefilterPushConstants::roughness, "roughness");
+
+        glUseProgram(computeEnvironmentMapPrefilterMap.getOpenGLShaderHandle());
+        glBindTextureUnit(0, cubeMap.getOpenGLHandle());
+
+        for (uint32_t i = 0, size = MAP_SIZE; i < mipCount; i++, size /= 2) {
+            uint32_t numGroups = glm::max(1u, size / 32);
+            float roughness = static_cast<float>(i) / static_cast<float>(mipCount - 1);
+            prefilterPushConstantsData.roughness = roughness;
+            pushConstants.setData(&prefilterPushConstantsData, sizeof(PrefilterPushConstants));
+            pushConstants.upload(computeEnvironmentMapPrefilterMap.getOpenGLShaderHandle());
+            glBindImageTexture(1, prefilterMap->getOpenGLHandle(), static_cast<int>(i), GL_TRUE, 0, OpenGLHelpers::shaderImageAccessToOpenGL(ShaderImageAccess::WriteOnly), OpenGLHelpers::getOpenGLTextureFormatForImageBind(prefilterMap->getFormat()));
+            glDispatchCompute(numGroups, numGroups, 6);
+            glMemoryBarrier(GL_ALL_BARRIER_BITS);
+        }
 
         auto* irradianceMap = new OpenGLTextureCube(TextureFormat::Float32A, 32, 32, MipMapFiltering::Bilinear);
 
-//        environmentMapIrradianceMap.bind();
-//        environmentMapIrradianceMap.setTextureCube(*prefilterMap, 0);
-//        environmentMapIrradianceMap.setImageCube(*irradianceMap, 1, ShaderStorageAccess::WriteOnly);
-//        environmentMapIrradianceMap.dispatch(irradianceMap->getWidth() / 2, irradianceMap->getWidth() / 2, 6);
-//        environmentMapIrradianceMap.waitForMemoryBarrier({MemoryBarrierBit::All});
+        glUseProgram(computeEnvironmentMapIrradianceMap.getOpenGLShaderHandle());
+        glBindTextureUnit(0, prefilterMap->getOpenGLHandle());
+        glBindImageTexture(1, irradianceMap->getOpenGLHandle(), 0, GL_TRUE, 0, OpenGLHelpers::shaderImageAccessToOpenGL(ShaderImageAccess::WriteOnly), OpenGLHelpers::getOpenGLTextureFormatForImageBind(irradianceMap->getFormat()));
+        glDispatchCompute(irradianceMap->getWidth() / 2, irradianceMap->getWidth() / 2, 6);
+        glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
         return {irradianceMap, prefilterMap};
+    }
+
+    const std::vector<VertexBufferLayout> OpenGLRenderer::getUnitQuadVertexInputLayout() {
+        return quadVAO.getLayout();
+    }
+
+    const std::vector<VertexBufferLayout> OpenGLRenderer::getUnitCubeVertexInputLayout() {
+        return unitCubeVAO.getLayout();
+    }
+
+    const RenderPass* OpenGLRenderer::getSwapChainRenderPass() {
+        return &swapChainRenderPass;
     }
 
     void OpenGLRenderer::beginImGuiFrame() {

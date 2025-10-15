@@ -321,13 +321,11 @@ namespace CgEngine {
 
         auto skyboxComponentIt = componentManager->cbegin<SkyboxComponent>();
         if (skyboxComponentIt != componentManager->cend<SkyboxComponent>()) {
-            sceneEnvironment.irradianceMap = skyboxComponentIt->getIrradianceMap().get();
-            sceneEnvironment.prefilterMap = skyboxComponentIt->getPrefilterMap().get();
+            sceneEnvironment.environmentMapDescriptorSet = skyboxComponentIt->getDescriptorSet();
             sceneEnvironment.environmentIntensity = skyboxComponentIt->getIntensity();
             sceneEnvironment.environmentLod = skyboxComponentIt->getLod();
         } else {
-            sceneEnvironment.irradianceMap = Renderer::getBlackCubeTexture();
-            sceneEnvironment.prefilterMap = Renderer::getBlackCubeTexture();
+            sceneEnvironment.environmentMapDescriptorSet = nullptr;
             sceneEnvironment.environmentIntensity = 0.0f;
             sceneEnvironment.environmentLod = 1.0f;
         }

@@ -34,6 +34,7 @@ namespace CgEngine::ImGuiWidgets {
     }
 
     void copyCurrentConfig(const std::string& compName, const std::function<void(std::unordered_map<std::string, std::string>&)>& getConfigMap) {
+        ImGui::PushID(compName.c_str());
         if (ImGui::Button("Copy Config")) {
             std::unordered_map<std::string, std::string> configMap;
             getConfigMap(configMap);
@@ -49,6 +50,7 @@ namespace CgEngine::ImGuiWidgets {
             doc.print(stream);
             Application::get().getWindow().setClipboardText(stream.str().c_str());
         }
+        ImGui::PopID();
     }
 
 }

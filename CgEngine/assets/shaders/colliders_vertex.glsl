@@ -1,9 +1,15 @@
 #version 450 core
 
 #include "CameraDataBuffer.glsl"
-#include "TransformsOffsetPC.glsl"
 
-layout(binding = 0, std430) buffer Transforms {
+#include "Macros.glsl"
+
+PUSH_CONSTANT(CollidersPC, 10) {
+    vec3 color;
+    int transformsOffset;
+} pc_colliders;
+
+layout(binding = 1, std430) buffer Transforms {
     mat4 transforms[];
 } b_Transforms;
 
@@ -14,6 +20,6 @@ layout (location = 3) in vec4 a_Bitangent;
 layout (location = 4) in vec4 a_TexCoord;
 
 void main() {
-    mat4 model = b_Transforms.transforms[gl_InstanceID];
+    mat4 model = b_Transforms.transforms[pc_colliders.transformsOffset + gl_InstanceID];
     gl_Position = u_CameraData.viewProjection * model * a_Pos;
 }

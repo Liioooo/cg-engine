@@ -31,6 +31,8 @@ namespace CgEngine {
         virtual DepthAttachmentFormat getDepthAttachmentFormat() const = 0;
         virtual bool isUsableAsTexture() const = 0;
         virtual uint32_t getLayerCount() const = 0;
+        virtual uint32_t getWidth() const = 0;
+        virtual uint32_t getHeight() const = 0;
 
         virtual void resize(uint32_t newWidth, uint32_t newHeight) = 0;
     };

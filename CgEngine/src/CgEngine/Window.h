@@ -25,8 +25,8 @@ namespace CgEngine {
         void setVsync(bool enabled);
         inline bool isVsync();
         void pollEvents();
-        int getWidth();
-        int getHeight();
+        int getWidth() const;
+        int getHeight() const;
         int getFramebufferWidth() const;
         int getFramebufferHeight() const;
         GLFWwindow& getWindowHandle() const;

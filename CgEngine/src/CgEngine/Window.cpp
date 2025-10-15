@@ -164,11 +164,11 @@ namespace CgEngine {
         glfwPollEvents();
     }
 
-    int Window::getWidth() {
+    int Window::getWidth() const {
         return windowWidth;
     }
 
-    int Window::getHeight() {
+    int Window::getHeight() const {
         return windowHeight;
     }
 

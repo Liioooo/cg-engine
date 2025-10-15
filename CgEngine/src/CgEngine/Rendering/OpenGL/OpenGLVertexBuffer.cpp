@@ -54,6 +54,15 @@ namespace CgEngine {
         glBufferData(GL_ARRAY_BUFFER, size, data, getOpenGLUsage(usage));
     }
 
+    void OpenGLVertexBuffer::setSubData(size_t offset, const void* data, size_t size) {
+        CG_ASSERT(vbo != ~0 || usage == VertexBufferUsage::Dynamic, "Static VertexBuffer cannot be updated")
+
+        if (vbo == ~0) {
+            glCreateBuffers(1, &vbo);
+        }
+        glNamedBufferSubData(vbo, offset, size, data);
+    }
+
     void OpenGLVertexBuffer::setLayout(VertexBufferLayout layout) {
         this->layout = layout;
     }

@@ -16,6 +16,8 @@
 #include "Rendering/OpenGL/OpenGLDescriptorSet.h"
 #include "Rendering/OpenGL/OpenGLTextureCube.h"
 #include "Rendering/OpenGL/OpenGLPushConstants.h"
+#include "Rendering/OpenGL/OpenGLComputePipeline.h"
+#include "Rendering/OpenGL/OpenGLGraphicsPipeline.h"
 
 namespace CgEngine {
 
@@ -317,6 +319,42 @@ namespace CgEngine {
                 return nullptr;
             case GraphicsAPI::OpenGL:
                 return new OpenGLPushConstants(std::move(prefix));
+        }
+    }
+
+    ComputePipeline* GraphicsObjectsFactory::createComputePipeline() {
+        switch (api) {
+            case GraphicsAPI::Vulkan:
+                return nullptr;
+            case GraphicsAPI::OpenGL:
+                return new OpenGLComputePipeline();
+        }
+    }
+
+    ComputePipeline* GraphicsObjectsFactory::createComputePipeline(const ComputePipelineSpecification& spec) {
+        switch (api) {
+            case GraphicsAPI::Vulkan:
+                return nullptr;
+            case GraphicsAPI::OpenGL:
+                return new OpenGLComputePipeline(spec);
+        }
+    }
+
+    GraphicsPipeline* GraphicsObjectsFactory::createGraphicsPipeline() {
+        switch (api) {
+            case GraphicsAPI::Vulkan:
+                return nullptr;
+            case GraphicsAPI::OpenGL:
+                return new OpenGLGraphicsPipeline();
+        }
+    }
+
+    GraphicsPipeline* GraphicsObjectsFactory::createGraphicsPipeline(const GraphicsPipelineSpecification& spec) {
+        switch (api) {
+            case GraphicsAPI::Vulkan:
+                return nullptr;
+            case GraphicsAPI::OpenGL:
+                return new OpenGLGraphicsPipeline(spec);
         }
     }
 

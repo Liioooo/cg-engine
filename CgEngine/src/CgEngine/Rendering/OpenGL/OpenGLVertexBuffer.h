@@ -19,6 +19,7 @@ namespace CgEngine {
         OpenGLVertexBuffer& operator=(OpenGLVertexBuffer& other) = delete;
 
         void setData(const void* data, size_t size) override;
+        void setSubData(size_t offset, const void* data, size_t size) override;
         void setLayout(VertexBufferLayout layout) override;
         void setLayout(std::vector<VertexBufferElement> elements) override;
 

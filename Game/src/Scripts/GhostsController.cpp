@@ -107,6 +107,8 @@ namespace Game {
                 break;
             }
         }
+
+        debugDrawMap();
     }
 
     void GhostsController::fixedUpdate(CgEngine::TimeStep ts) {

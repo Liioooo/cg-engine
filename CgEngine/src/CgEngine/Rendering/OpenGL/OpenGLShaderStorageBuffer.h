@@ -22,7 +22,7 @@ namespace CgEngine {
         size_t getSize() const override;
 
         void setData(const void* data, size_t size) override;
-        void setSubData(size_t offset, const void* data, size_t size);
+        void setSubData(size_t offset, const void* data, size_t size) override;
 
         uint32_t getOpenGLHandle() const;
 

@@ -3,7 +3,6 @@
 
 #include "LightCalculationsHelperFragment.glsl"
 
-layout(location = 0) uniform float u_EnvironmentIntensity;
 layout(binding = 5) uniform samplerCube u_IrradianceMap;
 layout(binding = 6) uniform samplerCube u_PrefilterMap;
 layout(binding = 7) uniform sampler2D u_BrdfLUT;

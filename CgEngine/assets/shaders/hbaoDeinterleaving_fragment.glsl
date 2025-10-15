@@ -6,10 +6,14 @@ From https://github.com/nvpro-samples/gl_ssao/blob/master/hbao_deinterleave.frag
 
 #include "CameraDataBuffer.glsl"
 #include "ScreenDataBuffer.glsl"
+#include "Macros.glsl"
+
+PUSH_CONSTANT(HbaoUvOffset, 10) {
+    int uvOffset;
+} pc_uvOffset;
+
 
 layout(binding = 0) uniform sampler2D u_Depth;
-
-layout(location = 0) uniform int u_UVOffsetIndex;
 
 layout(location = 0) out float out_Color[8];
 
@@ -37,7 +41,7 @@ vec4 linearizeDepth(vec4 deviceZs) {
 }
 
 void main() {
-    vec2 uv = floor(gl_FragCoord.xy) * 4.0f + UV_OFFSETS[u_UVOffsetIndex] + 0.5f;
+    vec2 uv = floor(gl_FragCoord.xy) * 4.0f + UV_OFFSETS[pc_uvOffset.uvOffset] + 0.5f;
     uv *= u_ScreenData.invFullResolution;
 
     vec4 S0 = linearizeDepth(textureGather(u_Depth, uv, 0));

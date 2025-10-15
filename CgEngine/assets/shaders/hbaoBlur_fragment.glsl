@@ -6,14 +6,18 @@ From https://github.com/nvpro-samples/gl_ssao/blob/master/hbao_blur.frag.glsl
 
 #pragma optionNV(unroll all)
 
+#include "Macros.glsl"
+
 layout(location = 10) in VS_OUT {
     vec2 TexCoord;
 } fs_in;
 
 const float KERNEL_RADIUS = 3;
 
-layout(location = 0) uniform float u_Sharpness;
-layout(location = 1) uniform vec2 u_InvResolutionDirection; // either set x to 1/width or y to 1/height
+PUSH_CONSTANT(HbaoBlurPC, 10) {
+    float sharpness;
+    vec2 invResolutionDirection;
+} pc_hbaoBlur;
 
 layout(binding = 0) uniform sampler2D u_InputTex;
 
@@ -27,7 +31,7 @@ float BlurFunction(vec2 uv, float r, float center_c, float center_d, inout float
     const float BlurSigma = float(KERNEL_RADIUS) * 0.5;
     const float BlurFalloff = 1.0 / (2.0*BlurSigma*BlurSigma);
 
-    float ddiff = (d - center_d) * u_Sharpness;
+    float ddiff = (d - center_d) * pc_hbaoBlur.sharpness;
     float w = exp2(-r*r*BlurFalloff - ddiff*ddiff);
     w_total += w;
 
@@ -43,12 +47,12 @@ void main() {
     float w_total = 1.0;
 
     for (float r = 1; r <= KERNEL_RADIUS; ++r) {
-        vec2 uv = fs_in.TexCoord + u_InvResolutionDirection * r;
+        vec2 uv = fs_in.TexCoord + pc_hbaoBlur.invResolutionDirection * r;
         c_total += BlurFunction(uv, r, center_c, center_d, w_total);
     }
 
     for (float r = 1; r <= KERNEL_RADIUS; ++r) {
-        vec2 uv = fs_in.TexCoord - u_InvResolutionDirection * r;
+        vec2 uv = fs_in.TexCoord - pc_hbaoBlur.invResolutionDirection * r;
         c_total += BlurFunction(uv, r, center_c, center_d, w_total);
     }
 

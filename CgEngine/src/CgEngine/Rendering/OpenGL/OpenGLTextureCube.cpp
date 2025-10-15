@@ -11,13 +11,17 @@ namespace CgEngine {
         glBindTexture(GL_TEXTURE_CUBE_MAP, textureHandle);
 
         GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format, false);
+        GLenum glFormat = OpenGLHelpers::getOpenGLTextureFormat(format);
+        GLenum type = OpenGLHelpers::getOpenGLTextureType(format);
 
-        int levels = 1;
-        if (mipMapFiltering == MipMapFiltering::Trilinear) {
-            levels = Helpers::calculateMipCount(width, height);
-        }
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, internalFormat, width, height, 0, glFormat, type, nullptr);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, internalFormat, width, height, 0, glFormat, type, nullptr);
 
-        glTextureStorage2D(textureHandle, levels, internalFormat, width, height);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, internalFormat, width, height, 0, glFormat, type, nullptr);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, internalFormat, width, height, 0, glFormat, type, nullptr);
+
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, internalFormat, width, height, 0, glFormat, type, nullptr);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, width, height, 0, glFormat, type, nullptr);
 
         OpenGLHelpers::applyMipMapFiltering(mipMapFiltering, GL_TEXTURE_CUBE_MAP);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

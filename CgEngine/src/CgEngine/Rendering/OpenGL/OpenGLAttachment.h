@@ -21,6 +21,8 @@ namespace CgEngine {
         DepthAttachmentFormat getDepthAttachmentFormat() const override;
         bool isUsableAsTexture() const override;
         uint32_t getLayerCount() const override;
+        uint32_t getWidth() const override;
+        uint32_t getHeight() const override;
 
         void resize(uint32_t newWidth, uint32_t newHeight) override;
 
@@ -37,5 +39,7 @@ namespace CgEngine {
         TextureBorderColor textureBorderColor = TextureBorderColor::OpaqueBlack;
         uint32_t layerCount;
         std::vector<uint32_t> layerViewHandles;
+        uint32_t width = 0;
+        uint32_t height = 0;
     };
 }

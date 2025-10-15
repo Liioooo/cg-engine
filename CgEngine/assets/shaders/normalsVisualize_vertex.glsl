@@ -1,8 +1,14 @@
 #version 450 core
 
 #include "CameraDataBuffer.glsl"
+#include "Macros.glsl"
 
-layout(binding = 0, std430) buffer Transforms {
+PUSH_CONSTANT(CollidersPC, 10) {
+    vec3 color;
+    int transformsOffset;
+} pc_colliders;
+
+layout(binding = 1, std430) buffer Transforms {
     mat4 transforms[];
 } b_Transforms;
 
@@ -17,7 +23,7 @@ layout(location = 10) out VS_OUT {
 } vs_out;
 
 void main() {
-    mat4 model = b_Transforms.transforms[gl_InstanceID];
+    mat4 model = b_Transforms.transforms[pc_colliders.transformsOffset + gl_InstanceID];
     vs_out.Normal = normalize(mat3(transpose(inverse(u_CameraData.view * model))) * a_Normal.xyz);
     gl_Position = u_CameraData.view * model * a_Pos;
 }

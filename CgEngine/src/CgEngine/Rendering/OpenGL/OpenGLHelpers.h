@@ -13,6 +13,8 @@ namespace CgEngine {
         int getOpenGLTextureType(TextureFormat format);
         int getOpenGLTextureFormat(TextureFormat format);
         int getOpenGLWrapMode(TextureWrap wrap);
+        int getOpenGLIndexType(IndexBufferDataType type);
+        unsigned int getOpenGLDrawMode(DrawMode mode);
         void applyMipMapFiltering(MipMapFiltering mipMapFiltering, unsigned int textureType);
         int attachmentTypeToOpenGLInternalFormat(AttachmentType type);
         int shaderImageAccessToOpenGL(ShaderImageAccess access);

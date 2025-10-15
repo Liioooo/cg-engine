@@ -44,13 +44,8 @@ namespace CgEngine {
         return shaderHandle != ~0;
     }
 
-    void OpenGLComputePipeline::dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) const {
+    uint32_t OpenGLComputePipeline::getOpenGLShaderHandle() const {
         CG_ASSERT(isReady(), "ComputePipeline is not ready!")
-        glDispatchCompute(groupCountX, groupCountY, groupCountZ);
-    }
-
-    void OpenGLComputePipeline::bind() const {
-        CG_ASSERT(isReady(), "ComputePipeline is not ready!")
-        glUseProgram(shaderHandle);
+        return shaderHandle;
     }
 }

@@ -18,6 +18,10 @@ namespace CgEngine {
                 VertexBufferElement(ShaderDataType::Float4, true)
         };
 
+        static inline const std::vector<VertexBufferLayout> DEFAULT_VERT_BUFF_LAYOUTS = {
+                VertexBufferLayout(DEFAULT_VERT_BUFF_LAYOUT)
+        };
+
         struct Vertex {
             glm::vec4 position;
             glm::vec4 normal;

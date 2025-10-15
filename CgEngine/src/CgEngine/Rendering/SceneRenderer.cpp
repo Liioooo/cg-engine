@@ -17,6 +17,18 @@ namespace CgEngine {
         transformOffsetPushConstant->init<TransformsOffsetPushConstants>();
         transformOffsetPushConstant->mapUniform(&TransformsOffsetPushConstants::transformsOffset, "transformsOffset");
 
+        collidersPushConstants = GraphicsObjectsFactory::createPushConstants("pc_colliders");
+        collidersPushConstants->init<CollidersPushConstants>();
+        collidersPushConstants->mapUniform(&CollidersPushConstants::color, "color");
+        collidersPushConstants->mapUniform(&CollidersPushConstants::transformsOffset, "transformsOffset");
+
+        DescriptorSetSpecification environmentMapDescriptorSetSpec{};
+        environmentMapDescriptorSetSpec.textureCubeBindings = {
+            {5, Renderer::getBlackCubeTexture()},
+            {6, Renderer::getBlackCubeTexture()}
+        };
+        environmentMapDescriptorSetBlack = GraphicsObjectsFactory::createDescriptorSet();
+
         {
             ApplicationOptions& applicationOptions = Application::get().getApplicationOptions();
 
@@ -32,24 +44,31 @@ namespace CgEngine {
 
             dirShadowMaps = GraphicsObjectsFactory::createAttachment(dirShadowMapAttachmentSpec);
 
-            FramebufferSpecification shadowMapFramebufferSpec;
+            RenderPassSpecification shadowMapRenderPassSpec{};
+            shadowMapRenderPassSpec.clearColorAttachments = false;
+            shadowMapRenderPassSpec.clearDepthAttachment = true;
+            shadowMapRenderPassSpec.clearStencilBuffer = false;
+            shadowMapRenderPassSpec.clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
+
+            dirShadowMapRenderPass = GraphicsObjectsFactory::createRenderPass(shadowMapRenderPassSpec);
+
+            GraphicsPipelineSpecification dirShadowMapPipelineSpec{};
+            dirShadowMapPipelineSpec.renderPass = dirShadowMapRenderPass;
+            dirShadowMapPipelineSpec.engineShaderName = "dirShadowMap";
+            dirShadowMapPipelineSpec.frontfaceCulling = false;
+            dirShadowMapPipelineSpec.backfaceCulling = true;
+            dirShadowMapPipelineSpec.vertexInputLayout = MeshProps::DEFAULT_VERT_BUFF_LAYOUTS;
+
+            dirShadowMapPipeline = GraphicsObjectsFactory::createGraphicsPipeline(dirShadowMapPipelineSpec);
+
+            FramebufferSpecification shadowMapFramebufferSpec{};
+            shadowMapFramebufferSpec.renderPass = dirShadowMapRenderPass;
             shadowMapFramebufferSpec.height = applicationOptions.shadowMapResolution;
             shadowMapFramebufferSpec.width = applicationOptions.shadowMapResolution;
-            shadowMapFramebufferSpec.depthAttachment.allLayers = true;
             shadowMapFramebufferSpec.depthAttachment.attachment = dirShadowMaps;
 
             dirShadowMapFramebuffer = GraphicsObjectsFactory::createFramebuffer(shadowMapFramebufferSpec);
 
-            RenderPassSpecification shadowMapRenderPassSpec;
-            shadowMapRenderPassSpec.engineShaderName = "dirShadowMap";
-            shadowMapRenderPassSpec.clearColorAttachments = false;
-            shadowMapRenderPassSpec.clearDepthAttachment = true;
-            shadowMapRenderPassSpec.clearStencilBuffer = false;
-            shadowMapRenderPassSpec.frontfaceCulling = false;
-            shadowMapRenderPassSpec.backfaceCulling = true;
-            shadowMapRenderPassSpec.clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
-
-            dirShadowMapRenderPass = GraphicsObjectsFactory::createRenderPass(shadowMapRenderPassSpec);
             dirShadowMapTransformsBuffer = GraphicsObjectsFactory::createShaderStorageBuffer(MAX_OBJECTS * sizeof(glm::mat4));
 
             DescriptorSetSpecification dirShadowMapDescriptorSetSpec{};
@@ -88,27 +107,36 @@ namespace CgEngine {
 
             gBufferDepthAttachment = GraphicsObjectsFactory::createAttachment(gBufferDepthAttachmentSpec);
 
-            FramebufferSpecification gBufferFramebufferSpec;
-            gBufferFramebufferSpec.height = viewportHeight;
-            gBufferFramebufferSpec.width = viewportWidth;
-            gBufferFramebufferSpec.colorAttachments = {
-                    {gBufferAlbedoRoughnessAttachment},
-                    {gBufferEmissionMetallicAttachment},
-                    {gBufferWorldNormalsAttachment},
-                    {gBufferViewNormalsAttachment}
-            };
-            gBufferFramebufferSpec.depthAttachment.attachment = gBufferDepthAttachment;
-
-            gBufferFramebuffer = GraphicsObjectsFactory::createFramebuffer(gBufferFramebufferSpec);
-
-            RenderPassSpecification gBufferRenderPassSpec;
-            gBufferRenderPassSpec.engineShaderName = "gBuffer";
+            RenderPassSpecification gBufferRenderPassSpec{};
             gBufferRenderPassSpec.clearColorAttachments = true;
             gBufferRenderPassSpec.clearDepthAttachment = true;
             gBufferRenderPassSpec.clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
-            gBufferRenderPassSpec.depthCompareOperator = DepthCompareOperator::Less;
 
             gBufferRenderPass = GraphicsObjectsFactory::createRenderPass(gBufferRenderPassSpec);
+
+            GraphicsPipelineSpecification gBufferPipelineSpec{};
+            gBufferPipelineSpec.renderPass = gBufferRenderPass;
+            gBufferPipelineSpec.engineShaderName = "gBuffer";
+            gBufferPipelineSpec.depthCompareOperator = DepthCompareOperator::Less;
+            gBufferPipelineSpec.vertexInputLayout = MeshProps::DEFAULT_VERT_BUFF_LAYOUTS;
+
+            gBufferPipeline = GraphicsObjectsFactory::createGraphicsPipeline(gBufferPipelineSpec);
+
+            FramebufferSpecification gBufferFramebufferSpec{};
+            gBufferFramebufferSpec.height = viewportHeight;
+            gBufferFramebufferSpec.width = viewportWidth;
+            gBufferFramebufferSpec.renderPass = gBufferRenderPass;
+            gBufferFramebufferSpec.colorAttachments = {
+                {gBufferAlbedoRoughnessAttachment},
+                {gBufferEmissionMetallicAttachment},
+                {gBufferWorldNormalsAttachment},
+                {gBufferViewNormalsAttachment}
+            };
+            gBufferFramebufferSpec.depthAttachment.attachment = gBufferDepthAttachment;
+            gBufferFramebufferSpec.depthAttachment.allLayers = true;
+
+            gBufferFramebuffer = GraphicsObjectsFactory::createFramebuffer(gBufferFramebufferSpec);
+
             gBufferTransformsBuffer = GraphicsObjectsFactory::createShaderStorageBuffer(MAX_OBJECTS * sizeof(glm::mat4));
 
             DescriptorSetSpecification gBufferDescriptorSetSpec{};
@@ -116,7 +144,7 @@ namespace CgEngine {
                     {0, ubCameraData}
             };
             gBufferDescriptorSetSpec.ssboBindings = {
-                    {0, gBufferTransformsBuffer}
+                    {1, gBufferTransformsBuffer}
             };
 
             gBufferDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(gBufferDescriptorSetSpec);
@@ -135,154 +163,335 @@ namespace CgEngine {
 
             customShaderDeferredRenderPass = RenderPass(std::move(customShaderDeferredRenderPassSpec));
         }
+         */
         {
             glm::uvec2 quarterSize = (glm::uvec2(viewportWidth, viewportHeight) + 3u) / 4u;
 
-            hbaoDeinterleavingDepthTexture = Texture2DArray(TextureFormat::RedFloat32, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
+            hbaoUVOffsetPushConstants = GraphicsObjectsFactory::createPushConstants("pc_uvOffset");
+            hbaoUVOffsetPushConstants->init<HbaoUVOffsetPushConstants>();
+            hbaoUVOffsetPushConstants->mapUniform(&HbaoUVOffsetPushConstants::uvOffset, "uvOffset");
 
-            for (uint32_t i = 0; i < hbaoDeinterleavingDepthTextureViews.size(); i++) {
-                hbaoDeinterleavingDepthTextureViews[i] = Texture2DView(
-                        hbaoDeinterleavingDepthTexture.getRendererId(),
-                        false,
-                        hbaoDeinterleavingDepthTexture.getFormat(),
-                        TextureWrap::Clamp,
-                        0, 1, i, 1,
-                        MipMapFiltering::Nearest
-                );
-            }
+            AttachmentSpecification hbaoDeinterleavingAttachmentSpec{};
+            hbaoDeinterleavingAttachmentSpec.width = quarterSize.x;
+            hbaoDeinterleavingAttachmentSpec.height = quarterSize.y;
+            hbaoDeinterleavingAttachmentSpec.type = AttachmentType::R16F;
+            hbaoDeinterleavingAttachmentSpec.layerCount = 16;
+            hbaoDeinterleavingAttachmentSpec.usableAsTexture = true;
+            hbaoDeinterleavingAttachmentSpec.textureWrap = TextureWrap::Clamp;
+            hbaoDeinterleavingAttachmentSpec.mipMapFiltering = MipMapFiltering::Nearest;
 
-            FramebufferSpecification hbaoDeinterleavingFramebufferSpec0;
+            hbaoDeinterleavingAttachment = GraphicsObjectsFactory::createAttachment(hbaoDeinterleavingAttachmentSpec);
+
+            RenderPassSpecification hbaoDeinterleavingRenderPassSpec{};
+            hbaoDeinterleavingRenderPassSpec.clearDepthAttachment = false;
+            hbaoDeinterleavingRenderPassSpec.clearColorAttachments = true;
+            hbaoDeinterleavingRenderPassSpec.clearColor = {1.0f, 1.0f, 1.0f, 1.0f};
+
+            hbaoDeinterleavingRenderPass = GraphicsObjectsFactory::createRenderPass(hbaoDeinterleavingRenderPassSpec);
+
+            GraphicsPipelineSpecification hbaoDeinterleavingPipelineSpec{};
+            hbaoDeinterleavingPipelineSpec.renderPass = hbaoDeinterleavingRenderPass;
+            hbaoDeinterleavingPipelineSpec.engineShaderName = "hbaoDeinterleaving";
+            hbaoDeinterleavingPipelineSpec.depthWrite = false;
+            hbaoDeinterleavingPipelineSpec.depthTest = false;
+            hbaoDeinterleavingPipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
+
+            hbaoDeinterleavingPipeline = GraphicsObjectsFactory::createGraphicsPipeline(hbaoDeinterleavingPipelineSpec);
+
+            FramebufferSpecification hbaoDeinterleavingFramebufferSpec0{};
             hbaoDeinterleavingFramebufferSpec0.width = quarterSize.x;
             hbaoDeinterleavingFramebufferSpec0.height = quarterSize.y;
-            hbaoDeinterleavingFramebufferSpec0.clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
-            hbaoDeinterleavingFramebufferSpec0.hasDepthStencilAttachment = false;
-            hbaoDeinterleavingFramebufferSpec0.hasDepthAttachment = false;
-            hbaoDeinterleavingFramebufferSpec0.useExistingColorAttachment = true;
-            hbaoDeinterleavingFramebufferSpec0.existingColorAttachments = {
-                    hbaoDeinterleavingDepthTextureViews[0].getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[1].getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[2].getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[3].getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[4].getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[5].getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[6].getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[7].getRendererId()
+            hbaoDeinterleavingFramebufferSpec0.renderPass = hbaoDeinterleavingRenderPass;
+            hbaoDeinterleavingFramebufferSpec0.colorAttachments = {
+                {hbaoDeinterleavingAttachment, 0, false},
+                {hbaoDeinterleavingAttachment, 1, false},
+                {hbaoDeinterleavingAttachment, 2, false},
+                {hbaoDeinterleavingAttachment, 3, false},
+                {hbaoDeinterleavingAttachment, 4, false},
+                {hbaoDeinterleavingAttachment, 5, false},
+                {hbaoDeinterleavingAttachment, 6, false},
+                {hbaoDeinterleavingAttachment, 7, false}
             };
-            hbaoDeinterleavingFramebuffers[0] = new Framebuffer(hbaoDeinterleavingFramebufferSpec0);
 
-            FramebufferSpecification hbaoDeinterleavingFramebufferSpec1;
+            hbaoDeinterleavingFramebuffers[0] = GraphicsObjectsFactory::createFramebuffer(hbaoDeinterleavingFramebufferSpec0);
+
+            FramebufferSpecification hbaoDeinterleavingFramebufferSpec1{};
             hbaoDeinterleavingFramebufferSpec1.width = quarterSize.x;
             hbaoDeinterleavingFramebufferSpec1.height = quarterSize.y;
-            hbaoDeinterleavingFramebufferSpec1.clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
-            hbaoDeinterleavingFramebufferSpec1.hasDepthStencilAttachment = false;
-            hbaoDeinterleavingFramebufferSpec1.hasDepthAttachment = false;
-            hbaoDeinterleavingFramebufferSpec1.useExistingColorAttachment = true;
-            hbaoDeinterleavingFramebufferSpec1.existingColorAttachments = {
-                    hbaoDeinterleavingDepthTextureViews[8].getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[9].getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[10].getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[11].getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[12].getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[13].getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[14].getRendererId(),
-                    hbaoDeinterleavingDepthTextureViews[15].getRendererId()
+            hbaoDeinterleavingFramebufferSpec1.renderPass = hbaoDeinterleavingRenderPass;
+            hbaoDeinterleavingFramebufferSpec1.colorAttachments = {
+                    {hbaoDeinterleavingAttachment, 8, false},
+                    {hbaoDeinterleavingAttachment, 9, false},
+                    {hbaoDeinterleavingAttachment, 10, false},
+                    {hbaoDeinterleavingAttachment, 11, false},
+                    {hbaoDeinterleavingAttachment, 12, false},
+                    {hbaoDeinterleavingAttachment, 13, false},
+                    {hbaoDeinterleavingAttachment, 14, false},
+                    {hbaoDeinterleavingAttachment, 15, false}
             };
-            hbaoDeinterleavingFramebuffers[1] = new Framebuffer(hbaoDeinterleavingFramebufferSpec1);
 
-            RenderPassSpecification hbaoDeinterleavingRenderPassSpec;
-            hbaoDeinterleavingRenderPassSpec.shader = Shader("hbaoDeinterleaving");
-            hbaoDeinterleavingRenderPassSpec.framebuffer = hbaoDeinterleavingFramebuffers[0];
-            hbaoDeinterleavingRenderPassSpec.usingExistingFramebuffer = true;
-            hbaoDeinterleavingRenderPassSpec.clearDepthBuffer = false;
-            hbaoDeinterleavingRenderPassSpec.clearColorBuffer = true;
-            hbaoDeinterleavingRenderPassSpec.depthWrite = false;
-            hbaoDeinterleavingRenderPassSpec.depthTest = false;
+            hbaoDeinterleavingFramebuffers[1] = GraphicsObjectsFactory::createFramebuffer(hbaoDeinterleavingFramebufferSpec1);
 
-            hbaoDeinterleavingRenderPass = RenderPass(std::move(hbaoDeinterleavingRenderPassSpec));
+            DescriptorSetSpecification hbaoDeinterleavingDescriptorSetSpec{};
+            hbaoDeinterleavingDescriptorSetSpec.attachmentTextureBindings.resize(1);
+            hbaoDeinterleavingDescriptorSetSpec.attachmentTextureBindings[0].attachment = gBufferDepthAttachment;
+            hbaoDeinterleavingDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 0;
+            hbaoDeinterleavingDescriptorSetSpec.attachmentTextureBindings[0].allLayers = true;
+            hbaoDeinterleavingDescriptorSetSpec.uboBindings = {
+                    {0, ubCameraData},
+                    {3, ubScreenData}
+            };
 
-            hbaoShader = ComputeShader("hbao");
+            hbaoDeinterleavingDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(hbaoDeinterleavingDescriptorSetSpec);
+
+            ComputePipelineSpecification hbaoComputePipelineSpec{};
+            hbaoComputePipelineSpec.engineShaderName = "hbao";
+
+            hbaoComputePipeline = GraphicsObjectsFactory::createComputePipeline(hbaoComputePipelineSpec);
 
             for (int i = 0; i < 16; i++) {
                 hbaoData.float2Offsets[i] = glm::vec4((float)(i % 4) + 0.5f, (float)(i / 4.0f) + 0.5f, 0.0f, 1.f);
             }
             std::memcpy(hbaoData.jitters, generateHBAOJitterNoise().data(), sizeof(glm::vec4) * 16);
 
-            hbaoResultTexture = Texture2DArray(TextureFormat::RedGreenFloat16, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
+            AttachmentSpecification hbaoResultSpec{};
+            hbaoResultSpec.width = quarterSize.x;
+            hbaoResultSpec.height = quarterSize.y;
+            hbaoResultSpec.type = AttachmentType::RG16F;
+            hbaoResultSpec.layerCount = 16;
+            hbaoResultSpec.usableAsTexture = true;
+            hbaoResultSpec.textureWrap = TextureWrap::Clamp;
+            hbaoResultSpec.mipMapFiltering = MipMapFiltering::Nearest;
 
-            FramebufferSpecification hbaoReinterleavingFramebufferSpec;
+            hbaoResult = GraphicsObjectsFactory::createAttachment(hbaoResultSpec);
+
+            DescriptorSetSpecification hbaoComputeDescriptorSetSpec{};
+            hbaoComputeDescriptorSetSpec.attachmentTextureBindings.resize(2);
+            hbaoComputeDescriptorSetSpec.attachmentTextureBindings[0].attachment = hbaoDeinterleavingAttachment;
+            hbaoComputeDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 0;
+            hbaoComputeDescriptorSetSpec.attachmentTextureBindings[0].allLayers = true;
+            hbaoComputeDescriptorSetSpec.attachmentTextureBindings[1].attachment = gBufferViewNormalsAttachment;
+            hbaoComputeDescriptorSetSpec.attachmentTextureBindings[1].bindingPoint = 1;
+            hbaoComputeDescriptorSetSpec.attachmentTextureBindings[1].allLayers = true;
+            hbaoComputeDescriptorSetSpec.attachmentImageBindings.resize(1);
+            hbaoComputeDescriptorSetSpec.attachmentImageBindings[0].attachment = hbaoResult;
+            hbaoComputeDescriptorSetSpec.attachmentImageBindings[0].bindingPoint = 2;
+            hbaoComputeDescriptorSetSpec.attachmentImageBindings[0].allLayers = true;
+            hbaoComputeDescriptorSetSpec.attachmentImageBindings[0].access = ShaderImageAccess::WriteOnly;
+            hbaoComputeDescriptorSetSpec.uboBindings = {
+                    {3, ubScreenData},
+                    {4, ubHBAOData}
+            };
+
+            hbaoComputeDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(hbaoComputeDescriptorSetSpec);
+
+            AttachmentSpecification hbaoReinterleavingAttachmentSpec{};
+            hbaoDeinterleavingAttachmentSpec.layerCount = 1;
+            hbaoReinterleavingAttachmentSpec.width = viewportWidth;
+            hbaoReinterleavingAttachmentSpec.height = viewportHeight;
+            hbaoReinterleavingAttachmentSpec.type = AttachmentType::RG16F;
+            hbaoReinterleavingAttachmentSpec.usableAsTexture = true;
+            hbaoReinterleavingAttachmentSpec.textureWrap = TextureWrap::Clamp;
+            hbaoReinterleavingAttachmentSpec.mipMapFiltering = MipMapFiltering::Bilinear;
+
+            hbaoReinterleavingAttachment = GraphicsObjectsFactory::createAttachment(hbaoReinterleavingAttachmentSpec);
+
+            RenderPassSpecification hbaoReinterleavingRenderPassSpec{};
+            hbaoReinterleavingRenderPassSpec.clearColorAttachments = true;
+            hbaoReinterleavingRenderPassSpec.clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
+            hbaoReinterleavingRenderPassSpec.clearDepthAttachment = false;
+            hbaoReinterleavingRenderPassSpec.clearStencilBuffer = false;
+
+            hbaoReinterleavingRenderPass = GraphicsObjectsFactory::createRenderPass(hbaoReinterleavingRenderPassSpec);
+
+            GraphicsPipelineSpecification hbaoReinterleavingPipelineSpec{};
+            hbaoReinterleavingPipelineSpec.renderPass = hbaoReinterleavingRenderPass;
+            hbaoReinterleavingPipelineSpec.engineShaderName = "hbaoReinterleaving";
+            hbaoReinterleavingPipelineSpec.frontfaceCulling = false;
+            hbaoReinterleavingPipelineSpec.backfaceCulling = false;
+            hbaoReinterleavingPipelineSpec.depthWrite = false;
+            hbaoReinterleavingPipelineSpec.depthTest = false;
+            hbaoReinterleavingPipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
+
+            hbaoReinterleavingPipeline = GraphicsObjectsFactory::createGraphicsPipeline(hbaoReinterleavingPipelineSpec);
+
+            FramebufferSpecification hbaoReinterleavingFramebufferSpec{};
             hbaoReinterleavingFramebufferSpec.width = viewportWidth;
             hbaoReinterleavingFramebufferSpec.height = viewportHeight;
-            hbaoReinterleavingFramebufferSpec.clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
-            hbaoReinterleavingFramebufferSpec.hasDepthStencilAttachment = false;
-            hbaoReinterleavingFramebufferSpec.hasDepthAttachment = false;
-            hbaoReinterleavingFramebufferSpec.useExistingColorAttachment = false;
-            hbaoReinterleavingFramebufferSpec.colorAttachments = {FramebufferFormat::RG16F};
+            hbaoReinterleavingFramebufferSpec.renderPass = hbaoReinterleavingRenderPass;
+            hbaoReinterleavingFramebufferSpec.colorAttachments = {
+                    {hbaoReinterleavingAttachment}
+            };
 
-            auto* hbaoReinterleavingFramebuffer = new Framebuffer(hbaoReinterleavingFramebufferSpec);
+            hbaoReinterleavingFramebuffer = GraphicsObjectsFactory::createFramebuffer(hbaoReinterleavingFramebufferSpec);
 
-            RenderPassSpecification hbaoReinterleavingRenderPassSpec;
-            hbaoReinterleavingRenderPassSpec.shader = Shader("hbaoReinterleaving");
-            hbaoReinterleavingRenderPassSpec.framebuffer = hbaoReinterleavingFramebuffer;
-            hbaoReinterleavingRenderPassSpec.clearColorBuffer = true;
-            hbaoReinterleavingRenderPassSpec.clearDepthBuffer = false;
-            hbaoReinterleavingRenderPassSpec.clearStencilBuffer = false;
-            hbaoReinterleavingRenderPassSpec.frontfaceCulling = false;
-            hbaoReinterleavingRenderPassSpec.backfaceCulling = false;
-            hbaoReinterleavingRenderPassSpec.depthTest = false;
-            hbaoReinterleavingRenderPassSpec.depthWrite = false;
+            DescriptorSetSpecification hbaoReinterleavingDescriptorSetSpec{};
+            hbaoReinterleavingDescriptorSetSpec.attachmentTextureBindings.resize(1);
+            hbaoReinterleavingDescriptorSetSpec.attachmentTextureBindings[0].attachment = hbaoResult;
+            hbaoReinterleavingDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 0;
+            hbaoReinterleavingDescriptorSetSpec.attachmentTextureBindings[0].allLayers = true;
 
-            hbaoReinterleavingRenderPass = RenderPass(std::move(hbaoReinterleavingRenderPassSpec));
+            hbaoReinterleavingDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(hbaoReinterleavingDescriptorSetSpec);
 
-            FramebufferSpecification hbaoBlurFramebufferSpec;
-            hbaoBlurFramebufferSpec.width = viewportWidth;
-            hbaoBlurFramebufferSpec.height = viewportHeight;
-            hbaoBlurFramebufferSpec.clearColor = {1.0f, 1.0f, 1.0f, 0.0f};
-            hbaoBlurFramebufferSpec.hasDepthStencilAttachment = false;
-            hbaoBlurFramebufferSpec.hasDepthAttachment = false;
-            hbaoBlurFramebufferSpec.useExistingColorAttachment = false;
-            hbaoBlurFramebufferSpec.colorAttachments = {FramebufferFormat::RG16F};
+            AttachmentSpecification hbaoBlurAttachmentSpec{};
+            hbaoBlurAttachmentSpec.width = viewportWidth;
+            hbaoBlurAttachmentSpec.height = viewportHeight;
+            hbaoBlurAttachmentSpec.type = AttachmentType::RG16F;
 
-            auto* hbaoBlurFramebuffer = new Framebuffer(hbaoBlurFramebufferSpec);
+            hbaoBlurAttachment0 = GraphicsObjectsFactory::createAttachment(hbaoBlurAttachmentSpec);
+            hbaoBlurAttachment1 = GraphicsObjectsFactory::createAttachment(hbaoBlurAttachmentSpec);
 
-            RenderPassSpecification hbaoBlurRenderPassSpec;
-            hbaoBlurRenderPassSpec.shader = Shader("hbaoBlur");
-            hbaoBlurRenderPassSpec.framebuffer = hbaoBlurFramebuffer;
-            hbaoBlurRenderPassSpec.clearColorBuffer = true;
-            hbaoBlurRenderPassSpec.clearDepthBuffer = false;
-            hbaoBlurRenderPassSpec.clearStencilBuffer = false;
-            hbaoBlurRenderPassSpec.frontfaceCulling = false;
-            hbaoBlurRenderPassSpec.backfaceCulling = false;
-            hbaoBlurRenderPassSpec.depthTest = false;
-            hbaoBlurRenderPassSpec.depthWrite = false;
+            RenderPassSpecification hbaoBlurRenderPassSpec0{};
+            hbaoBlurRenderPassSpec0.clearColorAttachments = true;
+            hbaoBlurRenderPassSpec0.clearDepthAttachment = false;
+            hbaoBlurRenderPassSpec0.clearColor = {1.0f, 1.0f, 1.0f, 0.0f};
+            hbaoBlurRenderPassSpec0.clearStencilBuffer = false;
+            hbaoBlurRenderPass0 = GraphicsObjectsFactory::createRenderPass(hbaoBlurRenderPassSpec0);
 
-            hbaoBlurRenderPass = RenderPass(std::move(hbaoBlurRenderPassSpec));
+            RenderPassSpecification hbaoBlurRenderPassSpec1{};
+            hbaoBlurRenderPassSpec1.clearColorAttachments = false;
+            hbaoBlurRenderPassSpec1.clearDepthAttachment = false;
+            hbaoBlurRenderPassSpec1.clearStencilBuffer = false;
+            hbaoBlurRenderPass1 = GraphicsObjectsFactory::createRenderPass(hbaoBlurRenderPassSpec1);
+
+            GraphicsPipelineSpecification hbaoBlurPipelineSpec0{};
+            hbaoBlurPipelineSpec0.renderPass = hbaoBlurRenderPass0;
+            hbaoBlurPipelineSpec0.engineShaderName = "hbaoBlur";
+            hbaoBlurPipelineSpec0.frontfaceCulling = false;
+            hbaoBlurPipelineSpec0.backfaceCulling = false;
+            hbaoBlurPipelineSpec0.depthTest = false;
+            hbaoBlurPipelineSpec0.depthWrite = false;
+
+            hbaoBlurPipeline0 = GraphicsObjectsFactory::createGraphicsPipeline(hbaoBlurPipelineSpec0);
+
+            GraphicsPipelineSpecification hbaoBlurPipelineSpec1{};
+            hbaoBlurPipelineSpec1.renderPass = hbaoBlurRenderPass0;
+            hbaoBlurPipelineSpec1.engineShaderName = "hbaoBlur";
+            hbaoBlurPipelineSpec1.frontfaceCulling = false;
+            hbaoBlurPipelineSpec1.backfaceCulling = false;
+            hbaoBlurPipelineSpec1.depthTest = false;
+            hbaoBlurPipelineSpec1.depthWrite = false;
+
+            hbaoBlurPipeline1 = GraphicsObjectsFactory::createGraphicsPipeline(hbaoBlurPipelineSpec1);
+
+            FramebufferSpecification hbaoBlurFramebufferSpec0{};
+            hbaoBlurFramebufferSpec0.width = viewportWidth;
+            hbaoBlurFramebufferSpec0.height = viewportHeight;
+            hbaoBlurFramebufferSpec0.renderPass = hbaoBlurRenderPass0;
+            hbaoBlurFramebufferSpec0.colorAttachments = {
+                    {hbaoBlurAttachment0}
+            };
+
+            hbaoBlurFramebuffer0 = GraphicsObjectsFactory::createFramebuffer(hbaoBlurFramebufferSpec0);
+
+            FramebufferSpecification hbaoBlurFramebufferSpec1{};
+            hbaoBlurFramebufferSpec1.width = viewportWidth;
+            hbaoBlurFramebufferSpec1.height = viewportHeight;
+            hbaoBlurFramebufferSpec1.renderPass = hbaoBlurRenderPass1;
+            hbaoBlurFramebufferSpec1.colorAttachments = {
+                    {hbaoBlurAttachment1}
+            };
+
+            hbaoBlurFramebuffer1 = GraphicsObjectsFactory::createFramebuffer(hbaoBlurFramebufferSpec1);
+
+            DescriptorSetSpecification hbaoBlurDescriptorSetSpec0{};
+            hbaoBlurDescriptorSetSpec0.attachmentTextureBindings.resize(1);
+            hbaoBlurDescriptorSetSpec0.attachmentTextureBindings[0].attachment = hbaoReinterleavingAttachment;
+            hbaoBlurDescriptorSetSpec0.attachmentTextureBindings[0].bindingPoint = 0;
+            hbaoBlurDescriptorSetSpec0.attachmentTextureBindings[0].allLayers = true;
+
+            hbaoBlurDescriptorSet0 = GraphicsObjectsFactory::createDescriptorSet(hbaoBlurDescriptorSetSpec0);
+
+            DescriptorSetSpecification hbaoBlurDescriptorSetSpec1{};
+            hbaoBlurDescriptorSetSpec1.attachmentTextureBindings.resize(1);
+            hbaoBlurDescriptorSetSpec1.attachmentTextureBindings[0].attachment = hbaoBlurAttachment0;
+            hbaoBlurDescriptorSetSpec1.attachmentTextureBindings[0].bindingPoint = 0;
+            hbaoBlurDescriptorSetSpec1.attachmentTextureBindings[0].allLayers = true;
+
+            hbaoBlurDescriptorSet1 = GraphicsObjectsFactory::createDescriptorSet(hbaoBlurDescriptorSetSpec1);
+
+            hbaoBlurPushConstants = GraphicsObjectsFactory::createPushConstants("pc_hbaoBlur");
+            hbaoBlurPushConstants->init<HbaoBlurPushConstants>();
+            hbaoBlurPushConstants->mapUniform(&HbaoBlurPushConstants::sharpness, "sharpness");
+            hbaoBlurPushConstants->mapUniform(&HbaoBlurPushConstants::invResolutionDirection, "invResolutionDirection");
         }
         {
-            FramebufferSpecification pbrFramebufferSpec;
+            RenderPassSpecification pbrRenderPassSpec{};
+            pbrRenderPassSpec.clearColorAttachments = true;
+            pbrRenderPassSpec.clearDepthAttachment = false;
+            pbrRenderPassSpec.clearStencilBuffer = false;
+            pbrRenderPassSpec.clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
+            pbrRenderPassSpec.hasDepthStencilAttachment = false;
+            pbrRenderPassSpec.colorAttachments = {AttachmentType::RGBA16F};
+
+            pbrRenderPass = GraphicsObjectsFactory::createRenderPass(pbrRenderPassSpec);
+
+            GraphicsPipelineSpecification pbrPipelineSpec{};
+            pbrPipelineSpec.renderPass = pbrRenderPass;
+            pbrPipelineSpec.engineShaderName = "pbr";
+            pbrPipelineSpec.depthWrite = false;
+            pbrPipelineSpec.depthTest = false;
+            pbrPipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
+
+            pbrPipeline = GraphicsObjectsFactory::createGraphicsPipeline(pbrPipelineSpec);
+
+            AttachmentSpecification pbrColorAttachmentSpec{};
+            pbrColorAttachmentSpec.width = viewportWidth;
+            pbrColorAttachmentSpec.height = viewportHeight;
+            pbrColorAttachmentSpec.type = AttachmentType::RGBA16F;
+            pbrColorAttachmentSpec.usableAsTexture = true;
+            pbrColorAttachmentSpec.textureWrap = TextureWrap::Clamp;
+            pbrColorAttachmentSpec.mipMapFiltering = MipMapFiltering::Bilinear;
+            pbrColorAttachmentSpec.layerCount = 1;
+
+            pbrColorAttachment = GraphicsObjectsFactory::createAttachment(pbrColorAttachmentSpec);
+
+            FramebufferSpecification pbrFramebufferSpec{};
             pbrFramebufferSpec.height = viewportHeight;
             pbrFramebufferSpec.width = viewportWidth;
-            pbrFramebufferSpec.clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
-            pbrFramebufferSpec.colorAttachments = {FramebufferFormat::RGBA16F};
-            pbrFramebufferSpec.hasDepthStencilAttachment = false;
-            pbrFramebufferSpec.hasDepthAttachment = false;
-            pbrFramebufferSpec.useExistingDepthAttachment = true;
-            pbrFramebufferSpec.existingDepthAttachment = gBufferRenderPass.getSpecification().framebuffer->getDepthAttachmentRendererId();
-            pbrFramebufferSpec.samples = 1;
+            pbrFramebufferSpec.renderPass = pbrRenderPass;
+            pbrFramebufferSpec.colorAttachments = {
+                {pbrColorAttachment}
+            };
 
-            auto* framebuffer = new Framebuffer(pbrFramebufferSpec);
+            pbrFramebuffer = GraphicsObjectsFactory::createFramebuffer(pbrFramebufferSpec);
 
-            RenderPassSpecification pbrRenderPassSpec;
-            pbrRenderPassSpec.shader = Shader("pbr");
-            pbrRenderPassSpec.framebuffer = framebuffer;
-            pbrRenderPassSpec.clearDepthBuffer = false;
-            pbrRenderPassSpec.depthWrite = false;
-            pbrRenderPassSpec.depthTest = false;
+            DescriptorSetSpecification pbrDescriptorSetSpec{};
+            pbrDescriptorSetSpec.attachmentTextureBindings.resize(6);
+            pbrDescriptorSetSpec.attachmentTextureBindings[0].attachment = gBufferAlbedoRoughnessAttachment;
+            pbrDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 0;
+            pbrDescriptorSetSpec.attachmentTextureBindings[0].allLayers = true;
+            pbrDescriptorSetSpec.attachmentTextureBindings[1].attachment = gBufferEmissionMetallicAttachment;
+            pbrDescriptorSetSpec.attachmentTextureBindings[1].bindingPoint = 1;
+            pbrDescriptorSetSpec.attachmentTextureBindings[1].allLayers = true;
+            pbrDescriptorSetSpec.attachmentTextureBindings[2].attachment = gBufferWorldNormalsAttachment;
+            pbrDescriptorSetSpec.attachmentTextureBindings[2].bindingPoint = 2;
+            pbrDescriptorSetSpec.attachmentTextureBindings[2].allLayers = true;
+            pbrDescriptorSetSpec.attachmentTextureBindings[3].attachment = gBufferDepthAttachment;
+            pbrDescriptorSetSpec.attachmentTextureBindings[3].bindingPoint = 3;
+            pbrDescriptorSetSpec.attachmentTextureBindings[3].allLayers = true;
+            pbrDescriptorSetSpec.attachmentTextureBindings[4].attachment = dirShadowMaps;
+            pbrDescriptorSetSpec.attachmentTextureBindings[4].bindingPoint = 8;
+            pbrDescriptorSetSpec.attachmentTextureBindings[4].allLayers = true;
+            pbrDescriptorSetSpec.attachmentTextureBindings[5].attachment = hbaoBlurAttachment1;
+            pbrDescriptorSetSpec.attachmentTextureBindings[5].bindingPoint = 9;
+            pbrDescriptorSetSpec.attachmentTextureBindings[5].allLayers = true;
+            pbrDescriptorSetSpec.texture2DBindings = {
+                {7, Renderer::getBrdfLUTTexture()}
+            };
+            pbrDescriptorSetSpec.uboBindings = {
+                {0, ubCameraData},
+                {1, ubLightData},
+                {2, ubDirShadowData}
+            };
 
-            pbrRenderPass = RenderPass(std::move(pbrRenderPassSpec));
+            pbrDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(pbrDescriptorSetSpec);
 
-            pbrPassMaterial.setTexture("u_DirShadowMap", dirShadowMaps.getRendererId(), 8);
-            pbrPassMaterial.setTexture("u_BrdfLUT", Renderer::getBrdfLUTTexture().getRendererId(), 7);
+            pbrPushConstants = GraphicsObjectsFactory::createPushConstants("pc_pbr");
+            pbrPushConstants->init<PbrPushConstants>();
+            pbrPushConstants->mapUniform(&PbrPushConstants::environmentIntensity, "environmentIntensity");
         }
+        /*
         {
             RenderPassSpecification customShaderForwardRenderPassSpec;
             customShaderForwardRenderPassSpec.framebuffer = pbrRenderPass.getSpecification().framebuffer;
@@ -296,197 +505,329 @@ namespace CgEngine {
 
             customShaderForwardRenderPass = RenderPass(std::move(customShaderForwardRenderPassSpec));
         }
+         */
         {
-            RenderPassSpecification skyboxRenderPassSpec;
-            skyboxRenderPassSpec.shader = Shader("skybox");
-            skyboxRenderPassSpec.framebuffer = pbrRenderPass.getSpecification().framebuffer;
-            skyboxRenderPassSpec.usingExistingFramebuffer = true;
-            skyboxRenderPassSpec.depthCompareOperator = DepthCompareOperator::LessOrEqual;
-            skyboxRenderPassSpec.clearColorBuffer = false;
-            skyboxRenderPassSpec.clearDepthBuffer = false;
-            skyboxRenderPassSpec.clearStencilBuffer = false;
+            RenderPassSpecification afterPbrRenderPassSpec{};
+            afterPbrRenderPassSpec.clearColorAttachments = false;
+            afterPbrRenderPassSpec.clearDepthAttachment = false;
+            afterPbrRenderPassSpec.clearStencilBuffer = false;
+            afterPbrRenderPassSpec.hasDepthStencilAttachment = true;
+            afterPbrRenderPassSpec.depthAttachmentFormat = gBufferDepthAttachment->getDepthAttachmentFormat();
+            afterPbrRenderPassSpec.colorAttachments = {
+                    pbrColorAttachment->getType()
+            };
 
-            skyboxRenderPass = RenderPass(std::move(skyboxRenderPassSpec));
+            afterPbrRenderPass = GraphicsObjectsFactory::createRenderPass(afterPbrRenderPassSpec);
+
+            FramebufferSpecification afterPbrFramebufferSpec{};
+            afterPbrFramebufferSpec.renderPass = afterPbrRenderPass;
+            afterPbrFramebufferSpec.width = viewportWidth;
+            afterPbrFramebufferSpec.height = viewportHeight;
+            afterPbrFramebufferSpec.colorAttachments = {
+                    {pbrColorAttachment}
+            };
+            afterPbrFramebufferSpec.depthAttachment.attachment = gBufferDepthAttachment;
+            afterPbrFramebufferSpec.depthAttachment.allLayers = true;
+
+            afterPbrFramebuffer = GraphicsObjectsFactory::createFramebuffer(afterPbrFramebufferSpec);
+        }
+        {
+            GraphicsPipelineSpecification skyboxPipelineSpec{};
+            skyboxPipelineSpec.renderPass = afterPbrRenderPass;
+            skyboxPipelineSpec.engineShaderName = "skybox";
+            skyboxPipelineSpec.depthCompareOperator = DepthCompareOperator::LessOrEqual;
+            skyboxPipelineSpec.depthTest = true;
+            skyboxPipelineSpec.vertexInputLayout = Renderer::getUnitCubeVertexInputLayout();
+
+            skyboxPipeline = GraphicsObjectsFactory::createGraphicsPipeline(skyboxPipelineSpec);
+
+            skyboxPushConstants = GraphicsObjectsFactory::createPushConstants("pc_skybox");
+            skyboxPushConstants->init<SkyboxPushConstants>();
+            skyboxPushConstants->mapUniform(&SkyboxPushConstants::intensity, "intensity");
+            skyboxPushConstants->mapUniform(&SkyboxPushConstants::lod, "lod");
+        }
+        {
+            GraphicsPipelineSpecification physicsCollidersPipelineSpec;
+            physicsCollidersPipelineSpec.renderPass = afterPbrRenderPass;
+            physicsCollidersPipelineSpec.engineShaderName = "colliders";
+            physicsCollidersPipelineSpec.depthTest = false;
+            physicsCollidersPipelineSpec.depthWrite = false;
+            physicsCollidersPipelineSpec.wireframe = true;
+            physicsCollidersPipelineSpec.vertexInputLayout = MeshProps::DEFAULT_VERT_BUFF_LAYOUTS;
+
+            physicsCollidersPipeline = GraphicsObjectsFactory::createGraphicsPipeline(physicsCollidersPipelineSpec);
+
+            physicsCollidersTransformsBuffer = GraphicsObjectsFactory::createShaderStorageBuffer(MAX_OBJECTS * sizeof(glm::mat4));
+
+            DescriptorSetSpecification physicsCollidersDescriptorSetSpec{};
+            physicsCollidersDescriptorSetSpec.uboBindings = {
+                    {0, ubCameraData}
+            };
+            physicsCollidersDescriptorSetSpec.ssboBindings = {
+                    {1, physicsCollidersTransformsBuffer}
+            };
+
+            physicsCollidersDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(physicsCollidersDescriptorSetSpec);
+        }
+        {
+            GraphicsPipelineSpecification boundingBoxPipelineSpec;
+            boundingBoxPipelineSpec.renderPass = afterPbrRenderPass;
+            boundingBoxPipelineSpec.engineShaderName = "colliders";
+            boundingBoxPipelineSpec.depthTest = true;
+            boundingBoxPipelineSpec.depthWrite = false;
+            boundingBoxPipelineSpec.depthCompareOperator = DepthCompareOperator::LessOrEqual;
+            boundingBoxPipelineSpec.wireframe = true;
+            boundingBoxPipelineSpec.backfaceCulling = false;
+            boundingBoxPipelineSpec.vertexInputLayout = MeshProps::DEFAULT_VERT_BUFF_LAYOUTS;
+
+            boundingBoxPipeline = GraphicsObjectsFactory::createGraphicsPipeline(boundingBoxPipelineSpec);
+
+            boundingBoxTransformsBuffer = GraphicsObjectsFactory::createShaderStorageBuffer(MAX_OBJECTS * sizeof(glm::mat4));
+
+            DescriptorSetSpecification boundingBoxDescriptorSetSpec{};
+            boundingBoxDescriptorSetSpec.uboBindings = {
+                    {0, ubCameraData}
+            };
+            boundingBoxDescriptorSetSpec.ssboBindings = {
+                    {1, boundingBoxTransformsBuffer}
+            };
+
+            boundingBoxDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(boundingBoxDescriptorSetSpec);
+        }
+        {
+            GraphicsPipelineSpecification mormalsDebugPipelineSpec{};
+            mormalsDebugPipelineSpec.renderPass = afterPbrRenderPass;
+            mormalsDebugPipelineSpec.engineShaderName = "normalsVisualize";
+            mormalsDebugPipelineSpec.depthTest = true;
+            mormalsDebugPipelineSpec.depthWrite = false;
+            mormalsDebugPipelineSpec.vertexInputLayout = MeshProps::DEFAULT_VERT_BUFF_LAYOUTS;
+
+            normalsDebugPipeline = GraphicsObjectsFactory::createGraphicsPipeline(mormalsDebugPipelineSpec);
+        }
+        {
+            debugLinesVAO = GraphicsObjectsFactory::createVertexArrayObject();
+            auto* linesVertexBuffer = GraphicsObjectsFactory::createVertexBuffer(MAX_DEBUG_LINES * 2 * sizeof(float) * 6, VertexBufferUsage::Dynamic);
+            linesVertexBuffer->setLayout({{ShaderDataType::Float3, false}, {ShaderDataType::Float3, false}});
+            debugLinesVAO->addVertexBuffer(linesVertexBuffer);
+
+            GraphicsPipelineSpecification debugLinesPipelineSpec{};
+            debugLinesPipelineSpec.engineShaderName = "lines";
+            debugLinesPipelineSpec.depthTest = true;
+            debugLinesPipelineSpec.depthWrite = false;
+            debugLinesPipelineSpec.drawMode = DrawMode::Lines;
+
+            debugLinesPipeline = GraphicsObjectsFactory::createGraphicsPipeline(debugLinesPipelineSpec);
+
+            DescriptorSetSpecification debugLinesDescriptorSetSpec{};
+            debugLinesDescriptorSetSpec.uboBindings = {
+                {0, ubCameraData}
+            };
+
+            debugLinesDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(debugLinesDescriptorSetSpec);
         }
         {
             float bloomWidth = static_cast<float>(viewportWidth) / 2.0f;
             float bloomHeight = static_cast<float>(viewportHeight) / 2.0f;
-            for (auto& bloomTexture: bloomTextures) {
-                bloomTexture = Texture2D(TextureFormat::Float32, static_cast<uint32_t>(bloomWidth), static_cast<uint32_t>(bloomHeight), TextureWrap::Clamp, MipMapFiltering::Bilinear);
+            for (auto& bloomAttachment: bloomAttachments) {
+                AttachmentSpecification bloomAttachmentSpec{};
+                bloomAttachmentSpec.width = static_cast<uint32_t>(bloomWidth);
+                bloomAttachmentSpec.height = static_cast<uint32_t>(bloomHeight);
+                bloomAttachmentSpec.type = AttachmentType::RGBA16F;
+                bloomAttachmentSpec.usableAsTexture = true;
+                bloomAttachmentSpec.textureWrap = TextureWrap::Clamp;
+                bloomAttachmentSpec.mipMapFiltering = MipMapFiltering::Bilinear;
+                bloomAttachmentSpec.layerCount = 1;
+                bloomAttachment = GraphicsObjectsFactory::createAttachment(bloomAttachmentSpec);
+
                 bloomWidth /= 2.0f;
                 bloomHeight /= 2.0f;
             }
 
-            FramebufferSpecification bloomFramebufferSpec;
-            bloomFramebufferSpec.width = viewportWidth / 2;
-            bloomFramebufferSpec.height = viewportHeight / 2;
-            bloomFramebufferSpec.clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
-            bloomFramebufferSpec.hasDepthStencilAttachment = false;
-            bloomFramebufferSpec.useExistingColorAttachment = true;
-            bloomFramebufferSpec.existingColorAttachments = { bloomTextures[0].getRendererId() };
-
-            auto* framebuffer = new Framebuffer(bloomFramebufferSpec);
-
             RenderPassSpecification bloomDownSamplePassSpec;
-            bloomDownSamplePassSpec.shader = Shader("bloomDownSample");
-            bloomDownSamplePassSpec.clearColorBuffer = true;
-            bloomDownSamplePassSpec.clearDepthBuffer = false;
-            bloomDownSamplePassSpec.depthTest = false;
-            bloomDownSamplePassSpec.depthWrite = false;
-            bloomDownSamplePassSpec.framebuffer = framebuffer;
+            bloomDownSamplePassSpec.clearColorAttachments = true;
+            bloomDownSamplePassSpec.clearDepthAttachment = false;
+            bloomDownSamplePassSpec.hasDepthStencilAttachment = false;
+            bloomDownSamplePassSpec.colorAttachments = { AttachmentType::RGBA16F };
 
-            bloomDownSamplePass = RenderPass(std::move(bloomDownSamplePassSpec));
+            bloomDownSamplePass = GraphicsObjectsFactory::createRenderPass(bloomDownSamplePassSpec);
+
+            GraphicsPipelineSpecification bloomDownsamplePipelineSpec{};
+            bloomDownsamplePipelineSpec.renderPass = bloomDownSamplePass;
+            bloomDownsamplePipelineSpec.engineShaderName = "bloomDownSample";
+            bloomDownsamplePipelineSpec.depthTest = false;
+            bloomDownsamplePipelineSpec.depthWrite = false;
+
+            bloomDownsamplePipeline = GraphicsObjectsFactory::createGraphicsPipeline(bloomDownsamplePipelineSpec);
+
+            for (size_t i = 0; i < bloomDownsampleFramebuffers.size(); i++) {
+                FramebufferSpecification bloomFramebufferSpec{};
+                bloomFramebufferSpec.width = bloomAttachments[i]->getWidth();
+                bloomFramebufferSpec.height = bloomAttachments[i]->getHeight();
+                bloomFramebufferSpec.renderPass = bloomDownSamplePass;
+                bloomFramebufferSpec.colorAttachments = {
+                        {bloomAttachments[i]}
+                };
+                bloomDownsampleFramebuffers[i] = GraphicsObjectsFactory::createFramebuffer(bloomFramebufferSpec);
+            }
 
             RenderPassSpecification bloomUpSamplePassSpec;
-            bloomUpSamplePassSpec.shader = Shader("bloomUpSample");
-            bloomUpSamplePassSpec.clearColorBuffer = false;
-            bloomUpSamplePassSpec.clearDepthBuffer = false;
-            bloomUpSamplePassSpec.depthTest = false;
-            bloomUpSamplePassSpec.depthWrite = false;
-            bloomUpSamplePassSpec.useBlending = true;
-            bloomUpSamplePassSpec.blendingEquation = BlendingEquation::Add;
-            bloomUpSamplePassSpec.srcBlendingFunction = BlendingFunction::One;
-            bloomUpSamplePassSpec.destBlendingFunction = BlendingFunction::One;
-            bloomUpSamplePassSpec.framebuffer = framebuffer;
-            bloomUpSamplePassSpec.usingExistingFramebuffer = true;
+            bloomUpSamplePassSpec.clearColorAttachments = false;
+            bloomUpSamplePassSpec.clearDepthAttachment = false;
+            bloomUpSamplePassSpec.hasDepthStencilAttachment = false;
+            bloomUpSamplePassSpec.colorAttachments = { AttachmentType::RGBA16F };
 
-            bloomUpSamplePass = RenderPass(std::move(bloomUpSamplePassSpec));
+            bloomUpSamplePass = GraphicsObjectsFactory::createRenderPass(bloomUpSamplePassSpec);
+
+            GraphicsPipelineSpecification bloomUpsamplePipelineSpec{};
+            bloomUpsamplePipelineSpec.renderPass = bloomUpSamplePass;
+            bloomUpsamplePipelineSpec.engineShaderName = "bloomUpSample";
+            bloomUpsamplePipelineSpec.depthTest = false;
+            bloomUpsamplePipelineSpec.depthWrite = false;
+            bloomUpsamplePipelineSpec.useBlending = true;
+            bloomUpsamplePipelineSpec.blendingEquation = BlendingEquation::Add;
+            bloomUpsamplePipelineSpec.srcBlendingFunction = BlendingFunction::One;
+            bloomUpsamplePipelineSpec.destBlendingFunction = BlendingFunction::One;
+
+            bloomUpsamplePipeline = GraphicsObjectsFactory::createGraphicsPipeline(bloomUpsamplePipelineSpec);
+
+            for (size_t i = 0; i < bloomUpsampleFramebuffers.size(); i++) {
+                FramebufferSpecification bloomFramebufferSpec{};
+                bloomFramebufferSpec.width = bloomAttachments[i]->getWidth();
+                bloomFramebufferSpec.height = bloomAttachments[i]->getHeight();
+                bloomFramebufferSpec.renderPass = bloomUpSamplePass;
+                bloomFramebufferSpec.colorAttachments = {
+                        {bloomAttachments[i]}
+                };
+                bloomUpsampleFramebuffers[i] = GraphicsObjectsFactory::createFramebuffer(bloomFramebufferSpec);
+            }
+
+            bloomDownsamplePushConstants = GraphicsObjectsFactory::createPushConstants("pc_bloomDownsample");
+            bloomDownsamplePushConstants->init<BloomDownsamplePushConstants>();
+            bloomDownsamplePushConstants->mapUniform(&BloomDownsamplePushConstants::useThreshold, "useThreshold");
+
+            DescriptorSetSpecification bloomDescriptorSetSpec0{};
+            bloomDescriptorSetSpec0.attachmentTextureBindings.resize(1);
+            bloomDescriptorSetSpec0.attachmentTextureBindings[0].attachment = pbrColorAttachment;
+            bloomDescriptorSetSpec0.attachmentTextureBindings[0].bindingPoint = 0;
+            bloomDescriptorSetSpec0.attachmentTextureBindings[0].allLayers = true;
+
+            bloomDescriptorSets[0] = GraphicsObjectsFactory::createDescriptorSet(bloomDescriptorSetSpec0);
+
+            for (size_t i = 1; i < bloomDescriptorSets.size(); i++) {
+                DescriptorSetSpecification bloomDescriptorSetSpec{};
+                bloomDescriptorSetSpec.attachmentTextureBindings.resize(1);
+                bloomDescriptorSetSpec.attachmentTextureBindings[0].attachment = bloomAttachments[i - 1];
+                bloomDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 0;
+                bloomDescriptorSetSpec.attachmentTextureBindings[0].allLayers = true;
+
+                bloomDescriptorSets[i] = GraphicsObjectsFactory::createDescriptorSet(bloomDescriptorSetSpec);
+            }
         }
         {
-            RenderPassSpecification physicsCollidersRenderPassSpec;
-            physicsCollidersRenderPassSpec.shader = Shader("colliders");
-            physicsCollidersRenderPassSpec.framebuffer = pbrRenderPass.getSpecification().framebuffer;
-            physicsCollidersRenderPassSpec.usingExistingFramebuffer = true;
-            physicsCollidersRenderPassSpec.depthTest = false;
-            physicsCollidersRenderPassSpec.depthWrite = false;
-            physicsCollidersRenderPassSpec.clearColorBuffer = false;
-            physicsCollidersRenderPassSpec.clearDepthBuffer = false;
-            physicsCollidersRenderPassSpec.clearStencilBuffer = false;
-            physicsCollidersRenderPassSpec.wireframe = true;
+            GraphicsPipelineSpecification screenPipelineSpec;
+            screenPipelineSpec.renderPass = Renderer::getSwapChainRenderPass();
+            screenPipelineSpec.engineShaderName = "screen";
+            screenPipelineSpec.depthTest = false;
+            screenPipelineSpec.depthWrite = false;
+            screenPipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
 
-            physicsCollidersRenderPass = RenderPass(std::move(physicsCollidersRenderPassSpec));
+            screenPipeline = GraphicsObjectsFactory::createGraphicsPipeline(screenPipelineSpec);
 
-            physicsCollidersMaterial.set("u_Color", {0.0f, 1.0f, 0.0f});
+            DescriptorSetSpecification screenDescriptorSetSpec{};
+            screenDescriptorSetSpec.attachmentTextureBindings.resize(2);
+            screenDescriptorSetSpec.attachmentTextureBindings[0].attachment = pbrColorAttachment;
+            screenDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 0;
+            screenDescriptorSetSpec.attachmentTextureBindings[0].allLayers = true;
+            screenDescriptorSetSpec.attachmentTextureBindings[1].attachment = bloomAttachments[0];
+            screenDescriptorSetSpec.attachmentTextureBindings[1].bindingPoint = 1;
+            screenDescriptorSetSpec.attachmentTextureBindings[1].allLayers = true;
+
+            screenDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(screenDescriptorSetSpec);
         }
         {
-            RenderPassSpecification boundingBoxRenderPassSpec;
-            boundingBoxRenderPassSpec.shader = Shader("colliders");
-            boundingBoxRenderPassSpec.framebuffer = pbrRenderPass.getSpecification().framebuffer;
-            boundingBoxRenderPassSpec.usingExistingFramebuffer = true;
-            boundingBoxRenderPassSpec.depthTest = true;
-            boundingBoxRenderPassSpec.depthWrite = false;
-            boundingBoxRenderPassSpec.clearColorBuffer = false;
-            boundingBoxRenderPassSpec.clearDepthBuffer = false;
-            boundingBoxRenderPassSpec.clearStencilBuffer = false;
-            boundingBoxRenderPassSpec.wireframe = true;
-            boundingBoxRenderPassSpec.backfaceCulling = false;
+            auto* uiIndices = new uint32_t[MAX_UI_INDICES];
 
-            boundingBoxRenderPass = RenderPass(std::move(boundingBoxRenderPassSpec));
+            uint32_t offset = 0;
+            for (uint32_t i = 0; i < MAX_UI_INDICES; i += 6) {
+                uiIndices[i + 0] = offset + 0;
+                uiIndices[i + 1] = offset + 1;
+                uiIndices[i + 2] = offset + 2;
 
-            boundingBoxMaterial.set("u_Color", {1.0f, 1.0f, 0.0f});
-        }
-        {
-            RenderPassSpecification mormalsDebugRenderPassSpec;
-            mormalsDebugRenderPassSpec.shader = Shader("normalsVisualize");
-            mormalsDebugRenderPassSpec.framebuffer = pbrRenderPass.getSpecification().framebuffer;
-            mormalsDebugRenderPassSpec.usingExistingFramebuffer = true;
-            mormalsDebugRenderPassSpec.depthTest = true;
-            mormalsDebugRenderPassSpec.depthWrite = false;
-            mormalsDebugRenderPassSpec.clearColorBuffer = false;
-            mormalsDebugRenderPassSpec.clearDepthBuffer = false;
-            mormalsDebugRenderPassSpec.clearStencilBuffer = false;
+                uiIndices[i + 3] = offset + 2;
+                uiIndices[i + 4] = offset + 3;
+                uiIndices[i + 5] = offset + 0;
 
-            normalsDebugRenderPass = RenderPass(std::move(mormalsDebugRenderPassSpec));
+                offset += 4;
+            }
 
-            normalsDebugMaterial.set("u_Color", {1.0f, 0.0f, 0.0f});
-        }
-        {
-            RenderPassSpecification debugLinesRenderPassSpec;
-            debugLinesRenderPassSpec.shader = Shader("lines");
-            debugLinesRenderPassSpec.framebuffer = pbrRenderPass.getSpecification().framebuffer;
-            debugLinesRenderPassSpec.usingExistingFramebuffer = true;
-            debugLinesRenderPassSpec.depthTest = true;
-            debugLinesRenderPassSpec.depthWrite = false;
-            debugLinesRenderPassSpec.clearColorBuffer = false;
-            debugLinesRenderPassSpec.clearDepthBuffer = false;
-            debugLinesRenderPassSpec.clearStencilBuffer = false;
+            uiIndexBuffer = GraphicsObjectsFactory::createIndexBuffer(uiIndices, MAX_UI_INDICES, IndexBufferDataType::UInt32);
 
-            debugLinesRenderPass = RenderPass(std::move(debugLinesRenderPassSpec));
-        }
-        {
-            FramebufferSpecification screenFramebufferSpec;
-            screenFramebufferSpec.height = viewportHeight;
-            screenFramebufferSpec.width = viewportWidth;
-            screenFramebufferSpec.clearColor = {0.0f, 1.0f, 1.0f, 1.0f};
-            screenFramebufferSpec.hasDepthStencilAttachment = false;
-            screenFramebufferSpec.samples = 1;
-            screenFramebufferSpec.screenTarget = true;
+            uiCircleVAO = GraphicsObjectsFactory::createVertexArrayObject();
+            auto* uiCircleVertexBuffer = GraphicsObjectsFactory::createVertexBuffer(sizeof(UiCircleVertex) * MAX_UI_VERTICES, VertexBufferUsage::Dynamic);
+            uiCircleVertexBuffer->setLayout({{ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float, false}, {ShaderDataType::Float, false}, {ShaderDataType::Float, false}});
+            uiCircleVAO->addVertexBuffer(uiCircleVertexBuffer);
+            uiCircleVAO->useExistingIndexBuffer(uiIndexBuffer);
 
-            auto* framebuffer = new Framebuffer(screenFramebufferSpec);
-            RenderPassSpecification screenRenderPassSpec;
-            screenRenderPassSpec.shader = Shader("screen");
-            screenRenderPassSpec.framebuffer = framebuffer;
-            screenRenderPassSpec.depthTest = false;
+            uiRectVAO = GraphicsObjectsFactory::createVertexArrayObject();
+            auto* uiRectVertexBuffer = GraphicsObjectsFactory::createVertexBuffer(sizeof(UiRectVertex) * MAX_UI_VERTICES, VertexBufferUsage::Dynamic);
+            uiRectVertexBuffer->setLayout({{ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float2, false}, {ShaderDataType::Float, false}, {ShaderDataType::Float, false}});
+            uiRectVAO->addVertexBuffer(uiRectVertexBuffer);
+            uiRectVAO->useExistingIndexBuffer(uiIndexBuffer);
 
-            screenRenderPass = RenderPass(std::move(screenRenderPassSpec));
+            uiTextVAO = GraphicsObjectsFactory::createVertexArrayObject();
+            auto* uiTextVertexBuffer = GraphicsObjectsFactory::createVertexBuffer(sizeof(UiTextVertex) * MAX_UI_VERTICES, VertexBufferUsage::Dynamic);
+            uiTextVertexBuffer->setLayout({{ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float, false}});
+            uiTextVAO->addVertexBuffer(uiTextVertexBuffer);
+            uiTextVAO->useExistingIndexBuffer(uiIndexBuffer);
 
-            screenMaterial.setTexture("u_FinalImage", pbrRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
-            screenMaterial.setTexture("u_BloomTexture", bloomTextures[0].getRendererId(), 1);
-        }
-        {
-            RenderPassSpecification uiCircleRenderPassSpec;
-            uiCircleRenderPassSpec.shader = Shader("uiCircle");
-            uiCircleRenderPassSpec.clearColorBuffer = false;
-            uiCircleRenderPassSpec.clearDepthBuffer = false;
-            uiCircleRenderPassSpec.depthTest = false;
-            uiCircleRenderPassSpec.depthWrite = false;
-            uiCircleRenderPassSpec.useBlending = true;
-            uiCircleRenderPassSpec.blendingEquation = BlendingEquation::Add;
-            uiCircleRenderPassSpec.srcBlendingFunction = BlendingFunction::SrcAlpha;
-            uiCircleRenderPassSpec.destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
-            uiCircleRenderPassSpec.framebuffer = screenRenderPass.getSpecification().framebuffer;
-            uiCircleRenderPassSpec.usingExistingFramebuffer = true;
+            GraphicsPipelineSpecification uiCirclePipelineSpec;
+            uiCirclePipelineSpec.renderPass = Renderer::getSwapChainRenderPass();
+            uiCirclePipelineSpec.engineShaderName = "uiCircle";
+            uiCirclePipelineSpec.depthTest = false;
+            uiCirclePipelineSpec.depthWrite = false;
+            uiCirclePipelineSpec.useBlending = true;
+            uiCirclePipelineSpec.blendingEquation = BlendingEquation::Add;
+            uiCirclePipelineSpec.srcBlendingFunction = BlendingFunction::SrcAlpha;
+            uiCirclePipelineSpec.destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
+            uiCirclePipelineSpec.vertexInputLayout = uiCircleVAO->getLayout();
 
-            uiCirclePass = RenderPass(std::move(uiCircleRenderPassSpec));
+            uiCirclePipeline = GraphicsObjectsFactory::createGraphicsPipeline(uiCirclePipelineSpec);
 
-            RenderPassSpecification uiRectRenderPassSpec;
-            uiRectRenderPassSpec.shader = Shader("uiRect");
-            uiRectRenderPassSpec.clearColorBuffer = false;
-            uiRectRenderPassSpec.clearDepthBuffer = false;
-            uiRectRenderPassSpec.depthTest = false;
-            uiRectRenderPassSpec.depthWrite = false;
-            uiRectRenderPassSpec.useBlending = true;
-            uiRectRenderPassSpec.blendingEquation = BlendingEquation::Add;
-            uiRectRenderPassSpec.srcBlendingFunction = BlendingFunction::SrcAlpha;
-            uiRectRenderPassSpec.destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
-            uiRectRenderPassSpec.framebuffer = screenRenderPass.getSpecification().framebuffer;
-            uiRectRenderPassSpec.usingExistingFramebuffer = true;
+            GraphicsPipelineSpecification uiRectPipelineSpec;
+            uiRectPipelineSpec.renderPass = Renderer::getSwapChainRenderPass();
+            uiRectPipelineSpec.engineShaderName = "uiRect";
+            uiRectPipelineSpec.depthTest = false;
+            uiRectPipelineSpec.depthWrite = false;
+            uiRectPipelineSpec.useBlending = true;
+            uiRectPipelineSpec.blendingEquation = BlendingEquation::Add;
+            uiRectPipelineSpec.srcBlendingFunction = BlendingFunction::SrcAlpha;
+            uiRectPipelineSpec.destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
+            uiRectPipelineSpec.vertexInputLayout = uiRectVAO->getLayout();
 
-            uiRectPass = RenderPass(std::move(uiRectRenderPassSpec));
+            uiRectPipeline = GraphicsObjectsFactory::createGraphicsPipeline(uiRectPipelineSpec);
 
-            RenderPassSpecification uiTextRenderPassSpec;
-            uiTextRenderPassSpec.shader = Shader("uiText");
-            uiTextRenderPassSpec.clearColorBuffer = false;
-            uiTextRenderPassSpec.clearDepthBuffer = false;
-            uiTextRenderPassSpec.depthTest = false;
-            uiTextRenderPassSpec.depthWrite = false;
-            uiTextRenderPassSpec.useBlending = true;
-            uiTextRenderPassSpec.blendingEquation = BlendingEquation::Add;
-            uiTextRenderPassSpec.srcBlendingFunction = BlendingFunction::SrcAlpha;
-            uiTextRenderPassSpec.destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
-            uiTextRenderPassSpec.framebuffer = screenRenderPass.getSpecification().framebuffer;
-            uiTextRenderPassSpec.usingExistingFramebuffer = true;
+            for (auto& item: uiDescriptorSets) {
+                item = GraphicsObjectsFactory::createDescriptorSet();
+            }
+            for (auto& item: uiTextDescriptorSets) {
+                item = GraphicsObjectsFactory::createDescriptorSet();
+            }
 
-            uiTextPass = RenderPass(std::move(uiTextRenderPassSpec));
+            GraphicsPipelineSpecification uiTextPipelineSpec;
+            uiTextPipelineSpec.renderPass = Renderer::getSwapChainRenderPass();
+            uiTextPipelineSpec.engineShaderName = "uiText";
+            uiTextPipelineSpec.depthTest = false;
+            uiTextPipelineSpec.depthWrite = false;
+            uiTextPipelineSpec.useBlending = true;
+            uiTextPipelineSpec.blendingEquation = BlendingEquation::Add;
+            uiTextPipelineSpec.srcBlendingFunction = BlendingFunction::SrcAlpha;
+            uiTextPipelineSpec.destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
+            uiTextPipelineSpec.vertexInputLayout = uiTextVAO->getLayout();
 
+            uiTextPipeline = GraphicsObjectsFactory::createGraphicsPipeline(uiTextPipelineSpec);
 
             uiProjectionMatrix = glm::ortho(0.0f, static_cast<float>(viewportWidth), 0.0f, static_cast<float>(viewportHeight));
         }
-
-        for (uint32_t i = 0; i < Renderer::maxTextureSlots; i++) {
-            Renderer::getWhiteTexture().bind(i);
-        }
-         */
 
 //        boneTransformsBuffer = ShaderStorageBuffer();
 //        boneTransformsBuffer.setData(nullptr, maxBones * maxAnimatedComponents * sizeof(glm::mat4));
@@ -534,49 +875,28 @@ namespace CgEngine {
             screenData.invHalfResolution = { invViewportWidth * 2.0f,  invViewportHeight * 2.0f };
             ubScreenData->setData(&screenData, sizeof(UBScreenData));
 
-//            gBufferRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
-//            pbrRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
-//            pbrRenderPass.getSpecification().framebuffer->setDepthAttachment(gBufferRenderPass.getSpecification().framebuffer->getDepthAttachmentRendererId(), 0, viewportWidth, viewportHeight);
-//            screenRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
+            gBufferAlbedoRoughnessAttachment->resize(viewportWidth, viewportHeight);
+            gBufferEmissionMetallicAttachment->resize(viewportWidth, viewportHeight);
+            gBufferWorldNormalsAttachment->resize(viewportWidth, viewportHeight);
+            gBufferViewNormalsAttachment->resize(viewportWidth, viewportHeight);
+            gBufferDepthAttachment->resize(viewportWidth, viewportHeight);
+            gBufferFramebuffer->recreate(viewportWidth, viewportHeight);
 
             glm::uvec2 quarterSize = (glm::uvec2(viewportWidth, viewportHeight) + 3u) / 4u;
 
-//            hbaoDeinterleavingDepthTexture = Texture2DArray(TextureFormat::RedFloat32, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
+            hbaoDeinterleavingAttachment->resize(quarterSize.x, quarterSize.y);
+            hbaoDeinterleavingFramebuffers[0]->recreate(quarterSize.x, quarterSize.y);
+            hbaoDeinterleavingFramebuffers[1]->recreate(quarterSize.x, quarterSize.y);
 
-//            for (int i = 0; i < hbaoDeinterleavingDepthTextureViews.size(); i++) {
-//                hbaoDeinterleavingDepthTextureViews[i] = Texture2DView(
-//                        hbaoDeinterleavingDepthTexture.getRendererId(),
-//                        false,
-//                        hbaoDeinterleavingDepthTexture.getFormat(),
-//                        TextureWrap::Clamp,
-//                        0, 1, i, 1,
-//                        MipMapFiltering::Nearest
-//                );
-//            }
+            hbaoResult->resize(quarterSize.x, quarterSize.y);
 
-//            hbaoDeinterleavingFramebuffers[0]->resize(quarterSize.x, quarterSize.y, false);
-//            hbaoDeinterleavingFramebuffers[0]->setColorAttachments({
-//                hbaoDeinterleavingDepthTextureViews[0].getRendererId(),
-//                hbaoDeinterleavingDepthTextureViews[1].getRendererId(),
-//                hbaoDeinterleavingDepthTextureViews[2].getRendererId(),
-//                hbaoDeinterleavingDepthTextureViews[3].getRendererId(),
-//                hbaoDeinterleavingDepthTextureViews[4].getRendererId(),
-//                hbaoDeinterleavingDepthTextureViews[5].getRendererId(),
-//                hbaoDeinterleavingDepthTextureViews[6].getRendererId(),
-//                hbaoDeinterleavingDepthTextureViews[7].getRendererId()
-//            }, 0, quarterSize.x, quarterSize.y);
-//
-//            hbaoDeinterleavingFramebuffers[1]->resize(quarterSize.x, quarterSize.y, false);
-//            hbaoDeinterleavingFramebuffers[1]->setColorAttachments({
-//                hbaoDeinterleavingDepthTextureViews[8].getRendererId(),
-//                hbaoDeinterleavingDepthTextureViews[9].getRendererId(),
-//                hbaoDeinterleavingDepthTextureViews[10].getRendererId(),
-//                hbaoDeinterleavingDepthTextureViews[11].getRendererId(),
-//                hbaoDeinterleavingDepthTextureViews[12].getRendererId(),
-//                hbaoDeinterleavingDepthTextureViews[13].getRendererId(),
-//                hbaoDeinterleavingDepthTextureViews[14].getRendererId(),
-//                hbaoDeinterleavingDepthTextureViews[15].getRendererId()
-//            }, 0, quarterSize.x, quarterSize.y);
+            hbaoReinterleavingAttachment->resize(viewportWidth, viewportHeight);
+            hbaoReinterleavingFramebuffer->recreate(viewportWidth, viewportHeight);
+
+            hbaoBlurAttachment0->resize(viewportWidth, viewportHeight);
+            hbaoBlurAttachment1->resize(viewportWidth, viewportHeight);
+            hbaoBlurFramebuffer0->recreate(viewportWidth, viewportHeight);
+            hbaoBlurFramebuffer1->recreate(viewportWidth, viewportHeight);
 
             constexpr uint32_t HBAO_WORK_GROUP_SIZE = 16u;
             glm::uvec2 quarterSizeWorkGroups = quarterSize + (HBAO_WORK_GROUP_SIZE - quarterSize % HBAO_WORK_GROUP_SIZE);
@@ -584,30 +904,33 @@ namespace CgEngine {
             hbaoWorkGroupSize.y = quarterSizeWorkGroups.y / 16u;
             hbaoWorkGroupSize.z = 16u;
 
-//            hbaoResultTexture = Texture2DArray(TextureFormat::RedGreenFloat16, quarterSize.x, quarterSize.y, TextureWrap::Clamp, 16, MipMapFiltering::Nearest);
+            pbrColorAttachment->resize(viewportWidth, viewportHeight);
+            pbrFramebuffer->recreate(viewportWidth, viewportHeight);
 
-//            hbaoReinterleavingRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
-//            hbaoBlurRenderPass.getSpecification().framebuffer->resize(viewportWidth, viewportHeight, false);
+            afterPbrFramebuffer->recreate(viewportWidth, viewportHeight);
 
-//            float bloomWidth = static_cast<float>(viewportWidth) / 2.0f;
-//            float bloomHeight = static_cast<float>(viewportHeight) / 2.0f;
-//            for (int i = 0; i < bloomTextures.size(); i++) {
-//                bloomTextures[i] = Texture2D(TextureFormat::Float32, static_cast<uint32_t>(bloomWidth), static_cast<uint32_t>(bloomHeight), TextureWrap::Clamp, MipMapFiltering::Bilinear);
-//                bloomWidth /= 2.0f;
-//                bloomHeight /= 2.0f;
+            float bloomWidth = static_cast<float>(viewportWidth) / 2.0f;
+            float bloomHeight = static_cast<float>(viewportHeight) / 2.0f;
+
+            for (auto& bloomAttachment: bloomAttachments) {
+                bloomAttachment->resize(static_cast<uint32_t>(bloomWidth), static_cast<uint32_t>(bloomHeight));
+                bloomWidth /= 2.0f;
+                bloomHeight /= 2.0f;
+            }
+            for (size_t i = 0; i < bloomDownsampleFramebuffers.size(); i++) {
+                bloomDownsampleFramebuffers[i]->recreate(bloomAttachments[i]->getWidth(), bloomAttachments[i]->getHeight());
+            }
+            for (size_t i = 0; i < bloomUpsampleFramebuffers.size(); i++) {
+                bloomUpsampleFramebuffers[i]->recreate(bloomAttachments[i]->getWidth(), bloomAttachments[i]->getHeight());
+            }
+            for (const auto& item: bloomDescriptorSets) {
+                item->recreate();
             }
 
-//            screenMaterial.setTexture("u_FinalImage", pbrRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
-//            screenMaterial.setTexture("u_BloomTexture", bloomTextures[0].getRendererId(), 1);
-//
-//            pbrPassMaterial.setTexture("u_HBAO_Tex", hbaoBlurRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 9);
-//            pbrPassMaterial.setTexture("u_gBuffer_AlbedoRoughness", gBufferRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
-//            pbrPassMaterial.setTexture("u_gBuffer_EmissionMetallic", gBufferRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(1), 1);
-//            pbrPassMaterial.setTexture("u_gBuffer_WorldNormal", gBufferRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(2), 2);
-//            pbrPassMaterial.setTexture("u_Depth", gBufferRenderPass.getSpecification().framebuffer->getDepthAttachmentRendererId(), 3);
+            screenDescriptorSet->recreate();
 
             uiProjectionMatrix = glm::ortho(0.0f, static_cast<float>(viewportWidth), 0.0f, static_cast<float>(viewportHeight));
-//        }
+        }
 
         UBCameraData cameraData{};
         cameraData.projection = camera.getProjectionMatrix();
@@ -663,19 +986,17 @@ namespace CgEngine {
 
         ubLightData->setData(&lightData, sizeof(UBLightData));
 
-//        skyboxMaterial.setTextureCube("u_Texture", *sceneEnvironment.prefilterMap, 0);
-//        skyboxMaterial.set("u_Intensity", sceneEnvironment.environmentIntensity);
-//        skyboxMaterial.set("u_Lod", sceneEnvironment.environmentLod);
+
+        SkyboxPushConstants skyboxPushConstantsData{};
+        skyboxPushConstantsData.intensity = sceneEnvironment.environmentIntensity;
+        skyboxPushConstantsData.lod = sceneEnvironment.environmentLod;
+        skyboxPushConstants->setData(&skyboxPushConstantsData, sizeof(SkyboxPushConstants));
 
         currentSceneEnvironment.environmentIntensity = sceneEnvironment.environmentIntensity;
-//        currentSceneEnvironment.irradianceMapId = sceneEnvironment.irradianceMap->getRendererId();
-//        currentSceneEnvironment.prefilterMapId = sceneEnvironment.prefilterMap->getRendererId();
+        currentSceneEnvironment.environmentMapDescriptorSet = sceneEnvironment.environmentMapDescriptorSet != nullptr ? sceneEnvironment.environmentMapDescriptorSet : environmentMapDescriptorSetBlack;
         currentSceneEnvironment.dirLightCastShadows = lightEnvironment.dirLightCastShadows && lightEnvironment.dirLightIntensity != 0.0f;
 
-//        pbrPassMaterial.setTexture("u_IrradianceMap", currentSceneEnvironment.irradianceMapId, 5);
-//        pbrPassMaterial.setTexture("u_PrefilterMap", currentSceneEnvironment.prefilterMapId, 6);
-//        pbrPassMaterial.set("u_EnvironmentIntensity", currentSceneEnvironment.environmentIntensity);
-
+        pbrPushConstants->setData(&currentSceneEnvironment.environmentIntensity, sizeof(float));
 
         setupShadowMapData(lightEnvironment.dirLightDirection, cameraData.viewProjection, camera);
 
@@ -691,6 +1012,8 @@ namespace CgEngine {
         ApplicationOptions& applicationOptions = Application::get().getApplicationOptions();
 
         buildTransformBuffers();
+        buildUiVertexBuffers();
+        fillDebugLinesVertexBuffer();
 
         skinMeshes();
         shadowMapPass();
@@ -703,34 +1026,42 @@ namespace CgEngine {
             hbaoReinterleavingPass();
             hbaoBlurPass();
         } else {
-//            clearPass(hbaoBlurRenderPass);
+            Renderer::clearPass(hbaoBlurRenderPass0, hbaoBlurFramebuffer1);
         }
 
         pbrPass();
         customShaderForwardPass();
+
+        Renderer::beginRenderPass(afterPbrRenderPass, afterPbrFramebuffer);
+
         skyboxPass();
 
         #ifdef CG_ENABLE_DEBUG_FEATURES
-        if (applicationOptions.debugShowPhysicsColliders) {
-            physicsCollidersPass();
-        }
-        if (applicationOptions.debugShowBoundingBoxes) {
-            boundingBoxPass();
-        }
-        if (applicationOptions.debugShowNormals) {
-            normalsDebugPass();
-        }
+            if (applicationOptions.debugShowPhysicsColliders) {
+                physicsCollidersPass();
+            }
+            if (applicationOptions.debugShowBoundingBoxes) {
+                boundingBoxPass();
+            }
+            if (applicationOptions.debugShowNormals) {
+                normalsDebugPass();
+            }
         #endif
 
         if (applicationOptions.debugRenderLines) {
             debugLinesPass();
         }
 
+        Renderer::endRenderPass();
+
         if (applicationOptions.enableBloom) {
             bloomPass();
         }
+
+        Renderer::beginSwapChainRenderPass();
         screenPass();
         uiPass();
+        Renderer::endRenderPass();
 
         skinningQueue.clear();
 
@@ -746,11 +1077,11 @@ namespace CgEngine {
         uiDrawInfoQueue.clear();
 
         #ifdef CG_ENABLE_DEBUG_FEATURES
-        physicsCollidersDrawCommandQueue.clear();
-        physicsCollidersMeshTransforms.clear();
+            physicsCollidersDrawCommandQueue.clear();
+            physicsCollidersMeshTransforms.clear();
 
-        boundingBoxDrawCommandQueue.clear();
-        boundingBoxMeshTransforms.clear();
+            boundingBoxDrawCommandQueue.clear();
+            boundingBoxMeshTransforms.clear();
         #endif
 
         debugLinesDrawInfoQueue.clear();
@@ -966,69 +1297,70 @@ namespace CgEngine {
                 drawInfo.textIndexCount += textElement->getNumIndices();
             }
 
-            CG_ASSERT(drawInfo.circleIndexCount <= Renderer::maxUiIndices, "Cannot render that many UICircles")
-            CG_ASSERT(drawInfo.rectIndexCount <= Renderer::maxUiIndices, "Cannot render that many UIRects")
-            CG_ASSERT(drawInfo.textIndexCount <= Renderer::maxUiIndices, "Cannot render that many UIText")
+            CG_ASSERT(drawInfo.circleIndexCount <= MAX_UI_INDICES, "Cannot render that many UICircles")
+            CG_ASSERT(drawInfo.rectIndexCount <= MAX_UI_INDICES, "Cannot render that many UIRects")
+            CG_ASSERT(drawInfo.textIndexCount <= MAX_UI_INDICES, "Cannot render that many UIText")
             CG_ASSERT(drawInfo.filledTextureSlots < drawInfo.textureSlots.size(), "Cannot render that many different Textures on a single z-index")
             CG_ASSERT(drawInfo.filledFontAtlases < drawInfo.fontAtlases.size(), "Cannot render that many different Fonts on a single z-index")
+            CG_ASSERT(uiDrawInfoQueue.size() < MAX_UI_Z_LAYERS, "Cannot render that many different z-indices")
         }
     }
 
     void SceneRenderer::submitPhysicsColliderMesh(MeshVertices* mesh, const glm::mat4& transform) {
-//        const auto& submeshes = mesh->getSubmeshes();
-//
-//        for (const auto& meshNode: mesh->getMeshNodes()) {
-//            for (const auto& submeshIndex: meshNode.submeshIndices) {
-//                const Submesh& submesh = submeshes.at(submeshIndex);
-//                MeshKey mk = {mesh->getVAO()->getRendererId(), submeshIndex, physicsCollidersMaterial.getUuid().getUuid()};
-//
-//                physicsCollidersMeshTransforms[mk].emplace_back(transform * meshNode.transform);
-//
-//                DrawCommand& drawCommand = physicsCollidersDrawCommandQueue[mk];
-//                drawCommand.vao = mesh->getVAO();
-//                drawCommand.material = &physicsCollidersMaterial;
-//                drawCommand.baseIndex = submesh.baseIndex;
-//                drawCommand.baseVertex = submesh.baseVertex;
-//                drawCommand.indexCount = submesh.indexCount;
-//                drawCommand.instanceCount++;
-//            }
-//        }
+        const auto& submeshes = mesh->getSubmeshes();
+
+        for (const auto& meshNode: mesh->getMeshNodes()) {
+            for (const auto& submeshIndex: meshNode.submeshIndices) {
+                const Submesh& submesh = submeshes.at(submeshIndex);
+                MeshKey mk = {mesh->getVAO(), submeshIndex, 0};
+
+                physicsCollidersMeshTransforms[mk].emplace_back(transform * meshNode.transform);
+
+                DrawCommand& drawCommand = physicsCollidersDrawCommandQueue[mk];
+                drawCommand.vao = mesh->getVAO();
+                drawCommand.material = nullptr;
+                drawCommand.baseIndex = submesh.baseIndex;
+                drawCommand.baseVertex = submesh.baseVertex;
+                drawCommand.indexCount = submesh.indexCount;
+                drawCommand.instanceCount++;
+            }
+        }
     }
 
     void SceneRenderer::submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, Mesh* mesh, const std::vector<uint32_t>& meshNodes, const glm::mat4& transform) {
-//        for (const auto& meshNodeIndex: meshNodes) {
-//            const auto& meshNode = mesh->getMeshNodes().at(meshNodeIndex);
-//            auto [center, extents] = meshNode.aaBoundingBox.getTransformedAdjustedCenterAndExtents(transform * meshNode.transform);
-//            const auto& boundingBoxSubmesh = boundingBoxMesh->getSubmeshes().at(0);
-//
-//            MeshKey mk = {boundingBoxMesh->getVAO()->getRendererId(), 0, boundingBoxMaterial.getUuid().getUuid()};
-//            boundingBoxMeshTransforms[mk].emplace_back(glm::translate(glm::mat4(1.0f), center) * glm::scale(glm::mat4(1.0f), extents * 2.0f));
-//
-//            DrawCommand& drawCommand = boundingBoxDrawCommandQueue[mk];
-//            drawCommand.vao = boundingBoxMesh->getVAO();
-//            drawCommand.material = &boundingBoxMaterial;
-//            drawCommand.baseIndex = boundingBoxSubmesh.baseIndex;
-//            drawCommand.baseVertex = boundingBoxSubmesh.baseVertex;
-//            drawCommand.indexCount = boundingBoxSubmesh.indexCount;
-//            drawCommand.instanceCount++;
-//        }
+        for (const auto& meshNodeIndex: meshNodes) {
+            const auto& meshNode = mesh->getMeshNodes().at(meshNodeIndex);
+            auto [center, extents] = meshNode.aaBoundingBox.getTransformedAdjustedCenterAndExtents(transform * meshNode.transform);
+            const auto& boundingBoxSubmesh = boundingBoxMesh->getSubmeshes().at(0);
+
+            MeshKey mk = {boundingBoxMesh->getVAO(), 0, 0};
+            boundingBoxMeshTransforms[mk].emplace_back(glm::translate(glm::mat4(1.0f), center) * glm::scale(glm::mat4(1.0f), extents * 2.0f));
+
+            DrawCommand& drawCommand = boundingBoxDrawCommandQueue[mk];
+            drawCommand.vao = boundingBoxMesh->getVAO();
+            drawCommand.material = nullptr;
+            drawCommand.baseIndex = boundingBoxSubmesh.baseIndex;
+            drawCommand.baseVertex = boundingBoxSubmesh.baseVertex;
+            drawCommand.indexCount = boundingBoxSubmesh.indexCount;
+            drawCommand.instanceCount++;
+        }
     }
 
     void SceneRenderer::submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, const AABoundingBox& boundingBox, const glm::mat4& transform) {
-//        auto [center, extents] = boundingBox.getTransformedAdjustedCenterAndExtents(transform);
-//
-//        const auto& boundingBoxSubmesh = boundingBoxMesh->getSubmeshes().at(0);
-//
-//        MeshKey mk = {boundingBoxMesh->getVAO()->getRendererId(), 0, boundingBoxMaterial.getUuid().getUuid()};
-//        boundingBoxMeshTransforms[mk].emplace_back(glm::translate(glm::mat4(1.0f), center) * glm::scale(glm::mat4(1.0f), extents * 2.0f));
-//
-//        DrawCommand& drawCommand = boundingBoxDrawCommandQueue[mk];
-//        drawCommand.vao = boundingBoxMesh->getVAO();
-//        drawCommand.material = &boundingBoxMaterial;
-//        drawCommand.baseIndex = boundingBoxSubmesh.baseIndex;
-//        drawCommand.baseVertex = boundingBoxSubmesh.baseVertex;
-//        drawCommand.indexCount = boundingBoxSubmesh.indexCount;
-//        drawCommand.instanceCount++;
+        auto [center, extents] = boundingBox.getTransformedAdjustedCenterAndExtents(transform);
+
+        const auto& boundingBoxSubmesh = boundingBoxMesh->getSubmeshes().at(0);
+
+        MeshKey mk = {boundingBoxMesh->getVAO(), 0, 0};
+        boundingBoxMeshTransforms[mk].emplace_back(glm::translate(glm::mat4(1.0f), center) * glm::scale(glm::mat4(1.0f), extents * 2.0f));
+
+        DrawCommand& drawCommand = boundingBoxDrawCommandQueue[mk];
+        drawCommand.vao = boundingBoxMesh->getVAO();
+        drawCommand.material = nullptr;
+        drawCommand.baseIndex = boundingBoxSubmesh.baseIndex;
+        drawCommand.baseVertex = boundingBoxSubmesh.baseVertex;
+        drawCommand.indexCount = boundingBoxSubmesh.indexCount;
+        drawCommand.instanceCount++;
     }
 
     void SceneRenderer::submitDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color) {
@@ -1073,7 +1405,9 @@ namespace CgEngine {
             return;
         }
 
-        Renderer::beginRenderPass(dirShadowMapRenderPass, dirShadowMapFramebuffer, dirShadowMapDescriptorSet);
+        Renderer::beginRenderPass(dirShadowMapRenderPass, dirShadowMapFramebuffer);
+        Renderer::bindGraphicsPipeline(dirShadowMapPipeline);
+        Renderer::bindDescriptorSet(dirShadowMapDescriptorSet, 0);
 
         for (const auto [mk, command]: shadowMapDrawCommandQueue) {
             transformOffsetPushConstant->setData(&command.transformsBufferOffset, sizeof(int));
@@ -1088,7 +1422,9 @@ namespace CgEngine {
         CG_GPU_DEBUG_GROUP("GBufferPass")
         CG_GPU_TIME_FN(&renderingStats.gBufferTimer)
 
-        Renderer::beginRenderPass(gBufferRenderPass, gBufferFramebuffer, gBufferDescriptorSet);
+        Renderer::beginRenderPass(gBufferRenderPass, gBufferFramebuffer);
+        Renderer::bindGraphicsPipeline(gBufferPipeline);
+        Renderer::bindDescriptorSet(gBufferDescriptorSet, 0);
 
         for (const auto [mk, command]: drawCommandQueue) {
             transformOffsetPushConstant->setData(&command.transformsBufferOffset, sizeof(int));
@@ -1101,77 +1437,88 @@ namespace CgEngine {
     }
 
     void SceneRenderer::hbaoDeinterleavingPass() {
-//        CG_GPU_DEBUG_GROUP("HBAODeinterleavingPass")
-//        CG_GPU_TIME_FN(&renderingStats.hbaoDeinterleavingTimer)
-//
-//        auto& deinterleavingShader = hbaoDeinterleavingRenderPass.getSpecification().shader;
-//
-//        hbaoDeinterleavingRenderPass.getSpecification().framebuffer = hbaoDeinterleavingFramebuffers[0];
-//        Renderer::beginRenderPass(hbaoDeinterleavingRenderPass);
-//        deinterleavingShader.setTexture(gBufferRenderPass.getSpecification().framebuffer->getDepthAttachmentRendererId(), 0);
-//        deinterleavingShader.setInt("u_UVOffsetIndex", 0);
-//        Renderer::renderUnitQuad(emptyMaterial);
-//        Renderer::endRenderPass();
-//
-//        hbaoDeinterleavingRenderPass.getSpecification().framebuffer = hbaoDeinterleavingFramebuffers[1];
-//        Renderer::beginRenderPass(hbaoDeinterleavingRenderPass);
-//        deinterleavingShader.setInt("u_UVOffsetIndex", 1);
-//        Renderer::renderUnitQuad(emptyMaterial);
-//        Renderer::endRenderPass();
+        CG_GPU_DEBUG_GROUP("HBAODeinterleavingPass")
+        CG_GPU_TIME_FN(&renderingStats.hbaoDeinterleavingTimer)
+
+        int uvOffset = 0;
+
+        Renderer::beginRenderPass(hbaoDeinterleavingRenderPass, hbaoDeinterleavingFramebuffers[0]);
+        Renderer::bindGraphicsPipeline(hbaoDeinterleavingPipeline);
+        Renderer::bindDescriptorSet(hbaoDeinterleavingDescriptorSet, 0);
+        hbaoUVOffsetPushConstants->setData(&uvOffset, sizeof(int));
+        Renderer::setPushConstants({hbaoUVOffsetPushConstants}, 1);
+        Renderer::renderUnitQuad();
+        Renderer::endRenderPass();
+
+        uvOffset = 1;
+
+        Renderer::beginRenderPass(hbaoDeinterleavingRenderPass, hbaoDeinterleavingFramebuffers[1]);
+        Renderer::bindGraphicsPipeline(hbaoDeinterleavingPipeline);
+        Renderer::bindDescriptorSet(hbaoDeinterleavingDescriptorSet, 0);
+        hbaoUVOffsetPushConstants->setData(&uvOffset, sizeof(int));
+        Renderer::setPushConstants({hbaoUVOffsetPushConstants}, 1);
+        Renderer::renderUnitQuad();
+        Renderer::endRenderPass();
     }
 
     void SceneRenderer::hbaoComputePass() {
-//        CG_GPU_DEBUG_GROUP("HBAOComputePass")
-//        CG_GPU_TIME_FN(&renderingStats.hbaoComputeTimer)
-//
-//        hbaoShader.bind();
-//
-//        hbaoShader.setTexture2D(hbaoDeinterleavingDepthTexture.getRendererId(), 0);
-//        hbaoShader.setTexture2D(gBufferRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(3), 1); // ViewSpaceNormals
-//        hbaoShader.setImageArray(hbaoResultTexture, 2, ShaderStorageAccess::WriteOnly);
-//
-//        hbaoShader.dispatch(hbaoWorkGroupSize.x, hbaoWorkGroupSize.y, hbaoWorkGroupSize.z);
-//        hbaoShader.waitForMemoryBarrier({MemoryBarrierBit::TextureFetch, MemoryBarrierBit::ShaderImageAccess});
+        CG_GPU_DEBUG_GROUP("HBAOComputePass")
+        CG_GPU_TIME_FN(&renderingStats.hbaoComputeTimer)
+
+        Renderer::bindComputePipeline(hbaoComputePipeline);
+        Renderer::bindDescriptorSet(hbaoComputeDescriptorSet, 0);
+        Renderer::dispatchCompute(hbaoWorkGroupSize.x, hbaoWorkGroupSize.y, hbaoWorkGroupSize.z);
+        Renderer::transitionImageLayoutFromComputeToShaderReadOnly(hbaoResult, ShaderStage::Fragment);
     }
 
     void SceneRenderer::hbaoReinterleavingPass() {
-//        CG_GPU_DEBUG_GROUP("HBAOReinterleavingPass")
-//        CG_GPU_TIME_FN(&renderingStats.hbaoReinterleavingTimer)
-//
-//        Renderer::beginRenderPass(hbaoReinterleavingRenderPass);
-//        hbaoReinterleavingRenderPass.getSpecification().shader.setTexture(hbaoResultTexture.getRendererId(), 0);
-//        Renderer::renderUnitQuad(emptyMaterial);
-//        Renderer::endRenderPass();
+        CG_GPU_DEBUG_GROUP("HBAOReinterleavingPass")
+        CG_GPU_TIME_FN(&renderingStats.hbaoReinterleavingTimer)
+
+        Renderer::beginRenderPass(hbaoReinterleavingRenderPass, hbaoReinterleavingFramebuffer);
+        Renderer::bindGraphicsPipeline(hbaoReinterleavingPipeline);
+        Renderer::bindDescriptorSet(hbaoReinterleavingDescriptorSet, 0);
+        Renderer::renderUnitQuad();
+        Renderer::endRenderPass();
     }
 
     void SceneRenderer::hbaoBlurPass() {
-//        CG_GPU_DEBUG_GROUP("HBAOBlurPass")
-//        CG_GPU_TIME_FN(&renderingStats.hbaoBlurTimer)
-//
-//        auto& shader = hbaoBlurRenderPass.getSpecification().shader;
-//
-//        Renderer::beginRenderPass(hbaoBlurRenderPass);
-//
-//        shader.setFloat("u_Sharpness", hbaoSharpness);
-//
-//        shader.setTexture(hbaoReinterleavingRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
-//        shader.setVec2("u_InvResolutionDirection", glm::vec2(invViewportWidth, 0.0f));
-//        Renderer::renderUnitQuad(emptyMaterial);
-//
-//        shader.setTexture(hbaoBlurRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
-//        shader.setVec2("u_InvResolutionDirection", glm::vec2(0.0f, invViewportHeight));
-//        Renderer::renderUnitQuad(emptyMaterial);
-//
-//        Renderer::endRenderPass();
+        CG_GPU_DEBUG_GROUP("HBAOBlurPass")
+        CG_GPU_TIME_FN(&renderingStats.hbaoBlurTimer)
+
+        HbaoBlurPushConstants pc{};
+        pc.sharpness = hbaoSharpness;
+        pc.invResolutionDirection = glm::vec2(invViewportWidth, 0.0f);
+
+        Renderer::beginRenderPass(hbaoBlurRenderPass0, hbaoBlurFramebuffer0);
+        Renderer::bindGraphicsPipeline(hbaoBlurPipeline0);
+        Renderer::bindDescriptorSet(hbaoBlurDescriptorSet0, 0);
+        hbaoBlurPushConstants->setData(&pc, sizeof(HbaoBlurPushConstants));
+        Renderer::setPushConstants({hbaoBlurPushConstants}, 1);
+        Renderer::renderUnitQuad();
+        Renderer::endRenderPass();
+
+        Renderer::beginRenderPass(hbaoBlurRenderPass1, hbaoBlurFramebuffer1);
+        Renderer::bindGraphicsPipeline(hbaoBlurPipeline1);
+        Renderer::bindDescriptorSet(hbaoBlurDescriptorSet1, 0);
+        pc.invResolutionDirection = glm::vec2(0.0f, invViewportHeight);
+        hbaoBlurPushConstants->setData(&pc, sizeof(HbaoBlurPushConstants));
+        Renderer::setPushConstants({hbaoBlurPushConstants}, 1);
+        Renderer::renderUnitQuad();
+        Renderer::endRenderPass();
     }
 
     void SceneRenderer::pbrPass() {
-//        CG_GPU_DEBUG_GROUP("PBRPass")
-//        CG_GPU_TIME_FN(&renderingStats.pbrTimer)
-//
-//        Renderer::beginRenderPass(pbrRenderPass);
-//        Renderer::renderUnitQuad(pbrPassMaterial);
-//        Renderer::endRenderPass();
+        CG_GPU_DEBUG_GROUP("PBRPass")
+        CG_GPU_TIME_FN(&renderingStats.pbrTimer)
+
+        Renderer::beginRenderPass(pbrRenderPass, pbrFramebuffer);
+        Renderer::bindGraphicsPipeline(pbrPipeline);
+        Renderer::bindDescriptorSet(pbrDescriptorSet, 0);
+        Renderer::bindDescriptorSet(currentSceneEnvironment.environmentMapDescriptorSet, 1);
+        Renderer::setPushConstants({pbrPushConstants}, 1);
+        Renderer::renderUnitQuad();
+        Renderer::endRenderPass();
     }
 
     void SceneRenderer::customShaderDeferredPass() {
@@ -1269,125 +1616,152 @@ namespace CgEngine {
     }
 
     void SceneRenderer::skyboxPass() {
-//        CG_GPU_DEBUG_GROUP("SkyboxPass")
-//        CG_GPU_TIME_FN(&renderingStats.skyboxTimer)
-//
-//        Renderer::beginRenderPass(skyboxRenderPass);
-//        Renderer::renderUnitCube(skyboxMaterial);
-//        Renderer::endRenderPass();
+        CG_GPU_DEBUG_GROUP("SkyboxPass")
+        CG_GPU_TIME_FN(&renderingStats.skyboxTimer)
+
+        Renderer::bindGraphicsPipeline(skyboxPipeline);
+        Renderer::bindDescriptorSet(currentSceneEnvironment.environmentMapDescriptorSet, 0);
+        Renderer::setPushConstants({skyboxPushConstants}, 1);
+        Renderer::renderUnitCube();
     }
 
     void SceneRenderer::physicsCollidersPass() {
-//        Renderer::beginRenderPass(physicsCollidersRenderPass);
-//
-//        for (const auto [mk, command]: physicsCollidersDrawCommandQueue) {
-//            const auto& transforms = physicsCollidersMeshTransforms[mk];
-//            Renderer::executeDrawCommand(*command.vao, *command.material, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
-//        }
-//
-//        Renderer::endRenderPass();
+        CG_GPU_DEBUG_GROUP("PhysicsCollidersPass")
+
+        Renderer::bindGraphicsPipeline(physicsCollidersPipeline);
+        Renderer::bindDescriptorSet(physicsCollidersDescriptorSet, 0);
+
+        CollidersPushConstants pc{};
+        pc.color = {0.0f, 1.0f, 0.0f};
+
+        for (const auto [mk, command]: physicsCollidersDrawCommandQueue) {
+            pc.transformsOffset = command.transformsBufferOffset;
+            collidersPushConstants->setData(&pc, sizeof(CollidersPushConstants));
+            Renderer::setPushConstants({collidersPushConstants}, 1);
+            Renderer::executeDrawCommand(command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount);
+        }
     }
 
     void SceneRenderer::boundingBoxPass() {
-//        Renderer::beginRenderPass(boundingBoxRenderPass);
-//
-//        for (const auto [mk, command]: boundingBoxDrawCommandQueue) {
-//            const auto& transforms = boundingBoxMeshTransforms[mk];
-//            Renderer::executeDrawCommand(*command.vao, *command.material, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
-//        }
-//
-//        Renderer::endRenderPass();
+        CG_GPU_DEBUG_GROUP("BoundingBoxPass")
+
+        Renderer::bindGraphicsPipeline(boundingBoxPipeline);
+        Renderer::bindDescriptorSet(boundingBoxDescriptorSet, 0);
+
+        CollidersPushConstants pc{};
+        pc.color = {1.0f, 1.0f, 0.0f};
+
+        for (const auto [mk, command]: boundingBoxDrawCommandQueue) {
+            pc.transformsOffset = command.transformsBufferOffset;
+            collidersPushConstants->setData(&pc, sizeof(CollidersPushConstants));
+            Renderer::setPushConstants({collidersPushConstants}, 1);
+            Renderer::executeDrawCommand(command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount);
+        }
     }
 
     void SceneRenderer::normalsDebugPass() {
-//        Renderer::beginRenderPass(normalsDebugRenderPass);
-//
-//        for (const auto [mk, command]: drawCommandQueue) {
-//            const auto& transforms = meshTransforms[mk];
-//            Renderer::executeDrawCommand(*command.vao, normalsDebugMaterial, command.indexCount, command.baseIndex, command.baseVertex, transforms, command.instanceCount);
-//        }
-//
-//        Renderer::endRenderPass();
+        CG_GPU_DEBUG_GROUP("NormalsDebugPass")
+
+        Renderer::bindGraphicsPipeline(normalsDebugPipeline);
+        Renderer::bindDescriptorSet(gBufferDescriptorSet, 0);
+
+        CollidersPushConstants pc{};
+        pc.color = {1.0f, 0.0f, 0.0f};
+
+        for (const auto [mk, command]: drawCommandQueue) {
+            pc.transformsOffset = command.transformsBufferOffset;
+            collidersPushConstants->setData(&pc, sizeof(CollidersPushConstants));
+            Renderer::setPushConstants({collidersPushConstants}, 1);
+            Renderer::executeDrawCommand(command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount);
+        }
     }
 
     void SceneRenderer::debugLinesPass() {
-//        Renderer::beginRenderPass(debugLinesRenderPass);
-//        Renderer::renderLines(debugLinesDrawInfoQueue);
-//        Renderer::endRenderPass();
+        Renderer::bindGraphicsPipeline(debugLinesPipeline);
+        Renderer::bindDescriptorSet(debugLinesDescriptorSet, 0);
+        Renderer::drawArrays(debugLinesVAO, debugLinesDrawInfoQueue.size() * 2);
     }
 
     void SceneRenderer::bloomPass() {
-//        CG_GPU_DEBUG_GROUP("BloomPass")
-//        CG_GPU_TIME_FN(&renderingStats.bloomTimer)
-//
-//        auto& downSampleShader = bloomDownSamplePass.getSpecification().shader;
-//
-//        bloomDownSamplePass.getSpecification().framebuffer->setColorAttachments({bloomTextures[0].getRendererId()}, 0, viewportWidth / 2, viewportHeight / 2);
-//        Renderer::beginRenderPass(bloomDownSamplePass);
-//        downSampleShader.setTexture(pbrRenderPass.getSpecification().framebuffer->getColorAttachmentRendererId(0), 0);
-//        downSampleShader.setBool("u_UseThreshold", true);
-//        Renderer::renderUnitQuad(emptyMaterial);
-//        Renderer::endRenderPass();
-//
-//        downSampleShader.setBool("u_UseThreshold", false);
-//        for (uint32_t i = 0; i < bloomTextures.size() - 1; ++i) {
-//            bloomDownSamplePass.getSpecification().framebuffer->setColorAttachments({bloomTextures[i + 1].getRendererId()}, 0, bloomTextures[i + 1].getWidth(), bloomTextures[i + 1].getHeight());
-//            Renderer::beginRenderPass(bloomDownSamplePass);
-//            downSampleShader.setTexture(bloomTextures[i].getRendererId(), 0);
-//            Renderer::renderUnitQuad(emptyMaterial);
-//            Renderer::endRenderPass();
-//        }
-//
-//        auto& upSampleShader = bloomUpSamplePass.getSpecification().shader;
-//
-//        for (uint32_t i = bloomTextures.size() - 1; i > 0; i--) {
-//            bloomUpSamplePass.getSpecification().framebuffer->setColorAttachments({bloomTextures[i - 1].getRendererId()}, 0, bloomTextures[i - 1].getWidth(), bloomTextures[i - 1].getHeight());
-//            Renderer::beginRenderPass(bloomUpSamplePass);
-//            upSampleShader.setTexture(bloomTextures[i].getRendererId(), 0);
-//            Renderer::renderUnitQuad(emptyMaterial);
-//            Renderer::endRenderPass();
-//        }
+        CG_GPU_DEBUG_GROUP("BloomPass")
+        CG_GPU_TIME_FN(&renderingStats.bloomTimer)
+
+        BloomDownsamplePushConstants pc{};
+        pc.useThreshold = true;
+        bloomDownsamplePushConstants->setData(&pc, sizeof(BloomDownsamplePushConstants));
+
+        Renderer::beginRenderPass(bloomDownSamplePass, bloomDownsampleFramebuffers[0]);
+        Renderer::bindGraphicsPipeline(bloomDownsamplePipeline);
+        Renderer::setPushConstants({bloomDownsamplePushConstants}, 1);
+        Renderer::bindDescriptorSet(bloomDescriptorSets[0], 0);
+        Renderer::renderUnitQuad();
+        Renderer::endRenderPass();
+
+        pc.useThreshold = false;
+        bloomDownsamplePushConstants->setData(&pc, sizeof(BloomDownsamplePushConstants));
+
+        for (uint32_t i = 0; i < bloomDownsampleFramebuffers.size() - 1; ++i) {
+            Renderer::beginRenderPass(bloomDownSamplePass, bloomDownsampleFramebuffers[i + 1]);
+            Renderer::bindGraphicsPipeline(bloomDownsamplePipeline);
+            Renderer::setPushConstants({bloomDownsamplePushConstants}, 1);
+            Renderer::bindDescriptorSet(bloomDescriptorSets[i + 1], 0);
+            Renderer::renderUnitQuad();
+            Renderer::endRenderPass();
+        }
+
+        for (uint32_t i = bloomUpsampleFramebuffers.size() - 1; i > 0; i--) {
+            Renderer::beginRenderPass(bloomUpSamplePass, bloomUpsampleFramebuffers[i]);
+            Renderer::bindGraphicsPipeline(bloomUpsamplePipeline);
+            Renderer::bindDescriptorSet(bloomDescriptorSets[i + 2], 0);
+            Renderer::renderUnitQuad();
+            Renderer::endRenderPass();
+        }
     }
 
     void SceneRenderer::screenPass() {
-//        CG_GPU_DEBUG_GROUP("ScreenPass")
-//        CG_GPU_TIME_FN(&renderingStats.screenTimer)
-//
-//        Renderer::beginRenderPass(screenRenderPass);
-//        Renderer::renderUnitQuad(screenMaterial);
-//        Renderer::endRenderPass();
+        CG_GPU_DEBUG_GROUP("ScreenPass")
+        CG_GPU_TIME_FN(&renderingStats.screenTimer)
+
+        Renderer::bindGraphicsPipeline(screenPipeline);
+        Renderer::bindDescriptorSet(screenDescriptorSet, 0);
+        Renderer::renderUnitQuad();
     }
 
     void SceneRenderer::uiPass() {
-//        CG_GPU_DEBUG_GROUP("UiPass")
-//        CG_GPU_TIME_FN(&renderingStats.uiTimer)
-//
-//        for (const auto& [zIndex, drawInfo]: uiDrawInfoQueue) {
-//
-//            for (uint32_t i = 0; i < drawInfo.filledTextureSlots; i++) {
-//                drawInfo.textureSlots[i]->bind(i);
-//            }
-//            if (drawInfo.circleIndexCount > 0) {
-//                Renderer::beginRenderPass(uiCirclePass);
-//                Renderer::renderUiCircles(drawInfo.circleVertices, drawInfo.circleIndexCount);
-//                Renderer::endRenderPass();
-//            }
-//            if (drawInfo.rectIndexCount > 0) {
-//                Renderer::beginRenderPass(uiRectPass);
-//                Renderer::renderUiRects(drawInfo.rectVertices, drawInfo.rectIndexCount);
-//                Renderer::endRenderPass();
-//            }
-//
-//
-//            for (uint32_t i = 0; i < drawInfo.filledFontAtlases; i++) {
-//                drawInfo.fontAtlases[i]->bind(i);
-//            }
-//            if (drawInfo.textIndexCount > 0) {
-//                Renderer::beginRenderPass(uiTextPass);
-//                Renderer::renderUiText(drawInfo.textVertices, drawInfo.textIndexCount);
-//                Renderer::endRenderPass();
-//            }
-//        }
+        CG_GPU_DEBUG_GROUP("UiPass")
+        CG_GPU_TIME_FN(&renderingStats.uiTimer)
+
+        uint32_t zIndex = 0;
+        size_t circleOffset = 0;
+        size_t rectOffset = 0;
+        size_t textOffset = 0;
+
+        for (const auto& [_, drawInfo]: uiDrawInfoQueue) {
+            if (drawInfo.circleIndexCount > 0) {
+                Renderer::bindGraphicsPipeline(uiCirclePipeline);
+                Renderer::bindDescriptorSet(uiDescriptorSets[zIndex], 0);
+                Renderer::executeDrawCommand(uiCircleVAO, drawInfo.circleIndexCount, 0, circleOffset);
+
+                circleOffset += drawInfo.circleVertices.size();
+            }
+            if (drawInfo.rectIndexCount > 0) {
+                Renderer::bindGraphicsPipeline(uiRectPipeline);
+                Renderer::bindDescriptorSet(uiDescriptorSets[zIndex], 0);
+                Renderer::executeDrawCommand(uiRectVAO, drawInfo.rectIndexCount, 0, rectOffset);
+
+                rectOffset += drawInfo.rectVertices.size();
+            }
+
+            if (drawInfo.textIndexCount > 0) {
+                Renderer::bindGraphicsPipeline(uiTextPipeline);
+                Renderer::bindDescriptorSet(uiTextDescriptorSets[zIndex], 0);
+                Renderer::executeDrawCommand(uiTextVAO, drawInfo.textIndexCount, 0, textOffset);
+
+                textOffset += drawInfo.textVertices.size();
+            }
+
+            zIndex++;
+        }
     }
 
     void SceneRenderer::setupShadowMapData(glm::vec3 dirLightDirection, const glm::mat4& cameraViewProjection, const Camera& camera) {
@@ -1587,6 +1961,107 @@ namespace CgEngine {
                 currentOffset += static_cast<int>(instanceCount);
             }
         }
+        #ifdef CG_ENABLE_DEBUG_FEATURES
+            {
+                int currentOffset = 0;
+                for (auto& [mk, command]: boundingBoxDrawCommandQueue) {
+                    const auto& transforms = boundingBoxMeshTransforms.at(mk);
+                    uint32_t instanceCount = command.instanceCount;
+
+                    command.transformsBufferOffset = currentOffset;
+                    boundingBoxTransformsBuffer->setSubData(currentOffset * sizeof(glm::mat4), transforms.data(), instanceCount * sizeof(glm::mat4));
+
+                    currentOffset += static_cast<int>(instanceCount);
+                }
+            }
+            {
+                int currentOffset = 0;
+                for (auto& [mk, command]: physicsCollidersDrawCommandQueue) {
+                    const auto& transforms = physicsCollidersMeshTransforms.at(mk);
+                    uint32_t instanceCount = command.instanceCount;
+
+                    command.transformsBufferOffset = currentOffset;
+                    physicsCollidersTransformsBuffer->setSubData(currentOffset * sizeof(glm::mat4), transforms.data(), instanceCount * sizeof(glm::mat4));
+
+                    currentOffset += static_cast<int>(instanceCount);
+                }
+            }
+        #endif
+    }
+
+    void SceneRenderer::buildUiVertexBuffers() {
+        size_t circleOffset = 0;
+        size_t rectOffset = 0;
+        size_t textOffset = 0;
+        uint32_t zIndex = 0;
+
+        for (const auto& [_, drawInfo]: uiDrawInfoQueue) {
+            if (drawInfo.circleIndexCount > 0) {
+                size_t size = drawInfo.circleVertices.size() * sizeof(UiCircleVertex);
+                uiCircleVAO->getVertexBuffer(0)->setSubData(circleOffset, drawInfo.circleVertices.data(), size);
+                circleOffset += size;
+            }
+            if (drawInfo.rectIndexCount > 0) {
+                size_t size = drawInfo.rectVertices.size() * sizeof(UiRectVertex);
+                uiRectVAO->getVertexBuffer(0)->setSubData(rectOffset, drawInfo.rectVertices.data(), size);
+                rectOffset += size;
+            }
+            if (drawInfo.textIndexCount > 0) {
+                size_t size = drawInfo.textVertices.size() * sizeof(UiTextVertex);
+                uiTextVAO->getVertexBuffer(0)->setSubData(textOffset, drawInfo.textVertices.data(), size);
+                textOffset += size;
+            }
+
+            DescriptorSetSpecification uiDescriptorSetSpec{};
+            uiDescriptorSetSpec.texture2DBindings.resize(16);
+            for (uint32_t i = 0; i < drawInfo.filledTextureSlots; i++) {
+                uiDescriptorSetSpec.texture2DBindings[i].texture = drawInfo.textureSlots[i];
+                uiDescriptorSetSpec.texture2DBindings[i].bindingPoint = i;
+            }
+            for (uint32_t i = drawInfo.filledTextureSlots; i < uiDescriptorSetSpec.texture2DBindings.size(); i++) {
+                uiDescriptorSetSpec.texture2DBindings[i].texture = Renderer::getWhiteTexture();
+                uiDescriptorSetSpec.texture2DBindings[i].bindingPoint = i;
+            }
+            uiDescriptorSets[zIndex]->reconfigure(uiDescriptorSetSpec);
+
+            DescriptorSetSpecification uiTextDescriptorSetSpec{};
+            uiTextDescriptorSetSpec.texture2DBindings.resize(4);
+            for (uint32_t i = 0; i < drawInfo.filledFontAtlases; i++) {
+                uiTextDescriptorSetSpec.texture2DBindings[i].texture = drawInfo.fontAtlases[i];
+                uiTextDescriptorSetSpec.texture2DBindings[i].bindingPoint = i;
+            }
+            for (uint32_t i = drawInfo.filledFontAtlases; i < uiTextDescriptorSetSpec.texture2DBindings.size(); i++) {
+                uiTextDescriptorSetSpec.texture2DBindings[i].texture = Renderer::getWhiteTexture();
+                uiTextDescriptorSetSpec.texture2DBindings[i].bindingPoint = i;
+            }
+            uiTextDescriptorSets[zIndex]->reconfigure(uiTextDescriptorSetSpec);
+
+            zIndex++;
+        }
+    }
+
+    void SceneRenderer::fillDebugLinesVertexBuffer() {
+        auto vertices = std::vector<float>();
+
+        for (const auto& line: debugLinesDrawInfoQueue) {
+            vertices.push_back(line.from.x);
+            vertices.push_back(line.from.y);
+            vertices.push_back(line.from.z);
+
+            vertices.push_back(line.color.x);
+            vertices.push_back(line.color.y);
+            vertices.push_back(line.color.z);
+
+            vertices.push_back(line.to.x);
+            vertices.push_back(line.to.y);
+            vertices.push_back(line.to.z);
+
+            vertices.push_back(line.color.x);
+            vertices.push_back(line.color.y);
+            vertices.push_back(line.color.z);
+        }
+
+        debugLinesVAO->getVertexBuffer(0)->setSubData(0, vertices.data(), vertices.size() * sizeof(float));
     }
 
     void SceneRenderer::resetRenderingStats() {
