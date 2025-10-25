@@ -36,13 +36,13 @@ uniform layout(binding=16) sampler2D u_displacementC2;
 uniform layout(binding=17) sampler2D u_derivativesC2;
 uniform layout(binding=18) sampler2D u_turbulenceC2;
 
-layout(location = 11) in TS_OUT {
+layout(location = 11) in TCS_OUT {
     vec4 aPos;
     vec4 aNormal;
     vec4 aTangent;
     vec4 aBitangent;
     vec4 aTexCoord;
-} ts_in[];
+} tes_in[];
 
 layout(location = 12) out VS_OUT {
     vec3 WorldPosition;
@@ -62,9 +62,9 @@ vec4 bilinearInterpolation(vec4 i00, vec4 i01, vec4 i10, vec4 i11) {
 }
 
 void main() {
-    vec4 p = bilinearInterpolation(ts_in[0].aPos, ts_in[1].aPos, ts_in[2].aPos, ts_in[3].aPos);
-    vec4 n = bilinearInterpolation(ts_in[0].aNormal, ts_in[1].aNormal, ts_in[2].aNormal, ts_in[3].aNormal);
-    vec4 t = bilinearInterpolation(ts_in[0].aTexCoord, ts_in[1].aTexCoord, ts_in[2].aTexCoord, ts_in[3].aTexCoord);
+    vec4 p = bilinearInterpolation(tes_in[0].aPos, tes_in[1].aPos, tes_in[2].aPos, tes_in[3].aPos);
+    vec4 n = bilinearInterpolation(tes_in[0].aNormal, tes_in[1].aNormal, tes_in[2].aNormal, tes_in[3].aNormal);
+    vec4 t = bilinearInterpolation(tes_in[0].aTexCoord, tes_in[1].aTexCoord, tes_in[2].aTexCoord, tes_in[3].aTexCoord);
 
     vec4 displacement0 = texture(u_displacementC0, (u_CustomPipelineData.transform * p).xz / u_OceanData.length0);
     vec4 displacement1 = texture(u_displacementC1, (u_CustomPipelineData.transform * p).xz / u_OceanData.length1);

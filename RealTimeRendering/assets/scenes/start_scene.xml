@@ -10,7 +10,7 @@
             <TransformComponent position="1.08298 16.935 -6.05486" rotation="0 0 0" scale="1 1 1" />
             <CameraComponent primary="true" projection="perspective" near="0.1" far="500" fov="80" exposure="0.75" bloom-intensity="0.1" />
             <ScriptComponent script-name="flyingCameraScript" normal="10" slow="5" fast="80" />
-<!--            <AnimationComponent asset-file="rtr_island.fbx" animation="Plane|CameraAction"/>-->
+            <AnimationComponent asset-file="rtr_island.fbx" animation="Plane|CameraAction"/>
         </Components>
     </Entity>
     <Entity>
@@ -33,9 +33,9 @@
     <Entity id="island">
         <Components>
             <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
-<!--            <MeshRendererComponent asset-file="rtr_island.fbx" />-->
-<!--            <RigidBodyComponent dynamic="false" />-->
-<!--            <TriangleColliderComponent asset-file="rtr_island.fbx" mesh-node="Plane" />-->
+            <MeshRendererComponent asset-file="rtr_island.fbx" />
+            <RigidBodyComponent dynamic="false" />
+            <TriangleColliderComponent asset-file="rtr_island.fbx" mesh-node="Plane" />
         </Components>
         <Entity id="grass">
             <Components>

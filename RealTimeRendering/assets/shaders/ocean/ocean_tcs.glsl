@@ -8,7 +8,7 @@ layout (binding = 5, std140) uniform CustomPipelineData {
     mat4 transform;
 } u_CustomPipelineData;
 
-layout(location = 10) in TS_OUT {
+layout(location = 10) in VS_OUT_TO_TCS {
     vec4 aPos;
     vec4 aNormal;
     vec4 aTangent;
@@ -16,23 +16,23 @@ layout(location = 10) in TS_OUT {
     vec4 aTexCoord;
 } ts_in[];
 
-layout(location = 11) out TS_OUT {
+layout(location = 11) out TCS_OUT {
     vec4 aPos;
     vec4 aNormal;
     vec4 aTangent;
     vec4 aBitangent;
     vec4 aTexCoord;
-} ts_out[];
+} tcs_out[];
 
 void main()
 {
     // ----------------------------------------------------------------------
     // pass attributes through
-    ts_out[gl_InvocationID].aPos = ts_in[gl_InvocationID].aPos;
-    ts_out[gl_InvocationID].aNormal = ts_in[gl_InvocationID].aNormal;
-    ts_out[gl_InvocationID].aTangent = ts_in[gl_InvocationID].aTangent;
-    ts_out[gl_InvocationID].aBitangent = ts_in[gl_InvocationID].aBitangent;
-    ts_out[gl_InvocationID].aTexCoord = ts_in[gl_InvocationID].aTexCoord;
+    tcs_out[gl_InvocationID].aPos = ts_in[gl_InvocationID].aPos;
+    tcs_out[gl_InvocationID].aNormal = ts_in[gl_InvocationID].aNormal;
+    tcs_out[gl_InvocationID].aTangent = ts_in[gl_InvocationID].aTangent;
+    tcs_out[gl_InvocationID].aBitangent = ts_in[gl_InvocationID].aBitangent;
+    tcs_out[gl_InvocationID].aTexCoord = ts_in[gl_InvocationID].aTexCoord;
 
     // ----------------------------------------------------------------------
     // invocation zero controls tessellation levels for the entire patch
