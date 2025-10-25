@@ -37,13 +37,13 @@ namespace CgEngine {
 
         static void transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition);
         static void memoryBarrierForVertexBufferAfterCompute(const VertexBuffer* vertexBuffer);
+        static void memoryBarrierForAttachmentAfterComputeToCompute(Attachment* attachment);
 
         static void renderUnitQuad();
         static void renderUnitCube();
         static void executeDrawCommand(const VertexArrayObject* vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, uint32_t instanceCount);
         static void executeDrawCommand(const VertexArrayObject* vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex);
         static void drawArrays(const VertexArrayObject* vao, uint32_t vertexCount);
-//        static void executeCustomShaderDrawCommand(const VertexArrayObject& vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, uint32_t instanceCount, int tessellationPatchSize);
 
         static Texture2D* getWhiteTexture();
         static Texture2D* getBrdfLUTTexture();

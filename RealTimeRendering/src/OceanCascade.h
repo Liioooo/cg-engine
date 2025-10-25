@@ -46,25 +46,9 @@ namespace RTR {
 
         float calculateOmegaP() const;
 
-        struct InitialSpectrumUBOData {
-            float T;
-            float gamma;
-            float alpha;
-            float omega_p;
-            glm::vec2 wind;
-            int size;
-            float length;
-            float depth;
-            float g;
-            float cutoffLow;
-            float cutoffHigh;
-        };
-
         struct SimulateOceanPC {
             float time;
         };
-
-        CgEngine::UniformBuffer* initialSpectrumUBO = nullptr;
         CgEngine::DescriptorSet* timeSpectrumDescriptorSet = nullptr;
         CgEngine::PushConstants* timeSpectrumPushConstants = nullptr;
 
@@ -72,7 +56,6 @@ namespace RTR {
             float deltaTime;
             float lambda;
         };
-
         CgEngine::DescriptorSet* finalTexturesDescriptorSet = nullptr;
         CgEngine::PushConstants* finalTexturesPushConstants = nullptr;
 

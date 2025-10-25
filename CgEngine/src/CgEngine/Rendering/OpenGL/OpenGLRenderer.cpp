@@ -330,6 +330,10 @@ namespace CgEngine {
         glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
     }
 
+    void OpenGLRenderer::memoryBarrierForAttachmentAfterComputeToCompute(CgEngine::Attachment* attachment) {
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    }
+
     void OpenGLRenderer::renderUnitQuad() {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
         CG_ASSERT(currentPipelineHandle != ~0, "There is no active GraphicsPipeline!")

@@ -167,9 +167,6 @@ namespace RTR {
         oceanCascade2->calculateStateAtTime(currentTime, ts.getSeconds());
     }
 
-    void Ocean::onKeyPressed(CgEngine::KeyPressedEvent& event) {
-    }
-
     void Ocean::onRenderImGui() {
         bool changed = false;
         bool needRecalculation = false;

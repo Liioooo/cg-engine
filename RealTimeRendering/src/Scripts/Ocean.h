@@ -32,9 +32,7 @@ namespace RTR {
 
         void update(CgEngine::TimeStep ts) override;
 
-        void onKeyPressed(CgEngine::KeyPressedEvent& event) override;
-
-        void onRenderImGui();
+        void onRenderImGui() override;
 
         void createMesh();
 

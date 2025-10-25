@@ -1515,7 +1515,7 @@ namespace CgEngine {
 
     void SceneRenderer::customShaderPass() {
         CG_GPU_DEBUG_GROUP("CustomShaderPass")
-        CG_GPU_TIME_FN(&renderingStats.customShaderDeferredTimer)
+        CG_GPU_TIME_FN(&renderingStats.customShaderTimer)
 
         CustomPipelineData customPipelineData{};
 

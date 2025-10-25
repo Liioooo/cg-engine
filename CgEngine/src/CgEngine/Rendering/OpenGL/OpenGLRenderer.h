@@ -37,6 +37,7 @@ namespace CgEngine {
 
         void transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition) override;
         void memoryBarrierForVertexBufferAfterCompute(const VertexBuffer* vertexBuffer) override;
+        void memoryBarrierForAttachmentAfterComputeToCompute(Attachment* attachment) override;
 
         void renderUnitQuad() override;
         void renderUnitCube() override;

@@ -40,6 +40,7 @@ namespace CgEngine {
 
         virtual void transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition) = 0;
         virtual void memoryBarrierForVertexBufferAfterCompute(const VertexBuffer* vertexBuffer) = 0;
+        virtual void memoryBarrierForAttachmentAfterComputeToCompute(Attachment* attachment) = 0;
 
         virtual void renderUnitQuad() = 0;
         virtual void renderUnitCube() = 0;

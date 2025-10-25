@@ -25,8 +25,7 @@ namespace CgEngine::ImGuiWidgets {
         ImGui::Text("HBAO Reinterleave: %.6fms", renderingStats.hbaoReinterleavingTimer);
         ImGui::Text("HBAO Blur: %.6fms", renderingStats.hbaoBlurTimer);
         ImGui::Text("PBR: %.6fms", renderingStats.pbrTimer);
-        ImGui::Text("Custom Shader Deferred: %.6fms", renderingStats.customShaderDeferredTimer);
-        ImGui::Text("Custom Shader Forward: %.6fms", renderingStats.customShaderForwardTimer);
+        ImGui::Text("Custom Shader: %.6fms", renderingStats.customShaderTimer);
         ImGui::Text("Skybox: %.6fms", renderingStats.skyboxTimer);
         ImGui::Text("Bloom: %.6fms", renderingStats.bloomTimer);
         ImGui::Text("Screen: %.6fms", renderingStats.screenTimer);

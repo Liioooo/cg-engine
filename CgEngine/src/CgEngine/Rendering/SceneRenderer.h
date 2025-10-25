@@ -24,8 +24,7 @@ namespace CgEngine {
         float hbaoReinterleavingTimer = 0.0f;
         float hbaoBlurTimer = 0.0f;
         float pbrTimer = 0.0f;
-        float customShaderForwardTimer = 0.0f;
-        float customShaderDeferredTimer = 0.0f;
+        float customShaderTimer = 0.0f;
         float skyboxTimer = 0.0f;
         float bloomTimer = 0.0f;
         float screenTimer = 0.0f;

@@ -2,7 +2,6 @@
 #include "OceanCascade.h"
 #include "CgEngine/Rendering/GraphicsObjectsFactory.h"
 #include "CgEngine/Rendering/Renderer.h"
-#include "glad/glad.h"
 
 namespace RTR {
     OceanCascade::OceanCascade(const OceanParams& oceanParams, CgEngine::ResourceManager& resourceManager) : oceanParams(oceanParams), fastFourierTransform(resourceManager) {
@@ -12,12 +11,9 @@ namespace RTR {
         this->timeSpectrumShader = resourceManager.getResource<CgEngine::CustomComputePipeline>("ocean/simulate-ocean");
         this->conjugateSpectrumShader = resourceManager.getResource<CgEngine::CustomComputePipeline>("ocean/conjugate");
         this->finalTexturesShader = resourceManager.getResource<CgEngine::CustomComputePipeline>("ocean/compute-final");
-
-        this->initialSpectrumUBO = CgEngine::GraphicsObjectsFactory::createUniformBuffer(sizeof(InitialSpectrumUBOData));
     }
 
-    OceanCascade::~OceanCascade()
-    {
+    OceanCascade::~OceanCascade() {
         delete gaussianNoise;
         delete initialSpectrum;
         delete waveData;
@@ -29,11 +25,33 @@ namespace RTR {
         delete displacement;
         delete derivatives;
         delete turbulence;
+
+        delete timeSpectrumDescriptorSet;
+        delete timeSpectrumPushConstants;
+
+        delete finalTexturesDescriptorSet;
+        delete finalTexturesPushConstants;
     }
 
     void OceanCascade::calculateInitialState() {
         generateGaussianNoise();
         initTextures();
+
+        struct InitialSpectrumUBOData {
+            float T;
+            float gamma;
+            float alpha;
+            float omega_p;
+            glm::vec2 wind;
+            int size;
+            float length;
+            float depth;
+            float g;
+            float cutoffLow;
+            float cutoffHigh;
+        };
+
+        auto* initialSpectrumUBO = CgEngine::GraphicsObjectsFactory::createUniformBuffer(sizeof(InitialSpectrumUBOData));
 
         CgEngine::DescriptorSetSpecification initialSpectrumDescriptorSetSpec{};
         initialSpectrumDescriptorSetSpec.layout = initialSpectrumShader->getDescriptorSetLayout();
@@ -49,24 +67,25 @@ namespace RTR {
         };
         auto* initialSpectrumDescriptorSet = CgEngine::GraphicsObjectsFactory::createDescriptorSet(initialSpectrumDescriptorSetSpec);
 
-        InitialSpectrumUBOData uboData{};
-        uboData.T = oceanParams.spectrumParams.T;
-        uboData.gamma = oceanParams.spectrumParams.gamma;
-        uboData.alpha = oceanParams.spectrumParams.alpha;
-        uboData.omega_p = oceanParams.spectrumParams.omega_p;
-        uboData.wind = oceanParams.spectrumParams.wind;
-        uboData.size = oceanParams.size;
-        uboData.length = oceanParams.length;
-        uboData.depth = oceanParams.depth;
-        uboData.g = oceanParams.g;
-        uboData.cutoffLow = oceanParams.spectrumParams.cutoffLow;
-        uboData.cutoffHigh = oceanParams.spectrumParams.cutoffHigh;
-        initialSpectrumUBO->setData(&uboData, sizeof(InitialSpectrumUBOData));
+        InitialSpectrumUBOData initialSpectrumUboData{};
+        initialSpectrumUboData.T = oceanParams.spectrumParams.T;
+        initialSpectrumUboData.gamma = oceanParams.spectrumParams.gamma;
+        initialSpectrumUboData.alpha = oceanParams.spectrumParams.alpha;
+        initialSpectrumUboData.omega_p = oceanParams.spectrumParams.omega_p;
+        initialSpectrumUboData.wind = oceanParams.spectrumParams.wind;
+        initialSpectrumUboData.size = oceanParams.size;
+        initialSpectrumUboData.length = oceanParams.length;
+        initialSpectrumUboData.depth = oceanParams.depth;
+        initialSpectrumUboData.g = oceanParams.g;
+        initialSpectrumUboData.cutoffLow = oceanParams.spectrumParams.cutoffLow;
+        initialSpectrumUboData.cutoffHigh = oceanParams.spectrumParams.cutoffHigh;
+        initialSpectrumUBO->setData(&initialSpectrumUboData, sizeof(InitialSpectrumUBOData));
 
         CgEngine::Renderer::bindComputePipeline(initialSpectrumShader->getComputePipeline());
         CgEngine::Renderer::bindDescriptorSet(initialSpectrumDescriptorSet, 0);
         CgEngine::Renderer::dispatchCompute(oceanParams.size / 8, oceanParams.size / 8, 1);
-        glMemoryBarrier(GL_ALL_BARRIER_BITS);
+        CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(initialSpectrum);
+        CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(waveData);
 
         CgEngine::DescriptorSetSpecification conjugateSpectrumDescriptorSetSpec{};
         conjugateSpectrumDescriptorSetSpec.layout = conjugateSpectrumShader->getDescriptorSetLayout();
@@ -79,8 +98,9 @@ namespace RTR {
         CgEngine::Renderer::bindComputePipeline(conjugateSpectrumShader->getComputePipeline());
         CgEngine::Renderer::bindDescriptorSet(conjugateSpectrumDescriptorSet, 0);
         CgEngine::Renderer::dispatchCompute(oceanParams.size / 8, oceanParams.size / 8, 1);
-        glMemoryBarrier(GL_ALL_BARRIER_BITS);
+        CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(initialSpectrum);
 
+        delete initialSpectrumUBO;
         delete initialSpectrumDescriptorSet;
         delete conjugateSpectrumDescriptorSet;
 
@@ -128,7 +148,10 @@ namespace RTR {
         timeSpectrumPushConstants->setData(&simulateOceanPc, sizeof(SimulateOceanPC));
         CgEngine::Renderer::setPushConstants({timeSpectrumPushConstants}, 1);
         CgEngine::Renderer::dispatchCompute(oceanParams.size / 8, oceanParams.size / 8, 1);
-        glMemoryBarrier(GL_ALL_BARRIER_BITS);
+        CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(dxDz);
+        CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(dyDxz);
+        CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(dyxDyz);
+        CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(dxxDzz);
 
         fastFourierTransform.inverseTransform(dxDz);
         fastFourierTransform.inverseTransform(dyDxz);
@@ -144,7 +167,9 @@ namespace RTR {
         finalTexturesPushConstants->setData(&finalTexturesPc, sizeof(FinalTexturesPC));
         CgEngine::Renderer::setPushConstants({finalTexturesPushConstants}, 1);
         CgEngine::Renderer::dispatchCompute(oceanParams.size / 8, oceanParams.size / 8, 1);
-        glMemoryBarrier(GL_ALL_BARRIER_BITS);
+        CgEngine::Renderer::transitionImageLayoutFromComputeToShaderReadOnly(displacement, CgEngine::ShaderStage::Fragment);
+        CgEngine::Renderer::transitionImageLayoutFromComputeToShaderReadOnly(turbulence, CgEngine::ShaderStage::Fragment);
+        CgEngine::Renderer::transitionImageLayoutFromComputeToShaderReadOnly(derivatives, CgEngine::ShaderStage::Fragment);
     }
 
     void OceanCascade::generateGaussianNoise() {

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Rendering/TextureCube.h>
 #include <Rendering/CustomPipeline.h>
 #include <Resources/ResRef.h>
 #include <Resources/ResourceManager.h>
@@ -10,7 +9,7 @@ namespace RTR {
     public:
         FastFourierTransform(CgEngine::ResourceManager& resourceManager);
         ~FastFourierTransform();
-        void inverseTransform(CgEngine::Attachment* input, bool outputToInput = true, bool permute = true);
+        void inverseTransform(CgEngine::Attachment* input);
     private:
         CgEngine::ResourceManager& resourceManager;
         CgEngine::ResRef<CgEngine::CustomComputePipeline> precomputeTwiddleFactorsAndInputIndicesShader = nullptr;
@@ -25,7 +24,9 @@ namespace RTR {
             int step;
             bool pingPong;
         };
-
         CgEngine::PushConstants* pushConstants = nullptr;
+
+        std::unordered_map<CgEngine::Attachment*, std::unique_ptr<CgEngine::DescriptorSet>> fftDescriptorSets{};
+        std::unordered_map<CgEngine::Attachment*, std::unique_ptr<CgEngine::DescriptorSet>> permuteDescriptorSets{};
     };
 }

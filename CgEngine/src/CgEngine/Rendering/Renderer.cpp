@@ -75,6 +75,10 @@ namespace CgEngine {
         backend->memoryBarrierForVertexBufferAfterCompute(vertexBuffer);
     }
 
+    void Renderer::memoryBarrierForAttachmentAfterComputeToCompute(Attachment* attachment) {
+        backend->memoryBarrierForAttachmentAfterComputeToCompute(attachment);
+    }
+
     void Renderer::renderUnitQuad() {
         backend->renderUnitQuad();
     }

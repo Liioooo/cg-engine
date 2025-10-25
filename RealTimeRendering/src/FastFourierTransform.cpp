@@ -22,7 +22,7 @@ namespace RTR {
         delete twiddleFactors;
     }
 
-    void FastFourierTransform::inverseTransform(CgEngine::Attachment* input, bool outputToInput, bool permute) {
+    void FastFourierTransform::inverseTransform(CgEngine::Attachment* input) {
         int logSize = (int)log2(input->getWidth());
         bool pingPong = false;
 
@@ -61,7 +61,7 @@ namespace RTR {
             CgEngine::Renderer::bindDescriptorSet(descSet, 0);
             CgEngine::Renderer::setPushConstants({pc}, 1);
             CgEngine::Renderer::dispatchCompute(logSize, static_cast<int>(input->getHeight() / 2.0 / 8.0), 1);
-            glMemoryBarrier(GL_ALL_BARRIER_BITS);
+            CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(twiddleFactors);
 
             delete descSet;
             delete pc;
@@ -80,17 +80,20 @@ namespace RTR {
             buffer = CgEngine::GraphicsObjectsFactory::createAttachment(spec);
         }
 
-        CgEngine::DescriptorSetSpecification fftDescSetSpec{};
-        fftDescSetSpec.layout = horizontalStepInverseFftShader->getDescriptorSetLayout();
-        fftDescSetSpec.attachmentImageBindings = {
-            {0, ~0u, true, CgEngine::ShaderImageAccess::ReadOnly, twiddleFactors},
-            {1, ~0u, true, CgEngine::ShaderImageAccess::ReadWrite, input},
-            {2, ~0u, true, CgEngine::ShaderImageAccess::ReadWrite, buffer},
-        };
-        auto* fftDescSet = CgEngine::GraphicsObjectsFactory::createDescriptorSet(fftDescSetSpec);
+        if (fftDescriptorSets.find(input) == fftDescriptorSets.end()) {
+            CgEngine::DescriptorSetSpecification fftDescSetSpec{};
+            fftDescSetSpec.layout = horizontalStepInverseFftShader->getDescriptorSetLayout();
+            fftDescSetSpec.attachmentImageBindings = {
+                    {0, ~0u, true, CgEngine::ShaderImageAccess::ReadOnly, twiddleFactors},
+                    {1, ~0u, true, CgEngine::ShaderImageAccess::ReadWrite, input},
+                    {2, ~0u, true, CgEngine::ShaderImageAccess::ReadWrite, buffer},
+            };
+            auto* fftDescSet = CgEngine::GraphicsObjectsFactory::createDescriptorSet(fftDescSetSpec);
+            fftDescriptorSets[input] = std::unique_ptr<CgEngine::DescriptorSet>(fftDescSet);
+        }
 
         CgEngine::Renderer::bindComputePipeline(horizontalStepInverseFftShader->getComputePipeline());
-        CgEngine::Renderer::bindDescriptorSet(fftDescSet, 0);
+        CgEngine::Renderer::bindDescriptorSet(fftDescriptorSets.at(input).get(), 0);
 
         PCFft pcData{};
 
@@ -103,11 +106,12 @@ namespace RTR {
 
             CgEngine::Renderer::setPushConstants({pushConstants}, 1);
             CgEngine::Renderer::dispatchCompute(input->getWidth() / 8, input->getHeight() / 8, 1);
-            glMemoryBarrier(GL_ALL_BARRIER_BITS);
+            CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(input);
+            CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(buffer);
         }
 
         CgEngine::Renderer::bindComputePipeline(verticalStepInverseFftShader->getComputePipeline());
-        CgEngine::Renderer::bindDescriptorSet(fftDescSet, 0);
+        CgEngine::Renderer::bindDescriptorSet(fftDescriptorSets.at(input).get(), 0);
 
         for (int i = 0; i < logSize; i++) {
             pingPong = !pingPong;
@@ -118,47 +122,24 @@ namespace RTR {
 
             CgEngine::Renderer::setPushConstants({pushConstants}, 1);
             CgEngine::Renderer::dispatchCompute(input->getWidth() / 8, input->getHeight() / 8, 1);
-            glMemoryBarrier(GL_ALL_BARRIER_BITS);
+            CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(input);
+            CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(buffer);
         }
 
-//    if (pingPong && outputToInput) {
-//        Graphics.Blit(buffer, input);
-//    }
-//
-//    if (!pingPong && !outputToInput) {
-//        TODO: Implement this
-//        Graphics.Blit(input, buffer);
-//    }
-
-        if (permute) {
-            CgEngine::Renderer::bindComputePipeline(permuteShader->getComputePipeline());
-
+        if (permuteDescriptorSets.find(input) == permuteDescriptorSets.end()) {
             CgEngine::DescriptorSetSpecification permuteDescSetSpec{};
             permuteDescSetSpec.layout = permuteShader->getDescriptorSetLayout();
-
-            if (outputToInput) {
-                permuteDescSetSpec.attachmentImageBindings = {
+            permuteDescSetSpec.attachmentImageBindings = {
                     {0, ~0u, true, CgEngine::ShaderImageAccess::ReadWrite, input},
-                };
-            } else {
-                permuteDescSetSpec.attachmentImageBindings = {
-                        {0, ~0u, true, CgEngine::ShaderImageAccess::ReadWrite, buffer},
-                };
-            }
+            };
             auto* permuteDescSet = CgEngine::GraphicsObjectsFactory::createDescriptorSet(permuteDescSetSpec);
-            CgEngine::Renderer::bindDescriptorSet(permuteDescSet, 0);
-            CgEngine::Renderer::dispatchCompute(input->getWidth() / 8, input->getHeight() / 8, 1);
-            glMemoryBarrier(GL_ALL_BARRIER_BITS);
+            permuteDescriptorSets[input] = std::unique_ptr<CgEngine::DescriptorSet>(permuteDescSet);
+        }
 
-            delete permuteDescSet;
-        }
-        /*
-        if (scale) {
-            fftShader.SetInt(PROP_ID_SIZE, size);
-            fftShader.SetTexture(KERNEL_SCALE, PROP_ID_BUFFER0, outputToInput ? input : buffer);
-            fftShader.Dispatch(KERNEL_SCALE, size / LOCAL_WORK_GROUPS_X, size / LOCAL_WORK_GROUPS_Y, 1);
-        }
-        */
+        CgEngine::Renderer::bindComputePipeline(permuteShader->getComputePipeline());
+        CgEngine::Renderer::bindDescriptorSet(permuteDescriptorSets.at(input).get(), 0);
+        CgEngine::Renderer::dispatchCompute(input->getWidth() / 8, input->getHeight() / 8, 1);
+        CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(input);
     }
 
 }
