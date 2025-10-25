@@ -1,11 +1,11 @@
 #version 450 core
 
-#include "common/CameraDataBuffer.glsl"
-#include "common/LightDataBuffer.glsl"
-#include "common/IBLCalculationsFragment.glsl"
-#include "common/GBuffersFragment.glsl"
+#include "CameraDataBuffer.glsl"
+#include "LightDataBuffer.glsl"
+#include "IBLCalculationsFragment.glsl"
+#include "GBuffersFragment.glsl"
 
-in VS_OUT {
+layout(location = 12) in VS_OUT {
     vec3 WorldPosition;
     vec3 Normal;
     vec4 TexCoord;
@@ -13,17 +13,19 @@ in VS_OUT {
     vec3 ViewVector;
 } fs_in;
 
-uniform float u_length0;
-uniform float u_length1;
-uniform float u_length2;
-uniform vec3 u_foamColor;
-uniform vec3 u_sssColor;
-uniform vec3 u_color;
-uniform float u_roughness;
-uniform float u_roughnessScale;
-uniform float u_maxGloss;
-uniform float u_foamBias;
-uniform float u_foamScale;
+layout (binding = 2, std140) uniform OceanData {
+    vec3 foamColor;
+    float roughness;
+    vec3 sssColor;
+    float roughnessScale;
+    vec3 color;
+    float maxGloss;
+    float foamBias;
+    float foamScale;
+    float length0;
+    float length1;
+    float length2;
+} u_OceanData;
 
 uniform layout(binding=10) sampler2D u_displacementC0;
 uniform layout(binding=11) sampler2D u_derivativesC0;
@@ -37,30 +39,28 @@ uniform layout(binding=16) sampler2D u_displacementC2;
 uniform layout(binding=17) sampler2D u_derivativesC2;
 uniform layout(binding=18) sampler2D u_turbulenceC2;
 
-out vec4 o_FragColor;
-
 void main() {
     vec4 derivatives = vec4(0.0);
-    derivatives += texture(u_derivativesC0, fs_in.WorldPosition.xz / u_length0);
-    derivatives += texture(u_derivativesC1, fs_in.WorldPosition.xz / u_length1) * fs_in.LodScales.y;
-    derivatives += texture(u_derivativesC2, fs_in.WorldPosition.xz / u_length2) * fs_in.LodScales.z;
+    derivatives += texture(u_derivativesC0, fs_in.WorldPosition.xz / u_OceanData.length0);
+    derivatives += texture(u_derivativesC1, fs_in.WorldPosition.xz / u_OceanData.length1) * fs_in.LodScales.y;
+    derivatives += texture(u_derivativesC2, fs_in.WorldPosition.xz / u_OceanData.length2) * fs_in.LodScales.z;
 
     vec2 slope = vec2(derivatives.x / (1 + derivatives.z), derivatives.y / (1 + derivatives.w));
     vec3 N = normalize(vec3(-slope.x, 1, -slope.y));
 
-    float jacobian = texture(u_turbulenceC0, fs_in.WorldPosition.xz / u_length0).x
-        + texture(u_turbulenceC1, fs_in.WorldPosition.xz / u_length1).x
-        + texture(u_turbulenceC2, fs_in.WorldPosition.xz / u_length2).x;
-    jacobian = min(1.0, max(0.0, (-jacobian + u_foamBias) * u_foamScale));
+    float jacobian = texture(u_turbulenceC0, fs_in.WorldPosition.xz / u_OceanData.length0).x
+        + texture(u_turbulenceC1, fs_in.WorldPosition.xz / u_OceanData.length1).x
+        + texture(u_turbulenceC2, fs_in.WorldPosition.xz / u_OceanData.length2).x;
+    jacobian = min(1.0, max(0.0, (-jacobian + u_OceanData.foamBias) * u_OceanData.foamScale));
 
-    vec3 _albedo = mix(vec3(0.0), u_foamColor, jacobian);
-    float distanceGloss = mix(1 - u_roughness, u_maxGloss, 1 / (1 + length(fs_in.ViewVector) * u_roughnessScale));
+    vec3 _albedo = mix(vec3(0.0), u_OceanData.foamColor, jacobian);
+    float distanceGloss = mix(1 - u_OceanData.roughness, u_OceanData.maxGloss, 1 / (1 + length(fs_in.ViewVector) * u_OceanData.roughnessScale));
     float _smoothness = mix(distanceGloss, 0.0, jacobian);
 
     vec3 _viewDir = normalize(fs_in.ViewVector);
     vec3 H = normalize(-N + u_LightData.dirLightDirection.xyz);
     float ViewDotH = pow(clamp(dot(_viewDir, -H), 0.0, 1.0), 5.0) * 30.0 * 0.133;
-    vec3 color = mix(u_color, clamp(u_color + vec3(u_sssColor * ViewDotH * fs_in.LodScales.w), 0.0, 1.0), fs_in.LodScales.z);
+    vec3 color = mix(u_OceanData.color, clamp(u_OceanData.color + vec3(u_OceanData.sssColor * ViewDotH * fs_in.LodScales.w), 0.0, 1.0), fs_in.LodScales.z);
 
     float fresnel = dot(N, _viewDir);
     fresnel = clamp(1 - fresnel, 0.0, 1.0);

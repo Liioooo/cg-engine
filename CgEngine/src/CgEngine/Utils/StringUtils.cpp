@@ -1,4 +1,5 @@
 #include "StringUtils.h"
+#include <charconv>
 
 namespace CgEngine::Utils::String {
     bool equalsIgnoreCase(const std::string_view a, const std::string_view b) {
@@ -60,24 +61,26 @@ namespace CgEngine::Utils::String {
         return str;
     }
 
-    std::optional<int32_t> toInt(const std::string& s) {
+    std::optional<int32_t> toInt(std::string_view s) {
+        int32_t value;
+        auto [ptr, ec] = std::from_chars(s.data(), s.data() + s.size(), value);
+        if (ec == std::errc()) {
+            return value;
+        } else {
+            return std::nullopt;
+        }
+    }
+
+    std::optional<float> toFloat(std::string_view s) {
         try {
-            return std::stoi(s);
+            return std::stof(std::string(s));
         } catch (...) {
             return std::nullopt;
         }
     }
 
-    std::optional<float> toFloat(const std::string& s) {
-        try {
-            return std::stof(s);
-        } catch (...) {
-            return std::nullopt;
-        }
-    }
-
-    bool toBool(const std::string& s) {
-        char first = *s.c_str();
+    bool toBool(std::string_view s) {
+        char first = s.empty() ? '0' : s[0];
         return (first == '1' || first == 't' || first == 'T' || first == 'y' || first == 'Y');
     }
 

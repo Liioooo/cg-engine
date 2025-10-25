@@ -1,8 +1,9 @@
+#include <charconv>
 #include "LoaderUtils.h"
 #include "StringUtils.h"
 
 namespace CgEngine::Utils::LoaderUtils {
-    glm::vec3 stringTupleToVec3(const std::string& s) {
+    glm::vec3 stringTupleToVec3(std::string_view s) {
         size_t p0 = 0;
         size_t p1 = s.find(' ');
         float x = Utils::String::toFloat(s.substr(p0, p1)).value_or(0.0f);
@@ -14,7 +15,7 @@ namespace CgEngine::Utils::LoaderUtils {
         return {x, y, z};
     }
 
-    glm::vec4 stringTupleToVec4(const std::string& s) {
+    glm::vec4 stringTupleToVec4(std::string_view s) {
         size_t p0 = 0;
         size_t p1 = s.find(' ');
         float x = Utils::String::toFloat(s.substr(p0, p1)).value_or(0.0f);
@@ -29,21 +30,51 @@ namespace CgEngine::Utils::LoaderUtils {
         return {x, y, z, w};
     }
 
-    glm::vec3 hexStringToColor(const std::string& s) {
-        uint64_t color = std::stoul(s.substr(1), nullptr, 16);
+    glm::vec3 hexStringToColor(std::string_view s) {
+        if (s.empty()) return {0.0f, 0.0f, 0.0f};
+        if (s.front() == '#')
+            s.remove_prefix(1);
+
+        uint32_t color;
+        auto [ptr, ec] = std::from_chars(s.data(), s.data() + s.size(), color, 16);
+        if (ec != std::errc()) return {0.0f, 0.0f, 0.0f};;
+
         float r = ((color >> 16) & 0xFF) / 255.0f;
-        float g = ((color >> 8) & 0xFF) / 255.0f;
-        float b = (color & 0xFF) / 255.0f;
-        return {r, g, b};
+        float g = ((color >> 8)  & 0xFF) / 255.0f;
+        float b = ( color        & 0xFF) / 255.0f;
+
+        return glm::vec3{r, g, b};
     }
 
-    std::vector<std::string> getListFromString(const std::string& s) {
-        std::vector<std::string> result{};
-        std::stringstream ss(s);
-        std::string item;
+    std::vector<std::string> getListFromString(std::string_view s) {
+        std::vector<std::string> result;
+        size_t start = 0;
 
-        while (std::getline(ss, item, ',')) {
-            result.emplace_back(item);
+        while (true) {
+            size_t end = s.find(',', start);
+            if (end == std::string_view::npos) {
+                result.emplace_back(s.substr(start)); // last segment
+                break;
+            }
+            result.emplace_back(s.substr(start, end - start));
+            start = end + 1;
+        }
+
+        return result;
+    }
+
+    std::vector<uint32_t> getUint32ListFromString(std::string_view s) {
+        std::vector<uint32_t> result;
+        size_t start = 0;
+
+        while (true) {
+            size_t end = s.find(',', start);
+            if (end == std::string_view::npos) {
+                result.emplace_back(Utils::String::toInt(s.substr(start)).value_or(0)); // last segment
+                break;
+            }
+            result.emplace_back(Utils::String::toInt(s.substr(start, end - start)).value_or(0));
+            start = end + 1;
         }
 
         return result;

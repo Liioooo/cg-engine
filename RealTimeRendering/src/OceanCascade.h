@@ -1,8 +1,11 @@
 #pragma once
 
-#include <Rendering/TextureCube.h>
-#include <Rendering/CustomShaders.h>
+#include <Rendering/Attachment.h>
+#include <Rendering/Texture2D.h>
+#include <Rendering/CustomPipeline.h>
+#include <Rendering/PushConstants.h>
 #include <Resources/ResRef.h>
+#include <Resources/ResourceManager.h>
 #include "FastFourierTransform.h"
 
 namespace RTR {
@@ -26,8 +29,7 @@ namespace RTR {
 
     class OceanCascade {
     public:
-        explicit OceanCascade(const OceanParams& oceanParams,
-                              CgEngine::ResourceManager& resourceManager);
+        explicit OceanCascade(const OceanParams& oceanParams, CgEngine::ResourceManager& resourceManager);
 
         ~OceanCascade();
 
@@ -43,25 +45,56 @@ namespace RTR {
         float calculateAlpha() const;
 
         float calculateOmegaP() const;
+
+        struct InitialSpectrumUBOData {
+            float T;
+            float gamma;
+            float alpha;
+            float omega_p;
+            glm::vec2 wind;
+            int size;
+            float length;
+            float depth;
+            float g;
+            float cutoffLow;
+            float cutoffHigh;
+        };
+
+        struct SimulateOceanPC {
+            float time;
+        };
+
+        CgEngine::UniformBuffer* initialSpectrumUBO = nullptr;
+        CgEngine::DescriptorSet* timeSpectrumDescriptorSet = nullptr;
+        CgEngine::PushConstants* timeSpectrumPushConstants = nullptr;
+
+        struct FinalTexturesPC {
+            float deltaTime;
+            float lambda;
+        };
+
+        CgEngine::DescriptorSet* finalTexturesDescriptorSet = nullptr;
+        CgEngine::PushConstants* finalTexturesPushConstants = nullptr;
+
     public:
         OceanParams oceanParams;
 
         CgEngine::Texture2D* gaussianNoise = nullptr;
-        CgEngine::Texture2D* initialSpectrum = nullptr;
-        CgEngine::Texture2D* waveData = nullptr;
-        CgEngine::Texture2D* dxDz = nullptr;
-        CgEngine::Texture2D* dyDxz = nullptr;
-        CgEngine::Texture2D* dyxDyz = nullptr;
-        CgEngine::Texture2D* dxxDzz = nullptr;
+        CgEngine::Attachment* initialSpectrum = nullptr;
+        CgEngine::Attachment* waveData = nullptr;
+        CgEngine::Attachment* dxDz = nullptr;
+        CgEngine::Attachment* dyDxz = nullptr;
+        CgEngine::Attachment* dyxDyz = nullptr;
+        CgEngine::Attachment* dxxDzz = nullptr;
 
-        CgEngine::Texture2D* displacement = nullptr;
-        CgEngine::Texture2D* derivatives = nullptr;
-        CgEngine::Texture2D* turbulence = nullptr;
+        CgEngine::Attachment* displacement = nullptr;
+        CgEngine::Attachment* derivatives = nullptr;
+        CgEngine::Attachment* turbulence = nullptr;
 
-        CgEngine::ResRef<CgEngine::CustomComputeShader> initialSpectrumShader;
-        CgEngine::ResRef<CgEngine::CustomComputeShader> conjugateSpectrumShader;
-        CgEngine::ResRef<CgEngine::CustomComputeShader> timeSpectrumShader;
-        CgEngine::ResRef<CgEngine::CustomComputeShader> finalTexturesShader;
+        CgEngine::ResRef<CgEngine::CustomComputePipeline> initialSpectrumShader;
+        CgEngine::ResRef<CgEngine::CustomComputePipeline> conjugateSpectrumShader;
+        CgEngine::ResRef<CgEngine::CustomComputePipeline> timeSpectrumShader;
+        CgEngine::ResRef<CgEngine::CustomComputePipeline> finalTexturesShader;
 
         FastFourierTransform fastFourierTransform;
     };

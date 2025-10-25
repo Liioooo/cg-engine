@@ -52,7 +52,7 @@ namespace CgEngine {
     // The Mesh_LOD1, Mesh_LOD2, etc. all have the same transform.
 
     struct MeshNode {
-        aiNode* aiNode;
+        aiNode* aiNode = nullptr;
         PhysicsTriangleMesh* physicsTriangleMesh = nullptr;
         PhysicsConvexMesh* physicsConvexMesh = nullptr;
         AABoundingBox aaBoundingBox;
@@ -77,7 +77,7 @@ namespace CgEngine {
         virtual const uint32_t getMaterialCount() const = 0;
 
     protected:
-        VertexArrayObject* vao;
+        VertexArrayObject* vao = nullptr;
         std::vector<Submesh> submeshes;
         std::vector<MeshNode> meshNodes{};
         std::unordered_map<std::string, uint32_t> nodeNameToNode{};

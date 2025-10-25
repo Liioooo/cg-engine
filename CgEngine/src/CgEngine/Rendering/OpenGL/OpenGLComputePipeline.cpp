@@ -7,7 +7,12 @@
 namespace CgEngine {
 
     OpenGLComputePipeline::OpenGLComputePipeline(const ComputePipelineSpecification& spec) {
-        shaderHandle = OpenGLHelpers::loadOpenGLComputeShader(spec.engineShaderName, ShaderEnv::Engine);
+        if (!spec.engineShaderName.empty()) {
+            shaderHandle = OpenGLHelpers::loadOpenGLComputeShader(spec.engineShaderName, ShaderEnv::Engine);
+        } else {
+            shaderHandle = OpenGLHelpers::loadOpenGLCustomComputeShader(spec.customShader);
+        }
+
         if (shaderHandle == ~0) {
             CG_LOGGING_ERROR("Failed to load compute shader for ComputePipeline: {}", spec.engineShaderName)
             return;

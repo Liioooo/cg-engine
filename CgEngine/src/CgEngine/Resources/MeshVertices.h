@@ -78,7 +78,7 @@ namespace CgEngine {
         std::vector<ResRef<PBRMaterial>> materials;
         Skeleton* skeleton = nullptr;
         std::vector<BoneInfluence> boneInfluences{};
-        ImmutableShaderStorageBuffer* boneInfluencesBuffer;
+        ImmutableShaderStorageBuffer* boneInfluencesBuffer = nullptr;
         std::vector<BoneInfo> boneInfos{};
         std::unordered_map<std::string, SkeletalAnimation> skeletalAnimations;
         std::unordered_map<std::string, Animation> animations;

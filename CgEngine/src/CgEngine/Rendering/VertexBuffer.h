@@ -47,6 +47,20 @@ namespace CgEngine {
             }
         }
 
+        bool operator ==(const VertexBufferLayout& other) const {
+            if (bufferElements.size() != other.bufferElements.size()) {
+                return false;
+            }
+
+            for (size_t i = 0; i < bufferElements.size(); i++) {
+                if (!(bufferElements[i] == other.bufferElements[i])) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         std::vector<VertexBufferElement> bufferElements;
         int stride = 0;
     };

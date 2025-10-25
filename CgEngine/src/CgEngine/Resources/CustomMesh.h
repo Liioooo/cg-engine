@@ -6,7 +6,7 @@ namespace CgEngine {
 
     class CustomMesh : public Mesh {
     public:
-        explicit CustomMesh(const std::vector<VertexBufferElement>& vertexBufferLayout);
+        explicit CustomMesh(std::vector<VertexBufferElement> vertexBufferLayout);
         ~CustomMesh() override;
 
         const Material* getMaterial(size_t index) const override;
@@ -47,6 +47,7 @@ namespace CgEngine {
         AABoundingBox boundingBox;
         Material* material = nullptr;
         std::map<uint32_t, LodMesh> lodMeshes;
+        std::vector<VertexBufferElement> vertexBufferLayout;
     };
 
 }

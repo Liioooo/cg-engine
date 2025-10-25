@@ -1,5 +1,7 @@
 #version 450 core
 
+#include "Macros.glsl"
+
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 layout(rgba32f, binding = 0) uniform restrict readonly image2D u_h0Texture;
@@ -9,7 +11,9 @@ layout(rg32f, binding = 3) uniform restrict writeonly image2D u_DyDxz;
 layout(rg32f, binding = 4) uniform restrict writeonly image2D u_DyxDyz;
 layout(rg32f, binding = 5) uniform restrict writeonly image2D u_DxxDzz;
 
-uniform float u_time;
+PUSH_CONSTANT(PCSimulateOcean, 10) {
+    float time;
+} pc_simulateOcean;
 
 vec2 complexMult(vec2 a, vec2 b) {
     return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
@@ -20,7 +24,7 @@ void main() {
 
     vec4 wave = imageLoad(u_waveTexture, texelCoord);
     vec4 h0 = imageLoad(u_h0Texture, texelCoord);
-    float phase = wave.w * u_time;
+    float phase = wave.w * pc_simulateOcean.time;
     vec2 exponent = vec2(cos(phase), sin(phase));
 
     // TODO: Check this

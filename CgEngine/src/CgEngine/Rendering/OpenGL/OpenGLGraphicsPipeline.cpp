@@ -6,7 +6,12 @@
 namespace CgEngine {
 
     OpenGLGraphicsPipeline::OpenGLGraphicsPipeline(const GraphicsPipelineSpecification& spec) : specification(spec) {
-        shaderHandle = OpenGLHelpers::loadOpenGLGraphicsShader(spec.engineShaderName, ShaderEnv::Engine);
+        if (!spec.engineShaderName.empty()) {
+            shaderHandle = OpenGLHelpers::loadOpenGLGraphicsShader(spec.engineShaderName, ShaderEnv::Engine);
+        } else {
+            shaderHandle = OpenGLHelpers::loadOpenGLGraphicsShader(spec.customShaders.vertex, spec.customShaders.fragment, spec.customShaders.geometry, spec.customShaders.tcs, spec.customShaders.tes, ShaderEnv::Custom);
+        }
+
         if (shaderHandle == ~0) {
             CG_LOGGING_ERROR("Failed to load shader for GraphicsPipeline: {}", spec.engineShaderName)
             ready = false;

@@ -1,0 +1,112 @@
+<Pipelines>
+    <ComputePipeline name="ocean/init-spectrum">
+        <Shader>ocean/initSpectrum_comp</Shader>
+        <DescriptorSetLayout>
+            <UboBindingPoints>0</UboBindingPoints>
+            <ImageBindingPoints>0,1,2</ImageBindingPoints>
+        </DescriptorSetLayout>
+    </ComputePipeline>
+    <ComputePipeline name="ocean/conjugate">
+        <Shader>ocean/conjugate_comp</Shader>
+        <DescriptorSetLayout>
+            <ImageBindingPoints>0</ImageBindingPoints>
+        </DescriptorSetLayout>
+    </ComputePipeline>
+    <ComputePipeline name="ocean/simulate-ocean">
+        <Shader>ocean/simulateOcean_comp</Shader>
+        <DescriptorSetLayout>
+            <ImageBindingPoints>0,1,2,3,4,5</ImageBindingPoints>
+        </DescriptorSetLayout>
+    </ComputePipeline>
+    <ComputePipeline name="ocean/fft/precomputeTwiddleFactorsAndInputIndices">
+        <Shader>ocean/fft/precomputeTwiddleFactorsAndInputIndices_comp</Shader>
+        <DescriptorSetLayout>
+            <ImageBindingPoints>0</ImageBindingPoints>
+        </DescriptorSetLayout>
+    </ComputePipeline>
+    <ComputePipeline name="ocean/fft/horizontalStepInverseFft">
+        <Shader>ocean/fft/horizontalStepInverseFft_comp</Shader>
+        <DescriptorSetLayout>
+            <ImageBindingPoints>0,1,2</ImageBindingPoints>
+        </DescriptorSetLayout>
+    </ComputePipeline>
+    <ComputePipeline name="ocean/fft/verticalStepInverseFft">
+        <Shader>ocean/fft/verticalStepInverseFft_comp</Shader>
+        <DescriptorSetLayout>
+            <ImageBindingPoints>0,1,2</ImageBindingPoints>
+        </DescriptorSetLayout>
+    </ComputePipeline>
+    <ComputePipeline name="ocean/fft/permute">
+        <Shader>ocean/fft/permute_comp</Shader>
+        <DescriptorSetLayout>
+            <ImageBindingPoints>0</ImageBindingPoints>
+        </DescriptorSetLayout>
+    </ComputePipeline>
+    <ComputePipeline name="ocean/compute-final">
+        <Shader>ocean/computeFinalTextures_comp</Shader>
+        <DescriptorSetLayout>
+            <ImageBindingPoints>0,1,2,3,4,5,6</ImageBindingPoints>
+        </DescriptorSetLayout>
+    </ComputePipeline>
+    <GraphicsPipeline name="ocean/render">
+        <Shader>
+            <Vertex>ocean/ocean_vertex</Vertex>
+            <Fragment>ocean/ocean_fragment</Fragment>
+            <Tcs>ocean/ocean_tcs</Tcs>
+            <Tes>ocean/ocean_tes</Tes>
+        </Shader>
+        <VertexBufferLayouts>
+            <VertexBufferLayout>
+                <VertexBufferElement data-type="Float4" normalized="true" />
+                <VertexBufferElement data-type="Float4" normalized="true" />
+                <VertexBufferElement data-type="Float4" normalized="true" />
+                <VertexBufferElement data-type="Float4" normalized="true" />
+                <VertexBufferElement data-type="Float4" normalized="true" />
+            </VertexBufferLayout>
+        </VertexBufferLayouts>
+        <DescriptorSetLayout>
+            <UboBindingPoints>2</UboBindingPoints>
+            <Texture2DAndAttachmentBindingPoints>10,11,12,13,14,15,16,17,18</Texture2DAndAttachmentBindingPoints>
+        </DescriptorSetLayout>
+        <DepthCompareOperator>Less</DepthCompareOperator>
+        <DepthTest>true</DepthTest>
+        <DepthWrite>true</DepthWrite>
+        <Wireframe>false</Wireframe>
+        <BackfaceCulling>true</BackfaceCulling>
+        <FrontfaceCulling>false</FrontfaceCulling>
+        <UseBlending>false</UseBlending>
+        <BlendingEquation>Add</BlendingEquation>
+        <SrcBlendingFunction>SrcAlpha</SrcBlendingFunction>
+        <DestBlendingFunction>OneMinusSrcAlpha</DestBlendingFunction>
+        <TesselationPatchSize>4</TesselationPatchSize>
+        <DrawMode>Patches</DrawMode>
+    </GraphicsPipeline>
+    <GraphicsPipeline name="grass/render">
+        <Shader>
+            <Vertex>grass/grass_vertex</Vertex>
+            <Fragment>grass/grass_fragment</Fragment>
+        </Shader>
+        <VertexBufferLayouts>
+            <VertexBufferLayout>
+                <VertexBufferElement data-type="Int" normalized="false" />
+            </VertexBufferLayout>
+        </VertexBufferLayouts>
+        <DescriptorSetLayout>
+            <UboBindingPoints>2</UboBindingPoints>
+            <SsboBindingPoints>6</SsboBindingPoints>
+        </DescriptorSetLayout>
+        <DepthCompareOperator>Less</DepthCompareOperator>
+        <DepthTest>true</DepthTest>
+        <DepthWrite>true</DepthWrite>
+        <Wireframe>false</Wireframe>
+        <BackfaceCulling>true</BackfaceCulling>
+        <FrontfaceCulling>false</FrontfaceCulling>
+        <UseBlending>false</UseBlending>
+        <BlendingEquation>Add</BlendingEquation>
+        <SrcBlendingFunction>SrcAlpha</SrcBlendingFunction>
+        <DestBlendingFunction>OneMinusSrcAlpha</DestBlendingFunction>
+        <TesselationPatchSize>0</TesselationPatchSize>
+        <DrawMode>Triangles</DrawMode>
+    </GraphicsPipeline>
+</Pipelines>
+

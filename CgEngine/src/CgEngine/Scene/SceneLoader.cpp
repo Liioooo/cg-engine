@@ -90,7 +90,7 @@ namespace CgEngine {
         } else if (name == "AnimationComponent") {
             createAnimationComponent(scene, entity, node);
         } else if (name == "CustomShaderRendererComponent") {
-//            createCustomShaderRendererComponent(scene, entity, node);
+            createCustomShaderRendererComponent(scene, entity, node);
         } else if (name == "AudioListenerComponent") {
             createAudioListenerComponent(scene, entity, node);
         } else if (name == "AudioComponent") {
@@ -308,22 +308,18 @@ namespace CgEngine {
         scene->attachComponent<AnimationComponent>(entity, params);
     }
 
-//    void SceneLoader::createCustomShaderRendererComponent(Scene* scene, Entity entity, const pugi::xml_node& node) {
-//        CustomShaderRendererComponentParams params;
-//        if (!node.attribute("asset-file").empty()) params.assetFile = node.attribute("asset-file").as_string();
-//        if (!node.attribute("mesh").empty()) params.mesh = node.attribute("mesh").as_string();
-//        if (!node.attribute("material").empty()) params.material = node.attribute("material").as_string();
-//        if (!node.attribute("enable-culling").empty()) params.enableCulling = node.attribute("enable-culling").as_bool();
-//        if (!node.attribute("bounding-min").empty()) params.boundingMin = Utils::LoaderUtils::stringTupleToVec3(node.attribute("bounding-min").as_string());
-//        if (!node.attribute("bounding-max").empty()) params.boundingMax = Utils::LoaderUtils::stringTupleToVec3(node.attribute("bounding-max").as_string());
-//        if (!node.attribute("mesh-nodes").empty()) params.meshNodes = Utils::LoaderUtils::getListFromString(node.attribute("mesh-nodes").as_string());
-//        if (!node.attribute("instance-count").empty()) params.instanceCount = node.attribute("instance-count").as_uint();
-//        if (!node.attribute("shader").empty()) params.shader = node.attribute("shader").as_string();
-//        if (!node.attribute("use-dir-shadow-mapping-data").empty()) params.renderPassOptions.useDirShadowMappingData = node.attribute("use-dir-shadow-mapping-data").as_bool();
-//        if (!node.attribute("use-environment-mapping-data").empty()) params.renderPassOptions.useEnvironmentMappingData = node.attribute("use-environment-mapping-data").as_bool();
-//
-//        scene->attachComponent<CustomShaderRendererComponent>(entity, params);
-//    }
+    void SceneLoader::createCustomShaderRendererComponent(Scene* scene, Entity entity, const pugi::xml_node& node) {
+        CustomShaderRendererComponentParams params;
+        if (!node.attribute("asset-file").empty()) params.assetFile = node.attribute("asset-file").as_string();
+        if (!node.attribute("mesh").empty()) params.mesh = node.attribute("mesh").as_string();
+        if (!node.attribute("enable-culling").empty()) params.enableCulling = node.attribute("enable-culling").as_bool();
+        if (!node.attribute("bounding-min").empty()) params.boundingMin = Utils::LoaderUtils::stringTupleToVec3(node.attribute("bounding-min").as_string());
+        if (!node.attribute("bounding-max").empty()) params.boundingMax = Utils::LoaderUtils::stringTupleToVec3(node.attribute("bounding-max").as_string());
+        if (!node.attribute("mesh-nodes").empty()) params.meshNodes = Utils::LoaderUtils::getListFromString(node.attribute("mesh-nodes").as_string());
+        if (!node.attribute("instance-count").empty()) params.instanceCount = node.attribute("instance-count").as_uint();
+
+        scene->attachComponent<CustomShaderRendererComponent>(entity, params);
+    }
 
     void SceneLoader::createAudioListenerComponent(Scene* scene, Entity entity, const pugi::xml_node& node) {
         AudioListenerComponentParams params;

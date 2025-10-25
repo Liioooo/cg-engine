@@ -47,6 +47,7 @@ namespace CgEngine {
         PhysicsSystem& getPhysicsSystem();
         ResourceManager& getResourceManager();
         SceneManager& getSceneManager();
+        SceneRenderer& getSceneRenderer();
         Window& getWindow();
 
         template<typename S>

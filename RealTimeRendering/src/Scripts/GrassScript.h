@@ -2,11 +2,23 @@
 
 #include "CgEngine/Scripting/NativeScript.h"
 #include "CgEngine/Resources/ResRef.h"
-#include "CgEngine/Rendering/CustomShaders.h"
+#include "CgEngine/Rendering/CustomPipeline.h"
 #include "CgEngine/Resources/CustomMesh.h"
 
 
 namespace RTR {
+
+    struct GrassData {
+        glm::vec2 grassParams;
+        glm::vec2 grassSize;
+        glm::vec3 grassLOD;
+        float time;
+        glm::vec3 islandCenter;
+        float _padding_0;
+        glm::vec2 islandSize;
+        float _padding_1[2];
+        glm::mat4 grassColor;
+    };
 
     class GrassScript : public CgEngine::NativeScript {
     public:
@@ -66,12 +78,18 @@ namespace RTR {
         float currentTime = 0.0f;
         CgEngine::Entity grassContainer;
 
-        CgEngine::CustomValMaterial grassMaterialHigh;
-        CgEngine::CustomValMaterial grassMaterialLow;
+        CgEngine::UniformBuffer* grassMatHigh;
+        CgEngine::UniformBuffer* grassMatLow;
 
-        CgEngine::ShaderStorageBuffer* offsetsBuffer;
+        GrassData grassMatHighData;
+        GrassData grassMatLowData;
+
+        CgEngine::ImmutableShaderStorageBuffer* offsetsBuffer;
         CgEngine::CustomMesh* geometryHigh;
         CgEngine::CustomMesh* geometryLow;
+
+        CgEngine::DescriptorSet* grassDescriptorSetHigh;
+        CgEngine::DescriptorSet* grassDescriptorSetLow;
 
         CgEngine::ResRef<CgEngine::Texture2D> heightGrassMap;
 

@@ -3,6 +3,11 @@
 namespace CgEngine {
     Mesh::~Mesh() {
         delete vao;
+
+        for (const auto& mN: meshNodes) {
+            delete mN.physicsConvexMesh;
+            delete mN.physicsTriangleMesh;
+        }
     }
 
     VertexArrayObject* Mesh::getVAO() {

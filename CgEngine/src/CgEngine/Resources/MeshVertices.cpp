@@ -80,6 +80,7 @@ namespace CgEngine {
 
     MeshVertices::~MeshVertices() {
         delete skeleton;
+        delete boneInfluencesBuffer;
     }
 
     const std::vector<MeshProps::Vertex>& MeshVertices::getVertices() const {

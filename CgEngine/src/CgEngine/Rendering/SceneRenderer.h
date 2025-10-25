@@ -43,13 +43,16 @@ namespace CgEngine {
         void endScene();
         void submitMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, bool enableCulling, const glm::mat4& transform, const std::vector<float>& lodDistances);
         void submitAnimatedMesh(MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms, VertexArrayObject* skinnedVAO, const DescriptorSet* descriptorSet);
-//        void submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, const AABoundingBox* boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions, std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers, const std::vector<float>& lodDistances);
+        void submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, bool enableCulling, const AABoundingBox* boundingBox, const glm::mat4& transform, CustomGraphicsPipeline* pipeline, uint32_t instanceCount, const std::vector<float>& lodDistances, const DescriptorSet* descriptorSet);
         void submitUiElements(const std::unordered_map<std::string, UiElement*>& uiElements);
         void submitPhysicsColliderMesh(MeshVertices* mesh, const glm::mat4& transform);
         void submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, Mesh* mesh, const std::vector<uint32_t>& meshNodes, const glm::mat4& transform);
         void submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, const AABoundingBox& boundingBox, const glm::mat4& transform);
         void submitDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color);
+
         const CameraFrustum& getCamaraFrustum() const;
+        const RenderPass* getGBufferRenderPass() const;
+        const DescriptorSetLayout* getCustomPipelineDescriptorSetLayout() const;
 
         const RenderingStats& getRenderingStats();
 
@@ -204,7 +207,8 @@ namespace CgEngine {
         GraphicsPipeline* debugLinesPipeline;
         DescriptorSet* debugLinesDescriptorSet;
 
-        RenderPass* customShaderDeferredRenderPass;
+        DescriptorSetLayout* customPipelineDescriptorSetLayout;
+        DescriptorSet* customPipelineDescriptorSet;
 
         struct SkinningPushConstants {
             int componentIndex;
@@ -224,7 +228,7 @@ namespace CgEngine {
         void hbaoReinterleavingPass();
         void hbaoBlurPass();
         void pbrPass();
-        void customShaderDeferredPass();
+        void customShaderPass();
         void skyboxPass();
         void physicsCollidersPass();
         void boundingBoxPass();
@@ -318,6 +322,11 @@ namespace CgEngine {
         UniformBuffer* ubHBAOData;
 
         float hbaoSharpness = 1.0f;
+
+        struct CustomPipelineData {
+            glm::mat4 transform;
+        };
+        UniformBuffer* ubCustomPipelineData;
 
         struct MeshKey {
             const VertexArrayObject* vao;
@@ -419,19 +428,17 @@ namespace CgEngine {
 
         glm::mat4 uiProjectionMatrix;
 
-//        struct CustomShaderDrawCommand {
-//            uint32_t instanceCount;
-//            VertexArrayObject* vao;
-//            const Material* material;
-//            uint32_t baseIndex;
-//            uint32_t baseVertex;
-//            uint32_t indexCount;
-//            glm::mat4 transform;
-//            CustomShaderRendererComponentRenderPassOptions renderPassOptions;
-//            std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers = {nullptr, nullptr};
-//        };
+        struct CustomShaderDrawCommand {
+            uint32_t instanceCount;
+            VertexArrayObject* vao;
+            const DescriptorSet* descriptorSet;
+            uint32_t baseIndex;
+            uint32_t baseVertex;
+            uint32_t indexCount;
+            glm::mat4 transform;
+        };
 
-//        std::unordered_map<CustomShader*, std::vector<CustomShaderDrawCommand>> customShaderDeferredDrawCommandQueue;
+        std::unordered_map<CustomGraphicsPipeline*, std::vector<CustomShaderDrawCommand>> customShaderDrawCommandQueue;
 
         IndexBuffer* uiIndexBuffer;
         VertexArrayObject* uiCircleVAO;

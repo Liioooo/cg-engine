@@ -8,9 +8,9 @@ namespace CgEngine::Utils::String {
     bool matches(std::string_view string, const std::string& pattern);
     std::string replaceAll(std::string str, const std::string& from, const std::string& to);
 
-    std::optional<int32_t> toInt(const std::string& s);
-    std::optional<float> toFloat(const std::string& s);
-    bool toBool(const std::string& s);
+    std::optional<int32_t> toInt(std::string_view s);
+    std::optional<float> toFloat(std::string_view s);
+    bool toBool(std::string_view s);
 
     std::string fromBool(bool value);
 }

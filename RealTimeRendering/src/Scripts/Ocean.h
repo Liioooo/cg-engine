@@ -3,6 +3,8 @@
 #include <OceanCascade.h>
 #include <FastFourierTransform.h>
 #include "CgEngine/Scripting/NativeScript.h"
+#include "CgEngine/Rendering/DescriptorSet.h"
+#include "CgEngine/Rendering/UniformBuffer.h"
 
 namespace RTR {
 
@@ -44,12 +46,22 @@ namespace RTR {
 
     private:
         CgEngine::CustomMesh* mesh = nullptr;
-        CgEngine::CustomValMaterial* mat = nullptr;
-        CgEngine::ShaderStorageBuffer* instanceBuffer = nullptr;
+        CgEngine::DescriptorSet* mat = nullptr;
+        CgEngine::UniformBuffer* matUniformBuffer;
 
-        CgEngine::Uuid onPreRenderCbUuid;
-
-        // Custom begin
+        struct MaterialUniformBufferData {
+            glm::vec3 foamColor;
+            float roughness;
+            glm::vec3 sssColor;
+            float roughnessScale;
+            glm::vec3 color;
+            float maxGloss;
+            float foamBias;
+            float foamScale;
+            float length0;
+            float length1;
+            float length2;
+        };
 
         float currentTime = 0;
 

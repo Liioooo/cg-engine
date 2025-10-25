@@ -128,6 +128,10 @@ namespace CgEngine {
         return *sceneManager;
     }
 
+    SceneRenderer& Application::getSceneRenderer() {
+        return *sceneRenderer;
+    }
+
     Window &Application::getWindow() {
         return *window;
     }

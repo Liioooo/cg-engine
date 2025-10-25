@@ -25,7 +25,7 @@ namespace CgEngine {
         }
 
         std::vector<char> loadShaderBinary(const std::string& name, ShaderEnv env) {
-            const std::filesystem::path path = env == ShaderEnv::Engine ? FileSystem::getAsEnginePath(std::filesystem::path("compiled_shaders/opengl") / name) : FileSystem::getAsGamePath(name);
+            const std::filesystem::path path = env == ShaderEnv::Engine ? FileSystem::getAsEnginePath(std::filesystem::path("compiled_shaders/opengl") / name) : FileSystem::getAsGamePath(std::filesystem::path("compiled_shaders/opengl") / name);
 
             if (!FileSystem::checkFileExists(path)) {
                 return {};

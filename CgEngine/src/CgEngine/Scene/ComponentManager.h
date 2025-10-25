@@ -22,6 +22,7 @@
 #include "Components/AudioListenerComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/LodDistanceComponent.h"
+#include "Components/CustomShaderRendererComponent.h"
 #include "ComponentArray.h"
 
 namespace CgEngine {
@@ -48,7 +49,7 @@ namespace CgEngine {
             registerComponentType<CharacterControllerComponent>();
             registerComponentType<UiCanvasComponent>();
             registerComponentType<AnimationComponent>();
-//            registerComponentType<CustomShaderRendererComponent>();
+            registerComponentType<CustomShaderRendererComponent>();
             registerComponentType<AudioListenerComponent>();
             registerComponentType<AudioComponent>();
             registerComponentType<LodDistanceComponent>();

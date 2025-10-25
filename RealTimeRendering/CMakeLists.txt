@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.23)
+include(../CMakeAssetHandling.cmake)
 
 project(RealTimeRendering VERSION 0.1.0)
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
@@ -113,9 +114,4 @@ target_precompile_headers(${PROJECT_NAME} REUSE_FROM CG_ENGINE)
 ################################################################################
 # Assets handling
 ################################################################################
-add_custom_target(copy_assets_cg_engine_real_time_rendering COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/../CgEngine/assets ${PROJECT_BINARY_DIR}/assets/engine)
-add_dependencies(${PROJECT_NAME} copy_assets_cg_engine_real_time_rendering)
-
-add_custom_target(copy_assets_real_time_rendering COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/assets ${PROJECT_BINARY_DIR}/assets/game)
-add_dependencies(${PROJECT_NAME} copy_assets_real_time_rendering)
-
+handle_assets()

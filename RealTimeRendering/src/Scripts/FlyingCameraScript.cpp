@@ -65,7 +65,7 @@ namespace RTR {
         }
 
         if (event.getKeyCode() == CgEngine::KeyCode::F12) {
-            getComponent<CgEngine::AnimationComponent>().setAnimationPlaying(manualControl);
+            // getComponent<CgEngine::AnimationComponent>().setAnimationPlaying(manualControl);
             manualControl = !manualControl;
             if (!manualControl) {
                 return;

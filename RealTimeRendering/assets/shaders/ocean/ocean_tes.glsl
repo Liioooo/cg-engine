@@ -1,14 +1,28 @@
 #version 450 core
 
-#include "common/CameraDataBuffer.glsl"
-#include "common/GBuffersVertex.glsl"
+#include "CameraDataBuffer.glsl"
+#include "GBuffersVertex.glsl"
 
 layout (quads, fractional_even_spacing, ccw) in;
 
-uniform mat4 u_Transform;
-uniform float u_length0;
-uniform float u_length1;
-uniform float u_length2;
+layout (binding = 5, std140) uniform CustomPipelineData {
+    mat4 transform;
+} u_CustomPipelineData;
+
+
+layout (binding = 2, std140) uniform OceanData {
+    vec3 foamColor;
+    float roughness;
+    vec3 sssColor;
+    float roughnessScale;
+    vec3 color;
+    float maxGloss;
+    float foamBias;
+    float foamScale;
+    float length0;
+    float length1;
+    float length2;
+} u_OceanData;
 
 uniform layout(binding=10) sampler2D u_displacementC0;
 uniform layout(binding=11) sampler2D u_derivativesC0;
@@ -22,7 +36,7 @@ uniform layout(binding=16) sampler2D u_displacementC2;
 uniform layout(binding=17) sampler2D u_derivativesC2;
 uniform layout(binding=18) sampler2D u_turbulenceC2;
 
-in TS_OUT {
+layout(location = 11) in TS_OUT {
     vec4 aPos;
     vec4 aNormal;
     vec4 aTangent;
@@ -30,7 +44,7 @@ in TS_OUT {
     vec4 aTexCoord;
 } ts_in[];
 
-out VS_OUT {
+layout(location = 12) out VS_OUT {
     vec3 WorldPosition;
     vec3 Normal;
     vec4 TexCoord;
@@ -52,22 +66,22 @@ void main() {
     vec4 n = bilinearInterpolation(ts_in[0].aNormal, ts_in[1].aNormal, ts_in[2].aNormal, ts_in[3].aNormal);
     vec4 t = bilinearInterpolation(ts_in[0].aTexCoord, ts_in[1].aTexCoord, ts_in[2].aTexCoord, ts_in[3].aTexCoord);
 
-    vec4 displacement0 = texture(u_displacementC0, (u_Transform * p).xz / u_length0);
-    vec4 displacement1 = texture(u_displacementC1, (u_Transform * p).xz / u_length1);
-    vec4 displacement2 = texture(u_displacementC2, (u_Transform * p).xz / u_length2);
+    vec4 displacement0 = texture(u_displacementC0, (u_CustomPipelineData.transform * p).xz / u_OceanData.length0);
+    vec4 displacement1 = texture(u_displacementC1, (u_CustomPipelineData.transform * p).xz / u_OceanData.length1);
+    vec4 displacement2 = texture(u_displacementC2, (u_CustomPipelineData.transform * p).xz / u_OceanData.length2);
 
-    vs_out.ViewVector = vec3(u_CameraData.position - u_Transform * p);
+    vs_out.ViewVector = vec3(u_CameraData.position - u_CustomPipelineData.transform * p);
     float viewDist = length(vs_out.ViewVector);
-    float lod_c0 = min(7.13 * u_length0 / viewDist, 1);
-    float lod_c1 = min(7.13 * u_length1 / viewDist, 1);
-    float lod_c2 = min(7.13 * u_length2 / viewDist, 1);
+    float lod_c0 = min(7.13 * u_OceanData.length0 / viewDist, 1);
+    float lod_c1 = min(7.13 * u_OceanData.length1 / viewDist, 1);
+    float lod_c2 = min(7.13 * u_OceanData.length2 / viewDist, 1);
 
     vec4 displacement = displacement0 * lod_c0;
     float largeWaveBias = displacement.y;
     displacement += displacement1 * lod_c1 + displacement2 * lod_c2;
-    vec4 worldPosition = u_Transform * p + displacement;
+    vec4 worldPosition = u_CustomPipelineData.transform * p + displacement;
 
-    vs_out.Normal = mat3(transpose(inverse(u_Transform))) * n.xyz;
+    vs_out.Normal = mat3(transpose(inverse(u_CustomPipelineData.transform))) * n.xyz;
     vs_out.WorldPosition = worldPosition.xyz;
     vs_out.TexCoord = t;
 

@@ -1,12 +1,14 @@
 #version 450 core
 
-#include "common/CameraDataBuffer.glsl"
+#include "CameraDataBuffer.glsl"
 
 layout (vertices=4) out;
 
-uniform mat4 u_Transform;
+layout (binding = 5, std140) uniform CustomPipelineData {
+    mat4 transform;
+} u_CustomPipelineData;
 
-in TS_OUT {
+layout(location = 10) in TS_OUT {
     vec4 aPos;
     vec4 aNormal;
     vec4 aTangent;
@@ -14,7 +16,7 @@ in TS_OUT {
     vec4 aTexCoord;
 } ts_in[];
 
-out TS_OUT {
+layout(location = 11) out TS_OUT {
     vec4 aPos;
     vec4 aNormal;
     vec4 aTangent;
@@ -45,10 +47,10 @@ void main()
         const float MIN_DISTANCE = 10;
         const float MAX_DISTANCE = 50;
 
-        float distance00 = clamp((length(vec3(u_CameraData.position - u_Transform * ts_in[0].aPos) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)), 0.0, 1.0);
-        float distance01 = clamp((length(vec3(u_CameraData.position - u_Transform * ts_in[1].aPos) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)), 0.0, 1.0);
-        float distance10 = clamp((length(vec3(u_CameraData.position - u_Transform * ts_in[2].aPos) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)), 0.0, 1.0);
-        float distance11 = clamp((length(vec3(u_CameraData.position - u_Transform * ts_in[3].aPos) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)), 0.0, 1.0);
+        float distance00 = clamp((length(vec3(u_CameraData.position - u_CustomPipelineData.transform * ts_in[0].aPos) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)), 0.0, 1.0);
+        float distance01 = clamp((length(vec3(u_CameraData.position - u_CustomPipelineData.transform * ts_in[1].aPos) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)), 0.0, 1.0);
+        float distance10 = clamp((length(vec3(u_CameraData.position - u_CustomPipelineData.transform * ts_in[2].aPos) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)), 0.0, 1.0);
+        float distance11 = clamp((length(vec3(u_CameraData.position - u_CustomPipelineData.transform * ts_in[3].aPos) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)), 0.0, 1.0);
 
         float tessLevel0 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance10, distance00));
         float tessLevel1 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance00, distance01));
@@ -68,4 +70,3 @@ void main()
         gl_TessLevelInner[1] = max(tessLevel0, tessLevel2);
     }
 }
-	

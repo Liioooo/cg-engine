@@ -5,6 +5,7 @@
 #include "Rendering/PBRMaterial.h"
 #include "Rendering/TextureCube.h"
 #include "Physics/PhysicsMaterial.h"
+#include "Rendering/CustomPipeline.h"
 #include "Font.h"
 #include "Timer.h"
 #include "ResRef.h"
@@ -56,9 +57,9 @@ namespace CgEngine {
             registerResourceType<TextureCube>();
             registerResourceType<PhysicsMaterial>();
             registerResourceType<Font>();
-//            registerResourceType<CustomShader>();
-//            registerResourceType<CustomComputeShader>();
             registerResourceType<AudioFile>();
+            registerResourceType<CustomGraphicsPipeline>();
+            registerResourceType<CustomComputePipeline>();
         }
 
         template<typename R>
@@ -116,9 +117,9 @@ namespace CgEngine {
             unloadUnusedResourceType<TextureCube>();
             unloadUnusedResourceType<PhysicsMaterial>();
             unloadUnusedResourceType<Font>();
-//            unloadUnusedResourceType<CustomShader>();
-//            unloadUnusedResourceType<CustomComputeShader>();
             unloadUnusedResourceType<AudioFile>();
+            unloadUnusedResourceType<CustomGraphicsPipeline>();
+            unloadUnusedResourceType<CustomComputePipeline>();
         }
 
     private:
@@ -140,7 +141,7 @@ namespace CgEngine {
         void unloadUnusedResourceType() {
             ResourceMap<R>& resourceMap = getResourceMap<R>();
             for (auto it = resourceMap.begin(); it != resourceMap.end();) {
-                CG_LOGGING_DEBUG("Unload Resource Info: {0} : {1} : UseCount: {2}", typeid(R).name(), it->first, it->second.use_count())
+                CG_LOGGING_DEBUG("Unload Resource Info: {0} : {1} : UseCount: {2}", typeid(R).name(), it->first, it->second.use_count() - 1)
 
                 if (it->second.use_count() == 1) {
                     CG_LOGGING_DEBUG("Unloading Resource: {0} : {1}", typeid(R).name(), it->first)

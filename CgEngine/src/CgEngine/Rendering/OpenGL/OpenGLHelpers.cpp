@@ -197,10 +197,14 @@ namespace CgEngine {
                     return GL_RGBA8;
                 case AttachmentType::RGBA16F:
                     return GL_RGBA16F;
+                case AttachmentType::RGBA32F:
+                    return GL_RGBA32F;
                 case AttachmentType::RG8:
                     return GL_RG8;
                 case AttachmentType::RG16F:
                     return GL_RG16F;
+                case AttachmentType::RG32F:
+                    return GL_RG32F;
                 case AttachmentType::R16F:
                     return GL_R16F;
             }
@@ -286,10 +290,72 @@ namespace CgEngine {
             return handle;
         }
 
+        uint32_t loadOpenGLGraphicsShader(const std::string& vertex, const std::string& fragment, const std::string& geometry, const std::string& tcs, const std::string& tes, ShaderEnv env) {
+            CG_LOGGING_DEBUG("Loading Shader: {0}", vertex)
+
+            std::vector<char> vertexSource = Helpers::loadShaderBinary(vertex + ".spv", env);
+            std::vector<char> fragmentSource = Helpers::loadShaderBinary(fragment + ".spv", env);
+            std::vector<char> geometrySource = Helpers::loadShaderBinary(geometry + ".spv", env);
+            std::vector<char> tcsSource = Helpers::loadShaderBinary(tcs + ".spv", env);
+            std::vector<char> tesSource = Helpers::loadShaderBinary(tes + ".spv", env);
+
+            uint32_t handle = glCreateProgram();
+            bool error = false;
+
+            if (!vertexSource.empty()) {
+                error |= OpenGLHelpers::createShaderType(GL_VERTEX_SHADER, "VERTEX", vertexSource, handle);
+            }
+            if (!fragmentSource.empty()) {
+                error |= OpenGLHelpers::createShaderType(GL_FRAGMENT_SHADER, "FRAGMENT", fragmentSource, handle);
+            }
+            if (!geometrySource.empty()) {
+                error |= OpenGLHelpers::createShaderType(GL_GEOMETRY_SHADER, "GEOMETRY", geometrySource, handle);
+            }
+            if (!tcsSource.empty()) {
+                error |= OpenGLHelpers::createShaderType(GL_TESS_CONTROL_SHADER, "TCS", tcsSource, handle);
+            }
+            if (!tesSource.empty()) {
+                error |= OpenGLHelpers::createShaderType(GL_TESS_EVALUATION_SHADER, "TES", tesSource, handle);
+            }
+
+            glLinkProgram(handle);
+            error |= OpenGLHelpers::checkShaderErrors(handle, "PROGRAM");
+
+            if (error) {
+                glDeleteProgram(handle);
+                CG_LOGGING_ERROR("Failed to load shader: {0}", vertex)
+                return ~0;
+            }
+
+            CG_LOGGING_DEBUG("Loaded Shader: {0}", vertex)
+            return handle;
+        }
+
         uint32_t loadOpenGLComputeShader(const std::string& name, ShaderEnv env) {
             CG_LOGGING_DEBUG("Loading ComputeShader: {0}", name)
 
             std::vector<char> source = Helpers::loadShaderBinaryWithType(name, "comp", env);
+
+            uint32_t handle = glCreateProgram();
+            bool error = OpenGLHelpers::createShaderType(GL_COMPUTE_SHADER, "COMPUTE", source, handle);
+
+            glLinkProgram(handle);
+            error |= OpenGLHelpers::checkShaderErrors(handle, "PROGRAM");
+
+            if (error) {
+                glDeleteProgram(handle);
+                CG_LOGGING_ERROR("Failed to load compute shader: {0}", name)
+                return ~0;
+            }
+
+            CG_LOGGING_DEBUG("Loaded ComputeShader: {0}", name)
+            return handle;
+        }
+
+        uint32_t loadOpenGLCustomComputeShader(const std::string& name) {
+            CG_LOGGING_DEBUG("Loading Compute Shader: {0}", name)
+
+            std::vector<char> source = Helpers::loadShaderBinary(name + ".spv", ShaderEnv::Custom);
 
             uint32_t handle = glCreateProgram();
             bool error = OpenGLHelpers::createShaderType(GL_COMPUTE_SHADER, "COMPUTE", source, handle);

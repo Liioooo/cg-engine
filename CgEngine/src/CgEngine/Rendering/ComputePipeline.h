@@ -8,6 +8,7 @@ namespace CgEngine {
     struct ComputePipelineSpecification {
         const DescriptorSetLayout* descriptorSetLayout = nullptr;
         std::string engineShaderName;
+        std::string customShader;
     };
 
     class ComputePipeline {

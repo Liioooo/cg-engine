@@ -4,6 +4,7 @@
 
 namespace CgEngine {
     const pugi::xml_document& XMLFile::getXMLDocument() {
+        CG_ASSERT(loaded, "XMLFile::getXMLDocument: XML file is not loaded.")
         return xmlDocument;
     }
 

@@ -1,6 +1,7 @@
 #include "StartScript.h"
 #include "CgEngine/Events/Input.h"
 #include "CgEngine/Application.h"
+#include "CgEngine/Rendering/CustomPipeline.h"
 
 namespace Game {
     void StartScript::onAttach() {

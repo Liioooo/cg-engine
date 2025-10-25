@@ -20,7 +20,9 @@ namespace CgEngine {
         int shaderImageAccessToOpenGL(ShaderImageAccess access);
         int getOpenGLTextureFormatForImageBind(TextureFormat format);
         uint32_t loadOpenGLGraphicsShader(const std::string& name, ShaderEnv env);
+        uint32_t loadOpenGLGraphicsShader(const std::string& vertex, const std::string& fragment, const std::string& geometry, const std::string& tcs, const std::string& tes, ShaderEnv env);
         uint32_t loadOpenGLComputeShader(const std::string& name, ShaderEnv env);
+        uint32_t loadOpenGLCustomComputeShader(const std::string& name);
         bool checkShaderErrors(uint32_t shaderHandle, const std::string& type);
         int getShaderUniformLocation(uint32_t programHandle, const std::string& name);
         bool createShaderType(unsigned int type, const std::string& sType, const std::vector<char>& source, unsigned int attachTo);

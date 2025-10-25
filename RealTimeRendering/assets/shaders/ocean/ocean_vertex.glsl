@@ -6,7 +6,7 @@ layout (location = 2) in vec4 a_Tangent;
 layout (location = 3) in vec4 a_Bitangent;
 layout (location = 4) in vec4 a_TexCoord;
 
-out TS_OUT {
+layout(location = 10) out TS_OUT {
     vec4 aPos;
     vec4 aNormal;
     vec4 aTangent;

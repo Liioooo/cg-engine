@@ -1,12 +1,20 @@
 #include "FastFourierTransform.h"
+#include "CgEngine/Rendering/GraphicsObjectsFactory.h"
+#include "CgEngine/Rendering/Renderer.h"
 
 namespace RTR {
 
     FastFourierTransform::FastFourierTransform(CgEngine::ResourceManager& resourceManager): resourceManager(resourceManager) {
-        precomputeTwiddleFactorsAndInputIndicesShader = resourceManager.getResource<CgEngine::CustomComputeShader>("ocean/fft/precomputeTwiddleFactorsAndInputIndices");
-        permuteShader = resourceManager.getResource<CgEngine::CustomComputeShader>("ocean/fft/permute");
-        horizontalStepInverseFftShader = resourceManager.getResource<CgEngine::CustomComputeShader>("ocean/fft/horizontalStepInverseFft");
-        verticalStepInverseFftShader = resourceManager.getResource<CgEngine::CustomComputeShader>("ocean/fft/verticalStepInverseFft");
+        precomputeTwiddleFactorsAndInputIndicesShader = resourceManager.getResource<CgEngine::CustomComputePipeline>("ocean/fft/precomputeTwiddleFactorsAndInputIndices");
+        permuteShader = resourceManager.getResource<CgEngine::CustomComputePipeline>("ocean/fft/permute");
+        horizontalStepInverseFftShader = resourceManager.getResource<CgEngine::CustomComputePipeline>("ocean/fft/horizontalStepInverseFft");
+        verticalStepInverseFftShader = resourceManager.getResource<CgEngine::CustomComputePipeline>("ocean/fft/verticalStepInverseFft");
+
+        pushConstants = CgEngine::GraphicsObjectsFactory::createPushConstants("pc_fft");
+        pushConstants->init<PCFft>();
+        pushConstants->mapUniform(&PCFft::step, "step");
+        pushConstants->mapUniform(&PCFft::pingPong, "pingPong");
+
     }
 
     FastFourierTransform::~FastFourierTransform() {
@@ -14,58 +22,103 @@ namespace RTR {
         delete twiddleFactors;
     }
 
-    void FastFourierTransform::inverseTransform(CgEngine::Texture2D& input, bool outputToInput, bool permute) {
-        int logSize = (int)log2(input.getWidth());
+    void FastFourierTransform::inverseTransform(CgEngine::Attachment* input, bool outputToInput, bool permute) {
+        int logSize = (int)log2(input->getWidth());
         bool pingPong = false;
 
         if (twiddleFactors == nullptr || twiddleFactors->getWidth() != logSize) {
-            twiddleFactors = new CgEngine::Texture2D(
-                    CgEngine::TextureFormat::Float32A,
-                    logSize,
-                    input.getHeight(),
-                    CgEngine::TextureWrap::Repeat,
-                    CgEngine::MipMapFiltering::Nearest
-            );
-            precomputeTwiddleFactorsAndInputIndicesShader->bind();
-            precomputeTwiddleFactorsAndInputIndicesShader->setInt("u_size", (int)input.getWidth());
-            precomputeTwiddleFactorsAndInputIndicesShader->setImage2D(*twiddleFactors, 0, CgEngine::ShaderStorageAccess::ReadWrite);
-            precomputeTwiddleFactorsAndInputIndicesShader->dispatch(logSize, static_cast<int>(input.getHeight() / 2.0 / 8.0), 1);
-            precomputeTwiddleFactorsAndInputIndicesShader->waitForMemoryBarrier({CgEngine::MemoryBarrierBit::ShaderImageAccess});
+            delete twiddleFactors;
+
+            CgEngine::AttachmentSpecification spec{};
+            spec.type = CgEngine::AttachmentType::RGBA32F;
+            spec.width = logSize;
+            spec.height = input->getHeight();
+            spec.usableAsTexture = true;
+            spec.textureWrap = CgEngine::TextureWrap::Repeat;
+            spec.mipMapFiltering = CgEngine::MipMapFiltering::Nearest;
+            twiddleFactors = CgEngine::GraphicsObjectsFactory::createAttachment(spec);
+
+            CgEngine::DescriptorSetSpecification descSetSpec{};
+            descSetSpec.layout = precomputeTwiddleFactorsAndInputIndicesShader->getDescriptorSetLayout();
+            descSetSpec.attachmentImageBindings = {
+                    {0, ~0u, true, CgEngine::ShaderImageAccess::WriteOnly, twiddleFactors},
+            };
+            auto* descSet = CgEngine::GraphicsObjectsFactory::createDescriptorSet(descSetSpec);
+
+            struct PushConstantData {
+                int size;
+            };
+            PushConstantData pcData{};
+            pcData.size = input->getWidth();
+
+
+            auto* pc = CgEngine::GraphicsObjectsFactory::createPushConstants("pc_precompute");
+            pc->init<PushConstantData>();
+            pc->mapUniform(&PushConstantData::size, "size");
+            pc->setData(&pcData, sizeof(int));
+
+            CgEngine::Renderer::bindComputePipeline(precomputeTwiddleFactorsAndInputIndicesShader->getComputePipeline());
+            CgEngine::Renderer::bindDescriptorSet(descSet, 0);
+            CgEngine::Renderer::setPushConstants({pc}, 1);
+            CgEngine::Renderer::dispatchCompute(logSize, static_cast<int>(input->getHeight() / 2.0 / 8.0), 1);
+            glMemoryBarrier(GL_ALL_BARRIER_BITS);
+
+            delete descSet;
+            delete pc;
         }
-        if (buffer == nullptr || buffer->getWidth() != input.getWidth()) {
-            buffer = new CgEngine::Texture2D(
-                    CgEngine::TextureFormat::RedGreenFloat32,
-                    input.getWidth(),
-                    input.getHeight(),
-                    CgEngine::TextureWrap::Repeat,
-                    CgEngine::MipMapFiltering::Nearest
-            );
+        if (buffer == nullptr || buffer->getWidth() != input->getWidth()) {
+            delete buffer;
+
+            CgEngine::AttachmentSpecification spec{};
+            spec.type = CgEngine::AttachmentType::RG32F;
+            spec.width = input->getWidth();
+            spec.height = input->getHeight();
+            spec.usableAsTexture = true;
+            spec.textureWrap = CgEngine::TextureWrap::Repeat;
+            spec.mipMapFiltering = CgEngine::MipMapFiltering::Nearest;
+
+            buffer = CgEngine::GraphicsObjectsFactory::createAttachment(spec);
         }
 
-        horizontalStepInverseFftShader->bind();
-        horizontalStepInverseFftShader->setImage2D(*twiddleFactors, 0, CgEngine::ShaderStorageAccess::ReadOnly);
-        horizontalStepInverseFftShader->setImage2D(input, 1, CgEngine::ShaderStorageAccess::ReadWrite);
-        horizontalStepInverseFftShader->setImage2D(*buffer, 2, CgEngine::ShaderStorageAccess::ReadWrite);
+        CgEngine::DescriptorSetSpecification fftDescSetSpec{};
+        fftDescSetSpec.layout = horizontalStepInverseFftShader->getDescriptorSetLayout();
+        fftDescSetSpec.attachmentImageBindings = {
+            {0, ~0u, true, CgEngine::ShaderImageAccess::ReadOnly, twiddleFactors},
+            {1, ~0u, true, CgEngine::ShaderImageAccess::ReadWrite, input},
+            {2, ~0u, true, CgEngine::ShaderImageAccess::ReadWrite, buffer},
+        };
+        auto* fftDescSet = CgEngine::GraphicsObjectsFactory::createDescriptorSet(fftDescSetSpec);
+
+        CgEngine::Renderer::bindComputePipeline(horizontalStepInverseFftShader->getComputePipeline());
+        CgEngine::Renderer::bindDescriptorSet(fftDescSet, 0);
+
+        PCFft pcData{};
 
         for (int i = 0; i < logSize; i++) {
             pingPong = !pingPong;
-            horizontalStepInverseFftShader->setInt("u_step", i);
-            horizontalStepInverseFftShader->setBool("u_pingPong", pingPong);
-            horizontalStepInverseFftShader->dispatch(input.getWidth() / 8, input.getHeight() / 8, 1);
-            horizontalStepInverseFftShader->waitForMemoryBarrier({CgEngine::MemoryBarrierBit::ShaderImageAccess});
+
+            pcData.step = i;
+            pcData.pingPong = pingPong;
+            pushConstants->setData(&pcData, sizeof(PCFft));
+
+            CgEngine::Renderer::setPushConstants({pushConstants}, 1);
+            CgEngine::Renderer::dispatchCompute(input->getWidth() / 8, input->getHeight() / 8, 1);
+            glMemoryBarrier(GL_ALL_BARRIER_BITS);
         }
 
-        verticalStepInverseFftShader->bind();
-        verticalStepInverseFftShader->setImage2D(*twiddleFactors, 0, CgEngine::ShaderStorageAccess::ReadOnly);
-        verticalStepInverseFftShader->setImage2D(input, 1, CgEngine::ShaderStorageAccess::ReadWrite);
-        verticalStepInverseFftShader->setImage2D(*buffer, 2, CgEngine::ShaderStorageAccess::ReadWrite);
+        CgEngine::Renderer::bindComputePipeline(verticalStepInverseFftShader->getComputePipeline());
+        CgEngine::Renderer::bindDescriptorSet(fftDescSet, 0);
 
         for (int i = 0; i < logSize; i++) {
             pingPong = !pingPong;
-            verticalStepInverseFftShader->setInt("u_step", i);
-            verticalStepInverseFftShader->setBool("u_pingPong", pingPong);
-            verticalStepInverseFftShader->dispatch(input.getWidth() / 8, input.getHeight() / 8, 1);
-            verticalStepInverseFftShader->waitForMemoryBarrier({CgEngine::MemoryBarrierBit::ShaderImageAccess});
+
+            pcData.step = i;
+            pcData.pingPong = pingPong;
+            pushConstants->setData(&pcData, sizeof(PCFft));
+
+            CgEngine::Renderer::setPushConstants({pushConstants}, 1);
+            CgEngine::Renderer::dispatchCompute(input->getWidth() / 8, input->getHeight() / 8, 1);
+            glMemoryBarrier(GL_ALL_BARRIER_BITS);
         }
 
 //    if (pingPong && outputToInput) {
@@ -77,15 +130,27 @@ namespace RTR {
 //        Graphics.Blit(input, buffer);
 //    }
 
-        permuteShader->bind();
         if (permute) {
+            CgEngine::Renderer::bindComputePipeline(permuteShader->getComputePipeline());
+
+            CgEngine::DescriptorSetSpecification permuteDescSetSpec{};
+            permuteDescSetSpec.layout = permuteShader->getDescriptorSetLayout();
+
             if (outputToInput) {
-                permuteShader->setImage2D(input, 0, CgEngine::ShaderStorageAccess::ReadWrite);
+                permuteDescSetSpec.attachmentImageBindings = {
+                    {0, ~0u, true, CgEngine::ShaderImageAccess::ReadWrite, input},
+                };
             } else {
-                permuteShader->setImage2D(*buffer, 0, CgEngine::ShaderStorageAccess::ReadWrite);
+                permuteDescSetSpec.attachmentImageBindings = {
+                        {0, ~0u, true, CgEngine::ShaderImageAccess::ReadWrite, buffer},
+                };
             }
-            permuteShader->dispatch(input.getWidth() / 8, input.getHeight() / 8, 1);
-            permuteShader->waitForMemoryBarrier({CgEngine::MemoryBarrierBit::ShaderImageAccess});
+            auto* permuteDescSet = CgEngine::GraphicsObjectsFactory::createDescriptorSet(permuteDescSetSpec);
+            CgEngine::Renderer::bindDescriptorSet(permuteDescSet, 0);
+            CgEngine::Renderer::dispatchCompute(input->getWidth() / 8, input->getHeight() / 8, 1);
+            glMemoryBarrier(GL_ALL_BARRIER_BITS);
+
+            delete permuteDescSet;
         }
         /*
         if (scale) {

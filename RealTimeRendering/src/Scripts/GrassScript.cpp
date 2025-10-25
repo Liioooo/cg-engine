@@ -1,5 +1,6 @@
 #include "GrassScript.h"
 #include "CgEngine/FileSystem.h"
+#include "CgEngine/Rendering/GraphicsObjectsFactory.h"
 #include "imgui.h"
 
 namespace RTR {
@@ -18,23 +19,54 @@ namespace RTR {
 
         glm::mat4 grassColorsUniform = glm::mat4(glm::vec4(baseColor1, 0.0f), glm::vec4(baseColor2, 0.0f), glm::vec4(tipColor1, 0.0f), glm::vec4(tipColor2, 0.0f));
 
-        grassMaterialHigh.set("u_GrassParams", glm::vec2{GRASS_SEGMENTS_HIGH, GRASS_VERTICES_HIGH});
-        grassMaterialHigh.set("u_GrassSize", glm::vec2{GRASS_WIDTH, GRASS_HEIGHT});
-        grassMaterialHigh.set("u_GrassLOD", glm::vec3{GRASS_LOD_DIST, GRASS_MAX_DIST, GRASS_TERRAIN_NORMAL_RATIO});
-        grassMaterialHigh.setTexture2D("u_HeightGrassMap", *heightGrassMap, 10);
-        grassMaterialHigh.set("u_IslandSize", islandSize);
-        grassMaterialHigh.set("u_IslandCenter", islandCenter);
-        grassMaterialHigh.set("u_GrassColor", grassColorsUniform);
+        grassMatHighData.grassParams = glm::vec2{GRASS_SEGMENTS_HIGH, GRASS_VERTICES_HIGH};
+        grassMatHighData.grassSize = glm::vec2{GRASS_WIDTH, GRASS_HEIGHT};
+        grassMatHighData.grassLOD = glm::vec3{GRASS_LOD_DIST, GRASS_MAX_DIST, GRASS_TERRAIN_NORMAL_RATIO};
+        grassMatHighData.islandSize = islandSize;
+        grassMatHighData.islandCenter = islandCenter;
+        grassMatHighData.grassColor = grassColorsUniform;
 
-        grassMaterialLow.set("u_GrassParams", glm::vec2{GRASS_SEGMENTS_LOW, GRASS_VERTICES_LOW});
-        grassMaterialLow.set("u_GrassSize", glm::vec2{GRASS_WIDTH, GRASS_HEIGHT});
-        grassMaterialLow.set("u_GrassLOD", glm::vec3{GRASS_LOD_DIST, GRASS_MAX_DIST, GRASS_TERRAIN_NORMAL_RATIO});
-        grassMaterialLow.setTexture2D("u_HeightGrassMap", *heightGrassMap, 10);
-        grassMaterialLow.set("u_IslandSize", islandSize);
-        grassMaterialLow.set("u_IslandCenter", islandCenter);
-        grassMaterialLow.set("u_GrassColor", grassColorsUniform);
+        grassMatLowData.grassParams = glm::vec2{GRASS_SEGMENTS_LOW, GRASS_VERTICES_LOW};
+        grassMatLowData.grassSize = glm::vec2{GRASS_WIDTH, GRASS_HEIGHT};
+        grassMatLowData.grassLOD = glm::vec3{GRASS_LOD_DIST, GRASS_MAX_DIST, GRASS_TERRAIN_NORMAL_RATIO};
+        grassMatLowData.islandSize = islandSize;
+        grassMatLowData.islandCenter = islandCenter;
+        grassMatLowData.grassColor = grassColorsUniform;
 
 
+        grassMatLow = CgEngine::GraphicsObjectsFactory::createUniformBuffer(sizeof(GrassData));
+        grassMatHigh = CgEngine::GraphicsObjectsFactory::createUniformBuffer(sizeof(GrassData));
+
+        grassMatLow->setData(&grassMatLowData, sizeof(GrassData));
+        grassMatHigh->setData(&grassMatHighData, sizeof(GrassData));
+
+        const auto* grassDescriptorSetLayout = getResource<CgEngine::CustomGraphicsPipeline>("grass/render")->getDescriptorSetLayout();
+
+        CgEngine::DescriptorSetSpecification grassDescSetSpecLow{};
+        grassDescSetSpecLow.layout = grassDescriptorSetLayout;
+        grassDescSetSpecLow.texture2DBindings = {
+            {10, heightGrassMap.get()}
+        };
+        grassDescSetSpecLow.uboBindings = {
+            {2, grassMatLow}
+        };
+        grassDescSetSpecLow.immutableSsboBindings = {
+            {6, offsetsBuffer}
+        };
+        grassDescriptorSetLow = CgEngine::GraphicsObjectsFactory::createDescriptorSet(grassDescSetSpecLow);
+
+        CgEngine::DescriptorSetSpecification grassDescSetSpecHigh{};
+        grassDescSetSpecHigh.layout = grassDescriptorSetLayout;
+        grassDescSetSpecHigh.texture2DBindings = {
+            {10, heightGrassMap.get()}
+        };
+        grassDescSetSpecHigh.uboBindings = {
+            {2, grassMatHigh}
+        };
+        grassDescSetSpecHigh.immutableSsboBindings = {
+            {6, offsetsBuffer}
+        };
+        grassDescriptorSetHigh = CgEngine::GraphicsObjectsFactory::createDescriptorSet(grassDescSetSpecHigh);
 
         grassContainer = createEntity();
         CgEngine::TransformComponentParams p;
@@ -52,27 +84,24 @@ namespace RTR {
 
             CgEngine::CustomShaderRendererComponentParams rendererLowParams;
             rendererLowParams.customMesh = geometryLow;
-            rendererLowParams.customMaterial = &grassMaterialLow;
+            rendererLowParams.descriptorSet = grassDescriptorSetLow;
             rendererLowParams.instanceCount = NUM_GRASS;
-            rendererLowParams.shader = "grass/render";
+            rendererLowParams.pipeline = "grass/render";
             rendererLowParams.enableCulling = true;
-            auto& rendererLowComp = attachComponent<CgEngine::CustomShaderRendererComponent>(grassLowEntity, rendererLowParams);
-            rendererLowComp.setInstanceBuffer1(offsetsBuffer);
+            attachComponent<CgEngine::CustomShaderRendererComponent>(grassLowEntity, rendererLowParams);
 
             CgEngine::Entity grassHighEntity = createEntity(grassTileEntity);
             attachComponent<CgEngine::TransformComponent>(grassHighEntity);
 
             CgEngine::CustomShaderRendererComponentParams rendererHighParams;
             rendererHighParams.customMesh = geometryHigh;
-            rendererHighParams.customMaterial = &grassMaterialHigh;
+            rendererHighParams.descriptorSet = grassDescriptorSetHigh;
             rendererHighParams.instanceCount = NUM_GRASS;
-            rendererHighParams.shader = "grass/render";
+            rendererHighParams.pipeline = "grass/render";
             rendererHighParams.enableCulling = true;
-            auto& rendererHighComp = attachComponent<CgEngine::CustomShaderRendererComponent>(grassHighEntity, rendererHighParams);
-            rendererHighComp.setInstanceBuffer1(offsetsBuffer);
+            attachComponent<CgEngine::CustomShaderRendererComponent>(grassHighEntity, rendererHighParams);
 
             grassEntities.emplace_back(grassLowEntity, grassHighEntity);
-
         }
     }
 
@@ -105,8 +134,11 @@ namespace RTR {
 
         currentTime += ts.getSeconds();
 
-        grassMaterialHigh.set("u_Time", currentTime);
-        grassMaterialLow.set("u_Time", currentTime);
+        grassMatHighData.time = currentTime;
+        grassMatLowData.time = currentTime;
+
+        grassMatHigh->setData(&grassMatHighData, sizeof(GrassData));
+        grassMatLow->setData(&grassMatLowData, sizeof(GrassData));
     }
 
     void GrassScript::createOffsetsBuffer() {
@@ -120,8 +152,7 @@ namespace RTR {
             offsets.emplace_back(dist(mt), dist(mt));
         }
 
-        offsetsBuffer = new CgEngine::ShaderStorageBuffer();
-        offsetsBuffer->setData(offsets.data(), offsets.size() * sizeof(glm::vec2));
+        offsetsBuffer = CgEngine::GraphicsObjectsFactory::createImmutableShaderStorageBuffer(offsets.size() * sizeof(glm::vec2), offsets.data());
     }
 
     CgEngine::CustomMesh* GrassScript::createGeometry(uint8_t segments) {
@@ -178,14 +209,17 @@ namespace RTR {
         if (changed) {
             glm::mat4 grassColorsUniform = glm::mat4(glm::vec4(baseColor1, 0.0f), glm::vec4(baseColor2, 0.0f), glm::vec4(tipColor1, 0.0f), glm::vec4(tipColor2, 0.0f));
 
-            grassMaterialHigh.set("u_GrassColor", grassColorsUniform);
-            grassMaterialLow.set("u_GrassColor", grassColorsUniform);
+            grassMatHighData.grassColor = grassColorsUniform;
+            grassMatLowData.grassColor = grassColorsUniform;
 
-            grassMaterialHigh.set("u_GrassSize", glm::vec2{GRASS_WIDTH, GRASS_HEIGHT});
-            grassMaterialLow.set("u_GrassSize", glm::vec2{GRASS_WIDTH, GRASS_HEIGHT});
+            grassMatHighData.grassSize = glm::vec2{GRASS_WIDTH, GRASS_HEIGHT};
+            grassMatLowData.grassSize = glm::vec2{GRASS_WIDTH, GRASS_HEIGHT};
 
-            grassMaterialHigh.set("u_GrassLOD", glm::vec3{GRASS_LOD_DIST, GRASS_MAX_DIST, GRASS_TERRAIN_NORMAL_RATIO});
-            grassMaterialLow.set("u_GrassLOD", glm::vec3{GRASS_LOD_DIST, GRASS_MAX_DIST, GRASS_TERRAIN_NORMAL_RATIO});
+            grassMatHighData.grassLOD = glm::vec3{GRASS_LOD_DIST, GRASS_MAX_DIST, GRASS_TERRAIN_NORMAL_RATIO};
+            grassMatLowData.grassLOD = glm::vec3{GRASS_LOD_DIST, GRASS_MAX_DIST, GRASS_TERRAIN_NORMAL_RATIO};
+
+            grassMatHigh->setData(&grassMatHighData, sizeof(GrassData));
+            grassMatLow->setData(&grassMatLowData, sizeof(GrassData));
         }
     }
 }

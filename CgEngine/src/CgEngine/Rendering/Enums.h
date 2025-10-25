@@ -55,7 +55,7 @@ namespace CgEngine {
     };
 
     enum class AttachmentType {
-        Depth, DepthStencil, RGBA8, RGBA16F, RG8, RG16F, R16F
+        Depth, DepthStencil, RGBA8, RGBA16F, RGBA32F, RG8, RG16F, RG32F, R16F
     };
 
     enum class DepthAttachmentFormat {

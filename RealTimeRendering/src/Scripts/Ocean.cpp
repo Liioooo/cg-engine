@@ -2,6 +2,7 @@
 
 #include "imgui.h"
 #include "OpenGLDebugGroup.h"
+#include "CgEngine/Rendering/GraphicsObjectsFactory.h"
 
 namespace RTR {
     CgEngine::CustomMesh* Ocean::createPlane(glm::vec2 center, glm::vec2 size, int segments) {
@@ -9,11 +10,11 @@ namespace RTR {
         std::vector<CgEngine::MeshProps::Vertex> vertices;
         std::vector<uint32_t> indices;
 
-        float wh = size.x / 2.0;
-        float dh = size.y / 2.0;
+        float wh = size.x / 2.0f;
+        float dh = size.y / 2.0f;
 
-        float dx = 1.0 / segments;
-        float dy = 1.0 / segments;
+        float dx = 1.0f / segments;
+        float dy = 1.0f / segments;
 
         for (int y = 0; y < segments + 1; ++y) {
             for (int x = 0; x < segments + 1; ++x) {
@@ -73,28 +74,40 @@ namespace RTR {
         updateMaterial();
     }
 
-    void Ocean::updateMaterial()
-    {
-        mat->setTexture2D("u_displacementC0", *oceanCascade0->displacement, 10);
-        mat->setTexture2D("u_derivativesC0", *oceanCascade0->derivatives, 11);
-        mat->setTexture2D("u_turbulenceC0", *oceanCascade0->turbulence, 12);
-        mat->setTexture2D("u_displacementC1", *oceanCascade1->displacement, 13);
-        mat->setTexture2D("u_derivativesC1", *oceanCascade1->derivatives, 14);
-        mat->setTexture2D("u_turbulenceC1", *oceanCascade1->turbulence, 15);
-        mat->setTexture2D("u_displacementC2", *oceanCascade2->displacement, 16);
-        mat->setTexture2D("u_derivativesC2", *oceanCascade2->derivatives, 17);
-        mat->setTexture2D("u_turbulenceC2", *oceanCascade2->turbulence, 18);
-        mat->set("u_length0", oceanParams0.length);
-        mat->set("u_length1", oceanParams1.length);
-        mat->set("u_length2", oceanParams2.length);
-        mat->set("u_foamColor", materialParams.foamColor);
-        mat->set("u_sssColor", materialParams.sssColor);
-        mat->set("u_color", materialParams.color);
-        mat->set("u_roughness", materialParams.roughness);
-        mat->set("u_roughnessScale", materialParams.roughnessScale);
-        mat->set("u_maxGloss", materialParams.maxGloss);
-        mat->set("u_foamBias", materialParams.foamBias);
-        mat->set("u_foamScale", materialParams.foamScale);
+    void Ocean::updateMaterial() {
+        MaterialUniformBufferData matData{};
+        matData.foamColor = materialParams.foamColor;
+        matData.sssColor = materialParams.sssColor;
+        matData.color = materialParams.color;
+        matData.roughness = materialParams.roughness;
+        matData.roughnessScale = materialParams.roughnessScale;
+        matData.maxGloss = materialParams.maxGloss;
+        matData.foamBias = materialParams.foamBias;
+        matData.foamScale = materialParams.foamScale;
+        matData.length0 = oceanParams0.length;
+        matData.length1 = oceanParams1.length;
+        matData.length2 = oceanParams2.length;
+
+        matUniformBuffer->setData(&matData, sizeof(MaterialUniformBufferData));
+
+        CgEngine::DescriptorSetSpecification matSpec{};
+        matSpec.layout = getComponent<CgEngine::CustomShaderRendererComponent>().getPipeline()->getDescriptorSetLayout();
+        matSpec.uboBindings = {
+            {2, matUniformBuffer}
+        };
+        matSpec.attachmentTextureBindings = {
+            {10, ~0u, true, oceanCascade0->displacement},
+            {11, ~0u, true, oceanCascade0->derivatives},
+            {12, ~0u, true, oceanCascade0->turbulence},
+            {13, ~0u, true, oceanCascade1->displacement},
+            {14, ~0u, true, oceanCascade1->derivatives},
+            {15, ~0u, true, oceanCascade1->turbulence},
+            {16, ~0u, true, oceanCascade2->displacement},
+            {17, ~0u, true, oceanCascade2->derivatives},
+            {18, ~0u, true, oceanCascade2->turbulence},
+        };
+
+        mat->reconfigure(matSpec);
     }
 
     void Ocean::onAttach() {
@@ -130,23 +143,20 @@ namespace RTR {
         oceanParams2 = OceanParams(oceanParams0);
         oceanParams2.length = 5;
 
-        mat = new CgEngine::CustomValMaterial();
         createMesh();
-        reinitialise();
+
+        mat = CgEngine::GraphicsObjectsFactory::createDescriptorSet();
+        matUniformBuffer = CgEngine::GraphicsObjectsFactory::createUniformBuffer(sizeof(MaterialUniformBufferData));
 
         CgEngine::CustomShaderRendererComponentParams params;
-        params.shader = "ocean/render";
+        params.pipeline = "ocean/render";
         params.customMesh = mesh;
         params.instanceCount = 1;
-        params.customMaterial = mat;
+        params.descriptorSet = mat;
         params.enableCulling = true;
-        params.renderPassOptions.tesselationPatchSize = 4;
 
-        auto& c = attachComponent<CgEngine::CustomShaderRendererComponent>(params);
-
-        onPreRenderCbUuid = addOnPreRenderCallback([](const CgEngine::CameraFrustum& camaraFrustum) {
-            CG_LOGGING_DEBUG("On PreRender")
-        }, true);
+        attachComponent<CgEngine::CustomShaderRendererComponent>(params);
+        reinitialise();
     }
 
     void Ocean::update(CgEngine::TimeStep ts) {
@@ -162,30 +172,30 @@ namespace RTR {
 
     void Ocean::onRenderImGui() {
         bool changed = false;
-        bool needRecaluclation = false;
+        bool needRecalculation = false;
 
         ImGui::PushID("OceanCascade0");
         ImGui::SeparatorText("Cascade 0");
-        needRecaluclation |= ImGui::DragFloat("Length", &oceanParams0.length);
-        needRecaluclation |= ImGui::DragFloat("Depth", &oceanParams0.depth);
-        needRecaluclation |= ImGui::DragFloat("Gravity", &oceanParams0.g);
-        needRecaluclation |= ImGui::DragFloat("Gamma", &oceanParams0.spectrumParams.gamma, 0.1);
+        needRecalculation |= ImGui::DragFloat("Length", &oceanParams0.length);
+        needRecalculation |= ImGui::DragFloat("Depth", &oceanParams0.depth);
+        needRecalculation |= ImGui::DragFloat("Gravity", &oceanParams0.g);
+        needRecalculation |= ImGui::DragFloat("Gamma", &oceanParams0.spectrumParams.gamma, 0.1);
         ImGui::PopID();
 
         ImGui::PushID("OceanCascade1");
         ImGui::SeparatorText("Cascade 1");
-        needRecaluclation |= ImGui::DragFloat("Length", &oceanParams1.length);
-        needRecaluclation |= ImGui::DragFloat("Depth", &oceanParams1.depth);
-        needRecaluclation |= ImGui::DragFloat("Gravity", &oceanParams1.g);
-        needRecaluclation |= ImGui::DragFloat("Gamma", &oceanParams1.spectrumParams.gamma, 0.1);
+        needRecalculation |= ImGui::DragFloat("Length", &oceanParams1.length);
+        needRecalculation |= ImGui::DragFloat("Depth", &oceanParams1.depth);
+        needRecalculation |= ImGui::DragFloat("Gravity", &oceanParams1.g);
+        needRecalculation |= ImGui::DragFloat("Gamma", &oceanParams1.spectrumParams.gamma, 0.1);
         ImGui::PopID();
 
         ImGui::PushID("OceanCascade2");
         ImGui::SeparatorText("Cascade 2");
-        needRecaluclation |= ImGui::DragFloat("Length", &oceanParams2.length);
-        needRecaluclation |= ImGui::DragFloat("Depth", &oceanParams2.depth);
-        needRecaluclation |= ImGui::DragFloat("Gravity", &oceanParams2.g);
-        needRecaluclation |= ImGui::DragFloat("Gamma", &oceanParams2.spectrumParams.gamma, 0.1);
+        needRecalculation |= ImGui::DragFloat("Length", &oceanParams2.length);
+        needRecalculation |= ImGui::DragFloat("Depth", &oceanParams2.depth);
+        needRecalculation |= ImGui::DragFloat("Gravity", &oceanParams2.g);
+        needRecalculation |= ImGui::DragFloat("Gamma", &oceanParams2.spectrumParams.gamma, 0.1);
         ImGui::PopID();
 
         ImGui::SeparatorText("Material Settings");
@@ -198,7 +208,7 @@ namespace RTR {
         changed |= ImGui::DragFloat("Foam Bias", &materialParams.foamBias, 0.1);
         changed |= ImGui::DragFloat("Foam Scale", &materialParams.foamScale, 0.05);
 
-        if (needRecaluclation) {
+        if (needRecalculation) {
             reinitialise();
         } else if (changed) {
             updateMaterial();
@@ -206,10 +216,7 @@ namespace RTR {
     }
 
     void Ocean::onDetach() {
-        removeOnPreRenderCallback(onPreRenderCbUuid);
-
         delete mesh;
-        delete instanceBuffer;
         delete mat;
     }
 }

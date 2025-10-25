@@ -10,8 +10,7 @@ namespace CgEngine {
             for (uint32_t i = 0; i < customMesh->getMaterialCount(); i++) {
                 CG_ASSERT(dynamic_cast<const PBRMaterial*>(customMesh->getMaterial(i)) != nullptr, "MeshRendererComponentParams: Your custom mesh does not only contain PBRMaterials!")
             }
-//            CG_ASSERT(!customMesh->getVAO()->getVertexBuffers().empty(), "CustomMesh does not have any Vertex data")
-//            CG_ASSERT(customMesh->getVAO()->getVertexBuffer(0)->getLayout() == MeshProps::DEFAULT_VERT_BUFF_LAYOUT, "MeshRendererComponent only works with DEFAULT_VERT_BUFF_LAYOUT")
+            CG_ASSERT(customMesh->getVAO()->getVertexBuffer(0)->getLayout() == MeshProps::DEFAULT_VERT_BUFF_LAYOUTS[0], "MeshRendererComponent only works with DEFAULT_VERT_BUFF_LAYOUT")
         }
     }
 
@@ -115,8 +114,7 @@ namespace CgEngine {
         for (uint32_t i = 0; i < mesh->getMaterialCount(); i++) {
             CG_ASSERT(dynamic_cast<const PBRMaterial*>(mesh->getMaterial(i)) != nullptr, "MeshRendererComponentParams: Your custom mesh does not only contain PBRMaterials!")
         }
-//        CG_ASSERT(!mesh->getVAO()->getVertexBuffers().empty(), "CustomMesh does not have any Vertex data")
-//        CG_ASSERT(mesh->getVAO()->getVertexBuffers()[0]->getLayout() == MeshProps::DEFAULT_VERT_BUFF_LAYOUT, "MeshRendererComponent only works with DEFAULT_VERT_BUFF_LAYOUT")
+        CG_ASSERT(mesh->getVAO()->getVertexBuffer(0)->getLayout() == MeshProps::DEFAULT_VERT_BUFF_LAYOUTS[0], "MeshRendererComponent only works with DEFAULT_VERT_BUFF_LAYOUT")
 
         customMesh = mesh;
 

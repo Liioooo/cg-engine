@@ -6,13 +6,8 @@
 
 namespace CgEngine {
 
-    CustomMesh::CustomMesh(const std::vector<VertexBufferElement>& vertexBufferLayout) {
+    CustomMesh::CustomMesh(std::vector<VertexBufferElement> vertexBufferLayout) : vertexBufferLayout(std::move(vertexBufferLayout)) {
         vao = GraphicsObjectsFactory::createVertexArrayObject();
-
-        auto* vertexBuffer = GraphicsObjectsFactory::createVertexBuffer(VertexBufferUsage::Static);
-        vertexBuffer->setLayout(vertexBufferLayout);
-
-        vao->addVertexBuffer(vertexBuffer);
     }
 
     CustomMesh::~CustomMesh() {
@@ -58,7 +53,9 @@ namespace CgEngine {
             meshNode.localTransform = glm::mat4(1.0f);
             meshNode.aaBoundingBox = boundingBox;
 
-            vao->getVertexBuffer(0)->setData(lodMeshes[0].vertexData, lodMeshes[0].vertexCount * lodMeshes[0].vertexSize);
+            auto* vertexBuffer = GraphicsObjectsFactory::createVertexBuffer(lodMeshes[0].vertexData, lodMeshes[0].vertexCount * lodMeshes[0].vertexSize, VertexBufferUsage::Static);
+            vertexBuffer->setLayout(vertexBufferLayout);
+            vao->addVertexBuffer(vertexBuffer);
             vao->setIndexBuffer(GraphicsObjectsFactory::createIndexBuffer(lodMeshes[0].indices.data(), lodMeshes[0].indices.size()));
         } else {
             MeshNode& lodOverviewNode = meshNodes.emplace_back();
@@ -110,7 +107,9 @@ namespace CgEngine {
                 indexOffset += lodMesh.indices.size();
             }
 
-            vao->getVertexBuffer(0)->setData(vertexData, vertexCount * lodMeshes[0].vertexSize);
+            auto* vertexBuffer = GraphicsObjectsFactory::createVertexBuffer(vertexData, vertexCount * lodMeshes[0].vertexSize, VertexBufferUsage::Static);
+            vertexBuffer->setLayout(vertexBufferLayout);
+            vao->addVertexBuffer(vertexBuffer);
             vao->setIndexBuffer(GraphicsObjectsFactory::createIndexBuffer(indexData, indexCount));
 
             free(vertexData);

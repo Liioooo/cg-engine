@@ -12,6 +12,7 @@ namespace CgEngine {
         ubDirShadowData = GraphicsObjectsFactory::createUniformBuffer(sizeof(UBDirShadowData));
         ubScreenData = GraphicsObjectsFactory::createUniformBuffer(sizeof(UBScreenData));
         ubHBAOData = GraphicsObjectsFactory::createUniformBuffer(sizeof(UBHBAOData));
+        ubCustomPipelineData = GraphicsObjectsFactory::createUniformBuffer(sizeof(CustomPipelineData));
 
         transformOffsetPushConstant = GraphicsObjectsFactory::createPushConstants("pc_transformsOffset");
         transformOffsetPushConstant->init<TransformsOffsetPushConstants>();
@@ -27,7 +28,7 @@ namespace CgEngine {
             {5, Renderer::getBlackCubeTexture()},
             {6, Renderer::getBlackCubeTexture()}
         };
-        environmentMapDescriptorSetBlack = GraphicsObjectsFactory::createDescriptorSet();
+        environmentMapDescriptorSetBlack = GraphicsObjectsFactory::createDescriptorSet(environmentMapDescriptorSetSpec);
 
         {
             ApplicationOptions& applicationOptions = Application::get().getApplicationOptions();
@@ -149,21 +150,22 @@ namespace CgEngine {
 
             gBufferDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(gBufferDescriptorSetSpec);
         }
-        /*
         {
-            RenderPassSpecification customShaderDeferredRenderPassSpec;
-            customShaderDeferredRenderPassSpec.framebuffer = gBufferRenderPass.getSpecification().framebuffer;
-            customShaderDeferredRenderPassSpec.usingExistingFramebuffer = true;
-            customShaderDeferredRenderPassSpec.depthCompareOperator = DepthCompareOperator::LessOrEqual;
-            customShaderDeferredRenderPassSpec.depthWrite = true;
-            customShaderDeferredRenderPassSpec.depthTest = true;
-            customShaderDeferredRenderPassSpec.clearColorBuffer = false;
-            customShaderDeferredRenderPassSpec.clearDepthBuffer = false;
-            customShaderDeferredRenderPassSpec.clearStencilBuffer = false;
+            DescriptorSetLayoutSpecification customPipelineDescriptorSetLayoutSpec{};
+            customPipelineDescriptorSetLayoutSpec.uboBindingPoints = {0, 3, 5};
 
-            customShaderDeferredRenderPass = RenderPass(std::move(customShaderDeferredRenderPassSpec));
+            customPipelineDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(customPipelineDescriptorSetLayoutSpec);
+
+            DescriptorSetSpecification customPipelineDescriptorSetSpec{};
+            customPipelineDescriptorSetSpec.layout = customPipelineDescriptorSetLayout;
+            customPipelineDescriptorSetSpec.uboBindings = {
+                {0, ubCameraData},
+                {3, ubScreenData},
+                {5, ubCustomPipelineData}
+            };
+
+            customPipelineDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(customPipelineDescriptorSetSpec);
         }
-         */
         {
             glm::uvec2 quarterSize = (glm::uvec2(viewportWidth, viewportHeight) + 3u) / 4u;
 
@@ -1016,8 +1018,11 @@ namespace CgEngine {
 
         skinMeshes();
         shadowMapPass();
+
+        Renderer::beginRenderPass(gBufferRenderPass, gBufferFramebuffer);
         gBufferPass();
-        customShaderDeferredPass();
+        customShaderPass();
+        Renderer::endRenderPass();
 
         if (applicationOptions.enableHBAO) {
             hbaoDeinterleavingPass();
@@ -1066,8 +1071,7 @@ namespace CgEngine {
         drawCommandQueue.clear();
         meshTransforms.clear();
 
-//        customShaderDeferredDrawCommandQueue.clear();
-//        customShaderForwardDrawCommandQueue.clear();
+        customShaderDrawCommandQueue.clear();
 
         shadowMapDrawCommandQueue.clear();
         shadowMapMeshTransforms.clear();
@@ -1183,55 +1187,40 @@ namespace CgEngine {
         }
     }
 
-//    void SceneRenderer::submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* material, bool enableCulling, const AABoundingBox* boundingBox, const glm::mat4& transform, CustomShader* shader, uint32_t instanceCount, CustomShaderRendererComponentRenderPassOptions& renderPassOptions, std::pair<ShaderStorageBuffer*, ShaderStorageBuffer*> instanceBuffers, const std::vector<float>& lodDistances) {
-//        if (enableCulling && boundingBox != nullptr && !cameraFrustum.testAABoundingBoxInFrustum(*boundingBox, transform)) {
-//            return;
-//        }
-//
-//        auto& submeshes = mesh->getSubmeshes();
-//
-//        for (const auto& meshNodeIndex: meshNodes) {
-//            const auto* meshNode = &mesh->getMeshNodes().at(meshNodeIndex);
-//
-//            glm::mat4 finalTransform = transform * meshNode->transform;
-//
-//            if (!meshNode->lodMeshNodes.empty()) {
-//                meshNode = &mesh->getMeshNodes().at(meshNode->lodMeshNodes[findCorrectLodIndex(lodDistances, finalTransform, meshNode->lodMeshNodes.size())]);
-//            }
-//
-//            bool isInCameraFrustum = !enableCulling || boundingBox != nullptr || cameraFrustum.testAABoundingBoxInFrustum(meshNode->aaBoundingBox, finalTransform);
-//
-//            if (isInCameraFrustum) {
-//                for (const auto& submeshIndex: meshNode->submeshIndices) {
-//                    const Submesh& submesh = submeshes.at(submeshIndex);
-//
-//                    if (shader->isForward()) {
-//                        CustomShaderDrawCommand& drawCommand = customShaderForwardDrawCommandQueue[shader].emplace_back();
-//                        drawCommand.instanceCount = instanceCount;
-//                        drawCommand.vao = mesh->getVAO();
-//                        drawCommand.material = material;
-//                        drawCommand.baseIndex = submesh.baseIndex;
-//                        drawCommand.baseVertex = submesh.baseVertex;
-//                        drawCommand.indexCount = submesh.indexCount;
-//                        drawCommand.transform = finalTransform;
-//                        drawCommand.renderPassOptions = renderPassOptions;
-//                        drawCommand.instanceBuffers = instanceBuffers;
-//                    } else {
-//                        CustomShaderDrawCommand& drawCommand = customShaderDeferredDrawCommandQueue[shader].emplace_back();
-//                        drawCommand.instanceCount = instanceCount;
-//                        drawCommand.vao = mesh->getVAO();
-//                        drawCommand.material = material;
-//                        drawCommand.baseIndex = submesh.baseIndex;
-//                        drawCommand.baseVertex = submesh.baseVertex;
-//                        drawCommand.indexCount = submesh.indexCount;
-//                        drawCommand.transform = finalTransform;
-//                        drawCommand.renderPassOptions = renderPassOptions;
-//                        drawCommand.instanceBuffers = instanceBuffers;
-//                    }
-//                }
-//            }
-//        }
-//    }
+    void SceneRenderer::submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, bool enableCulling, const AABoundingBox* boundingBox, const glm::mat4& transform, CustomGraphicsPipeline* pipeline, uint32_t instanceCount, const std::vector<float>& lodDistances, const DescriptorSet* descriptorSet) {
+        if (enableCulling && boundingBox != nullptr && !cameraFrustum.testAABoundingBoxInFrustum(*boundingBox, transform)) {
+            return;
+        }
+
+        auto& submeshes = mesh->getSubmeshes();
+
+        for (const auto& meshNodeIndex: meshNodes) {
+            const auto* meshNode = &mesh->getMeshNodes().at(meshNodeIndex);
+
+            glm::mat4 finalTransform = transform * meshNode->transform;
+
+            if (!meshNode->lodMeshNodes.empty()) {
+                meshNode = &mesh->getMeshNodes().at(meshNode->lodMeshNodes[findCorrectLodIndex(lodDistances, finalTransform, meshNode->lodMeshNodes.size())]);
+            }
+
+            bool isInCameraFrustum = !enableCulling || boundingBox != nullptr || cameraFrustum.testAABoundingBoxInFrustum(meshNode->aaBoundingBox, finalTransform);
+
+            if (isInCameraFrustum) {
+                for (const auto& submeshIndex: meshNode->submeshIndices) {
+                    const Submesh& submesh = submeshes.at(submeshIndex);
+
+                    CustomShaderDrawCommand& drawCommand = customShaderDrawCommandQueue[pipeline].emplace_back();
+                    drawCommand.instanceCount = instanceCount;
+                    drawCommand.vao = mesh->getVAO();
+                    drawCommand.descriptorSet = descriptorSet;
+                    drawCommand.baseIndex = submesh.baseIndex;
+                    drawCommand.baseVertex = submesh.baseVertex;
+                    drawCommand.indexCount = submesh.indexCount;
+                    drawCommand.transform = finalTransform;
+                }
+            }
+        }
+    }
 
     void SceneRenderer::submitUiElements(const std::unordered_map<std::string, UiElement*>& uiElements) {
         for (const auto& [_, element]: uiElements) {
@@ -1371,6 +1360,14 @@ namespace CgEngine {
         return cameraFrustum;
     }
 
+    const RenderPass* SceneRenderer::getGBufferRenderPass() const {
+        return gBufferRenderPass;
+    }
+
+    const DescriptorSetLayout * SceneRenderer::getCustomPipelineDescriptorSetLayout() const {
+        return customPipelineDescriptorSetLayout;
+    }
+
     const RenderingStats& SceneRenderer::getRenderingStats() {
         return renderingStats;
     }
@@ -1420,7 +1417,6 @@ namespace CgEngine {
         CG_GPU_DEBUG_GROUP("GBufferPass")
         CG_GPU_TIME_FN(&renderingStats.gBufferTimer)
 
-        Renderer::beginRenderPass(gBufferRenderPass, gBufferFramebuffer);
         Renderer::bindGraphicsPipeline(gBufferPipeline);
         Renderer::bindDescriptorSet(gBufferDescriptorSet, 0);
 
@@ -1430,8 +1426,6 @@ namespace CgEngine {
             Renderer::bindDescriptorSet(command.material->getDescriptorSet(), 1);
             Renderer::executeDrawCommand(command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount);
         }
-
-        Renderer::endRenderPass();
     }
 
     void SceneRenderer::hbaoDeinterleavingPass() {
@@ -1519,42 +1513,27 @@ namespace CgEngine {
         Renderer::endRenderPass();
     }
 
-    void SceneRenderer::customShaderDeferredPass() {
-//        CG_GPU_DEBUG_GROUP("CustomShaderDeferredPass")
-//        CG_GPU_TIME_FN(&renderingStats.customShaderDeferredTimer)
-//
-//        Renderer::beginRenderPass(customShaderDeferredRenderPass, true);
-//
-//        const Material* lastUsedMaterial = nullptr;
-//
-//        for (const auto& [shader, commands]: customShaderDeferredDrawCommandQueue) {
-//            shader->bind();
-//
-//            for (const auto& command: commands) {
-//                shader->setMat4("u_Transform", command.transform);
-//
-//                if (command.instanceBuffers.first != nullptr) {
-//                    command.instanceBuffers.first->bind(5);
-//                }
-//                if (command.instanceBuffers.second != nullptr) {
-//                    command.instanceBuffers.second->bind(6);
-//                }
-//
-//                const Material* material = command.material != nullptr ? command.material : &emptyMaterial;
-//
-//                Renderer::setFaceCulling(command.renderPassOptions.backfaceCulling, command.renderPassOptions.frontfaceCulling);
-//                Renderer::setTesselationPatchSize(command.renderPassOptions.tesselationPatchSize);
-//
-//                if (material != lastUsedMaterial) {
-//                    material->uploadToShader(*shader);
-//                }
-//                lastUsedMaterial = material;
-//
-//                Renderer::executeCustomShaderDrawCommand(*command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount, command.renderPassOptions.tesselationPatchSize);
-//            }
-//        }
-//
-//        Renderer::endRenderPass();
+    void SceneRenderer::customShaderPass() {
+        CG_GPU_DEBUG_GROUP("CustomShaderPass")
+        CG_GPU_TIME_FN(&renderingStats.customShaderDeferredTimer)
+
+        CustomPipelineData customPipelineData{};
+
+        for (const auto& [pipeline, commands]: customShaderDrawCommandQueue) {
+            Renderer::bindGraphicsPipeline(pipeline->getGraphicsPipeline());
+            Renderer::bindDescriptorSet(customPipelineDescriptorSet, 0);
+
+            for (const auto& command: commands) {
+                if (command.descriptorSet != nullptr) {
+                    Renderer::bindDescriptorSet(command.descriptorSet, 1);
+                }
+
+                customPipelineData.transform = command.transform;
+                ubCustomPipelineData->setData(&customPipelineData, sizeof(CustomPipelineData));
+
+                Renderer::executeDrawCommand(command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount);
+            }
+        }
     }
 
     void SceneRenderer::skyboxPass() {

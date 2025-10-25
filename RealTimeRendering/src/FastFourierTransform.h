@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Rendering/TextureCube.h>
-#include <Rendering/CustomShaders.h>
+#include <Rendering/CustomPipeline.h>
 #include <Resources/ResRef.h>
 #include <Resources/ResourceManager.h>
 
@@ -10,15 +10,22 @@ namespace RTR {
     public:
         FastFourierTransform(CgEngine::ResourceManager& resourceManager);
         ~FastFourierTransform();
-        void inverseTransform(CgEngine::Texture2D& input, bool outputToInput = true, bool permute = true);
+        void inverseTransform(CgEngine::Attachment* input, bool outputToInput = true, bool permute = true);
     private:
         CgEngine::ResourceManager& resourceManager;
-        CgEngine::ResRef<CgEngine::CustomComputeShader> precomputeTwiddleFactorsAndInputIndicesShader = nullptr;
-        CgEngine::ResRef<CgEngine::CustomComputeShader> permuteShader = nullptr;
-        CgEngine::ResRef<CgEngine::CustomComputeShader> horizontalStepInverseFftShader = nullptr;
-        CgEngine::ResRef<CgEngine::CustomComputeShader> verticalStepInverseFftShader = nullptr;
+        CgEngine::ResRef<CgEngine::CustomComputePipeline> precomputeTwiddleFactorsAndInputIndicesShader = nullptr;
+        CgEngine::ResRef<CgEngine::CustomComputePipeline> permuteShader = nullptr;
+        CgEngine::ResRef<CgEngine::CustomComputePipeline> horizontalStepInverseFftShader = nullptr;
+        CgEngine::ResRef<CgEngine::CustomComputePipeline> verticalStepInverseFftShader = nullptr;
 
-        CgEngine::Texture2D* buffer = nullptr;
-        CgEngine::Texture2D* twiddleFactors = nullptr;
+        CgEngine::Attachment* buffer = nullptr;
+        CgEngine::Attachment* twiddleFactors = nullptr;
+
+        struct PCFft {
+            int step;
+            bool pingPong;
+        };
+
+        CgEngine::PushConstants* pushConstants = nullptr;
     };
 }
