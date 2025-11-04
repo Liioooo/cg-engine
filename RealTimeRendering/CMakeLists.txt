@@ -14,48 +14,7 @@ message(STATUS "All_Sources_RealTimeRendering: ${All_Sources}")
 
 add_executable(${PROJECT_NAME} ${All_Sources})
 
-################################################################################
-# MSVC runtime library
-################################################################################
-get_property(MSVC_RUNTIME_LIBRARY_DEFAULT TARGET ${PROJECT_NAME} PROPERTY MSVC_RUNTIME_LIBRARY)
-string(CONCAT "MSVC_RUNTIME_LIBRARY_STR"
-        $<$<CONFIG:Debug>:
-        MultiThreadedDebug
-        >
-        $<$<OR:$<CONFIG:Release>,$<CONFIG:Dist>>:
-        MultiThreaded
-        >
-        $<$<NOT:$<OR:$<CONFIG:Debug>,$<CONFIG:Release>,$<CONFIG:Dist>>>:${MSVC_RUNTIME_LIBRARY_DEFAULT}>
-)
-set_target_properties(${PROJECT_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY ${MSVC_RUNTIME_LIBRARY_STR})
-
-################################################################################
-# Compile definitions
-################################################################################
-if (WIN32)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE PLATFORM_WIN32)
-    target_sources(${PROJECT_NAME} PRIVATE rtr.rc)
-endif ()
-if (UNIX)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE PLATFORM_UNIX)
-endif ()
-
-target_compile_definitions(${PROJECT_NAME} PRIVATE
-        $<$<CONFIG:Debug>:
-        _DEBUG
-        >
-        $<$<CONFIG:Release>:
-        CG_RELEASE
-        >
-        $<$<CONFIG:Dist>:
-        CG_DIST
-        >
-        $<$<OR:$<CONFIG:Release>,$<CONFIG:Dist>>:
-        NDEBUG
-        >
-)
-
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../CgEngine/src "${CMAKE_CURRENT_LIST_DIR}/src")
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src")
 target_link_libraries(${PROJECT_NAME} PRIVATE CG_ENGINE)
 
 ################################################################################
@@ -63,49 +22,25 @@ target_link_libraries(${PROJECT_NAME} PRIVATE CG_ENGINE)
 ################################################################################
 if (WIN32)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:RealTimeRendering> $<TARGET_FILE_DIR:RealTimeRendering>
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "$<TARGET_RUNTIME_DLLS:${PROJECT_NAME}>"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
             COMMAND_EXPAND_LISTS
     )
+endif()
 
-    set(PHYSX_DLLS)
-    list(APPEND PHYSX_DEBUG_DLLS
-            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/checked/PhysX_64.dll"
-            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/checked/PhysXCommon_64.dll"
-            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/checked/PhysXFoundation_64.dll"
-            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/checked/PhysXCooking_64.dll"
-    )
-    set(PHYSX_RELEASE_DLLS)
-    list(APPEND PHYSX_RELEASE_DLLS
-            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/release/PhysX_64.dll"
-            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/release/PhysXCommon_64.dll"
-            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/release/PhysXFoundation_64.dll"
-            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/release/PhysXCooking_64.dll"
-    )
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<IF:$<OR:$<CONFIG:Release>,$<CONFIG:Dist>>,${PHYSX_RELEASE_DLLS},${PHYSX_DEBUG_DLLS}>" $<TARGET_FILE_DIR:RealTimeRendering>
-            COMMAND_EXPAND_LISTS
-    )
-endif()
-if (UNIX)
-    set(PHYSX_DLLS)
-    list(APPEND PHYSX_DEBUG_DLLS
-            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/linux/checked/libPhysX_64.so"
-            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/linux/checked/libPhysXCommon_64.so"
-            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/linux/checked/libPhysXFoundation_64.so"
-            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/linux/checked/libPhysXCooking_64.so"
-    )
-    set(PHYSX_RELEASE_DLLS)
-    list(APPEND PHYSX_RELEASE_DLLS
-            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/linux/release/libPhysX_64.so"
-            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/linux/release/libPhysXCommon_64.so"
-            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/linux/release/libPhysXFoundation_64.so"
-            "${CMAKE_CURRENT_LIST_DIR}/../CgEngine/vendor/PhysX/lib/linux/release/libPhysXCooking_64.so"
-    )
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<IF:$<OR:$<CONFIG:Release>,$<CONFIG:Dist>>,${PHYSX_RELEASE_DLLS},${PHYSX_DEBUG_DLLS}>" $<TARGET_FILE_DIR:RealTimeRendering>
-            COMMAND_EXPAND_LISTS
-    )
-endif()
+get_target_property(PHYSX_DEBUG_DLLS PhysXSDK INTERFACE_PHYSX_DEBUG_DLLS)
+get_target_property(PHYSX_RELEASE_DLLS PhysXSDK INTERFACE_PHYSX_RELEASE_DLLS)
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<$<CONFIG:Debug>:${PHYSX_DEBUG_DLLS}>"
+        "$<$<CONFIG:Release>:${PHYSX_RELEASE_DLLS}>"
+        "$<$<CONFIG:Dist>:${PHYSX_RELEASE_DLLS}>"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+        COMMAND_EXPAND_LISTS
+)
+
 ################################################################################
 # Precompiled Header
 ################################################################################
