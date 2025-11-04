@@ -43,7 +43,7 @@ namespace CgEngine {
     };
 
     enum class MipMapFiltering {
-        Nearest, Bilinear, Trilinear
+        Nearest, Bilinear, Trilinear, Anisotropic
     };
 
     enum class TextureBorderColor {

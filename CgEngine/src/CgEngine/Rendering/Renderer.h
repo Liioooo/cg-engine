@@ -12,6 +12,9 @@
 
 namespace CgEngine {
 
+    class OpenGLRenderer;
+    class VulkanRenderer;
+
     class Renderer {
     public:
         static void init(Window& window);
@@ -54,9 +57,11 @@ namespace CgEngine {
         static const std::vector<VertexBufferLayout> getUnitCubeVertexInputLayout();
         static const RenderPass* getSwapChainRenderPass();
 
-
         static void beginImGuiFrame();
         static void renderImGuiFrame();
+
+        static OpenGLRenderer* getOpenGLBackend();
+        static VulkanRenderer* getVulkanBackend();
 
     private:
         static inline RendererBackendBase* backend;

@@ -59,6 +59,8 @@ namespace CgEngine {
 
         virtual void beginImGuiFrame() = 0;
         virtual void renderImGuiFrame() = 0;
+
+        virtual GraphicsAPI getGraphicsAPI() const = 0;
     };
 
 }

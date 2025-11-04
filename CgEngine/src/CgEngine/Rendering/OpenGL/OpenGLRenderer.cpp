@@ -111,9 +111,10 @@ namespace CgEngine {
         glPatchParameteri(GL_PATCH_VERTICES, tessellationPatchSize);
 
         glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+        glEnable(GL_FRAMEBUFFER_SRGB);
 
         uint32_t whiteTextureData = 0xffffffff;
-        whiteTexture = OpenGLTexture2D(TextureFormat::RGBA, 1, 1, TextureWrap::Clamp, &whiteTextureData, MipMapFiltering::Nearest, 1.0f, true);
+        whiteTexture = OpenGLTexture2D(TextureFormat::RGBA, 1, 1, TextureWrap::Clamp, &whiteTextureData, MipMapFiltering::Nearest);
 
         uint32_t blackCubeMapTextureData = 0xff000000;
         blackCubeTexture = OpenGLTextureCube(TextureFormat::RGBA, 1, 1, &blackCubeMapTextureData, MipMapFiltering::Nearest);
@@ -141,6 +142,7 @@ namespace CgEngine {
         swapChainRenderPass = OpenGLRenderPass(swapChainRenderPassSpec);
 
         swapChainFramebuffer = OpenGLFramebuffer(window.getFramebufferWidth(), window.getFramebufferHeight(), true);
+        glfwSwapInterval(window.isVsync() ? 1 : 0);
     }
 
     void OpenGLRenderer::shutdown() {

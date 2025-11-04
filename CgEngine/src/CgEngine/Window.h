@@ -1,5 +1,6 @@
 #pragma once
 
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include "Events/Event.h"
 #include "GraphicsApi.h"
@@ -22,8 +23,7 @@ namespace CgEngine {
         Window(const WindowSpecification& spec, std::function<void(Event&)>&& eventCallback);
         ~Window();
 
-        void setVsync(bool enabled);
-        inline bool isVsync();
+        bool isVsync() const;
         void pollEvents();
         int getWidth() const;
         int getHeight() const;
@@ -31,6 +31,7 @@ namespace CgEngine {
         int getFramebufferHeight() const;
         GLFWwindow& getWindowHandle() const;
         glm::vec2 getContentScale() const;
+        std::vector<const char*> Window::getRequiredVulkanExtensions() const;
 
         void setClipboardText(const char* string);
 

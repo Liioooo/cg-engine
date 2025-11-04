@@ -22,7 +22,6 @@ namespace CgEngine {
         bool debugRenderLines;
 
         float anisotropicFiltering;
-        bool useTextureCompression;
         uint32_t shadowMapResolution;
         bool enableBloom;
         bool enableHBAO;

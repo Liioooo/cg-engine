@@ -7,9 +7,7 @@ namespace CgEngine {
     struct Texture2DResourceSpecification {
         bool srgb = false;
         TextureWrap wrap = TextureWrap::Repeat;
-        MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear;
-        float anisotropicFiltering = 1.0f;
-        bool compression = false;
+        MipMapFiltering mipMapFiltering = MipMapFiltering::Anisotropic;
     };
 
     class Texture2D {
@@ -30,7 +28,6 @@ namespace CgEngine {
         virtual uint32_t getWidth() const = 0;
         virtual uint32_t getHeight() const = 0;
         virtual TextureFormat getFormat() const = 0;
-        virtual bool isCompressed() const = 0;
         virtual void bufferSubData(int x, int y, int w, int h, const void* data, int alignment) = 0;
     };
 

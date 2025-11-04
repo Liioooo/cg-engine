@@ -28,8 +28,9 @@ namespace CgEngine {
 
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);}
-        else if (spec.graphicsApi == GraphicsAPI::Vulkan) {
+            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+            glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
+        } else if (spec.graphicsApi == GraphicsAPI::Vulkan) {
             glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         }
 
@@ -79,7 +80,7 @@ namespace CgEngine {
             gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
         }
 
-        setVsync(spec.vSync);
+        vsync = spec.vSync;
 
         glfwSetWindowUserPointer(window, this);
 
@@ -142,8 +143,6 @@ namespace CgEngine {
                 }
             }
         });
-
-        Renderer::init(*this);
     }
 
     Window::~Window() {
@@ -151,12 +150,7 @@ namespace CgEngine {
         glfwTerminate();
     }
 
-    void Window::setVsync(bool enabled) {
-        vsync = enabled;
-        glfwSwapInterval(enabled ? 1 : 0);
-    }
-
-    bool Window::isVsync() {
+    bool Window::isVsync() const {
         return vsync;
     }
 
@@ -188,6 +182,16 @@ namespace CgEngine {
         glm::vec2 out;
         glfwGetWindowContentScale(window, &out.x, &out.y);
         return out;
+    }
+
+    std::vector<const char*> Window::getRequiredVulkanExtensions() const {
+        uint32_t glfwExtensionCount = 0;
+        const char** glfwExtensions;
+        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+        std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+
+        return extensions;
     }
 
     void Window::setClipboardText(const char* string) {

@@ -7,23 +7,22 @@
 
 namespace CgEngine {
 
-    OpenGLTexture2D::OpenGLTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, MipMapFiltering mipMapFiltering, float anisotropicFiltering, bool compression) : format(format), width(width), height(height), compression(compression) {
+    OpenGLTexture2D::OpenGLTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, MipMapFiltering mipMapFiltering) : format(format), width(width), height(height) {
         glCreateTextures(GL_TEXTURE_2D, 1, &id);
         glBindTexture(GL_TEXTURE_2D, id);
         OpenGLHelpers::applyMipMapFiltering(mipMapFiltering, GL_TEXTURE_2D);
         GLint textureWrap = OpenGLHelpers::getOpenGLWrapMode(wrap);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, textureWrap);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, textureWrap);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, anisotropicFiltering);
 
-        GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format, compression);
+        GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format);
         GLenum glFormat = OpenGLHelpers::getOpenGLTextureFormat(format);
         GLenum type = OpenGLHelpers::getOpenGLTextureType(format);
         glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, glFormat, type, nullptr);
     }
 
 
-    OpenGLTexture2D::OpenGLTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, const void* data, MipMapFiltering mipMapFiltering, float anisotropicFiltering, bool compression) : format(format), width(width), height(height), compression(compression) {
+    OpenGLTexture2D::OpenGLTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, const void* data, MipMapFiltering mipMapFiltering) : format(format), width(width), height(height) {
         glCreateTextures(GL_TEXTURE_2D, 1, &id);
         glBindTexture(GL_TEXTURE_2D, id);
 
@@ -31,17 +30,18 @@ namespace CgEngine {
         GLint textureWrap = OpenGLHelpers::getOpenGLWrapMode(wrap);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, textureWrap);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, textureWrap);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, anisotropicFiltering);
 
-        GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format, compression);
+        GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format);
         GLenum glFormat = OpenGLHelpers::getOpenGLTextureFormat(format);
         GLenum type = OpenGLHelpers::getOpenGLTextureType(format);
         glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, glFormat, type, data);
 
-        glGenerateMipmap(GL_TEXTURE_2D);
+        if (mipMapFiltering == MipMapFiltering::Trilinear || mipMapFiltering == MipMapFiltering::Anisotropic) {
+            glGenerateMipmap(GL_TEXTURE_2D);
+        }
     }
 
-    OpenGLTexture2D::OpenGLTexture2D(const std::filesystem::path& path, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering, float anisotropicFiltering, bool compression) {
+    OpenGLTexture2D::OpenGLTexture2D(const std::filesystem::path& path, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering) {
         int loadWidth, loadHeight, channels;
 
         CG_ASSERT(FileSystem::checkFileExists(path), "Texture2D: " + path.string() + " does not exist!")
@@ -76,7 +76,6 @@ namespace CgEngine {
 
         width = loadWidth;
         height = loadHeight;
-        this->compression = compression;
 
         if (srgb) {
             glCreateTextures(GL_TEXTURE_2D, 1, &id);
@@ -86,13 +85,14 @@ namespace CgEngine {
             GLint textureWrap = OpenGLHelpers::getOpenGLWrapMode(wrap);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, textureWrap);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, textureWrap);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, anisotropicFiltering);
 
             GLint glFormat = OpenGLHelpers::getOpenGLTextureFormat(format);
             GLenum type = OpenGLHelpers::getOpenGLTextureType(format);
-            glTexImage2D(GL_TEXTURE_2D, 0, compression ? (channels == 3 ? GL_COMPRESSED_SRGB_S3TC_DXT1_EXT : GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT) : (channels == 3 ? GL_SRGB : GL_SRGB_ALPHA), width, height, 0, glFormat, type, data);
+            glTexImage2D(GL_TEXTURE_2D, 0, channels == 3 ? GL_SRGB : GL_SRGB_ALPHA, width, height, 0, glFormat, type, data);
 
-            glGenerateMipmap(GL_TEXTURE_2D);
+            if (mipMapFiltering == MipMapFiltering::Trilinear || mipMapFiltering == MipMapFiltering::Anisotropic) {
+                glGenerateMipmap(GL_TEXTURE_2D);
+            }
         } else {
             glCreateTextures(GL_TEXTURE_2D, 1, &id);
             glBindTexture(GL_TEXTURE_2D, id);
@@ -101,20 +101,21 @@ namespace CgEngine {
             GLint textureWrap = OpenGLHelpers::getOpenGLWrapMode(wrap);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, textureWrap);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, textureWrap);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, anisotropicFiltering);
 
-            GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format, compression);
+            GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format);
             GLint glFormat = OpenGLHelpers::getOpenGLTextureFormat(format);
             GLenum type = OpenGLHelpers::getOpenGLTextureType(format);
             glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, glFormat, type, data);
 
-            glGenerateMipmap(GL_TEXTURE_2D);
+            if (mipMapFiltering == MipMapFiltering::Trilinear || mipMapFiltering == MipMapFiltering::Anisotropic) {
+                glGenerateMipmap(GL_TEXTURE_2D);
+            }
         }
 
         stbi_image_free(data);
     }
 
-    OpenGLTexture2D::OpenGLTexture2D(const unsigned char* buffer, int bufferLen, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering, float anisotropicFiltering, bool compression) {
+    OpenGLTexture2D::OpenGLTexture2D(const unsigned char* buffer, int bufferLen, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering) {
         int loadWidth, loadHeight, channels;
         unsigned char* data;
 
@@ -144,7 +145,6 @@ namespace CgEngine {
 
         width = loadWidth;
         height = loadHeight;
-        this->compression = compression;
 
         if (srgb) {
             glCreateTextures(GL_TEXTURE_2D, 1, &id);
@@ -154,13 +154,14 @@ namespace CgEngine {
             GLint textureWrap = OpenGLHelpers::getOpenGLWrapMode(wrap);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, textureWrap);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, textureWrap);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, anisotropicFiltering);
 
             GLint glFormat = OpenGLHelpers::getOpenGLTextureFormat(format);
             GLenum type = OpenGLHelpers::getOpenGLTextureType(format);
-            glTexImage2D(GL_TEXTURE_2D, 0, compression ? (channels == 3 ? GL_COMPRESSED_SRGB_S3TC_DXT1_EXT : GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT) : (channels == 3 ? GL_SRGB : GL_SRGB_ALPHA), width, height, 0, glFormat, type, data);
+            glTexImage2D(GL_TEXTURE_2D, 0, channels == 3 ? GL_SRGB : GL_SRGB_ALPHA, width, height, 0, glFormat, type, data);
 
-            glGenerateMipmap(GL_TEXTURE_2D);
+            if (mipMapFiltering == MipMapFiltering::Trilinear || mipMapFiltering == MipMapFiltering::Anisotropic) {
+                glGenerateMipmap(GL_TEXTURE_2D);
+            }
         } else {
             glCreateTextures(GL_TEXTURE_2D, 1, &id);
             glBindTexture(GL_TEXTURE_2D, id);
@@ -169,14 +170,15 @@ namespace CgEngine {
             GLint textureWrap = OpenGLHelpers::getOpenGLWrapMode(wrap);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, textureWrap);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, textureWrap);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, anisotropicFiltering);
 
-            GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format, compression);
+            GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format);
             GLint glFormat = OpenGLHelpers::getOpenGLTextureFormat(format);
             GLenum type = OpenGLHelpers::getOpenGLTextureType(format);
             glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, glFormat, type, data);
 
-            glGenerateMipmap(GL_TEXTURE_2D);
+            if (mipMapFiltering == MipMapFiltering::Trilinear || mipMapFiltering == MipMapFiltering::Anisotropic) {
+                glGenerateMipmap(GL_TEXTURE_2D);
+            }
         }
 
         stbi_image_free(data);
@@ -193,7 +195,6 @@ namespace CgEngine {
         width = other.width;
         height = other.height;
         format = other.format;
-        compression = other.compression;
 
         other.id = ~0;
         other.width = 0;
@@ -212,7 +213,6 @@ namespace CgEngine {
             width = other.width;
             height = other.height;
             format = other.format;
-            compression = other.compression;
 
             other.id = ~0;
             other.width = 0;
@@ -231,10 +231,6 @@ namespace CgEngine {
 
     TextureFormat OpenGLTexture2D::getFormat() const {
         return format;
-    }
-
-    bool OpenGLTexture2D::isCompressed() const {
-        return compression;
     }
 
     void OpenGLTexture2D::bufferSubData(int x, int y, int w, int h, const void* data, int alignment) {

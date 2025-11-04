@@ -14,6 +14,10 @@ layout(location = 0) out vec4 o_FragColor;
 
 layout(binding = 0) uniform sampler2D u_Textures[16];
 
+vec4 toLinearRGB(vec4 color) {
+    return vec4(pow(color.rgb, vec3(2.2)), color.a);
+}
+
 void main() {
     vec2 localPos = (fs_in.TexCoord - 0.5f) * 2.0f;
     float dist = length(localPos);
@@ -22,11 +26,11 @@ void main() {
         discard;
     }
 
-    vec4 fillColor = TextureIndex < 0.0f ? fs_in.FillColor : texture(u_Textures[int(TextureIndex)], fs_in.TexCoord);
+    vec4 fillColor = TextureIndex < 0.0f ? toLinearRGB(fs_in.FillColor) : texture(u_Textures[int(TextureIndex)], fs_in.TexCoord);
 
     float lineAlpha = 1.0f - smoothstep(1.0f - fs_in.LineWidth / (fs_in.Width * 0.5f), 1.02f - fs_in.LineWidth / (fs_in.Width * 0.5f), dist);
     float fillAlpha = 1.0f - smoothstep(0.95f, 1.0f, dist);
 
-    o_FragColor = vec4(mix(fs_in.LineColor.rgb, fillColor.rgb, lineAlpha), mix(fs_in.LineColor.a, fillColor.a, lineAlpha) * fillAlpha);
+    o_FragColor = vec4(mix(toLinearRGB(fs_in.LineColor).rgb, fillColor.rgb, lineAlpha), mix(fs_in.LineColor.a, fillColor.a, lineAlpha) * fillAlpha);
 
 }

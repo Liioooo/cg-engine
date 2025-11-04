@@ -43,10 +43,10 @@ namespace CgEngine {
         static VertexBuffer* createVertexBuffer(const void* data, size_t size, VertexBufferUsage usage = VertexBufferUsage::Static);
         static VertexArrayObject* createVertexArrayObject();
         static Texture2D* createTexture2D();
-        static Texture2D* createTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear, float anisotropicFiltering = 1.0f, bool compression = false);
-        static Texture2D* createTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, const void* data, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear, float anisotropicFiltering = 1.0f, bool compression = false);
-        static Texture2D* createTexture2D(const std::filesystem::path& path, bool srgb, TextureWrap wrap = TextureWrap::Repeat, MipMapFiltering mipMapFiltering = MipMapFiltering::Trilinear, float anisotropicFiltering = 1.0f, bool compression = false);
-        static Texture2D* createTexture2D(const unsigned char* buffer, int bufferLen, bool srgb, TextureWrap wrap = TextureWrap::Repeat, MipMapFiltering mipMapFiltering= MipMapFiltering::Trilinear, float anisotropicFiltering = 1.0f, bool compression = false);
+        static Texture2D* createTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, MipMapFiltering mipMapFiltering = MipMapFiltering::Anisotropic);
+        static Texture2D* createTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, const void* data, MipMapFiltering mipMapFiltering = MipMapFiltering::Anisotropic);
+        static Texture2D* createTexture2D(const std::filesystem::path& path, bool srgb, TextureWrap wrap = TextureWrap::Repeat, MipMapFiltering mipMapFiltering = MipMapFiltering::Anisotropic);
+        static Texture2D* createTexture2D(const unsigned char* buffer, int bufferLen, bool srgb, TextureWrap wrap = TextureWrap::Repeat, MipMapFiltering mipMapFiltering= MipMapFiltering::Anisotropic);
         static RenderPass* createRenderPass();
         static RenderPass* createRenderPass(const RenderPassSpecification& spec);
         static Attachment* createAttachment();

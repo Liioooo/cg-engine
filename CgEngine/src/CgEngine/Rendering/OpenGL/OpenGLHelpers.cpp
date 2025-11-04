@@ -4,6 +4,7 @@
 #include "OpenGLHelpers.h"
 #include "glad/glad.h"
 #include "Rendering/Helpers.h"
+#include "Application.h"
 
 namespace CgEngine {
 
@@ -95,31 +96,20 @@ namespace CgEngine {
             return GL_ZERO;
         }
 
-        int getOpenGLTextureInternalFormat(TextureFormat format, bool compression) {
-            if (!compression) {
-                switch (format) {
-                    case TextureFormat::R:               return GL_RED;
-                    case TextureFormat::RedFloat16:      return GL_R16F;
-                    case TextureFormat::RedFloat32:      return GL_R32F;
-                    case TextureFormat::RedGreenFloat16: return GL_RG16F;
-                    case TextureFormat::RedGreenFloat32: return GL_RG32F;
-                    case TextureFormat::RGB:             return GL_RGB;
-                    case TextureFormat::RGBA:            return GL_RGBA;
-                    case TextureFormat::Float16A:        return GL_RGBA16F;
-                    case TextureFormat::Float32A:        return GL_RGBA32F;
-                    case TextureFormat::Float16:         return GL_RGB16F;
-                    case TextureFormat::Float32:         return GL_RGB32F;
-                }
-                return 0;
-            }
+        int getOpenGLTextureInternalFormat(TextureFormat format) {
             switch (format) {
-                case TextureFormat::R:               return GL_COMPRESSED_RED;
-                case TextureFormat::RGB:             return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
-                case TextureFormat::RGBA:            return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-                case TextureFormat::Float16:         return GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT;
-                case TextureFormat::Float32:         return GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT;
+                case TextureFormat::R:               return GL_RED;
+                case TextureFormat::RedFloat16:      return GL_R16F;
+                case TextureFormat::RedFloat32:      return GL_R32F;
+                case TextureFormat::RedGreenFloat16: return GL_RG16F;
+                case TextureFormat::RedGreenFloat32: return GL_RG32F;
+                case TextureFormat::RGB:             return GL_RGB;
+                case TextureFormat::RGBA:            return GL_RGBA;
+                case TextureFormat::Float16A:        return GL_RGBA16F;
+                case TextureFormat::Float32A:        return GL_RGBA32F;
+                case TextureFormat::Float16:         return GL_RGB16F;
+                case TextureFormat::Float32:         return GL_RGB32F;
             }
-            CG_ASSERT(false, "Texture Compression was enabled with an unsupported Texture format")
             return 0;
         }
 
@@ -186,6 +176,13 @@ namespace CgEngine {
                 case MipMapFiltering::Trilinear: {
                     glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
                     glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameterf(textureType, GL_TEXTURE_MAX_ANISOTROPY, 1.0f);
+                    return;
+                }
+                case MipMapFiltering::Anisotropic: {
+                    glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                    glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameterf(textureType, GL_TEXTURE_MAX_ANISOTROPY, Application::get().getApplicationOptions().anisotropicFiltering);
                     return;
                 }
             }

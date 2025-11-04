@@ -37,7 +37,6 @@ namespace CgEngine {
         applicationOptions.debugShowNormals = iniReader.GetBoolean("application", "debug_show_normals", false);
         applicationOptions.debugRenderLines = iniReader.GetBoolean("application", "debug_render_lines", false);
         applicationOptions.anisotropicFiltering = static_cast<float>(iniReader.GetReal("application", "anisotropic_filtering", 1.0));
-        applicationOptions.useTextureCompression = static_cast<float>(iniReader.GetBoolean("application", "texture_compression", false));
         applicationOptions.shadowMapResolution = iniReader.GetInteger("application", "shadow_map_resolution", 2048);
         applicationOptions.enableBloom = iniReader.GetBoolean("application", "enable_bloom", true);
         applicationOptions.enableHBAO = iniReader.GetBoolean("application", "enable_hbao", true);
@@ -62,6 +61,7 @@ namespace CgEngine {
         windowSpecification.graphicsApi = applicationOptions.graphicsApi;
 
         window = new Window(windowSpecification, EVENT_BIND_FN(onEvent));
+        Renderer::init(*window);
 
         sceneRenderer = new SceneRenderer(window->getWidth(), window->getHeight());
 

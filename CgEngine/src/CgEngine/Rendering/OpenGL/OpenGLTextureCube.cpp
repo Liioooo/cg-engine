@@ -10,7 +10,7 @@ namespace CgEngine {
         glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &textureHandle);
         glBindTexture(GL_TEXTURE_CUBE_MAP, textureHandle);
 
-        GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format, false);
+        GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format);
         GLenum glFormat = OpenGLHelpers::getOpenGLTextureFormat(format);
         GLenum type = OpenGLHelpers::getOpenGLTextureType(format);
 
@@ -37,7 +37,7 @@ namespace CgEngine {
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-        GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format, false);
+        GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format);
         GLenum glFormat = OpenGLHelpers::getOpenGLTextureFormat(format);
         GLenum type = OpenGLHelpers::getOpenGLTextureType(format);
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, internalFormat, width, height, 0, glFormat, type, data);
@@ -49,7 +49,7 @@ namespace CgEngine {
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, internalFormat, width, height, 0, glFormat, type, data);
         glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, width, height, 0, glFormat, type, data);
 
-        if (mipMapFiltering == MipMapFiltering::Trilinear) {
+        if (mipMapFiltering == MipMapFiltering::Trilinear || mipMapFiltering == MipMapFiltering::Anisotropic) {
             glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
         }
     }

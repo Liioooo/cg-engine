@@ -1,12 +1,9 @@
 #include <Application.h>
 #include "Renderer.h"
-#include "glad/glad.h"
 #include "Asserts.h"
-#include "FileSystem.h"
-#include "imgui.h"
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_opengl3.h"
 #include "GraphicsObjectsFactory.h"
+#include "Rendering/OpenGL/OpenGLRenderer.h"
+#include "Rendering/Vulkan/VulkanRenderer.h"
 
 namespace CgEngine {
     void Renderer::init(Window& window) {
@@ -99,13 +96,6 @@ namespace CgEngine {
         backend->drawArrays(vao, vertexCount);
     }
 
-//    void Renderer::executeCustomShaderDrawCommand(const VertexArrayObject& vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, uint32_t instanceCount, int tesselationPatchSize)  {
-//        CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
-//
-//        vao.bind();
-//        glDrawElementsInstancedBaseVertex(tesselationPatchSize == ~0 ? GL_TRIANGLES : GL_PATCHES, indexCount, GL_UNSIGNED_INT, (void*)(baseIndex * sizeof(uint32_t)), instanceCount, baseVertex);
-//    }
-
     Texture2D* Renderer::getWhiteTexture() {
         return backend->getWhiteTexture();
     }
@@ -154,5 +144,15 @@ namespace CgEngine {
 
     void Renderer::renderImGuiFrame() {
         backend->renderImGuiFrame();
+    }
+
+    OpenGLRenderer* Renderer::getOpenGLBackend() {
+        CG_ASSERT(backend->getGraphicsAPI() == GraphicsAPI::OpenGL, "Renderer::getOpenGLBackend: Renderer backend is not OpenGL!")
+        return static_cast<OpenGLRenderer*>(backend);
+    }
+
+    VulkanRenderer* Renderer::getVulkanBackend() {
+        CG_ASSERT(backend->getGraphicsAPI() == GraphicsAPI::Vulkan, "Renderer::getVulkanBackend: Renderer backend is not Vulkan!")
+        return static_cast<VulkanRenderer*>(backend);
     }
 }

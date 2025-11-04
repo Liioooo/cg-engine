@@ -14,6 +14,7 @@ add_library(${PROJECT_NAME} ${All_Sources})
 
 # OpenGL
 find_package(OpenGL REQUIRED)
+find_package(Vulkan REQUIRED)
 
 ################################################################################
 # MSVC runtime library
@@ -60,6 +61,12 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 ################################################################################
 set(ADDITIONAL_LIBRARY_DEPENDENCIES)
 set(ADDITIONAL_INCLUDE_DIRECTORIES)
+
+# VULKAN #######################################################################
+target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan)
+list(APPEND ADDITIONAL_INCLUDE_DIRECTORIES ${Vulkan_INCLUDE_DIRS})
+target_compile_definitions(${PROJECT_NAME} PUBLIC VULKAN_HPP_NO_EXCEPTIONS)
+################################################################################
 
 # GLFW #########################################################################
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)

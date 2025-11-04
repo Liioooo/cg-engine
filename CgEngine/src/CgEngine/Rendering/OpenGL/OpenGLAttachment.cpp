@@ -35,6 +35,7 @@ namespace CgEngine {
 
         if (spec.usableAsTexture) {
             CG_ASSERT(spec.mipMapFiltering != MipMapFiltering::Trilinear, "Trilinear filtering is not supported for Attachments!")
+            CG_ASSERT(spec.mipMapFiltering != MipMapFiltering::Anisotropic, "Anisotropic filtering is not supported for Attachments!")
 
             OpenGLHelpers::applyMipMapFiltering(spec.mipMapFiltering, GL_TEXTURE_2D);
             GLint wrapMode = OpenGLHelpers::getOpenGLWrapMode(spec.textureWrap);

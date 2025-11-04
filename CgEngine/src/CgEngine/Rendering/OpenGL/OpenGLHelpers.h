@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Rendering/Enums.h"
+#include "Rendering/OpenGL/OpenGLRenderer.h"
 
 namespace CgEngine {
 
@@ -9,7 +10,7 @@ namespace CgEngine {
         int depthCompareOperatorToOpenGL(DepthCompareOperator op);
         int blendingEquationToOpenGL(BlendingEquation eq);
         int blendingFunctionToOpenGL(BlendingFunction fn);
-        int getOpenGLTextureInternalFormat(TextureFormat format, bool compression);
+        int getOpenGLTextureInternalFormat(TextureFormat format);
         int getOpenGLTextureType(TextureFormat format);
         int getOpenGLTextureFormat(TextureFormat format);
         int getOpenGLWrapMode(TextureWrap wrap);

@@ -57,6 +57,8 @@ namespace CgEngine {
         void beginImGuiFrame() override;
         void renderImGuiFrame() override;
 
+        GraphicsAPI getGraphicsAPI() const override { return GraphicsAPI::OpenGL; }
+
     private:
         const OpenGLRenderPass* currentRenderPass;
         uint32_t currentPipelineHandle = ~0;
@@ -88,8 +90,8 @@ namespace CgEngine {
         OpenGLVertexArrayObject quadVAO;
         OpenGLVertexArrayObject unitCubeVAO;
 
-        static void initImGui(Window& window);
-        static void shutdownImGui();
+        void initImGui(Window& window);
+        void shutdownImGui();
         static void debugCallback(unsigned int source, unsigned int type, unsigned int id, unsigned int severity, int length, const char* message, const void* userParam);
     };
 

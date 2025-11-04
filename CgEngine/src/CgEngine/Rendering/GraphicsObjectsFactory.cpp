@@ -18,6 +18,7 @@
 #include "Rendering/OpenGL/OpenGLPushConstants.h"
 #include "Rendering/OpenGL/OpenGLComputePipeline.h"
 #include "Rendering/OpenGL/OpenGLGraphicsPipeline.h"
+#include "Rendering/Vulkan/VulkanRenderer.h"
 
 namespace CgEngine {
 
@@ -28,7 +29,7 @@ namespace CgEngine {
     RendererBackendBase* GraphicsObjectsFactory::createRendererBackend() {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanRenderer();
             case GraphicsAPI::OpenGL:
                 return new OpenGLRenderer();
         }
@@ -97,39 +98,39 @@ namespace CgEngine {
         }
     }
 
-    Texture2D* GraphicsObjectsFactory::createTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, MipMapFiltering mipMapFiltering, float anisotropicFiltering, bool compression) {
+    Texture2D* GraphicsObjectsFactory::createTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, MipMapFiltering mipMapFiltering) {
         switch (api) {
             case GraphicsAPI::Vulkan:
                 return nullptr;
             case GraphicsAPI::OpenGL:
-                return new OpenGLTexture2D(format, width, height, wrap, mipMapFiltering, anisotropicFiltering, compression);
+                return new OpenGLTexture2D(format, width, height, wrap, mipMapFiltering);
         }
     }
 
-    Texture2D* GraphicsObjectsFactory::createTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, const void* data, MipMapFiltering mipMapFiltering, float anisotropicFiltering, bool compression) {
+    Texture2D* GraphicsObjectsFactory::createTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, const void* data, MipMapFiltering mipMapFiltering) {
         switch (api) {
             case GraphicsAPI::Vulkan:
                 return nullptr;
             case GraphicsAPI::OpenGL:
-                return new OpenGLTexture2D(format, width, height, wrap, data, mipMapFiltering, anisotropicFiltering, compression);
+                return new OpenGLTexture2D(format, width, height, wrap, data, mipMapFiltering);
         }
     }
 
-    Texture2D* GraphicsObjectsFactory::createTexture2D(const std::filesystem::path& path, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering, float anisotropicFiltering, bool compression) {
+    Texture2D* GraphicsObjectsFactory::createTexture2D(const std::filesystem::path& path, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering) {
         switch (api) {
             case GraphicsAPI::Vulkan:
                 return nullptr;
             case GraphicsAPI::OpenGL:
-                return new OpenGLTexture2D(path, srgb, wrap, mipMapFiltering, anisotropicFiltering, compression);
+                return new OpenGLTexture2D(path, srgb, wrap, mipMapFiltering);
         }
     }
 
-    Texture2D* GraphicsObjectsFactory::createTexture2D(const unsigned char* buffer, int bufferLen, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering, float anisotropicFiltering, bool compression) {
+    Texture2D* GraphicsObjectsFactory::createTexture2D(const unsigned char* buffer, int bufferLen, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering) {
         switch (api) {
             case GraphicsAPI::Vulkan:
                 return nullptr;
             case GraphicsAPI::OpenGL:
-                return new OpenGLTexture2D(buffer, bufferLen, srgb, wrap, mipMapFiltering, anisotropicFiltering, compression);
+                return new OpenGLTexture2D(buffer, bufferLen, srgb, wrap, mipMapFiltering);
         }
     }
 

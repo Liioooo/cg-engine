@@ -112,7 +112,7 @@ namespace CgEngine {
             std::string texturePath = FileSystem::getAsGamePath(textureName).string();
 
             Texture2DResourceSpecification spec{};
-            spec.srgb = false;
+            spec.srgb = true;
             spec.wrap = TextureWrap::Repeat;
             spec.mipMapFiltering = MipMapFiltering::Bilinear;
 

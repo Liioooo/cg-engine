@@ -708,7 +708,7 @@ namespace CgEngine {
                     if (Utils::String::startsWith(aiEmissiveTexPath.C_Str(), "*")) {
                         const auto* tex = scene->GetEmbeddedTexture(aiEmissiveTexPath.C_Str());
                         if (tex->mHeight == 0) {
-                            auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, true, getTextureWrapFromAssimp(aiEmissiveWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
+                            auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, true, getTextureWrapFromAssimp(aiEmissiveWrapMode[0]), MipMapFiltering::Anisotropic);
 
                             std::string resId = path.string() + "/" + std::string(aiEmissiveTexPath.C_Str());
 
@@ -721,9 +721,7 @@ namespace CgEngine {
                         Texture2DResourceSpecification spec{};
                         spec.srgb = true;
                         spec.wrap = getTextureWrapFromAssimp(aiEmissiveWrapMode[0]);
-                        spec.mipMapFiltering = MipMapFiltering::Trilinear;
-                        spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
-                        spec.compression = applicationOptions.useTextureCompression;
+                        spec.mipMapFiltering = MipMapFiltering::Anisotropic;
 
                         materialSpec.emissionTexture = resourceManager.getResource<Texture2D>(texturePath.string(), spec);
                     }
@@ -750,7 +748,7 @@ namespace CgEngine {
                     if (Utils::String::startsWith(aiAlbedoTexPath.C_Str(), "*")) {
                         const auto* tex = scene->GetEmbeddedTexture(aiAlbedoTexPath.C_Str());
                         if (tex->mHeight == 0) {
-                            auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, true, getTextureWrapFromAssimp(aiAlbedoWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
+                            auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, true, getTextureWrapFromAssimp(aiAlbedoWrapMode[0]), MipMapFiltering::Anisotropic);
 
                             std::string resId = path.string() + "/" + std::string(aiAlbedoTexPath.C_Str());
 
@@ -763,9 +761,7 @@ namespace CgEngine {
                         Texture2DResourceSpecification spec{};
                         spec.srgb = true;
                         spec.wrap = getTextureWrapFromAssimp(aiAlbedoWrapMode[0]);
-                        spec.mipMapFiltering = MipMapFiltering::Trilinear;
-                        spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
-                        spec.compression = applicationOptions.useTextureCompression;
+                        spec.mipMapFiltering = MipMapFiltering::Anisotropic;
 
                         materialSpec.albedoTexture = resourceManager.getResource<Texture2D>(texturePath.string(), spec);
                     }
@@ -789,7 +785,7 @@ namespace CgEngine {
                     if (Utils::String::startsWith(aiRoughnessTexPath.C_Str(), "*")) {
                         const auto* tex = scene->GetEmbeddedTexture(aiRoughnessTexPath.C_Str());
                         if (tex->mHeight == 0) {
-                            auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiRoughnessWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
+                            auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiRoughnessWrapMode[0]), MipMapFiltering::Anisotropic);
 
                             std::string resId = path.string() + "/" + std::string(aiRoughnessTexPath.C_Str());
 
@@ -802,9 +798,7 @@ namespace CgEngine {
                         Texture2DResourceSpecification spec{};
                         spec.srgb = false;
                         spec.wrap = getTextureWrapFromAssimp(aiRoughnessWrapMode[0]);
-                        spec.mipMapFiltering = MipMapFiltering::Trilinear;
-                        spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
-                        spec.compression = applicationOptions.useTextureCompression;
+                        spec.mipMapFiltering = MipMapFiltering::Anisotropic;
 
                         materialSpec.roughnessTexture = resourceManager.getResource<Texture2D>(texturePath.string(), spec);
                     }
@@ -812,7 +806,7 @@ namespace CgEngine {
                     if (Utils::String::startsWith(aiSpecularTexPath.C_Str(), "*")) {
                         const auto* tex = scene->GetEmbeddedTexture(aiSpecularTexPath.C_Str());
                         if (tex->mHeight == 0) {
-                            auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiSpecularWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
+                            auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiSpecularWrapMode[0]), MipMapFiltering::Anisotropic);
 
                             std::string resId = path.string() + "/" + std::string(aiSpecularTexPath.C_Str());
 
@@ -825,9 +819,7 @@ namespace CgEngine {
                         Texture2DResourceSpecification spec{};
                         spec.srgb = false;
                         spec.wrap = getTextureWrapFromAssimp(aiSpecularWrapMode[0]);
-                        spec.mipMapFiltering = MipMapFiltering::Trilinear;
-                        spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
-                        spec.compression = applicationOptions.useTextureCompression;
+                        spec.mipMapFiltering = MipMapFiltering::Anisotropic;
 
                         materialSpec.roughnessTexture = resourceManager.getResource<Texture2D>(texturePath.string(), spec);
                     }
@@ -842,7 +834,7 @@ namespace CgEngine {
                     if (Utils::String::startsWith(aiNormalTexPath.C_Str(), "*")) {
                         const auto* tex = scene->GetEmbeddedTexture(aiNormalTexPath.C_Str());
                         if (tex->mHeight == 0) {
-                            auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiNormalWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, false);
+                            auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiNormalWrapMode[0]), MipMapFiltering::Anisotropic);
 
                             std::string resId = path.string() + "/" + std::string(aiNormalTexPath.C_Str());
 
@@ -855,9 +847,7 @@ namespace CgEngine {
                         Texture2DResourceSpecification spec{};
                         spec.srgb = false;
                         spec.wrap = getTextureWrapFromAssimp(aiNormalWrapMode[0]);
-                        spec.mipMapFiltering = MipMapFiltering::Trilinear;
-                        spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
-                        spec.compression = false;
+                        spec.mipMapFiltering = MipMapFiltering::Anisotropic;
 
                         materialSpec.normalTexture = resourceManager.getResource<Texture2D>(texturePath.string(), spec);
                     }
@@ -875,7 +865,7 @@ namespace CgEngine {
                     if (Utils::String::startsWith(aiMetalnessTexPath.C_Str(), "*")) {
                         const auto* tex = scene->GetEmbeddedTexture(aiMetalnessTexPath.C_Str());
                         if (tex->mHeight == 0) {
-                            auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiMetalnessWrapMode[0]), MipMapFiltering::Trilinear, applicationOptions.anisotropicFiltering, applicationOptions.useTextureCompression);
+                            auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiMetalnessWrapMode[0]), MipMapFiltering::Anisotropic);
 
                             std::string resId = path.string() + "/" + std::string(aiMetalnessTexPath.C_Str());
 
@@ -888,9 +878,7 @@ namespace CgEngine {
                         Texture2DResourceSpecification spec{};
                         spec.srgb = false;
                         spec.wrap = getTextureWrapFromAssimp(aiMetalnessWrapMode[0]);
-                        spec.mipMapFiltering = MipMapFiltering::Trilinear;
-                        spec.anisotropicFiltering = applicationOptions.anisotropicFiltering;
-                        spec.compression = applicationOptions.useTextureCompression;
+                        spec.mipMapFiltering = MipMapFiltering::Anisotropic;
 
                         materialSpec.metalnessTexture = resourceManager.getResource<Texture2D>(texturePath.string(), spec);
                     }
