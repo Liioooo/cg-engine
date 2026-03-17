@@ -11,37 +11,51 @@ namespace CgEngine {
         explicit UiCircle() : UiElement(UIElementType::Circle) {};
         ~UiCircle() override = default;
 
-        void setWidth(float width, UIPosUnit unit);
-        float getWidth() const;
-
+        void setDiameter(float diameter, UIPosUnit unit);
         void setLineWidth(float lineWidth);
+        void setLineWidthHover(float lineWidth);
         void setLineColor(const glm::vec4& lineColor);
+        void setLineColorHover(const glm::vec4& lineColor);
         void setFillColor(const glm::vec4& fillColor);
+        void setFillColorHover(const glm::vec4& fillColor);
         void setTexture(ResRef<Texture2D> texture);
 
+        float getPixelDiameter() const;
         float getLineWidth() const;
+        float getLineWidthHover() const;
         const glm::vec4& getLineColor() const;
+        const glm::vec4& getLineColorHover() const;
         const glm::vec4& getFillColor() const;
+        const glm::vec4& getFillColorHover() const;
         const ResRef<Texture2D> getTexture() const;
 
         const std::vector<glm::vec4>& getVertices() const override;
+        uint32_t getNumIndices() const override;
 
     protected:
-        void updateElement(bool absolutePosDirty, bool viewportDirty, uint32_t viewportWidth, uint32_t viewportHeight) override;
+        void updateElement(uint32_t canvasWidth, uint32_t canvasHeight) override;
 
     private:
-        std::pair<float, UIPosUnit> width;
-        float scaledWidth;
+        std::pair<float, UIPosUnit> diameter;
+        float scaledDiameter;
 
-        float lineWidth{};
-        glm::vec4 lineColor{};
-        glm::vec4 fillColor{};
+        float lineWidth = 0.0f;
+        float lineWidthHover = 0.0f;
+        glm::vec4 lineColor = {0.0f, 0.0f, 0.0f, 1.0f};
+        glm::vec4 lineColorHover = {0.0f, 0.0f, 0.0f, 1.0f};
+        glm::vec4 fillColor = {0.0f, 0.0f, 0.0f, 1.0f};
+        glm::vec4 fillColorHover = {0.0f, 0.0f, 0.0f, 1.0f};
+
+        bool hasLineWidthHover = false;
+        bool hasLineColorHover = false;
+        bool hasFillColorHover = false;
 
         ResRef<Texture2D> texture = nullptr;
 
-        bool dirty = true;
-
         std::vector<glm::vec4> vertices;
+        glm::vec2 collisionCenter;
+
+        bool containsPoint(glm::vec2 point) const override;
     };
 
 }

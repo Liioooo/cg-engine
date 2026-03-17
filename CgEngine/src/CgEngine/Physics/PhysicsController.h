@@ -21,6 +21,7 @@ namespace CgEngine {
         void move(glm::vec3 dir);
         void setPosition(glm::vec3 pos);
         void jump(float strength);
+        void setHasGravity(bool hasGravity);
 
         bool isGrounded() const;
 

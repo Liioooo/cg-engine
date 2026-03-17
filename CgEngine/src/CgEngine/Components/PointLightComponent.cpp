@@ -1,7 +1,7 @@
 #include "PointLightComponent.h"
 #include "imgui.h"
 #include "ImGui/ImGuiWidgets.h"
-#include "Utils/LoaderUtils.h"
+#include "CgEngineSharedUtils/LoaderUtils.h"
 
 namespace CgEngine {
     void PointLightComponentParams::verifyParams() const {}
@@ -52,7 +52,7 @@ namespace CgEngine {
             ImGui::DragFloat("Radius", &radius, 0.01, 0.0f);
             ImGui::DragFloat("Falloff", &falloff, 0.01, 0.0f);
             ImGuiWidgets::copyCurrentConfig("PointLightComponent", [this](auto& map) {
-                map["color"] = Utils::LoaderUtils::vec3ColorToHexString(color);
+                map["color"] = LoaderUtils::vec3ColorToHexString(color);
                 map["intensity"] = std::to_string(intensity);
                 map["radius"] = std::to_string(radius);
                 map["falloff"] = std::to_string(falloff);

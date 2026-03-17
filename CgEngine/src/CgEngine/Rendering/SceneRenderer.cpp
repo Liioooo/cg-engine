@@ -4,6 +4,7 @@
 #include "OpenGLTimer.h"
 #include "OpenGLDebugGroup.h"
 #include "GraphicsObjectsFactory.h"
+#include "Ui/UIVertexBufferLayouts.h"
 
 namespace CgEngine {
     SceneRenderer::SceneRenderer(uint32_t viewportWidth, uint32_t viewportHeight) : viewportWidth(viewportWidth), viewportHeight(viewportHeight), invViewportWidth(1.0f / static_cast<float>(viewportWidth)), invViewportHeight(1.0f / static_cast<float>(viewportHeight)) {
@@ -47,8 +48,7 @@ namespace CgEngine {
 
             RenderPassSpecification shadowMapRenderPassSpec{};
             shadowMapRenderPassSpec.clearColorAttachments = false;
-            shadowMapRenderPassSpec.clearDepthAttachment = true;
-            shadowMapRenderPassSpec.clearStencilBuffer = false;
+            shadowMapRenderPassSpec.clearDepthStencilAttachment = true;
             shadowMapRenderPassSpec.clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
 
             dirShadowMapRenderPass = GraphicsObjectsFactory::createRenderPass(shadowMapRenderPassSpec);
@@ -66,7 +66,7 @@ namespace CgEngine {
             shadowMapFramebufferSpec.renderPass = dirShadowMapRenderPass;
             shadowMapFramebufferSpec.height = applicationOptions.shadowMapResolution;
             shadowMapFramebufferSpec.width = applicationOptions.shadowMapResolution;
-            shadowMapFramebufferSpec.depthAttachment.attachment = dirShadowMaps;
+            shadowMapFramebufferSpec.depthStencilAttachment.attachment = dirShadowMaps;
 
             dirShadowMapFramebuffer = GraphicsObjectsFactory::createFramebuffer(shadowMapFramebufferSpec);
 
@@ -110,7 +110,7 @@ namespace CgEngine {
 
             RenderPassSpecification gBufferRenderPassSpec{};
             gBufferRenderPassSpec.clearColorAttachments = true;
-            gBufferRenderPassSpec.clearDepthAttachment = true;
+            gBufferRenderPassSpec.clearDepthStencilAttachment = true;
             gBufferRenderPassSpec.clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
 
             gBufferRenderPass = GraphicsObjectsFactory::createRenderPass(gBufferRenderPassSpec);
@@ -133,8 +133,8 @@ namespace CgEngine {
                 {gBufferWorldNormalsAttachment},
                 {gBufferViewNormalsAttachment}
             };
-            gBufferFramebufferSpec.depthAttachment.attachment = gBufferDepthAttachment;
-            gBufferFramebufferSpec.depthAttachment.allLayers = true;
+            gBufferFramebufferSpec.depthStencilAttachment.attachment = gBufferDepthAttachment;
+            gBufferFramebufferSpec.depthStencilAttachment.allLayers = true;
 
             gBufferFramebuffer = GraphicsObjectsFactory::createFramebuffer(gBufferFramebufferSpec);
 
@@ -185,7 +185,7 @@ namespace CgEngine {
             hbaoDeinterleavingAttachment = GraphicsObjectsFactory::createAttachment(hbaoDeinterleavingAttachmentSpec);
 
             RenderPassSpecification hbaoDeinterleavingRenderPassSpec{};
-            hbaoDeinterleavingRenderPassSpec.clearDepthAttachment = false;
+            hbaoDeinterleavingRenderPassSpec.clearDepthStencilAttachment = false;
             hbaoDeinterleavingRenderPassSpec.clearColorAttachments = true;
             hbaoDeinterleavingRenderPassSpec.clearColor = {1.0f, 1.0f, 1.0f, 1.0f};
 
@@ -301,8 +301,7 @@ namespace CgEngine {
             RenderPassSpecification hbaoReinterleavingRenderPassSpec{};
             hbaoReinterleavingRenderPassSpec.clearColorAttachments = true;
             hbaoReinterleavingRenderPassSpec.clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
-            hbaoReinterleavingRenderPassSpec.clearDepthAttachment = false;
-            hbaoReinterleavingRenderPassSpec.clearStencilBuffer = false;
+            hbaoReinterleavingRenderPassSpec.clearDepthStencilAttachment = false;
 
             hbaoReinterleavingRenderPass = GraphicsObjectsFactory::createRenderPass(hbaoReinterleavingRenderPassSpec);
 
@@ -345,15 +344,13 @@ namespace CgEngine {
 
             RenderPassSpecification hbaoBlurRenderPassSpec0{};
             hbaoBlurRenderPassSpec0.clearColorAttachments = true;
-            hbaoBlurRenderPassSpec0.clearDepthAttachment = false;
+            hbaoBlurRenderPassSpec0.clearDepthStencilAttachment = false;
             hbaoBlurRenderPassSpec0.clearColor = {1.0f, 1.0f, 1.0f, 0.0f};
-            hbaoBlurRenderPassSpec0.clearStencilBuffer = false;
             hbaoBlurRenderPass0 = GraphicsObjectsFactory::createRenderPass(hbaoBlurRenderPassSpec0);
 
             RenderPassSpecification hbaoBlurRenderPassSpec1{};
             hbaoBlurRenderPassSpec1.clearColorAttachments = false;
-            hbaoBlurRenderPassSpec1.clearDepthAttachment = false;
-            hbaoBlurRenderPassSpec1.clearStencilBuffer = false;
+            hbaoBlurRenderPassSpec1.clearDepthStencilAttachment = false;
             hbaoBlurRenderPass1 = GraphicsObjectsFactory::createRenderPass(hbaoBlurRenderPassSpec1);
 
             GraphicsPipelineSpecification hbaoBlurPipelineSpec0{};
@@ -420,8 +417,7 @@ namespace CgEngine {
         {
             RenderPassSpecification pbrRenderPassSpec{};
             pbrRenderPassSpec.clearColorAttachments = true;
-            pbrRenderPassSpec.clearDepthAttachment = false;
-            pbrRenderPassSpec.clearStencilBuffer = false;
+            pbrRenderPassSpec.clearDepthStencilAttachment = false;
             pbrRenderPassSpec.clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
             pbrRenderPassSpec.hasDepthStencilAttachment = false;
             pbrRenderPassSpec.colorAttachments = {AttachmentType::RGBA16F};
@@ -496,10 +492,9 @@ namespace CgEngine {
         {
             RenderPassSpecification afterPbrRenderPassSpec{};
             afterPbrRenderPassSpec.clearColorAttachments = false;
-            afterPbrRenderPassSpec.clearDepthAttachment = false;
-            afterPbrRenderPassSpec.clearStencilBuffer = false;
+            afterPbrRenderPassSpec.clearDepthStencilAttachment = false;
             afterPbrRenderPassSpec.hasDepthStencilAttachment = true;
-            afterPbrRenderPassSpec.depthAttachmentFormat = gBufferDepthAttachment->getDepthAttachmentFormat();
+            afterPbrRenderPassSpec.depthStencilAttachmentFormat = gBufferDepthAttachment->getDepthStencilAttachmentFormat();
             afterPbrRenderPassSpec.colorAttachments = {
                     pbrColorAttachment->getType()
             };
@@ -513,8 +508,8 @@ namespace CgEngine {
             afterPbrFramebufferSpec.colorAttachments = {
                     {pbrColorAttachment}
             };
-            afterPbrFramebufferSpec.depthAttachment.attachment = gBufferDepthAttachment;
-            afterPbrFramebufferSpec.depthAttachment.allLayers = true;
+            afterPbrFramebufferSpec.depthStencilAttachment.attachment = gBufferDepthAttachment;
+            afterPbrFramebufferSpec.depthStencilAttachment.allLayers = true;
 
             afterPbrFramebuffer = GraphicsObjectsFactory::createFramebuffer(afterPbrFramebufferSpec);
         }
@@ -632,8 +627,7 @@ namespace CgEngine {
 
             RenderPassSpecification bloomDownSamplePassSpec;
             bloomDownSamplePassSpec.clearColorAttachments = true;
-            bloomDownSamplePassSpec.clearDepthAttachment = false;
-            bloomDownSamplePassSpec.hasDepthStencilAttachment = false;
+            bloomDownSamplePassSpec.clearDepthStencilAttachment = false;
             bloomDownSamplePassSpec.colorAttachments = { AttachmentType::RGBA16F };
 
             bloomDownSamplePass = GraphicsObjectsFactory::createRenderPass(bloomDownSamplePassSpec);
@@ -659,8 +653,7 @@ namespace CgEngine {
 
             RenderPassSpecification bloomUpSamplePassSpec;
             bloomUpSamplePassSpec.clearColorAttachments = false;
-            bloomUpSamplePassSpec.clearDepthAttachment = false;
-            bloomUpSamplePassSpec.hasDepthStencilAttachment = false;
+            bloomUpSamplePassSpec.clearDepthStencilAttachment = false;
             bloomUpSamplePassSpec.colorAttachments = { AttachmentType::RGBA16F };
 
             bloomUpSamplePass = GraphicsObjectsFactory::createRenderPass(bloomUpSamplePassSpec);
@@ -749,26 +742,7 @@ namespace CgEngine {
 
             uiIndexBuffer = GraphicsObjectsFactory::createIndexBuffer(uiIndices, MAX_UI_INDICES, IndexBufferDataType::UInt32);
 
-            uiCircleVAO = GraphicsObjectsFactory::createVertexArrayObject();
-            auto* uiCircleVertexBuffer = GraphicsObjectsFactory::createVertexBuffer(sizeof(UiCircleVertex) * MAX_UI_VERTICES, VertexBufferUsage::Dynamic);
-            uiCircleVertexBuffer->setLayout({{ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float, false}, {ShaderDataType::Float, false}, {ShaderDataType::Float, false}});
-            uiCircleVAO->addVertexBuffer(uiCircleVertexBuffer);
-            uiCircleVAO->useExistingIndexBuffer(uiIndexBuffer);
-
-            uiRectVAO = GraphicsObjectsFactory::createVertexArrayObject();
-            auto* uiRectVertexBuffer = GraphicsObjectsFactory::createVertexBuffer(sizeof(UiRectVertex) * MAX_UI_VERTICES, VertexBufferUsage::Dynamic);
-            uiRectVertexBuffer->setLayout({{ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float2, false}, {ShaderDataType::Float, false}, {ShaderDataType::Float, false}});
-            uiRectVAO->addVertexBuffer(uiRectVertexBuffer);
-            uiRectVAO->useExistingIndexBuffer(uiIndexBuffer);
-
-            uiTextVAO = GraphicsObjectsFactory::createVertexArrayObject();
-            auto* uiTextVertexBuffer = GraphicsObjectsFactory::createVertexBuffer(sizeof(UiTextVertex) * MAX_UI_VERTICES, VertexBufferUsage::Dynamic);
-            uiTextVertexBuffer->setLayout({{ShaderDataType::Float4, false}, {ShaderDataType::Float4, false}, {ShaderDataType::Float, false}});
-            uiTextVAO->addVertexBuffer(uiTextVertexBuffer);
-            uiTextVAO->useExistingIndexBuffer(uiIndexBuffer);
-
-            GraphicsPipelineSpecification uiCirclePipelineSpec;
-            uiCirclePipelineSpec.renderPass = Renderer::getSwapChainRenderPass();
+            DynamicGraphicsPipelineSpecification uiCirclePipelineSpec;
             uiCirclePipelineSpec.engineShaderName = "uiCircle";
             uiCirclePipelineSpec.depthTest = false;
             uiCirclePipelineSpec.depthWrite = false;
@@ -776,12 +750,13 @@ namespace CgEngine {
             uiCirclePipelineSpec.blendingEquation = BlendingEquation::Add;
             uiCirclePipelineSpec.srcBlendingFunction = BlendingFunction::SrcAlpha;
             uiCirclePipelineSpec.destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
-            uiCirclePipelineSpec.vertexInputLayout = uiCircleVAO->getLayout();
+            uiCirclePipelineSpec.vertexInputLayout = UI_CIRCLE_VERTEX_BUFFER_LAYOUTS;
+            uiCirclePipelineSpec.renderingInfo.hasDepthStencilAttachment = false;
+            uiCirclePipelineSpec.renderingInfo.colorAttachments = { UI_CANVAS_ATTACHMENT_TYPE };
 
-            uiCirclePipeline = GraphicsObjectsFactory::createGraphicsPipeline(uiCirclePipelineSpec);
+            uiCirclePipeline = GraphicsObjectsFactory::createDynamicGraphicsPipeline(uiCirclePipelineSpec);
 
-            GraphicsPipelineSpecification uiRectPipelineSpec;
-            uiRectPipelineSpec.renderPass = Renderer::getSwapChainRenderPass();
+            DynamicGraphicsPipelineSpecification uiRectPipelineSpec;
             uiRectPipelineSpec.engineShaderName = "uiRect";
             uiRectPipelineSpec.depthTest = false;
             uiRectPipelineSpec.depthWrite = false;
@@ -789,19 +764,13 @@ namespace CgEngine {
             uiRectPipelineSpec.blendingEquation = BlendingEquation::Add;
             uiRectPipelineSpec.srcBlendingFunction = BlendingFunction::SrcAlpha;
             uiRectPipelineSpec.destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
-            uiRectPipelineSpec.vertexInputLayout = uiRectVAO->getLayout();
+            uiRectPipelineSpec.vertexInputLayout = UI_RECT_VERTEX_BUFFER_LAYOUTS;
+            uiRectPipelineSpec.renderingInfo.hasDepthStencilAttachment = false;
+            uiRectPipelineSpec.renderingInfo.colorAttachments = { UI_CANVAS_ATTACHMENT_TYPE };
 
-            uiRectPipeline = GraphicsObjectsFactory::createGraphicsPipeline(uiRectPipelineSpec);
+            uiRectPipeline = GraphicsObjectsFactory::createDynamicGraphicsPipeline(uiRectPipelineSpec);
 
-            for (auto& item: uiDescriptorSets) {
-                item = GraphicsObjectsFactory::createDescriptorSet();
-            }
-            for (auto& item: uiTextDescriptorSets) {
-                item = GraphicsObjectsFactory::createDescriptorSet();
-            }
-
-            GraphicsPipelineSpecification uiTextPipelineSpec;
-            uiTextPipelineSpec.renderPass = Renderer::getSwapChainRenderPass();
+            DynamicGraphicsPipelineSpecification uiTextPipelineSpec;
             uiTextPipelineSpec.engineShaderName = "uiText";
             uiTextPipelineSpec.depthTest = false;
             uiTextPipelineSpec.depthWrite = false;
@@ -809,9 +778,50 @@ namespace CgEngine {
             uiTextPipelineSpec.blendingEquation = BlendingEquation::Add;
             uiTextPipelineSpec.srcBlendingFunction = BlendingFunction::SrcAlpha;
             uiTextPipelineSpec.destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
-            uiTextPipelineSpec.vertexInputLayout = uiTextVAO->getLayout();
+            uiTextPipelineSpec.vertexInputLayout = UI_TEXT_VERTEX_BUFFER_LAYOUTS;
+            uiTextPipelineSpec.renderingInfo.hasDepthStencilAttachment = false;
+            uiTextPipelineSpec.renderingInfo.colorAttachments = { UI_CANVAS_ATTACHMENT_TYPE };
 
-            uiTextPipeline = GraphicsObjectsFactory::createGraphicsPipeline(uiTextPipelineSpec);
+            uiTextPipeline = GraphicsObjectsFactory::createDynamicGraphicsPipeline(uiTextPipelineSpec);
+
+            uiPushConstants = GraphicsObjectsFactory::createPushConstants("pc_ui");
+            uiPushConstants->init<UiPushConstants>();
+            uiPushConstants->mapUniform(&UiPushConstants::projection, "projection");
+
+        }
+        {
+            DescriptorSetLayoutSpecification ui2DCameraBufferDescriptorSetLayoutSpec{};
+            ui2DCameraBufferDescriptorSetLayoutSpec.uboBindingPoints = { 0 };
+            ui2DDescriptorSetLayoutCameraBuffer = GraphicsObjectsFactory::createDescriptorSetLayout(ui2DCameraBufferDescriptorSetLayoutSpec);
+
+            DescriptorSetSpecification ui2DCameraBufferDescriptorSetSpec{};
+            ui2DCameraBufferDescriptorSetSpec.layout = ui2DDescriptorSetLayoutCameraBuffer;
+            ui2DCameraBufferDescriptorSetSpec.uboBindings = {
+                {0, ubCameraData}
+            };
+            ui2DDescriptorSetCameraBuffer = GraphicsObjectsFactory::createDescriptorSet(ui2DCameraBufferDescriptorSetSpec);
+
+            DescriptorSetLayoutSpecification uiCanvasSampleDescriptorSetLayoutSpec{};
+            uiCanvasSampleDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = { 0 };
+            uiCanvasSampleDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(uiCanvasSampleDescriptorSetLayoutSpec);
+
+            GraphicsPipelineSpecification ui2DPipelineSpec;
+            ui2DPipelineSpec.renderPass = Renderer::getSwapChainRenderPass();
+            ui2DPipelineSpec.engineShaderName = "ui2D";
+            ui2DPipelineSpec.depthTest = false;
+            ui2DPipelineSpec.depthWrite = false;
+            ui2DPipelineSpec.useBlending = true;
+            ui2DPipelineSpec.blendingEquation = BlendingEquation::Add;
+            ui2DPipelineSpec.srcBlendingFunction = BlendingFunction::SrcAlpha;
+            ui2DPipelineSpec.destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
+            ui2DPipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
+            ui2DPipelineSpec.descriptorSetLayouts = {ui2DDescriptorSetLayoutCameraBuffer, uiCanvasSampleDescriptorSetLayout};
+
+            ui2DPipeline = GraphicsObjectsFactory::createGraphicsPipeline(ui2DPipelineSpec);
+
+            ui2DPushConstants = GraphicsObjectsFactory::createPushConstants("pc_ui2D");
+            ui2DPushConstants->init<Ui2DPushConstants>();
+            ui2DPushConstants->mapUniform(&Ui2DPushConstants::transform, "transform");
 
             uiProjectionMatrix = glm::ortho(0.0f, static_cast<float>(viewportWidth), 0.0f, static_cast<float>(viewportHeight));
         }
@@ -1013,11 +1023,12 @@ namespace CgEngine {
         ApplicationOptions& applicationOptions = Application::get().getApplicationOptions();
 
         buildTransformBuffers();
-        buildUiVertexBuffers();
         fillDebugLinesVertexBuffer();
 
         skinMeshes();
         shadowMapPass();
+
+        uiCanvasPass();
 
         Renderer::beginRenderPass(gBufferRenderPass, gBufferFramebuffer);
         gBufferPass();
@@ -1063,7 +1074,7 @@ namespace CgEngine {
 
         Renderer::beginSwapChainRenderPass();
         screenPass();
-        uiPass();
+        ui2DPass();
         Renderer::endRenderPass();
 
         skinningQueue.clear();
@@ -1076,7 +1087,8 @@ namespace CgEngine {
         shadowMapDrawCommandQueue.clear();
         shadowMapMeshTransforms.clear();
 
-        uiDrawInfoQueue.clear();
+        uiCanvasDrawCommandQueue.clear();
+        ui2DDrawCommandQueue.clear();
 
         #ifdef CG_ENABLE_DEBUG_FEATURES
             physicsCollidersDrawCommandQueue.clear();
@@ -1222,76 +1234,6 @@ namespace CgEngine {
         }
     }
 
-    void SceneRenderer::submitUiElements(const std::unordered_map<std::string, UiElement*>& uiElements) {
-        for (const auto& [_, element]: uiElements) {
-            UiDrawInfo& drawInfo = uiDrawInfoQueue[element->getZIndex()];
-
-            if (element->getType() == UIElementType::Circle) {
-                auto* circleElement = dynamic_cast<UiCircle*>(element);
-                const auto* texture = circleElement->getTexture().get();
-                float textureIndex = findDrawInfoTextureIndex(drawInfo, texture);
-
-                for (const auto& v: element->getVertices()) {
-                    UiCircleVertex& vertex = drawInfo.circleVertices.emplace_back();
-                    vertex.posUV = v;
-                    vertex.fillColor = circleElement->getFillColor();
-                    vertex.width = circleElement->getWidth();
-                    vertex.lineColor = circleElement->getLineColor();
-                    vertex.lineWidth = circleElement->getLineWidth();
-                    vertex.textureIndex = textureIndex;
-                }
-                drawInfo.circleIndexCount += 6;
-            } else if (element->getType() == UIElementType::Rect) {
-                auto* rectElement = dynamic_cast<UiRect*>(element);
-                const auto* texture = rectElement->getTexture().get();
-                float textureIndex = findDrawInfoTextureIndex(drawInfo, texture);
-
-                for (const auto& v: element->getVertices()) {
-                    UiRectVertex& vertex = drawInfo.rectVertices.emplace_back();
-                    vertex.posUV = v;
-                    vertex.fillColor = rectElement->getFillColor();
-                    vertex.lineColor = rectElement->getLineColor();
-                    vertex.size = rectElement->getSize();
-                    vertex.lineWidth = rectElement->getLineWidth();
-                    vertex.textureIndex = textureIndex;
-                }
-                drawInfo.rectIndexCount += 6;
-            } else if (element->getType() == UIElementType::Text) {
-                auto* textElement = dynamic_cast<UiText*>(element);
-                const auto* fontAtlas = textElement->getFontAtlas();
-
-                float fontAtlasIndex = -1;
-                for (uint32_t i = 0; i < drawInfo.filledFontAtlases; i++) {
-                    if (drawInfo.fontAtlases[i] == fontAtlas) {
-                        fontAtlasIndex = static_cast<float>(i);
-                        break;
-                    }
-                }
-                if (fontAtlasIndex < 0.0f) {
-                    fontAtlasIndex = static_cast<float>(drawInfo.filledFontAtlases);
-                    drawInfo.fontAtlases[drawInfo.filledFontAtlases] = fontAtlas;
-                    drawInfo.filledFontAtlases++;
-                }
-
-                for (const auto& v: element->getVertices()) {
-                    UiTextVertex& vertex = drawInfo.textVertices.emplace_back();
-                    vertex.posUV = v;
-                    vertex.color = textElement->getColor();
-                    vertex.fontAtlasIndex = fontAtlasIndex;
-                }
-
-                drawInfo.textIndexCount += textElement->getNumIndices();
-            }
-
-            CG_ASSERT(drawInfo.circleIndexCount <= MAX_UI_INDICES, "Cannot render that many UICircles")
-            CG_ASSERT(drawInfo.rectIndexCount <= MAX_UI_INDICES, "Cannot render that many UIRects")
-            CG_ASSERT(drawInfo.textIndexCount <= MAX_UI_INDICES, "Cannot render that many UIText")
-            CG_ASSERT(drawInfo.filledTextureSlots < drawInfo.textureSlots.size(), "Cannot render that many different Textures on a single z-index")
-            CG_ASSERT(drawInfo.filledFontAtlases < drawInfo.fontAtlases.size(), "Cannot render that many different Fonts on a single z-index")
-            CG_ASSERT(uiDrawInfoQueue.size() < MAX_UI_Z_LAYERS, "Cannot render that many different z-indices")
-        }
-    }
-
     void SceneRenderer::submitPhysicsColliderMesh(MeshVertices* mesh, const glm::mat4& transform) {
         const auto& submeshes = mesh->getSubmeshes();
 
@@ -1356,6 +1298,19 @@ namespace CgEngine {
         lineInfo.color = color;
     }
 
+    void SceneRenderer::submitUiCanvas2D(UiCanvas* uiCanvas, glm::mat4 finalTransform, uint32_t zIndex) {
+        auto& command = uiCanvasDrawCommandQueue.emplace_back();
+        command.attachment = uiCanvas->getUiAttachment();
+        command.projectionMatrix = uiCanvas->getUiProjectionMatrix();
+        command.pixelSize = uiCanvas->getPixelSize();
+        command.drawCommands = std::move(uiCanvas->getUiDrawCommands());
+
+        auto& command2d = ui2DDrawCommandQueue.emplace_back();
+        command2d.sampleCanvasDescriptorSet = uiCanvas->getAttachmentSamplerDescriptorSet();
+        command2d.finalTransform = finalTransform;
+        command2d.zIndex = zIndex;
+    }
+
     const CameraFrustum& SceneRenderer::getCamaraFrustum() const {
         return cameraFrustum;
     }
@@ -1364,8 +1319,16 @@ namespace CgEngine {
         return gBufferRenderPass;
     }
 
-    const DescriptorSetLayout * SceneRenderer::getCustomPipelineDescriptorSetLayout() const {
+    const DescriptorSetLayout* SceneRenderer::getCustomPipelineDescriptorSetLayout() const {
         return customPipelineDescriptorSetLayout;
+    }
+
+    const IndexBuffer* SceneRenderer::getUiIndexBuffer() const {
+        return uiIndexBuffer;
+    }
+
+    const DescriptorSetLayout* SceneRenderer::getUiCanvasSampleDescriptorSetLayout() const {
+        return uiCanvasSampleDescriptorSetLayout;
     }
 
     const RenderingStats& SceneRenderer::getRenderingStats() {
@@ -1648,40 +1611,76 @@ namespace CgEngine {
         Renderer::renderUnitQuad();
     }
 
-    void SceneRenderer::uiPass() {
-        CG_GPU_DEBUG_GROUP("UiPass")
-        CG_GPU_TIME_FN(&renderingStats.uiTimer)
+    void SceneRenderer::uiCanvasPass() {
+        CG_GPU_DEBUG_GROUP("UiCanvasPass")
+        CG_GPU_TIME_FN(&renderingStats.uiCanvasTimer)
 
-        uint32_t zIndex = 0;
-        size_t circleOffset = 0;
-        size_t rectOffset = 0;
-        size_t textOffset = 0;
+        UiPushConstants uiPushConstantsData{};
 
-        for (const auto& [_, drawInfo]: uiDrawInfoQueue) {
-            if (drawInfo.circleIndexCount > 0) {
-                Renderer::bindGraphicsPipeline(uiCirclePipeline);
-                Renderer::bindDescriptorSet(uiDescriptorSets[zIndex], 0);
-                Renderer::executeDrawCommand(uiCircleVAO, drawInfo.circleIndexCount, 0, circleOffset);
+        for (const auto& canvasCommand: uiCanvasDrawCommandQueue) {
+            DynamicRenderingInfo renderingInfo{};
+            renderingInfo.clearColorAttachments = true;
+            renderingInfo.clearDepthStencilAttachment = false;
+            renderingInfo.clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
+            renderingInfo.renderArea = canvasCommand.pixelSize;
+            renderingInfo.colorAttachments.resize(1);
+            renderingInfo.colorAttachments[0].attachment = canvasCommand.attachment;
 
-                circleOffset += drawInfo.circleVertices.size();
+            Renderer::beginDynamicRendering(renderingInfo);
+
+            uiPushConstantsData.projection = canvasCommand.projectionMatrix;
+            uiPushConstants->setData(&uiPushConstantsData, sizeof(UiPushConstants));
+
+            size_t circleOffset = 0;
+            size_t rectOffset = 0;
+            size_t textOffset = 0;
+
+            for (const auto& command: canvasCommand.drawCommands) {
+                if (command.circleIndexCount > 0) {
+                    Renderer::bindDynamicGraphicsPipeline(uiCirclePipeline);
+                    Renderer::setPushConstants({uiPushConstants}, 1);
+                    Renderer::bindDescriptorSet(command.descriptorSet, 0);
+                    Renderer::executeDrawCommand(command.circleVAO, command.circleIndexCount, 0, circleOffset);
+
+                    circleOffset += command.circleVertexCount;
+                }
+                if (command.rectIndexCount > 0) {
+                    Renderer::bindDynamicGraphicsPipeline(uiRectPipeline);
+                    Renderer::setPushConstants({uiPushConstants}, 1);
+                    Renderer::bindDescriptorSet(command.descriptorSet, 0);
+                    Renderer::executeDrawCommand(command.rectVAO, command.rectIndexCount, 0, rectOffset);
+
+                    rectOffset += command.rectVertexCount;
+                }
+                if (command.textIndexCount > 0) {
+                    Renderer::bindDynamicGraphicsPipeline(uiTextPipeline);
+                    Renderer::setPushConstants({uiPushConstants}, 1);
+                    Renderer::bindDescriptorSet(command.textDescriptorSet, 0);
+                    Renderer::executeDrawCommand(command.textVAO, command.textIndexCount, 0, textOffset);
+
+                    textOffset += command.textVertexCount;
+                }
             }
-            if (drawInfo.rectIndexCount > 0) {
-                Renderer::bindGraphicsPipeline(uiRectPipeline);
-                Renderer::bindDescriptorSet(uiDescriptorSets[zIndex], 0);
-                Renderer::executeDrawCommand(uiRectVAO, drawInfo.rectIndexCount, 0, rectOffset);
 
-                rectOffset += drawInfo.rectVertices.size();
-            }
+            Renderer::endDynamicRendering();
+        }
+    }
 
-            if (drawInfo.textIndexCount > 0) {
-                Renderer::bindGraphicsPipeline(uiTextPipeline);
-                Renderer::bindDescriptorSet(uiTextDescriptorSets[zIndex], 0);
-                Renderer::executeDrawCommand(uiTextVAO, drawInfo.textIndexCount, 0, textOffset);
+    void SceneRenderer::ui2DPass() {
+        CG_GPU_DEBUG_GROUP("UiCanvasPass")
+        CG_GPU_TIME_FN(&renderingStats.ui2DTimer)
 
-                textOffset += drawInfo.textVertices.size();
-            }
+        std::sort(ui2DDrawCommandQueue.begin(), ui2DDrawCommandQueue.end(), [](const auto& a, const auto& b) {
+            return a.zIndex < b.zIndex;
+        });
 
-            zIndex++;
+        for (const auto& command: ui2DDrawCommandQueue) {
+            Renderer::bindGraphicsPipeline(ui2DPipeline);
+            Renderer::bindDescriptorSet(ui2DDescriptorSetCameraBuffer, 0);
+            Renderer::bindDescriptorSet(command.sampleCanvasDescriptorSet, 1);
+            ui2DPushConstants->setData(&command.finalTransform, sizeof(glm::mat4));
+            Renderer::setPushConstants({ui2DPushConstants}, 1);
+            Renderer::renderUnitQuad();
         }
     }
 
@@ -1798,24 +1797,6 @@ namespace CgEngine {
         ubHBAOData->setData(&hbaoData, sizeof(UBHBAOData));
     }
 
-    float SceneRenderer::findDrawInfoTextureIndex(UiDrawInfo& drawInfo, const Texture2D* texture) const {
-        float textureIndex = -1;
-        if (texture != nullptr) {
-            for (uint32_t i = 0; i < drawInfo.filledTextureSlots; i++) {
-                if (drawInfo.textureSlots[i] == texture) {
-                    textureIndex = static_cast<float>(i);
-                    break;
-                }
-            }
-            if (textureIndex < 0.0f) {
-                textureIndex = static_cast<float>(drawInfo.filledTextureSlots);
-                drawInfo.textureSlots[drawInfo.filledTextureSlots] = texture;
-                drawInfo.filledTextureSlots++;
-            }
-        }
-        return textureIndex;
-    }
-
     std::array<glm::vec4, 16> SceneRenderer::generateHBAOJitterNoise() const {
         // From: https://github.com/nvpro-samples/gl_ssao/blob/master/ssao.cpp#L325
 
@@ -1908,57 +1889,6 @@ namespace CgEngine {
                 }
             }
         #endif
-    }
-
-    void SceneRenderer::buildUiVertexBuffers() {
-        size_t circleOffset = 0;
-        size_t rectOffset = 0;
-        size_t textOffset = 0;
-        uint32_t zIndex = 0;
-
-        for (const auto& [_, drawInfo]: uiDrawInfoQueue) {
-            if (drawInfo.circleIndexCount > 0) {
-                size_t size = drawInfo.circleVertices.size() * sizeof(UiCircleVertex);
-                uiCircleVAO->getVertexBuffer(0)->setSubData(circleOffset, drawInfo.circleVertices.data(), size);
-                circleOffset += size;
-            }
-            if (drawInfo.rectIndexCount > 0) {
-                size_t size = drawInfo.rectVertices.size() * sizeof(UiRectVertex);
-                uiRectVAO->getVertexBuffer(0)->setSubData(rectOffset, drawInfo.rectVertices.data(), size);
-                rectOffset += size;
-            }
-            if (drawInfo.textIndexCount > 0) {
-                size_t size = drawInfo.textVertices.size() * sizeof(UiTextVertex);
-                uiTextVAO->getVertexBuffer(0)->setSubData(textOffset, drawInfo.textVertices.data(), size);
-                textOffset += size;
-            }
-
-            DescriptorSetSpecification uiDescriptorSetSpec{};
-            uiDescriptorSetSpec.texture2DBindings.resize(16);
-            for (uint32_t i = 0; i < drawInfo.filledTextureSlots; i++) {
-                uiDescriptorSetSpec.texture2DBindings[i].texture = drawInfo.textureSlots[i];
-                uiDescriptorSetSpec.texture2DBindings[i].bindingPoint = i;
-            }
-            for (uint32_t i = drawInfo.filledTextureSlots; i < uiDescriptorSetSpec.texture2DBindings.size(); i++) {
-                uiDescriptorSetSpec.texture2DBindings[i].texture = Renderer::getWhiteTexture();
-                uiDescriptorSetSpec.texture2DBindings[i].bindingPoint = i;
-            }
-            uiDescriptorSets[zIndex]->reconfigure(uiDescriptorSetSpec);
-
-            DescriptorSetSpecification uiTextDescriptorSetSpec{};
-            uiTextDescriptorSetSpec.texture2DBindings.resize(4);
-            for (uint32_t i = 0; i < drawInfo.filledFontAtlases; i++) {
-                uiTextDescriptorSetSpec.texture2DBindings[i].texture = drawInfo.fontAtlases[i];
-                uiTextDescriptorSetSpec.texture2DBindings[i].bindingPoint = i;
-            }
-            for (uint32_t i = drawInfo.filledFontAtlases; i < uiTextDescriptorSetSpec.texture2DBindings.size(); i++) {
-                uiTextDescriptorSetSpec.texture2DBindings[i].texture = Renderer::getWhiteTexture();
-                uiTextDescriptorSetSpec.texture2DBindings[i].bindingPoint = i;
-            }
-            uiTextDescriptorSets[zIndex]->reconfigure(uiTextDescriptorSetSpec);
-
-            zIndex++;
-        }
     }
 
     void SceneRenderer::fillDebugLinesVertexBuffer() {

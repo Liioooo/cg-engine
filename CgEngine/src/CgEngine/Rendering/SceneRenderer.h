@@ -10,6 +10,10 @@
 #include "CameraFrustum.h"
 #include "ComputePipeline.h"
 #include "GraphicsPipeline.h"
+#include "DynamicGraphicsPipeline.h"
+#include "Ui/UiCanvas.h"
+#include "Resources/Mesh.h"
+#include "CustomPipeline.h"
 
 namespace CgEngine {
 
@@ -28,7 +32,8 @@ namespace CgEngine {
         float skyboxTimer = 0.0f;
         float bloomTimer = 0.0f;
         float screenTimer = 0.0f;
-        float uiTimer = 0.0f;
+        float uiCanvasTimer = 0.0f;
+        float ui2DTimer = 0.0f;
     };
 
     class SceneRenderer {
@@ -43,24 +48,22 @@ namespace CgEngine {
         void submitMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, bool enableCulling, const glm::mat4& transform, const std::vector<float>& lodDistances);
         void submitAnimatedMesh(MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms, VertexArrayObject* skinnedVAO, const DescriptorSet* descriptorSet);
         void submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, bool enableCulling, const AABoundingBox* boundingBox, const glm::mat4& transform, CustomGraphicsPipeline* pipeline, uint32_t instanceCount, const std::vector<float>& lodDistances, const DescriptorSet* descriptorSet);
-        void submitUiElements(const std::unordered_map<std::string, UiElement*>& uiElements);
         void submitPhysicsColliderMesh(MeshVertices* mesh, const glm::mat4& transform);
         void submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, Mesh* mesh, const std::vector<uint32_t>& meshNodes, const glm::mat4& transform);
         void submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, const AABoundingBox& boundingBox, const glm::mat4& transform);
         void submitDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color);
+        void submitUiCanvas2D(UiCanvas* uiCanvas, glm::mat4 finalTransform, uint32_t zIndex);
 
         const CameraFrustum& getCamaraFrustum() const;
         const RenderPass* getGBufferRenderPass() const;
         const DescriptorSetLayout* getCustomPipelineDescriptorSetLayout() const;
+        const IndexBuffer* getUiIndexBuffer() const;
+        const DescriptorSetLayout* getUiCanvasSampleDescriptorSetLayout() const;
 
         const RenderingStats& getRenderingStats();
 
     private:
         static const uint32_t MAX_OBJECTS = 20000;
-        static const uint32_t MAX_UI_QUADS = 5000;
-        static const uint32_t MAX_UI_INDICES = MAX_UI_QUADS * 6;
-        static const uint32_t MAX_UI_VERTICES = MAX_UI_QUADS * 4 * 2;
-        static const uint32_t MAX_UI_Z_LAYERS = 10;
         static const uint32_t MAX_DEBUG_LINES = 1000;
 
         static const uint32_t MAX_BONES = 200;
@@ -196,12 +199,22 @@ namespace CgEngine {
         GraphicsPipeline* screenPipeline;
         DescriptorSet* screenDescriptorSet;
 
-        GraphicsPipeline* uiCirclePipeline;
-        GraphicsPipeline* uiRectPipeline;
-        std::array<DescriptorSet*, MAX_UI_Z_LAYERS> uiDescriptorSets;
+        struct UiPushConstants {
+            glm::mat4 projection;
+        };
+        DynamicGraphicsPipeline* uiCirclePipeline;
+        DynamicGraphicsPipeline* uiRectPipeline;
+        DynamicGraphicsPipeline* uiTextPipeline;
+        PushConstants* uiPushConstants;
 
-        GraphicsPipeline* uiTextPipeline;
-        std::array<DescriptorSet*, MAX_UI_Z_LAYERS> uiTextDescriptorSets;
+        struct Ui2DPushConstants {
+            glm::mat4 transform;
+        };
+        GraphicsPipeline* ui2DPipeline;
+        DescriptorSetLayout* ui2DDescriptorSetLayoutCameraBuffer;
+        DescriptorSet* ui2DDescriptorSetCameraBuffer;
+        DescriptorSetLayout* uiCanvasSampleDescriptorSetLayout;
+        PushConstants* ui2DPushConstants;
 
         GraphicsPipeline* debugLinesPipeline;
         DescriptorSet* debugLinesDescriptorSet;
@@ -235,7 +248,8 @@ namespace CgEngine {
         void debugLinesPass();
         void bloomPass();
         void screenPass();
-        void uiPass();
+        void uiCanvasPass();
+        void ui2DPass();
 
         void setupShadowMapData(glm::vec3 dirLightDirection, const glm::mat4& cameraViewProjection, const Camera& camera);
         void setupHBAOData(const glm::mat4& cameraProjection, const Camera& camera);
@@ -385,47 +399,24 @@ namespace CgEngine {
             bool dirLightCastShadows;
         } currentSceneEnvironment;
 
-        struct UiCircleVertex {
-            glm::vec4 posUV;
-            glm::vec4 lineColor;
-            glm::vec4 fillColor;
-            float width;
-            float lineWidth;
-            float textureIndex;
-        };
-
-        struct UiRectVertex {
-            glm::vec4 posUV;
-            glm::vec4 lineColor;
-            glm::vec4 fillColor;
-            glm::vec2 size;
-            float lineWidth;
-            float textureIndex;
-        };
-
-        struct UiTextVertex {
-            glm::vec4 posUV;
-            glm::vec4 color;
-            float fontAtlasIndex;
-        };
-
-        struct UiDrawInfo {
-            uint32_t circleIndexCount = 0;
-            std::vector<UiCircleVertex> circleVertices;
-            uint32_t rectIndexCount = 0;
-            std::vector<UiRectVertex> rectVertices;
-            std::array<const Texture2D*, 16> textureSlots{};
-            uint32_t filledTextureSlots = 0;
-
-            std::vector<UiTextVertex> textVertices;
-            uint32_t textIndexCount = 0;
-            std::array<const Texture2D*, 4> fontAtlases;
-            uint32_t filledFontAtlases = 0;
-        };
-
-        std::map<uint32_t, UiDrawInfo> uiDrawInfoQueue;
-
         glm::mat4 uiProjectionMatrix;
+
+        struct UiCanvasDrawCommand {
+            const Attachment* attachment;
+            glm::mat4 projectionMatrix;
+            glm::ivec2 pixelSize;
+            std::vector<UiDrawCommand> drawCommands;
+        };
+
+        std::vector<UiCanvasDrawCommand> uiCanvasDrawCommandQueue;
+
+        struct Ui2DDrawCommand {
+            const DescriptorSet* sampleCanvasDescriptorSet;
+            glm::mat4 finalTransform;
+            uint32_t zIndex;
+        };
+
+        std::vector<Ui2DDrawCommand> ui2DDrawCommandQueue;
 
         struct CustomShaderDrawCommand {
             uint32_t instanceCount;
@@ -440,17 +431,12 @@ namespace CgEngine {
         std::unordered_map<CustomGraphicsPipeline*, std::vector<CustomShaderDrawCommand>> customShaderDrawCommandQueue;
 
         IndexBuffer* uiIndexBuffer;
-        VertexArrayObject* uiCircleVAO;
-        VertexArrayObject* uiRectVAO;
-        VertexArrayObject* uiTextVAO;
 
         VertexArrayObject* debugLinesVAO;
 
-        float findDrawInfoTextureIndex(UiDrawInfo& drawInfo, const Texture2D* texture) const;
         std::array<glm::vec4, 16> generateHBAOJitterNoise() const;
         size_t findCorrectLodIndex(const std::vector<float>& lodDistances, const glm::mat4& transform, size_t lodCount) const;
         void buildTransformBuffers();
-        void buildUiVertexBuffers();
         void fillDebugLinesVertexBuffer();
 
         RenderingStats renderingStats;

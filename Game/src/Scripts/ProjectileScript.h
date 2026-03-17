@@ -13,7 +13,7 @@ namespace Game {
     protected:
         void update(CgEngine::TimeStep ts) override;
 
-        void onCollisionEnter(CgEngine::Entity other) override;
+        void onCollisionEnter(CgEngine::EntityHandle other) override;
 
     private:
         float lifetime = 5.0f;

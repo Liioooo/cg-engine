@@ -2,6 +2,9 @@
 #include "Scene/Scene.h"
 #include "PhysicsScene.h"
 #include "Asserts.h"
+#include "Components/TransformComponent.h"
+#include "Components/BoxColliderComponent.h"
+#include "Components/CapsuleColliderComponent.h"
 
 namespace CgEngine {
     PhysicsController::PhysicsController(physx::PxController* physXController, bool hasGravity, glm::vec3 gravity, float stepDownOffset, Entity entity, Scene& scene)
@@ -66,17 +69,17 @@ namespace CgEngine {
     }
 
     void PhysicsController::updateTransforms() {
-        auto& transformComp = getScene().getComponent<TransformComponent>(entity);
+        auto transformComp = getScene().getComponent<TransformComponent>(entity);
         auto pos = PhysXUtils::phsXExtendedToGlmVec(physXController->getPosition());
 
         if (getScene().hasComponent<BoxColliderComponent>(entity)) {
-            pos -= getScene().getComponent<BoxColliderComponent>(entity).getOffset();
+            pos -= getScene().getComponent<BoxColliderComponent>(entity)->getOffset();
         }
         if (getScene().hasComponent<CapsuleColliderComponent>(entity)) {
-            pos -= getScene().getComponent<CapsuleColliderComponent>(entity).getOffset();
+            pos -= getScene().getComponent<CapsuleColliderComponent>(entity)->getOffset();
         }
 
-        transformComp._physicsUpdate(pos, transformComp.getGlobalRotationQuat());
+        transformComp->_physicsUpdate(pos, transformComp->getGlobalRotationQuat());
     }
 
     void PhysicsController::move(glm::vec3 dir) {
@@ -92,6 +95,10 @@ namespace CgEngine {
         CG_ASSERT(hasGravity, "Cannot jump is gravity is disabled")
 
         nextJumpStrength = strength;
+    }
+
+    void PhysicsController::setHasGravity(bool hasGravity) {
+        this->hasGravity = hasGravity;
     }
 
     bool PhysicsController::isGrounded() const {

@@ -1,8 +1,8 @@
 #include "PBRMaterial.h"
 #include "Application.h"
 #include "FileSystem.h"
-#include "Utils/StringUtils.h"
-#include "Utils/LoaderUtils.h"
+#include "CgEngineSharedUtils/StringUtils.h"
+#include "CgEngineSharedUtils/LoaderUtils.h"
 #include "GraphicsObjectsFactory.h"
 
 namespace CgEngine {
@@ -37,21 +37,21 @@ namespace CgEngine {
         PBRMaterialSpecification materialSpecification;
 
         if (!albedo.empty()) {
-            materialSpecification.albedoColor = Utils::LoaderUtils::hexStringToColor(albedo);
+            materialSpecification.albedoColor = LoaderUtils::hexStringToColor(albedo);
         }
         if (!metalness.empty()) {
-            materialSpecification.metalness = Utils::String::toFloat(metalness).value_or(0.0f);
+            materialSpecification.metalness = StringUtils::toFloat(metalness).value_or(0.0f);
         }
         if (!roughness.empty()) {
-            materialSpecification.roughness = Utils::String::toFloat(roughness).value_or(1.0f);
+            materialSpecification.roughness = StringUtils::toFloat(roughness).value_or(1.0f);
         }
         if (!emissionTexture.empty()) {
             materialSpecification.emissionTexture = resourceManager.getResource<Texture2D>(FileSystem::getAsGamePath(emissionTexture).string());
-            float emissionIntensity = emission.empty() ? 1.0f : Utils::String::toFloat(emission).value_or(1.0f);
+            float emissionIntensity = emission.empty() ? 1.0f : StringUtils::toFloat(emission).value_or(1.0f);
             materialSpecification.emission = {emissionIntensity, emissionIntensity, emissionIntensity};
         } else if (!emissionColor.empty()) {
-            float emissionIntensity = emission.empty() ? 1.0f : Utils::String::toFloat(emission).value_or(1.0f);
-            materialSpecification.emission = Utils::LoaderUtils::hexStringToColor(emissionColor) * emissionIntensity;
+            float emissionIntensity = emission.empty() ? 1.0f : StringUtils::toFloat(emission).value_or(1.0f);
+            materialSpecification.emission = LoaderUtils::hexStringToColor(emissionColor) * emissionIntensity;
         }
         if (!albedoTexture.empty()) {
             std::string albedoTexturePath = FileSystem::getAsGamePath(albedoTexture).string();

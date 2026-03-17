@@ -29,6 +29,7 @@ namespace CgEngine {
         using Params = RigidBodyComponentParams;
 
         void onAttach(Scene& scene, RigidBodyComponentParams& params);
+        void onEnable(Scene& scene) override;
         void onDetach(Scene& scene) override;
         void onRenderImGui() override;
 
@@ -53,15 +54,15 @@ namespace CgEngine {
         void setMaxAngularVelocity(float velocity);
 
     private:
-        PhysicsActor* actor;
+        PhysicsActor* actor = nullptr;
 
-        uint32_t addBoxCollider(PhysicsMaterial& material, glm::vec3 halfSize, glm::vec3 offset, bool isTrigger);
-        uint32_t addSphereCollider(PhysicsMaterial& material, float radius, glm::vec3 offset, bool isTrigger);
-        uint32_t addCapsuleCollider(PhysicsMaterial& material, float radius, float halfHeight, glm::vec3 offset, bool isTrigger);
-        uint32_t addTriangleCollider(PhysicsMaterial& material, PhysicsTriangleMesh& physicsMesh, bool isTrigger);
-        uint32_t addConvexCollider(PhysicsMaterial& material, PhysicsConvexMesh& physicsMesh, bool isTrigger);
+        void addBoxCollider(PhysicsMaterial& material, glm::vec3 halfSize, glm::vec3 offset, bool isTrigger);
+        void addSphereCollider(PhysicsMaterial& material, float radius, glm::vec3 offset, bool isTrigger);
+        void addCapsuleCollider(PhysicsMaterial& material, float radius, float halfHeight, glm::vec3 offset, bool isTrigger);
+        void addTriangleCollider(PhysicsMaterial& material, PhysicsTriangleMesh& physicsMesh, bool isTrigger);
+        void addConvexCollider(PhysicsMaterial& material, PhysicsConvexMesh& physicsMesh, bool isTrigger);
 
-        void removeCollider(uint32_t colliderUuid);
+        void removeCollider(PhysicsColliderType colliderType);
     };
 
 }

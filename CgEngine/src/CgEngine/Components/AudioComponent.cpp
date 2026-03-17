@@ -2,6 +2,7 @@
 #include "Scene/Scene.h"
 #include "Application.h"
 #include "imgui.h"
+#include "Components/TransformComponent.h"
 
 namespace CgEngine {
     void AudioComponentParams::verifyParams() const {
@@ -18,9 +19,11 @@ namespace CgEngine {
 
         playOnAttach = params.playOnAttach;
         autoDestroy = params.autoDestroy;
+    }
 
-        auto& transform = scene.getComponent<TransformComponent>(entity);
-        AudioSystem::get().registerAudioComponent(uuid, audioFile, volume, pitch, looping, {transform.getGlobalRotationQuat(), transform.getGlobalPosition()}, playOnAttach, autoDestroy);
+    void AudioComponent::onEnable(Scene& scene) {
+        auto transform = scene.getComponent<TransformComponent>(entity);
+        AudioSystem::get().registerAudioComponent(uuid, audioFile, volume, pitch, looping, {transform->getGlobalRotationQuat(), transform->getGlobalPosition()}, playOnAttach, autoDestroy);
     }
 
     void AudioComponent::onDetach(Scene& scene) {

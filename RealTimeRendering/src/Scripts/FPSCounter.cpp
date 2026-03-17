@@ -19,7 +19,7 @@ namespace RTR {
     }
 
     void FPSCounter::createUI() {
-        auto& gameCanvas = getComponent<CgEngine::UiCanvasComponent>();
+        auto& gameCanvas = getComponent<CgEngine::UiCanvasComponent2D>();
         fps = gameCanvas.addUiText("fps");
 
         fps->setFont("SpaceMono-Bold.ttf");

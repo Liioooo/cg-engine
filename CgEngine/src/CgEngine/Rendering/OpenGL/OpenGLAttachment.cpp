@@ -17,14 +17,14 @@ namespace CgEngine {
             } else {
                 glTexStorage2D(target, 1, GL_DEPTH_COMPONENT32F, spec.width, spec.height);
             }
-            depthFormat = DepthAttachmentFormat::Depth32Float;
+            depthFormat = DepthStencilAttachmentFormat::Depth32Float;
         } else if (spec.type == AttachmentType::DepthStencil) {
             if (spec.layerCount > 1) {
                 glTexStorage3D(target, 1, GL_DEPTH32F_STENCIL8, spec.width, spec.height, spec.layerCount);
             } else {
                 glTexStorage2D(target, 1, GL_DEPTH32F_STENCIL8, spec.width, spec.height);
             }
-            depthFormat = DepthAttachmentFormat::Depth32FloatStencil8;
+            depthFormat = DepthStencilAttachmentFormat::Depth32FloatStencil8;
         } else {
             if (spec.layerCount > 1) {
                 glTexStorage3D(target, 1, OpenGLHelpers::attachmentTypeToOpenGLInternalFormat(spec.type), spec.width, spec.height, spec.layerCount);
@@ -126,7 +126,7 @@ namespace CgEngine {
         return type;
     }
 
-    DepthAttachmentFormat OpenGLAttachment::getDepthAttachmentFormat() const {
+    DepthStencilAttachmentFormat OpenGLAttachment::getDepthStencilAttachmentFormat() const {
         return depthFormat;
     }
 

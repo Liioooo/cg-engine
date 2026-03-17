@@ -5,7 +5,7 @@
 
 namespace CgEngine {
 
-    OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& spec) : width(spec.width), height(spec.height), colorAttachments(spec.colorAttachments), depthAttachment(spec.depthAttachment) {
+    OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& spec) : width(spec.width), height(spec.height), colorAttachments(spec.colorAttachments), depthStencilAttachment(spec.depthStencilAttachment) {
         init();
     }
 
@@ -69,9 +69,17 @@ namespace CgEngine {
         return framebufferHandle;
     }
 
+    bool OpenGLFramebuffer::hasStencilAttachment() const  {
+        CG_ASSERT(framebufferHandle != ~0, "Framebuffer is not initialized!")
+        if (depthStencilAttachment.attachment) {
+            auto* depthAttachmentGL = static_cast<const OpenGLAttachment*>(depthStencilAttachment.attachment);
+            return depthAttachmentGL->getType() == AttachmentType::DepthStencil;
+        }
+    }
+
     void OpenGLFramebuffer::init() {
         CG_ASSERT(width > 0 && height > 0, "Framebuffer width and height must be greater than 0!")
-        CG_ASSERT(colorAttachments.size() > 0 || depthAttachment.attachment != nullptr, "At least one attachment (color or depth) must be provided!")
+        CG_ASSERT(colorAttachments.size() > 0 || depthStencilAttachment.attachment != nullptr, "At least one attachment (color or depth) must be provided!")
 
         glGenFramebuffers(1, &framebufferHandle);
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferHandle);
@@ -99,21 +107,21 @@ namespace CgEngine {
         }
 
 
-        if (depthAttachment.attachment) {
-            auto* depthAttachmentGL = static_cast<const OpenGLAttachment*>(depthAttachment.attachment);
-            CG_ASSERT(depthAttachmentGL->getType() == AttachmentType::Depth || depthAttachmentGL->getType() == AttachmentType::DepthStencil, "Depth attachment must be of type Depth or DepthStencil")
+        if (depthStencilAttachment.attachment) {
+            auto* depthAttachmentGL = static_cast<const OpenGLAttachment*>(depthStencilAttachment.attachment);
+            CG_ASSERT(depthAttachmentGL->getType() == AttachmentType::Depth || depthAttachmentGL->getType() == AttachmentType::DepthStencil, "DepthStencil attachment must be of type Depth or DepthStencil")
 
             if (depthAttachmentGL->getType() == AttachmentType::DepthStencil) {
-                if (depthAttachment.allLayers) {
+                if (depthStencilAttachment.allLayers) {
                     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depthAttachmentGL->getOpenGLHandle(), 0);
                 } else {
-                    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depthAttachmentGL->getOpenGLHandle(), 0, depthAttachment.layer);
+                    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depthAttachmentGL->getOpenGLHandle(), 0, depthStencilAttachment.layer);
                 }
             } else {
-                if (depthAttachment.allLayers) {
+                if (depthStencilAttachment.allLayers) {
                     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthAttachmentGL->getOpenGLHandle(), 0);
                 } else {
-                    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthAttachmentGL->getOpenGLHandle(), 0, depthAttachment.layer);
+                    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthAttachmentGL->getOpenGLHandle(), 0, depthStencilAttachment.layer);
                 }
             }
         }

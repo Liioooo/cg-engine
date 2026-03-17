@@ -2,10 +2,11 @@
 #include "PhysicsActor.h"
 #include "Scene/Scene.h"
 #include "PhysicsSystem.h"
+#include "Components/TransformComponent.h"
 
 namespace CgEngine {
     PhysicsShapeCapsule::PhysicsShapeCapsule(PhysicsActor& actor, PhysicsMaterial& physicsMaterial, float radius, float halfHeight, glm::vec3 offset, bool isTrigger) : PhysicsShape() {
-        auto scale = actor.getScene().getComponent<TransformComponent>(actor.getEntity()).getGlobalScale();
+        auto scale = actor.getScene().getComponent<TransformComponent>(actor.getEntity())->getGlobalScale();
         float radiusScale = glm::max(scale.x, scale.z);
 
         physx::PxCapsuleGeometry geometry = physx::PxCapsuleGeometry(radius * radiusScale, halfHeight * scale.y);

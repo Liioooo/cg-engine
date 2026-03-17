@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Enums.h"
+#include "CgEngineSharedUtils/Enums.h"
 #include "DescriptorSetLayout.h"
 #include "VertexBuffer.h"
 
@@ -8,11 +8,10 @@ namespace CgEngine {
 
     struct RenderPassSpecification {
         bool clearColorAttachments = true;
-        bool clearDepthAttachment = true;
-        bool clearStencilBuffer = false;
+        bool clearDepthStencilAttachment = true;
         std::vector<AttachmentType> colorAttachments;
         bool hasDepthStencilAttachment = false;
-        DepthAttachmentFormat depthAttachmentFormat;
+        DepthStencilAttachmentFormat depthStencilAttachmentFormat;
         glm::vec4 clearColor;
     };
 

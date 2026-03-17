@@ -26,6 +26,7 @@ namespace CgEngine {
         using Params = AudioComponentParams;
 
         void onAttach(Scene& scene, AudioComponentParams& params);
+        void onEnable(Scene& scene) override;
         void onDetach(Scene& scene) override;
         void onRenderImGui() override;
 

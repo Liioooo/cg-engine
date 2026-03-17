@@ -2,7 +2,7 @@
 
 #include "Rendering/RendererBackendBase.h"
 #include "OpenGLVertexArrayObject.h"
-#include "Rendering/Enums.h"
+#include "CgEngineSharedUtils/Enums.h"
 #include "OpenGLTexture2D.h"
 #include "OpenGLRenderPass.h"
 #include "OpenGLTextureCube.h"
@@ -26,8 +26,12 @@ namespace CgEngine {
         void beginSwapChainRenderPass() override;
         void endRenderPass() override;
 
+        void beginDynamicRendering(const DynamicRenderingInfo& renderingInfo) override;
+        void endDynamicRendering() override;
+
         void bindGraphicsPipeline(const GraphicsPipeline* graphicsPipeline) override;
         void bindComputePipeline(const ComputePipeline* computePipeline) override;
+        void bindDynamicGraphicsPipeline(const DynamicGraphicsPipeline* graphicsPipeline) override;
         void dispatchCompute(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
         void clearPass(const RenderPass* renderPass, const Framebuffer* framebuffer) override;
@@ -61,6 +65,7 @@ namespace CgEngine {
 
     private:
         const OpenGLRenderPass* currentRenderPass;
+        bool currentlyDynamicRendering = false;
         uint32_t currentPipelineHandle = ~0;
         unsigned int drawMode;
         bool isWireframe;
@@ -74,6 +79,8 @@ namespace CgEngine {
         BlendingFunction srcBlendingFunction;
         BlendingFunction destBlendingFunction;
         int tessellationPatchSize;
+
+        unsigned int dynamicRenderingFramebufferHandle = ~0;
 
         OpenGLRenderPass swapChainRenderPass;
         OpenGLFramebuffer swapChainFramebuffer;

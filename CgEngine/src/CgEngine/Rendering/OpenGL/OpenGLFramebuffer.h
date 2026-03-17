@@ -25,6 +25,7 @@ namespace CgEngine {
         uint32_t getHeight() const override;
 
         uint32_t getOpenGLHandle() const;
+        bool hasStencilAttachment() const;
 
 
     private:
@@ -33,7 +34,7 @@ namespace CgEngine {
         uint32_t height = 0;
 
         std::vector<FramebufferAttachment> colorAttachments;
-        FramebufferAttachment depthAttachment;
+        FramebufferAttachment depthStencilAttachment;
 
         void init();
     };

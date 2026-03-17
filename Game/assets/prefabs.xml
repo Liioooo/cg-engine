@@ -21,4 +21,9 @@
             <ScriptComponent script-name="projectileScript" />
         </Components>
     </Prefab>
+    <Prefab name="startMenuControlsOverlay">
+        <Components>
+            <UiCanvasComponent2D canvas="startMenuControls" width="100vw" height="100vh" pos-x="50vw" pos-y="50vh" x-align="center" y-align="center"/>
+        </Components>
+    </Prefab>
 </Prefabs>

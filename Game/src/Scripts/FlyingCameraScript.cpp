@@ -1,10 +1,11 @@
+#include "CgEngine/Components/TransformComponent.h"
 #include "FlyingCameraScript.h"
 #include "CgEngine/Events/Input.h"
 #include "CgEngine/Events/KeyCodes.h"
 
 namespace Game {
     void FlyingCameraScript::update(CgEngine::TimeStep ts) {
-        if (!getComponent<CgEngine::CameraComponent>().isPrimary()) {
+        if (!getOwingEntity().getComponent<CgEngine::CameraComponent>()->isPrimary()) {
             return;
         }
 
@@ -23,8 +24,8 @@ namespace Game {
 
         prevMousePos = mousePos;
 
-        auto& comp = getComponent<CgEngine::TransformComponent>();
-        glm::vec3 pos = comp.getLocalPosition();
+        auto comp = getOwingEntity().getComponent<CgEngine::TransformComponent>();
+        glm::vec3 pos = comp->getLocalPosition();
 
         if (CgEngine::Input::getCursorMode() == CgEngine::CursorMode::Locked) {
             pitch = glm::clamp(pitch + mouseDeltaY, glm::radians(-80.0f), glm::radians(80.0f));
@@ -46,7 +47,7 @@ namespace Game {
             pos += glm::normalize(glm::cross(front, glm::vec3(0, 1, 0))) * 10.0f * ts.getSeconds();
         }
 
-        comp.setLocalPosition(pos);
-        comp.setYawPitchRoll(yaw, pitch, 0);
+        comp->setLocalPosition(pos);
+        comp->setYawPitchRoll(yaw, pitch, 0);
     }
 }

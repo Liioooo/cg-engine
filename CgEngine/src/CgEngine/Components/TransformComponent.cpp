@@ -2,7 +2,7 @@
 #include "Scene/Scene.h"
 #include "imgui.h"
 #include "ImGui/ImGuiWidgets.h"
-#include "Utils/LoaderUtils.h"
+#include "CgEngineSharedUtils/LoaderUtils.h"
 
 namespace CgEngine {
     void TransformComponentParams::verifyParams() const {}
@@ -12,12 +12,6 @@ namespace CgEngine {
         localRotationVec = params.rotation;
         localRotationQuat = glm::quat(params.rotation);
         localScale = params.scale;
-
-        if (scene.hasParent(entity)) {
-            _calculateChildTransformsWithParent(scene.getComponent<TransformComponent>(scene.getParent(entity)).modelMatrix, true);
-        } else {
-            _calculateTopLevelTransforms();
-        }
     }
 
     const glm::vec3& TransformComponent::getLocalPosition() const {
@@ -217,10 +211,10 @@ namespace CgEngine {
             isDirty = changed;
 
             ImGuiWidgets::copyCurrentConfig("TransformComponent", [this](auto& map) {
-                map["position"] = Utils::LoaderUtils::vec3ToStringTuple(localPosition);
-                map["rotation"] = Utils::LoaderUtils::vec3ToStringTuple(localRotationVec);
+                map["position"] = LoaderUtils::vec3ToStringTuple(localPosition);
+                map["rotation"] = LoaderUtils::vec3ToStringTuple(localRotationVec);
                 map["rotation-rads"] = "true";
-                map["scale"] = Utils::LoaderUtils::vec3ToStringTuple(localScale);
+                map["scale"] = LoaderUtils::vec3ToStringTuple(localScale);
             });
         }
     }

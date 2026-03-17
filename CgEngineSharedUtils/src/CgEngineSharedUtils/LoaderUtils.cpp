@@ -1,16 +1,18 @@
 #include <charconv>
+#include <sstream>
 #include "LoaderUtils.h"
 #include "StringUtils.h"
 
-namespace CgEngine::Utils::LoaderUtils {
+namespace CgEngine::LoaderUtils {
+
     glm::vec3 stringTupleToVec3(std::string_view s) {
         size_t p0 = 0;
         size_t p1 = s.find(' ');
-        float x = Utils::String::toFloat(s.substr(p0, p1)).value_or(0.0f);
+        float x = CgEngine::StringUtils::toFloat(s.substr(p0, p1)).value_or(0.0f);
         p0 = p1 + 1;
         p1 = s.find(' ', p0);
-        float y = Utils::String::toFloat(s.substr(p0, p1)).value_or(0.0f);
-        float z = Utils::String::toFloat(s.substr(p1 + 1)).value_or(0.0f);
+        float y = CgEngine::StringUtils::toFloat(s.substr(p0, p1)).value_or(0.0f);
+        float z = CgEngine::StringUtils::toFloat(s.substr(p1 + 1)).value_or(0.0f);
 
         return {x, y, z};
     }
@@ -18,14 +20,14 @@ namespace CgEngine::Utils::LoaderUtils {
     glm::vec4 stringTupleToVec4(std::string_view s) {
         size_t p0 = 0;
         size_t p1 = s.find(' ');
-        float x = Utils::String::toFloat(s.substr(p0, p1)).value_or(0.0f);
+        float x = CgEngine::StringUtils::toFloat(s.substr(p0, p1)).value_or(0.0f);
         p0 = p1 + 1;
         p1 = s.find(' ', p0);
-        float y = Utils::String::toFloat(s.substr(p0, p1)).value_or(0.0f);
+        float y = CgEngine::StringUtils::toFloat(s.substr(p0, p1)).value_or(0.0f);
         p1++;
         p0 = s.find(' ', p1);
-        float z = Utils::String::toFloat(s.substr(p1, p0)).value_or(0.0f);
-        float w = Utils::String::toFloat(s.substr(p0 + 1)).value_or(0.0f);
+        float z = CgEngine::StringUtils::toFloat(s.substr(p1, p0)).value_or(0.0f);
+        float w = CgEngine::StringUtils::toFloat(s.substr(p0 + 1)).value_or(0.0f);
 
         return {x, y, z, w};
     }
@@ -70,10 +72,10 @@ namespace CgEngine::Utils::LoaderUtils {
         while (true) {
             size_t end = s.find(',', start);
             if (end == std::string_view::npos) {
-                result.emplace_back(Utils::String::toInt(s.substr(start)).value_or(0)); // last segment
+                result.emplace_back(CgEngine::StringUtils::toInt(s.substr(start)).value_or(0)); // last segment
                 break;
             }
-            result.emplace_back(Utils::String::toInt(s.substr(start, end - start)).value_or(0));
+            result.emplace_back(CgEngine::StringUtils::toInt(s.substr(start, end - start)).value_or(0));
             start = end + 1;
         }
 
@@ -100,5 +102,37 @@ namespace CgEngine::Utils::LoaderUtils {
         std::stringstream stream;
         stream << vec.x << ' ' << vec.y << ' ' << vec.z << ' ' << vec.w;
         return stream.str();
+    }
+
+    std::pair<float, UIPosUnit> stringToUIPosAndUnit(std::string_view s) {
+        if (s.length() > 2 && s.compare(s.length() - 2, 2, "vw") == 0) {
+            float pos = 0.01f * CgEngine::StringUtils::toFloat(s.substr(0, s.length() - 2)).value();
+            return {pos, UIPosUnit::VWPercent};
+        } else if (s.length() > 2 && s.compare(s.length() - 2, 2, "vh") == 0) {
+            float pos = 0.01f * CgEngine::StringUtils::toFloat(s.substr(0, s.length() - 2)).value();
+            return {pos, UIPosUnit::VHPercent};
+        } else {
+            float pos = CgEngine::StringUtils::toFloat(s).value();
+            return {pos, UIPosUnit::Pixel};
+        }
+
+    }
+
+    UIXAlignment stringToUIXAlignment(std::string_view s) {
+        if (s == "left") {
+            return UIXAlignment::Left;
+        } else if (s == "right") {
+            return UIXAlignment::Right;
+        }
+        return UIXAlignment::Center;
+    }
+
+    UIYAlignment stringToUIYAlignment(std::string_view s) {
+        if (s == "top") {
+            return UIYAlignment::Top;
+        } else if (s == "bottom") {
+            return UIYAlignment::Bottom;
+        }
+        return UIYAlignment::Center;
     }
 }

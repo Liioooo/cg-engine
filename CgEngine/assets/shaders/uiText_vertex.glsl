@@ -1,10 +1,14 @@
 #version 450 core
 
-#include "CameraDataBuffer.glsl"
+#include "Macros.glsl"
 
 layout (location = 0) in vec4 a_PosUV;
 layout (location = 1) in vec4 a_Color;
 layout (location = 2) in float a_FontAtlasIndex;
+
+PUSH_CONSTANT(UIPushConstants, 10) {
+    mat4 projection;
+} pc_ui;
 
 layout(location = 10) out VS_OUT {
     vec2 TexCoord;
@@ -14,7 +18,7 @@ layout(location = 10) out VS_OUT {
 layout(location = 20) out flat float FontAtlasIndex;
 
 void main() {
-    gl_Position = u_CameraData.uiProjectionMatrix * vec4(a_PosUV.x, a_PosUV.y, 0.0f, 1.0);
+    gl_Position = pc_ui.projection * vec4(a_PosUV.x, a_PosUV.y, 0.0f, 1.0);
     vs_out.TexCoord = a_PosUV.zw;
     vs_out.Color = a_Color;
     FontAtlasIndex = a_FontAtlasIndex;

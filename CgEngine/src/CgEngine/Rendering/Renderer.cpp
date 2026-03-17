@@ -40,8 +40,20 @@ namespace CgEngine {
         backend->endRenderPass();
     }
 
+    void Renderer::beginDynamicRendering(const DynamicRenderingInfo& renderingInfo) {
+        backend->beginDynamicRendering(renderingInfo);
+    }
+
+    void Renderer::endDynamicRendering() {
+        backend->endDynamicRendering();
+    }
+
     void Renderer::bindGraphicsPipeline(const GraphicsPipeline* graphicsPipeline) {
         backend->bindGraphicsPipeline(graphicsPipeline);
+    }
+
+    void Renderer::bindDynamicGraphicsPipeline(const DynamicGraphicsPipeline* graphicsPipeline) {
+        backend->bindDynamicGraphicsPipeline(graphicsPipeline);
     }
 
     void Renderer::bindComputePipeline(const ComputePipeline* computePipeline) {

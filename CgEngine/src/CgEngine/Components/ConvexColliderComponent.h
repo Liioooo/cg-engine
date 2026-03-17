@@ -23,6 +23,7 @@ namespace CgEngine {
         using Params = ConvexColliderComponentParams;
 
         void onAttach(Scene& scene, ConvexColliderComponentParams& params);
+        void onEnable(Scene& scene) override;
         void onDetach(Scene& scene) override;
         void onRenderImGui() override;
 
@@ -36,7 +37,7 @@ namespace CgEngine {
         ResRef<PhysicsMaterial> physicsMaterial;
         std::string meshNode;
         bool isTrigger;
-        uint32_t colliderUuid;
+        bool isColliderAddedToActor = false;
     };
 
 }

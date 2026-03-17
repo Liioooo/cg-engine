@@ -13,4 +13,14 @@
         <Emission>1.0</Emission>
         <EmissionColor>#153aeb</EmissionColor>
     </Material>
+    <Material name="Test">
+        <Albedo>#153aeb</Albedo>
+        <Roughness>0.8</Roughness>
+        <Metalness>0</Metalness>
+        <Emission>1.0</Emission>
+        <EmissionColor>#153aeb</EmissionColor>
+        <EmissionTexture mipMapFiltering="Bilinear">pacMan2D.png</EmissionTexture>
+        <AlbedoTexture srgb="true">controls.png</AlbedoTexture>
+        <MetalnessTexture srgb="false">controls.png</MetalnessTexture>
+    </Material>
 </Materials>

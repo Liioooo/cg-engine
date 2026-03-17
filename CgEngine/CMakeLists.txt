@@ -99,6 +99,10 @@ target_link_libraries(${PROJECT_NAME} PUBLIC imgui)
 target_link_libraries(${PROJECT_NAME} PUBLIC dr_libs)
 ################################################################################
 
+# CG_ENGINE_SHARED_UTILS #######################################################
+target_link_libraries(${PROJECT_NAME} PUBLIC CG_ENGINE_SHARED_UTILS)
+################################################################################
+
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/src/CgEngine")
 target_include_directories(${PROJECT_NAME} INTERFACE "${CMAKE_CURRENT_LIST_DIR}/src")
 

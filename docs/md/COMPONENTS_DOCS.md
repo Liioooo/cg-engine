@@ -234,7 +234,7 @@ application->registerNativeScript<Game::CameraScript>("cameraScript");
 
 [PhysX CharacterController Docs](https://nvidia-omniverse.github.io/PhysX/physx/5.1.3/docs/CharacterControllers.html)
 
-## UiCanvasComponent
+## UiCanvasComponent2D
 
 This component doesn't have direct properties. One can specify which UI Elements it should contain by adding XML child nodes.
 

@@ -2,6 +2,7 @@
 #include "Scene/Scene.h"
 #include "Application.h"
 #include "imgui.h"
+#include "Components/RigidBodyComponent.h"
 
 namespace CgEngine {
     void TriangleColliderComponentParams::verifyParams() const {
@@ -17,15 +18,18 @@ namespace CgEngine {
 
         physicsMaterial = resourceManager.getResource<PhysicsMaterial>(params.material);
         mesh = resourceManager.getResource<MeshVertices>(params.assetFile);
+    }
 
-        if (scene.hasComponent<RigidBodyComponent>(entity)) {
-            colliderUuid = scene.getComponent<RigidBodyComponent>(entity).addTriangleCollider(*physicsMaterial, getPhysicsMesh(), isTrigger);
+    void TriangleColliderComponent::onEnable(Scene& scene) {
+        if (scene.hasComponent<RigidBodyComponent>(entity)&& !isColliderAddedToActor) {
+            scene.getComponent<RigidBodyComponent>(entity)->addTriangleCollider(*physicsMaterial, getPhysicsMesh(), isTrigger);
+            isColliderAddedToActor = true;
         }
     }
 
     void TriangleColliderComponent::onDetach(Scene& scene) {
         if (scene.hasComponent<RigidBodyComponent>(entity)) {
-            scene.getComponent<RigidBodyComponent>(entity).removeCollider(colliderUuid);
+            scene.getComponent<RigidBodyComponent>(entity)->removeCollider(PhysicsColliderType::TriangleMesh);
         }
     }
 

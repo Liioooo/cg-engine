@@ -20,6 +20,7 @@ namespace CgEngine {
         using Params = CharacterControllerComponentParams;
 
         void onAttach(Scene& scene, CharacterControllerComponentParams& params);
+        void onEnable(Scene& scene) override;
         void onDetach(Scene& scene) override;
         void onRenderImGui() override;
 
@@ -27,9 +28,11 @@ namespace CgEngine {
         void setPosition(glm::vec3 pos);
         void jump(float strength);
         bool isGrounded();
+        void setGravityEnabled(bool enabled);
 
     private:
-        PhysicsController* physicsController;
+        CharacterControllerComponentParams componentParams;
+        PhysicsController* physicsController = nullptr;
 
     };
 

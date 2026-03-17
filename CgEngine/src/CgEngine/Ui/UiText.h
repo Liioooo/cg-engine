@@ -20,31 +20,26 @@ namespace CgEngine {
         const glm::vec4& getColor() const;
         const Texture2D* getFontAtlas() const;
 
-        uint32_t getNumIndices() const;
-
         const std::vector<glm::vec4>& getVertices() const override;
+        uint32_t getNumIndices() const override;
 
     protected:
-        void updateElement(bool absolutePosDirty, bool viewportDirty, uint32_t viewportWidth, uint32_t viewportHeight) override;
+        void updateElement(uint32_t canvasWidth, uint32_t canvasHeight) override;
 
     private:
-        glm::vec4 color;
+        glm::vec4 color{};
         std::string text;
 
         std::pair<float, UIPosUnit> size;
-        float scaledSize;
 
         ResRef<Font> font;
         bool useKerning = true;
 
-        bool textDirty = true;
-
-        std::vector<glm::vec4> rawVertices;
         std::vector<glm::vec4> vertices;
 
-        glm::vec2 bounding;
-
         uint32_t numIndices = 0;
+
+        bool containsPoint(glm::vec2 point) const override;
     };
 
 }

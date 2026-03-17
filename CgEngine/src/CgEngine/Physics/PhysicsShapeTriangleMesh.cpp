@@ -2,10 +2,11 @@
 #include "PhysicsActor.h"
 #include "Scene/Scene.h"
 #include "PhysicsSystem.h"
+#include "Components/TransformComponent.h"
 
 namespace CgEngine {
     PhysicsShapeTriangleMesh::PhysicsShapeTriangleMesh(PhysicsActor& actor, PhysicsMaterial& physicsMaterial, PhysicsTriangleMesh& physicsMesh, bool isTrigger) : PhysicsShape() {
-        auto scale = actor.getScene().getComponent<TransformComponent>(actor.getEntity()).getGlobalScale();
+        auto scale = actor.getScene().getComponent<TransformComponent>(actor.getEntity())->getGlobalScale();
 
         physx::PxTriangleMeshGeometry geometry = physx::PxTriangleMeshGeometry(physicsMesh.getPhysxMesh(), physx::PxMeshScale(PhysXUtils::glmToPhysXVec(scale)));
         physxShape = physx::PxRigidActorExt::createExclusiveShape(actor.getPhysxActor(), geometry, *physicsMaterial.getPhysxMaterial());

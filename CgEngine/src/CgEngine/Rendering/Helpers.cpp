@@ -20,11 +20,11 @@ namespace CgEngine {
             return static_cast<uint32_t>(std::floor(std::log2(glm::min(width, height))) + 1);
         }
 
-        std::vector<char> loadShaderBinaryWithType(const std::string& name, const std::string& type, ShaderEnv env) {
+        std::vector<uint8_t> loadShaderBinaryWithType(const std::string& name, const std::string& type, ShaderEnv env) {
             return Helpers::loadShaderBinary(name + "_" + type + ".spv", env);
         }
 
-        std::vector<char> loadShaderBinary(const std::string& name, ShaderEnv env) {
+        std::vector<uint8_t> loadShaderBinary(const std::string& name, ShaderEnv env) {
             const std::filesystem::path path = env == ShaderEnv::Engine ? FileSystem::getAsEnginePath(std::filesystem::path("compiled_shaders/opengl") / name) : FileSystem::getAsGamePath(std::filesystem::path("compiled_shaders/opengl") / name);
 
             if (!FileSystem::checkFileExists(path)) {

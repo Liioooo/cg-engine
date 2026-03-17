@@ -2,7 +2,9 @@
 #include "Application.h"
 #include "FileSystem.h"
 #include "SceneLoader.h"
-#include "Utils/LoaderUtils.h"
+#include "CgEngineSharedUtils/LoaderUtils.h"
+#include "EntityHandle.h"
+#include "Components/TransformComponent.h"
 
 namespace CgEngine {
     Entity PrefabManager::instantiatePrefab(Scene* scene, const std::string& prefabName, Entity parent, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, const std::string& tag, const std::string& id) {
@@ -23,9 +25,9 @@ namespace CgEngine {
     }
 
     Entity PrefabManager::createPrefabEntity(Scene* scene, Entity parent, const pugi::xml_node& prefabDefinitionNode, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, const std::string& tag, const std::string& id) {
-        Entity entity = id.empty() ? scene->createEntity(parent) : scene->createEntity(parent, id);
+        EntityHandle entity = id.empty() ? scene->createEntity(parent) : scene->createEntity(parent, id);
         if (!tag.empty()) {
-            scene->setEntityTag(entity, tag);
+            entity.setTag(tag);
         }
 
         const auto& componentsNode = prefabDefinitionNode.child("Components");
@@ -56,9 +58,9 @@ namespace CgEngine {
         glm::vec3 scale = {1.0f, 1.0f, 1.0f};
         std::string tag, id;
 
-        if (!prefabNode.attribute("position").empty()) position = Utils::LoaderUtils::stringTupleToVec3(prefabNode.attribute("position").as_string());
-        if (!prefabNode.attribute("rotation").empty()) rotation = glm::radians(Utils::LoaderUtils::stringTupleToVec3(prefabNode.attribute("rotation").as_string()));
-        if (!prefabNode.attribute("scale").empty()) scale = Utils::LoaderUtils::stringTupleToVec3(prefabNode.attribute("scale").as_string());
+        if (!prefabNode.attribute("position").empty()) position = LoaderUtils::stringTupleToVec3(prefabNode.attribute("position").as_string());
+        if (!prefabNode.attribute("rotation").empty()) rotation = glm::radians(LoaderUtils::stringTupleToVec3(prefabNode.attribute("rotation").as_string()));
+        if (!prefabNode.attribute("scale").empty()) scale = LoaderUtils::stringTupleToVec3(prefabNode.attribute("scale").as_string());
         if (!prefabNode.attribute("tag").empty()) tag = prefabNode.attribute("tag").as_string();
         if (!prefabNode.attribute("id").empty()) id = prefabNode.attribute("id").as_string();
 

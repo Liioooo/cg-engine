@@ -6,8 +6,8 @@
 #include "ImGui/ImGuiWidgets.h"
 #include "ImGui/ImGuiSceneView.h"
 #include "OpenGLTimer.h"
-#include "Utils/LoaderUtils.h"
-#include "Utils/StringUtils.h"
+#include "CgEngineSharedUtils/LoaderUtils.h"
+#include "CgEngineSharedUtils/StringUtils.h"
 #include "Rendering/GraphicsObjectsFactory.h"
 
 namespace CgEngine {
@@ -42,9 +42,9 @@ namespace CgEngine {
         applicationOptions.enableHBAO = iniReader.GetBoolean("application", "enable_hbao", true);
         applicationOptions.graphicsApi = iniReader.GetBoolean("application", "use_vulkan", true) ? GraphicsAPI::Vulkan : GraphicsAPI::OpenGL;
 
-        std::vector<std::string> defaultLodDistances = Utils::LoaderUtils::getListFromString(iniReader.Get("application", "lod_distances", "10, 20, 100, 200, 400"));
+        std::vector<std::string> defaultLodDistances = LoaderUtils::getListFromString(iniReader.Get("application", "lod_distances", "10, 20, 100, 200, 400"));
         for (const auto& lodDistance: defaultLodDistances) {
-            applicationOptions.defaultLodDistances.emplace_back(Utils::String::toFloat(lodDistance).value_or(0.0f));
+            applicationOptions.defaultLodDistances.emplace_back(StringUtils::toFloat(lodDistance).value_or(0.0f));
         }
 
         GraphicsObjectsFactory::setGraphicsAPI(applicationOptions.graphicsApi);

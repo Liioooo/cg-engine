@@ -4,22 +4,11 @@
 
 namespace CgEngine {
 
-    class MouseMovedEvent : public Event {
+    class MouseMovedEvent : public Event, public IEventHasMousePosition {
     public:
-        MouseMovedEvent(const float x, const float y) : x(x), y(y) {}
-
-        inline float getXPos() const {
-            return x;
-        }
-        inline float getYPos() const {
-            return y;
-        }
+        MouseMovedEvent(const float x, const float y) : IEventHasMousePosition(x, y) {}
 
         EVENT_TYPE_FN(MouseMoved);
-
-    private:
-        float x;
-        float y;
     };
 
 }

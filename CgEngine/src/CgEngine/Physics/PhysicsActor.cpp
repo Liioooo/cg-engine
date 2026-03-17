@@ -7,17 +7,16 @@
 #include "Uuid.h"
 #include "Scene/Scene.h"
 #include "Application.h"
+#include "Components/TransformComponent.h"
 
 namespace CgEngine {
-    PhysicsActor::PhysicsActor(Scene* scene, Entity entity, glm::vec3 pos, glm::quat orientation, bool isDynamic, PhysicsCollisionDetection collisionDetection) : AbstractPhysicsActor(scene, entity), dynamic(isDynamic) {
+    PhysicsActor::PhysicsActor(Scene* scene, Entity entity, bool isDynamic, PhysicsCollisionDetection collisionDetection) : AbstractPhysicsActor(scene, entity), dynamic(isDynamic) {
         auto& physicsSystem = Application::get().getPhysicsSystem();
 
-        physx::PxTransform transform(PhysXUtils::glmToPhysXVec(pos), PhysXUtils::glmToPhysXQuat(orientation));
-
         if (!isDynamic) {
-            physxActor = physicsSystem.getPhysxPhysics().createRigidStatic(transform);
+            physxActor = physicsSystem.getPhysxPhysics().createRigidStatic(physx::PxTransform(physx::PxIdentity));
         } else {
-            physxActor = physicsSystem.getPhysxPhysics().createRigidDynamic(transform);
+            physxActor = physicsSystem.getPhysxPhysics().createRigidDynamic(physx::PxTransform(physx::PxIdentity));
 
             physxActor->is<physx::PxRigidDynamic>()->setSolverIterationCounts(physicsSystem.getPhysxSettings().solverIterations, physicsSystem.getPhysxSettings().solverVelocityIterations);
             physxActor->is<physx::PxRigidDynamic>()->setRigidBodyFlag(physx::PxRigidBodyFlag::eENABLE_CCD, collisionDetection == PhysicsCollisionDetection::Continuous);
@@ -55,9 +54,9 @@ namespace CgEngine {
     }
 
     void PhysicsActor::updateTransforms() {
-        auto& transformComp = getScene().getComponent<TransformComponent>(getEntity());
+        auto transformComp = getScene().getComponent<TransformComponent>(getEntity());
         physx::PxTransform transform = physxActor->getGlobalPose();
-        transformComp._physicsUpdate(PhysXUtils::phsXToGlmVec(transform.p), PhysXUtils::phsXToGlmQuat(transform.q));
+        transformComp->_physicsUpdate(PhysXUtils::phsXToGlmVec(transform.p), PhysXUtils::phsXToGlmQuat(transform.q));
     }
 
     void PhysicsActor::setKinematic(bool isKinematic) {
@@ -172,47 +171,37 @@ namespace CgEngine {
         physxActor->is<physx::PxRigidDynamic>()->setMaxAngularVelocity(velocity);
     }
 
-    uint32_t PhysicsActor::addBoxCollider(PhysicsMaterial& material, glm::vec3 halfSize, glm::vec3 offset, bool isTrigger) {
+    void PhysicsActor::addBoxCollider(PhysicsMaterial& material, glm::vec3 halfSize, glm::vec3 offset, bool isTrigger) {
         auto* collider = new PhysicsShapeBox(*this, material, halfSize, offset, isTrigger);
-        uint32_t uuid = Uuid().getUuid();
-        colliders.insert({uuid, collider});
-        return uuid;
+        colliders.insert({PhysicsColliderType::Box, collider});
     }
 
-    uint32_t PhysicsActor::addSphereCollider(PhysicsMaterial& material, float radius, glm::vec3 offset, bool isTrigger) {
+    void PhysicsActor::addSphereCollider(PhysicsMaterial& material, float radius, glm::vec3 offset, bool isTrigger) {
         auto* collider = new PhysicsShapeSphere(*this, material, radius, offset, isTrigger);
-        uint32_t uuid = Uuid().getUuid();
-        colliders.insert({uuid, collider});
-        return uuid;
+        colliders.insert({PhysicsColliderType::Sphere, collider});
     }
 
-    uint32_t PhysicsActor::addCapsuleCollider(PhysicsMaterial& material, float radius, float halfHeight, glm::vec3 offset, bool isTrigger) {
+    void PhysicsActor::addCapsuleCollider(PhysicsMaterial& material, float radius, float halfHeight, glm::vec3 offset, bool isTrigger) {
         auto* collider = new PhysicsShapeCapsule(*this, material, radius, halfHeight, offset, isTrigger);
-        uint32_t uuid = Uuid().getUuid();
-        colliders.insert({uuid, collider});
-        return uuid;
+        colliders.insert({PhysicsColliderType::Capsule, collider});
     }
 
-    uint32_t PhysicsActor::addTriangleCollider(PhysicsMaterial& material, PhysicsTriangleMesh& physicsMesh, bool isTrigger) {
+    void PhysicsActor::addTriangleCollider(PhysicsMaterial& material, PhysicsTriangleMesh& physicsMesh, bool isTrigger) {
         auto* collider = new PhysicsShapeTriangleMesh(*this, material, physicsMesh, isTrigger);
-        uint32_t uuid = Uuid().getUuid();
-        colliders.insert({uuid, collider});
-        return uuid;
+        colliders.insert({PhysicsColliderType::TriangleMesh, collider});
     }
 
-    uint32_t PhysicsActor::addConvexCollider(PhysicsMaterial& material, PhysicsConvexMesh& physicsMesh, bool isTrigger) {
+    void PhysicsActor::addConvexCollider(PhysicsMaterial& material, PhysicsConvexMesh& physicsMesh, bool isTrigger) {
         auto* collider = new PhysicsShapeConvexMesh(*this, material, physicsMesh, isTrigger);
-        uint32_t uuid = Uuid().getUuid();
-        colliders.insert({uuid, collider});
-        return uuid;
+        colliders.insert({PhysicsColliderType::ConvexMesh, collider});
     }
 
-    void PhysicsActor::removeCollider(uint32_t colliderUuid) {
-        if (colliders.find(colliderUuid) != colliders.end()) {
-            auto* collider = colliders[colliderUuid];
+    void PhysicsActor::removeCollider(PhysicsColliderType colliderType) {
+        if (colliders.find(colliderType) != colliders.end()) {
+            auto* collider = colliders[colliderType];
             collider->detachFromActor(physxActor);
             delete collider;
-            colliders.erase(colliderUuid);
+            colliders.erase(colliderType);
         }
     }
 }

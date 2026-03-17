@@ -2,6 +2,7 @@
 #include "Scene/Scene.h"
 #include "Application.h"
 #include "imgui.h"
+#include "RigidBodyComponent.h"
 
 namespace CgEngine {
     void ConvexColliderComponentParams::verifyParams() const {
@@ -17,15 +18,18 @@ namespace CgEngine {
 
         physicsMaterial = resourceManager.getResource<PhysicsMaterial>(params.material);
         mesh = resourceManager.getResource<MeshVertices>(params.assetFile);
+    }
 
-        if (scene.hasComponent<RigidBodyComponent>(entity)) {
-            colliderUuid = scene.getComponent<RigidBodyComponent>(entity).addConvexCollider(*physicsMaterial, getPhysicsMesh(), isTrigger);
+    void ConvexColliderComponent::onEnable(Scene& scene) {
+        if (scene.hasComponent<RigidBodyComponent>(entity) && !isColliderAddedToActor) {
+            scene.getComponent<RigidBodyComponent>(entity)->addConvexCollider(*physicsMaterial, getPhysicsMesh(), isTrigger);
+            isColliderAddedToActor = true;
         }
     }
 
     void ConvexColliderComponent::onDetach(Scene& scene) {
         if (scene.hasComponent<RigidBodyComponent>(entity)) {
-            scene.getComponent<RigidBodyComponent>(entity).removeCollider(colliderUuid);
+            scene.getComponent<RigidBodyComponent>(entity)->removeCollider(PhysicsColliderType::ConvexMesh);
         }
     }
 

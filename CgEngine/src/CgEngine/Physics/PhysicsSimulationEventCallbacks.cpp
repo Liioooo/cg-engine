@@ -1,6 +1,7 @@
 #include "PhysicsSimulationEventCallbacks.h"
 #include "AbstractPhysicsActor.h"
 #include "Scene/Scene.h"
+#include "Components/ScriptComponent.h"
 
 namespace CgEngine {
     void PhysicsSimulationEventCallbacks::onConstraintBreak(physx::PxConstraintInfo* constraints, physx::PxU32 count) {}
@@ -22,19 +23,19 @@ namespace CgEngine {
 
         if (pairs->flags == physx::PxContactPairFlag::eACTOR_PAIR_HAS_FIRST_TOUCH) {
             if (actor0->getScene().hasComponent<ScriptComponent>(actor0->getEntity())) {
-                actor0->getScene().getComponent<ScriptComponent>(actor0->getEntity()).onCollisionEnter(actor1->getEntity());
+                actor0->getScene().getComponent<ScriptComponent>(actor0->getEntity())->onCollisionEnter({&actor1->getScene(), actor1->getEntity()});
             }
             if (actor1->getScene().hasComponent<ScriptComponent>(actor1->getEntity())) {
-                actor1->getScene().getComponent<ScriptComponent>(actor1->getEntity()).onCollisionEnter(actor0->getEntity());
+                actor1->getScene().getComponent<ScriptComponent>(actor1->getEntity())->onCollisionEnter({&actor0->getScene(), actor0->getEntity()});
             }
         }
 
         if (pairs->flags == physx::PxContactPairFlag::eACTOR_PAIR_LOST_TOUCH) {
             if (actor0->getScene().hasComponent<ScriptComponent>(actor0->getEntity())) {
-                actor0->getScene().getComponent<ScriptComponent>(actor0->getEntity()).onCollisionExit(actor1->getEntity());
+                actor0->getScene().getComponent<ScriptComponent>(actor0->getEntity())->onCollisionExit({&actor1->getScene(), actor1->getEntity()});
             }
             if (actor1->getScene().hasComponent<ScriptComponent>(actor1->getEntity())) {
-                actor1->getScene().getComponent<ScriptComponent>(actor1->getEntity()).onCollisionExit(actor0->getEntity());
+                actor1->getScene().getComponent<ScriptComponent>(actor1->getEntity())->onCollisionExit({&actor0->getScene(), actor0->getEntity()});
             }
         }
     }
@@ -50,19 +51,19 @@ namespace CgEngine {
 
             if (pairs[i].status == physx::PxPairFlag::eNOTIFY_TOUCH_FOUND) {
                 if (triggerActor->getScene().hasComponent<ScriptComponent>(triggerActor->getEntity())) {
-                    triggerActor->getScene().getComponent<ScriptComponent>(triggerActor->getEntity()).onTriggerEnter(otherActor->getEntity());
+                    triggerActor->getScene().getComponent<ScriptComponent>(triggerActor->getEntity())->onTriggerEnter({&otherActor->getScene(), otherActor->getEntity()});
                 }
                 if (otherActor->getScene().hasComponent<ScriptComponent>(otherActor->getEntity())) {
-                    otherActor->getScene().getComponent<ScriptComponent>(otherActor->getEntity()).onTriggerEnter(triggerActor->getEntity());
+                    otherActor->getScene().getComponent<ScriptComponent>(otherActor->getEntity())->onTriggerEnter({&triggerActor->getScene(), triggerActor->getEntity()});
                 }
             }
 
             if (pairs[i].status == physx::PxPairFlag::eNOTIFY_TOUCH_LOST) {
                 if (triggerActor->getScene().hasComponent<ScriptComponent>(triggerActor->getEntity())) {
-                    triggerActor->getScene().getComponent<ScriptComponent>(triggerActor->getEntity()).onCollisionExit(otherActor->getEntity());
+                    triggerActor->getScene().getComponent<ScriptComponent>(triggerActor->getEntity())->onCollisionExit({&otherActor->getScene(), otherActor->getEntity()});
                 }
                 if (otherActor->getScene().hasComponent<ScriptComponent>(otherActor->getEntity())) {
-                    otherActor->getScene().getComponent<ScriptComponent>(otherActor->getEntity()).onTriggerExit(triggerActor->getEntity());
+                    otherActor->getScene().getComponent<ScriptComponent>(otherActor->getEntity())->onTriggerExit({&triggerActor->getScene(), triggerActor->getEntity()});
                 }
             }
         }

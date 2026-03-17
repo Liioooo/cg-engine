@@ -5,7 +5,7 @@ namespace CgEngine {
     class FileSystem {
     public:
         static std::string readFileToString(const std::filesystem::path& path);
-        static std::vector<char> readFileBinary(const std::filesystem::path& path);
+        static std::vector<uint8_t> readFileBinary(const std::filesystem::path& path);
         static bool checkFileExists(const std::filesystem::path& path);
 
         static std::filesystem::path getAsGamePath(const std::filesystem::path& path);

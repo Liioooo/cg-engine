@@ -11,7 +11,7 @@ namespace CgEngine {
         explicit Component(Entity entity) : entity(entity) {};
         virtual ~Component() = default;
 
-        virtual void onAttach(Scene& scene) {};
+        virtual void onEnable(Scene& scene) {};
         virtual void onDetach(Scene& scene) {};
 
         virtual void onRenderImGui() {};

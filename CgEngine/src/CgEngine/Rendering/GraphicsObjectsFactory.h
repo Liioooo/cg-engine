@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GraphicsApi.h"
-#include "Enums.h"
+#include "CgEngineSharedUtils/Enums.h"
 
 namespace CgEngine {
 
@@ -22,6 +22,7 @@ namespace CgEngine {
     class PushConstants;
     class ComputePipeline;
     class GraphicsPipeline;
+    class DynamicGraphicsPipeline;
 
     struct RenderPassSpecification;
     struct AttachmentSpecification;
@@ -30,6 +31,7 @@ namespace CgEngine {
     struct DescriptorSetSpecification;
     struct ComputePipelineSpecification;
     struct GraphicsPipelineSpecification;
+    struct DynamicGraphicsPipelineSpecification;
 
     class GraphicsObjectsFactory {
     public:
@@ -72,6 +74,8 @@ namespace CgEngine {
         static ComputePipeline* createComputePipeline(const ComputePipelineSpecification& spec);
         static GraphicsPipeline* createGraphicsPipeline();
         static GraphicsPipeline* createGraphicsPipeline(const GraphicsPipelineSpecification& spec);
+        static DynamicGraphicsPipeline* createDynamicGraphicsPipeline();
+        static DynamicGraphicsPipeline* createDynamicGraphicsPipeline(const DynamicGraphicsPipelineSpecification& spec);
 
     private:
         static inline GraphicsAPI api = GraphicsAPI::OpenGL;

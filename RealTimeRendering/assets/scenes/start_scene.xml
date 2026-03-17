@@ -108,7 +108,7 @@
     </Entity>
     <Entity id="canvas">
         <Components>
-            <UiCanvasComponent />
+            <UiCanvasComponent2D />
             <ScriptComponent script-name="fpsCounter" />
         </Components>
     </Entity>

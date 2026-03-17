@@ -11,11 +11,7 @@ namespace Game {
         }
 
     protected:
-        void onAttach() override;
-
-        void onMouseButtonPressed(CgEngine::MouseButtonPressedEvent& event) override;
-        void onMouseMoved(CgEngine::MouseMovedEvent& event) override;
-
+        void onEnable() override;
     };
 
 }

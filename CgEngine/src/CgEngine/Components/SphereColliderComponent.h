@@ -22,6 +22,7 @@ namespace CgEngine {
         using Params = SphereColliderComponentParams;
 
         void onAttach(Scene& scene, SphereColliderComponentParams& params);
+        void onEnable(Scene& scene) override;
         void onDetach(Scene& scene) override;
         void onRenderImGui() override;
 
@@ -35,7 +36,7 @@ namespace CgEngine {
         float radius;
         glm::vec3 offset;
         bool isTrigger;
-        uint32_t colliderUuid;
+        bool isColliderAddedToActor = false;
     };
 
 }

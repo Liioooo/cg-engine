@@ -4,8 +4,8 @@
 #include <Application.h>
 #include "CustomPipeline.h"
 #include "GraphicsObjectsFactory.h"
-#include "Utils/StringUtils.h"
-#include "Utils/LoaderUtils.h"
+#include "CgEngineSharedUtils/StringUtils.h"
+#include "CgEngineSharedUtils/LoaderUtils.h"
 
 namespace CgEngine {
     const pugi::xml_document& CustomPipelinesData::getPipelinesXMLFile() {
@@ -138,32 +138,32 @@ namespace CgEngine {
 
         std::string_view depthTest = pipelineNode.child_value("DepthTest");
         if (!depthTest.empty()) {
-            spec.depthTest = Utils::String::toBool(depthTest);
+            spec.depthTest = StringUtils::toBool(depthTest);
         }
 
         std::string_view depthWrite = pipelineNode.child_value("DepthWrite");
         if (!depthTest.empty()) {
-            spec.depthWrite = Utils::String::toBool(depthWrite);
+            spec.depthWrite = StringUtils::toBool(depthWrite);
         }
 
         std::string_view wireframe = pipelineNode.child_value("Wireframe");
         if (!depthTest.empty()) {
-            spec.wireframe = Utils::String::toBool(wireframe);
+            spec.wireframe = StringUtils::toBool(wireframe);
         }
 
         std::string_view backfaceCulling = pipelineNode.child_value("BackfaceCulling");
         if (!depthTest.empty()) {
-            spec.backfaceCulling = Utils::String::toBool(backfaceCulling);
+            spec.backfaceCulling = StringUtils::toBool(backfaceCulling);
         }
 
         std::string_view frontfaceCulling = pipelineNode.child_value("FrontfaceCulling");
         if (!depthTest.empty()) {
-            spec.frontfaceCulling = Utils::String::toBool(frontfaceCulling);
+            spec.frontfaceCulling = StringUtils::toBool(frontfaceCulling);
         }
 
         std::string_view useBlending = pipelineNode.child_value("UseBlending");
         if (!depthTest.empty()) {
-            spec.useBlending = Utils::String::toBool(useBlending);
+            spec.useBlending = StringUtils::toBool(useBlending);
         }
 
         std::string_view blendingEquation = pipelineNode.child_value("BlendingEquation");
@@ -188,7 +188,7 @@ namespace CgEngine {
 
         std::string_view tesselationPatchSize = pipelineNode.child_value("TesselationPatchSize");
         if (!depthTest.empty()) {
-            spec.tesselationPatchSize = Utils::String::toInt(tesselationPatchSize).value_or(~0);
+            spec.tesselationPatchSize = StringUtils::toInt(tesselationPatchSize).value_or(~0);
         }
 
         const auto& vertexBufferLayoutsNode = pipelineNode.child("VertexBufferLayouts");
@@ -205,10 +205,10 @@ namespace CgEngine {
 
         const auto& descriptorSetLayoutNode = pipelineNode.child("DescriptorSetLayout");
         spec.descriptorSetLayoutSpecification.usage = DescriptorSetLayoutUsage::Graphics;
-        spec.descriptorSetLayoutSpecification.uboBindingPoints = Utils::LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("UboBindingPoints"));
-        spec.descriptorSetLayoutSpecification.ssboBindingPoints = Utils::LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("SsboBindingPoints"));
-        spec.descriptorSetLayoutSpecification.texture2DAndAttachmentBindingPoints = Utils::LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("Texture2DAndAttachmentBindingPoints"));
-        spec.descriptorSetLayoutSpecification.imageBindingPoints = Utils::LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("ImageBindingPoints"));
+        spec.descriptorSetLayoutSpecification.uboBindingPoints = LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("UboBindingPoints"));
+        spec.descriptorSetLayoutSpecification.ssboBindingPoints = LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("SsboBindingPoints"));
+        spec.descriptorSetLayoutSpecification.texture2DAndAttachmentBindingPoints = LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("Texture2DAndAttachmentBindingPoints"));
+        spec.descriptorSetLayoutSpecification.imageBindingPoints = LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("ImageBindingPoints"));
 
         const auto& shaderNode = pipelineNode.child("Shader");
         std::string vertexPath = shaderNode.child("Vertex").child_value();
@@ -295,10 +295,10 @@ namespace CgEngine {
 
         const auto& descriptorSetLayoutNode = pipelineNode.child("DescriptorSetLayout");
         spec.descriptorSetLayoutSpecification.usage = DescriptorSetLayoutUsage::Compute;
-        spec.descriptorSetLayoutSpecification.uboBindingPoints = Utils::LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("UboBindingPoints"));
-        spec.descriptorSetLayoutSpecification.ssboBindingPoints = Utils::LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("SsboBindingPoints"));
-        spec.descriptorSetLayoutSpecification.texture2DAndAttachmentBindingPoints = Utils::LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("Texture2DAndAttachmentBindingPoints"));
-        spec.descriptorSetLayoutSpecification.imageBindingPoints = Utils::LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("ImageBindingPoints"));
+        spec.descriptorSetLayoutSpecification.uboBindingPoints = LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("UboBindingPoints"));
+        spec.descriptorSetLayoutSpecification.ssboBindingPoints = LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("SsboBindingPoints"));
+        spec.descriptorSetLayoutSpecification.texture2DAndAttachmentBindingPoints = LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("Texture2DAndAttachmentBindingPoints"));
+        spec.descriptorSetLayoutSpecification.imageBindingPoints = LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("ImageBindingPoints"));
 
         return new CustomComputePipeline(spec);
     }

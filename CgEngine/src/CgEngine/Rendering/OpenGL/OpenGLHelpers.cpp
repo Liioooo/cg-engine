@@ -249,11 +249,11 @@ namespace CgEngine {
         uint32_t loadOpenGLGraphicsShader(const std::string& name, ShaderEnv env) {
             CG_LOGGING_DEBUG("Loading Shader: {0}", name)
 
-            std::vector<char> vertexSource = Helpers::loadShaderBinaryWithType(name, "vertex", env);
-            std::vector<char> fragmentSource = Helpers::loadShaderBinaryWithType(name, "fragment", env);
-            std::vector<char> geometrySource = Helpers::loadShaderBinaryWithType(name, "geometry", env);
-            std::vector<char> tcsSource = Helpers::loadShaderBinaryWithType(name, "tcs", env);
-            std::vector<char> tesSource = Helpers::loadShaderBinaryWithType(name, "tes", env);
+            std::vector<uint8_t> vertexSource = Helpers::loadShaderBinaryWithType(name, "vertex", env);
+            std::vector<uint8_t> fragmentSource = Helpers::loadShaderBinaryWithType(name, "fragment", env);
+            std::vector<uint8_t> geometrySource = Helpers::loadShaderBinaryWithType(name, "geometry", env);
+            std::vector<uint8_t> tcsSource = Helpers::loadShaderBinaryWithType(name, "tcs", env);
+            std::vector<uint8_t> tesSource = Helpers::loadShaderBinaryWithType(name, "tes", env);
 
             uint32_t handle = glCreateProgram();
             bool error = false;
@@ -290,11 +290,11 @@ namespace CgEngine {
         uint32_t loadOpenGLGraphicsShader(const std::string& vertex, const std::string& fragment, const std::string& geometry, const std::string& tcs, const std::string& tes, ShaderEnv env) {
             CG_LOGGING_DEBUG("Loading Shader: {0}", vertex)
 
-            std::vector<char> vertexSource = Helpers::loadShaderBinary(vertex + ".spv", env);
-            std::vector<char> fragmentSource = Helpers::loadShaderBinary(fragment + ".spv", env);
-            std::vector<char> geometrySource = Helpers::loadShaderBinary(geometry + ".spv", env);
-            std::vector<char> tcsSource = Helpers::loadShaderBinary(tcs + ".spv", env);
-            std::vector<char> tesSource = Helpers::loadShaderBinary(tes + ".spv", env);
+            std::vector<uint8_t> vertexSource = Helpers::loadShaderBinary(vertex + ".spv", env);
+            std::vector<uint8_t> fragmentSource = Helpers::loadShaderBinary(fragment + ".spv", env);
+            std::vector<uint8_t> geometrySource = Helpers::loadShaderBinary(geometry + ".spv", env);
+            std::vector<uint8_t> tcsSource = Helpers::loadShaderBinary(tcs + ".spv", env);
+            std::vector<uint8_t> tesSource = Helpers::loadShaderBinary(tes + ".spv", env);
 
             uint32_t handle = glCreateProgram();
             bool error = false;
@@ -331,7 +331,7 @@ namespace CgEngine {
         uint32_t loadOpenGLComputeShader(const std::string& name, ShaderEnv env) {
             CG_LOGGING_DEBUG("Loading ComputeShader: {0}", name)
 
-            std::vector<char> source = Helpers::loadShaderBinaryWithType(name, "comp", env);
+            std::vector<uint8_t > source = Helpers::loadShaderBinaryWithType(name, "comp", env);
 
             uint32_t handle = glCreateProgram();
             bool error = OpenGLHelpers::createShaderType(GL_COMPUTE_SHADER, "COMPUTE", source, handle);
@@ -352,7 +352,7 @@ namespace CgEngine {
         uint32_t loadOpenGLCustomComputeShader(const std::string& name) {
             CG_LOGGING_DEBUG("Loading Compute Shader: {0}", name)
 
-            std::vector<char> source = Helpers::loadShaderBinary(name + ".spv", ShaderEnv::Custom);
+            std::vector<uint8_t> source = Helpers::loadShaderBinary(name + ".spv", ShaderEnv::Custom);
 
             uint32_t handle = glCreateProgram();
             bool error = OpenGLHelpers::createShaderType(GL_COMPUTE_SHADER, "COMPUTE", source, handle);
@@ -408,7 +408,7 @@ namespace CgEngine {
             return location;
         }
 
-        bool createShaderType(unsigned int type, const std::string& sType, const std::vector<char>& source, unsigned int attachTo) {
+        bool createShaderType(unsigned int type, const std::string& sType, const std::vector<uint8_t>& source, unsigned int attachTo) {
             uint32_t id = glCreateShader(type);
             glShaderBinary(1, &id, GL_SHADER_BINARY_FORMAT_SPIR_V_ARB, source.data(), static_cast<int>(source.size()) * sizeof(char));
             glSpecializeShader(id, "main", 0, nullptr, nullptr);

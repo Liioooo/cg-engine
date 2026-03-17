@@ -2,10 +2,11 @@
 #include "PhysicsActor.h"
 #include "Scene/Scene.h"
 #include "PhysicsSystem.h"
+#include "Components/TransformComponent.h"
 
 namespace CgEngine {
     PhysicsShapeBox::PhysicsShapeBox(PhysicsActor& actor, PhysicsMaterial& physicsMaterial, glm::vec3 halfSize, glm::vec3 offset, bool isTrigger) : PhysicsShape() {
-        auto scale = actor.getScene().getComponent<TransformComponent>(actor.getEntity()).getGlobalScale();
+        auto scale = actor.getScene().getComponent<TransformComponent>(actor.getEntity())->getGlobalScale();
         glm::vec3 size = glm::abs(scale * halfSize);
 
         physx::PxBoxGeometry geometry = physx::PxBoxGeometry(size.x, size.y, size.z);

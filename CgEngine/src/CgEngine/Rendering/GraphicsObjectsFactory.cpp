@@ -18,6 +18,7 @@
 #include "Rendering/OpenGL/OpenGLPushConstants.h"
 #include "Rendering/OpenGL/OpenGLComputePipeline.h"
 #include "Rendering/OpenGL/OpenGLGraphicsPipeline.h"
+#include "Rendering/OpenGL/OpenGLDynamicGraphicsPipeline.h"
 #include "Rendering/Vulkan/VulkanRenderer.h"
 
 namespace CgEngine {
@@ -29,7 +30,8 @@ namespace CgEngine {
     RendererBackendBase* GraphicsObjectsFactory::createRendererBackend() {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return new VulkanRenderer();
+//                return new VulkanRenderer();
+                return nullptr;
             case GraphicsAPI::OpenGL:
                 return new OpenGLRenderer();
         }
@@ -356,6 +358,24 @@ namespace CgEngine {
                 return nullptr;
             case GraphicsAPI::OpenGL:
                 return new OpenGLGraphicsPipeline(spec);
+        }
+    }
+
+    DynamicGraphicsPipeline* GraphicsObjectsFactory::createDynamicGraphicsPipeline() {
+        switch (api) {
+            case GraphicsAPI::Vulkan:
+                return nullptr;
+            case GraphicsAPI::OpenGL:
+                return new OpenGLDynamicGraphicsPipeline();
+        }
+    }
+
+    DynamicGraphicsPipeline* GraphicsObjectsFactory::createDynamicGraphicsPipeline(const DynamicGraphicsPipelineSpecification& spec) {
+        switch (api) {
+            case GraphicsAPI::Vulkan:
+                return nullptr;
+            case GraphicsAPI::OpenGL:
+                return new OpenGLDynamicGraphicsPipeline(spec);
         }
     }
 

@@ -1,5 +1,10 @@
 #include "GhostsController.h"
 #include "glm/gtx/vector_angle.hpp"
+#include "CgEngine/Components/TransformComponent.h"
+#include "CgEngine/Components/RigidBodyComponent.h"
+#include "CgEngine/Components/ConvexColliderComponent.h"
+#include "CgEngine/Components/PointLightComponent.h"
+#include "CgEngine/Components/AnimatedMeshRendererComponent.h"
 
 namespace Game {
     void GhostsController::onAttach() {
@@ -112,21 +117,21 @@ namespace Game {
     }
 
     void GhostsController::fixedUpdate(CgEngine::TimeStep ts) {
-        CgEngine::Entity playerEntity = findEntityById("player");
-        glm::vec3 playerPos = getComponent<CgEngine::TransformComponent>(playerEntity).getGlobalPosition();
+        CgEngine::EntityHandle playerEntity = findEntityById("player");
+        glm::vec3 playerPos = playerEntity.getComponent<CgEngine::TransformComponent>()->getGlobalPosition();
 
         for (auto& g: ghosts) {
             if (g.state == GhostState::Dead) {
-                getComponent<CgEngine::RigidBodyComponent>(g.entity).setGlobalPose(g.homePos, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-                auto& meshTransform = getComponent<CgEngine::TransformComponent>(*getChildEntities(g.entity).cbegin());
-                meshTransform.setLocalRotationVec({0.0f, glm::pi<float>(), 0.0f});
+                g.entity.getComponent<CgEngine::RigidBodyComponent>()->setGlobalPose(g.homePos, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                auto meshTransform = g.entity.getFirstChild().getComponent<CgEngine::TransformComponent>();
+                meshTransform->setLocalRotationVec({0.0f, glm::pi<float>(), 0.0f});
                 g.state = GhostState::Home;
                 timeSinceGhostLeavingHome = 0.0f;
                 continue;
             }
 
             if (g.state == GhostState::LeavingHome) {
-                getComponent<CgEngine::RigidBodyComponent>(g.entity).setKinematicTarget(g.homePos + glm::vec3(0.0f, 0.0f, 2.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                g.entity.getComponent<CgEngine::RigidBodyComponent>()->setKinematicTarget(g.homePos + glm::vec3(0.0f, 0.0f, 2.0f), glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
                 g.state = GhostState::Moving;
                 if (random(0, 1) == 0) {
                     g.lastMapNode = 3;
@@ -139,8 +144,8 @@ namespace Game {
             }
 
             if (g.state == GhostState::Moving) {
-                auto& rigid = getComponent<CgEngine::RigidBodyComponent>(g.entity);
-                if (glm::distance(rigid.getGlobalPosePosition(), mapNodes[g.nextMapNode].pos) < 0.4f) {
+                auto rigid = g.entity.getComponent<CgEngine::RigidBodyComponent>();
+                if (glm::distance(rigid->getGlobalPosePosition(), mapNodes[g.nextMapNode].pos) < 0.4f) {
                     // if they can see the player chase him
                     bool chasePlayer = false;
                     glm::vec3 playerInDir = glm::normalize(playerPos - mapNodes[g.nextMapNode].pos);
@@ -185,13 +190,13 @@ namespace Game {
                     }
                 }
 
-                glm::vec3 direction = glm::normalize(mapNodes[g.nextMapNode].pos - rigid.getGlobalPosePosition());
-                rigid.setKinematicTarget(rigid.getGlobalPosePosition() + direction * ts.getSeconds() * 6.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+                glm::vec3 direction = glm::normalize(mapNodes[g.nextMapNode].pos - rigid->getGlobalPosePosition());
+                rigid->setKinematicTarget(rigid->getGlobalPosePosition() + direction * ts.getSeconds() * 6.0f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
 
                 auto rot = glm::atan(direction.x, direction.z) - glm::pi<float>();
 
-                auto& meshTransform = getComponent<CgEngine::TransformComponent>(*getChildEntities(g.entity).cbegin());
-                meshTransform.setLocalRotationVec({0.0f, rot, 0.0f});
+                auto meshTransform = g.entity.getFirstChild().getComponent<CgEngine::TransformComponent>();
+                meshTransform->setLocalRotationVec({0.0f, rot, 0.0f});
             }
         }
     }
@@ -219,8 +224,8 @@ namespace Game {
     }
 
     void GhostsController::createCoins() {
-        CgEngine::Entity coinContainer = createEntity();
-        attachComponent<CgEngine::TransformComponent>(coinContainer, CgEngine::TransformComponentParams{glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f)});
+        CgEngine::EntityHandle coinContainer = createEntity();
+        coinContainer.attachComponent<CgEngine::TransformComponent>(CgEngine::TransformComponentParams{glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f)});
 
         std::unordered_set<std::string> visitedEdges;
         for (int i = 0; i < mapNodes.size(); ++i) {
@@ -251,8 +256,8 @@ namespace Game {
     }
 
     void GhostsController::createGhosts() {
-        CgEngine::Entity ghostContainer = createEntity();
-        attachComponent<CgEngine::TransformComponent>(ghostContainer, CgEngine::TransformComponentParams{glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f)});
+        CgEngine::EntityHandle ghostContainer = createEntity();
+        ghostContainer.attachComponent<CgEngine::TransformComponent>(CgEngine::TransformComponentParams{glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f)});
 
         ghosts[0].homePos = glm::vec3(-4.0f, 1.0f, -2.0f);
         ghosts[1].homePos = glm::vec3(-2.0f, 1.0f, -2.0f);
@@ -270,10 +275,10 @@ namespace Game {
 
             auto& g = ghosts[i];
             g.entity = createEntity(ghostContainer);
-            setEntityTag(g.entity, "ghost");
-            attachComponent<CgEngine::TransformComponent>(g.entity, CgEngine::TransformComponentParams{g.homePos, glm::vec3(0.0f), glm::vec3(1.0f, 0.8f, 1.0f)});
-            attachComponent<CgEngine::ConvexColliderComponent>(g.entity, CgEngine::ConvexColliderComponentParams{"models.fbx", "Ghost" + ghostModelStr, false, "default-physics-material"});
-            attachComponent<CgEngine::RigidBodyComponent>(g.entity, rigidBodyParams);
+            g.entity.setTag("ghost");
+            g.entity.attachComponent<CgEngine::TransformComponent>(CgEngine::TransformComponentParams{g.homePos, glm::vec3(0.0f), glm::vec3(1.0f, 0.8f, 1.0f)});
+            g.entity.attachComponent<CgEngine::ConvexColliderComponent>(CgEngine::ConvexColliderComponentParams{"models.fbx", "Ghost" + ghostModelStr, false, "default-physics-material"});
+            g.entity.attachComponent<CgEngine::RigidBodyComponent>(rigidBodyParams);
 
             glm::vec3 lightColor;
 
@@ -289,11 +294,11 @@ namespace Game {
                     break;
             }
 
-            attachComponent<CgEngine::PointLightComponent>(g.entity, CgEngine::PointLightComponentParams{lightColor, 1.0f, 4.0f, 0.8f});
+            g.entity.attachComponent<CgEngine::PointLightComponent>(CgEngine::PointLightComponentParams{lightColor, 1.0f, 4.0f, 0.8f});
 
             auto meshEntity = createEntity(g.entity);
-            attachComponent<CgEngine::TransformComponent>(meshEntity, CgEngine::TransformComponentParams{glm::vec3(0.0f), glm::vec3(0.0f, glm::pi<float>(), 0.0f), glm::vec3(1.0f)});
-            attachComponent<CgEngine::AnimatedMeshRendererComponent>(meshEntity, CgEngine::AnimatedMeshRendererComponentParams{"models.fbx", "", true, {"Ghost" + ghostModelStr}, "ArmatureGhost" + ghostModelStr + "|" + "Ghost" + ghostModelStr + "Anim", 2.0f, true, true});
+            meshEntity.attachComponent<CgEngine::TransformComponent>(CgEngine::TransformComponentParams{glm::vec3(0.0f), glm::vec3(0.0f, glm::pi<float>(), 0.0f), glm::vec3(1.0f)});
+            meshEntity.attachComponent<CgEngine::AnimatedMeshRendererComponent>(CgEngine::AnimatedMeshRendererComponentParams{"models.fbx", "", true, {"Ghost" + ghostModelStr}, "ArmatureGhost" + ghostModelStr + "|" + "Ghost" + ghostModelStr + "Anim", 2.0f, true, true});
         }
     }
 

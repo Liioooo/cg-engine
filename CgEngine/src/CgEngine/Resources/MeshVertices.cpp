@@ -4,7 +4,7 @@
 #include "Asserts.h"
 #include "FileSystem.h"
 #include "Application.h"
-#include "Utils/StringUtils.h"
+#include "CgEngineSharedUtils/StringUtils.h"
 #include <filesystem>
 #include <Rendering/GraphicsObjectsFactory.h>
 
@@ -20,8 +20,8 @@ namespace CgEngine {
                 std::string params = name.substr(14);
                 if (!params.empty()) {
                     size_t splitPoint = params.find('_');
-                    lonSegments = Utils::String::toInt(params.substr(0, splitPoint)).value();
-                    latSegments = Utils::String::toInt(params.substr(splitPoint + 1)).value();
+                    lonSegments = StringUtils::toInt(params.substr(0, splitPoint)).value();
+                    latSegments = StringUtils::toInt(params.substr(splitPoint + 1)).value();
                 }
             }
 
@@ -34,8 +34,8 @@ namespace CgEngine {
                 std::string params = name.substr(15);
                 if (!params.empty()) {
                     size_t splitPoint = params.find('_');
-                    radius = Utils::String::toFloat(params.substr(0, splitPoint)).value();
-                    height = Utils::String::toFloat(params.substr(splitPoint + 1)).value();
+                    radius = StringUtils::toFloat(params.substr(0, splitPoint)).value();
+                    height = StringUtils::toFloat(params.substr(splitPoint + 1)).value();
                 }
             }
 
@@ -705,7 +705,7 @@ namespace CgEngine {
                 aiTextureMapMode aiEmissiveWrapMode[3];
                 bool hasEmissiveTexture = aiMaterial->GetTexture(aiTextureType_EMISSIVE, 0, &aiEmissiveTexPath, nullptr, nullptr, nullptr, nullptr, aiEmissiveWrapMode) == AI_SUCCESS;
                 if (hasEmissiveTexture) {
-                    if (Utils::String::startsWith(aiEmissiveTexPath.C_Str(), "*")) {
+                    if (StringUtils::startsWith(aiEmissiveTexPath.C_Str(), "*")) {
                         const auto* tex = scene->GetEmbeddedTexture(aiEmissiveTexPath.C_Str());
                         if (tex->mHeight == 0) {
                             auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, true, getTextureWrapFromAssimp(aiEmissiveWrapMode[0]), MipMapFiltering::Anisotropic);
@@ -745,7 +745,7 @@ namespace CgEngine {
                 aiTextureMapMode aiAlbedoWrapMode[3];
                 bool hasAlbedoTexture = aiMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &aiAlbedoTexPath, nullptr, nullptr, nullptr, nullptr, aiAlbedoWrapMode) == AI_SUCCESS;
                 if (hasAlbedoTexture) {
-                    if (Utils::String::startsWith(aiAlbedoTexPath.C_Str(), "*")) {
+                    if (StringUtils::startsWith(aiAlbedoTexPath.C_Str(), "*")) {
                         const auto* tex = scene->GetEmbeddedTexture(aiAlbedoTexPath.C_Str());
                         if (tex->mHeight == 0) {
                             auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, true, getTextureWrapFromAssimp(aiAlbedoWrapMode[0]), MipMapFiltering::Anisotropic);
@@ -782,7 +782,7 @@ namespace CgEngine {
                 bool hasRoughnessTexture = aiMaterial->GetTexture(aiTextureType_SHININESS, 0, &aiRoughnessTexPath, nullptr, nullptr, nullptr, nullptr, aiRoughnessWrapMode) == AI_SUCCESS;
                 bool hasSpecularTexture = aiMaterial->GetTexture(aiTextureType_SPECULAR, 0, &aiSpecularTexPath, nullptr, nullptr, nullptr, nullptr, aiSpecularWrapMode) == AI_SUCCESS;
                 if (hasRoughnessTexture) {
-                    if (Utils::String::startsWith(aiRoughnessTexPath.C_Str(), "*")) {
+                    if (StringUtils::startsWith(aiRoughnessTexPath.C_Str(), "*")) {
                         const auto* tex = scene->GetEmbeddedTexture(aiRoughnessTexPath.C_Str());
                         if (tex->mHeight == 0) {
                             auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiRoughnessWrapMode[0]), MipMapFiltering::Anisotropic);
@@ -803,7 +803,7 @@ namespace CgEngine {
                         materialSpec.roughnessTexture = resourceManager.getResource<Texture2D>(texturePath.string(), spec);
                     }
                 } else if (hasSpecularTexture) {
-                    if (Utils::String::startsWith(aiSpecularTexPath.C_Str(), "*")) {
+                    if (StringUtils::startsWith(aiSpecularTexPath.C_Str(), "*")) {
                         const auto* tex = scene->GetEmbeddedTexture(aiSpecularTexPath.C_Str());
                         if (tex->mHeight == 0) {
                             auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiSpecularWrapMode[0]), MipMapFiltering::Anisotropic);
@@ -831,7 +831,7 @@ namespace CgEngine {
                 aiTextureMapMode aiNormalWrapMode[3];
                 bool hasNormalMap = aiMaterial->GetTexture(aiTextureType_NORMALS, 0, &aiNormalTexPath, nullptr, nullptr, nullptr, nullptr, aiNormalWrapMode) == AI_SUCCESS;
                 if (hasNormalMap) {
-                    if (Utils::String::startsWith(aiNormalTexPath.C_Str(), "*")) {
+                    if (StringUtils::startsWith(aiNormalTexPath.C_Str(), "*")) {
                         const auto* tex = scene->GetEmbeddedTexture(aiNormalTexPath.C_Str());
                         if (tex->mHeight == 0) {
                             auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiNormalWrapMode[0]), MipMapFiltering::Anisotropic);
@@ -862,7 +862,7 @@ namespace CgEngine {
                 aiTextureMapMode aiMetalnessWrapMode[3];
                 bool hasMetalnessTexture = aiMaterial->GetTexture(aiTextureType_METALNESS, 0, &aiMetalnessTexPath, nullptr, nullptr, nullptr, nullptr, aiMetalnessWrapMode) == AI_SUCCESS;
                 if (hasMetalnessTexture) {
-                    if (Utils::String::startsWith(aiMetalnessTexPath.C_Str(), "*")) {
+                    if (StringUtils::startsWith(aiMetalnessTexPath.C_Str(), "*")) {
                         const auto* tex = scene->GetEmbeddedTexture(aiMetalnessTexPath.C_Str());
                         if (tex->mHeight == 0) {
                             auto* texture = GraphicsObjectsFactory::createTexture2D(reinterpret_cast<unsigned char*>(tex->pcData), tex->mWidth, false, getTextureWrapFromAssimp(aiMetalnessWrapMode[0]), MipMapFiltering::Anisotropic);
@@ -900,7 +900,7 @@ namespace CgEngine {
 
     std::filesystem::path MeshVertices::getTexturePath(const std::filesystem::path& modelPath, const std::string &texturePath) {
         auto directory = modelPath.parent_path();
-        return directory / CgEngine::Utils::String::replaceAll(texturePath, "\\", "/");
+        return directory / StringUtils::replaceAll(texturePath, "\\", "/");
     }
 
     glm::mat4 MeshVertices::getTransformFromAssimpTransform(const aiMatrix4x4 &transform) {
@@ -1132,17 +1132,17 @@ namespace CgEngine {
         uint32_t meshNodeIndex = meshNodes.size() - 1;
         nodeNameToNode.insert({node->mName.C_Str(), meshNodeIndex});
 
-        auto nameParts = Utils::String::splitString(node->mName.C_Str(), '_');
-        if (nameParts.size() > 1 && Utils::String::matches(nameParts[nameParts.size() - 1], "LOD\\d+")) {
+        auto nameParts = StringUtils::splitString(node->mName.C_Str(), '_');
+        if (nameParts.size() > 1 && StringUtils::matches(nameParts[nameParts.size() - 1], "LOD\\d+")) {
             std::string aiNodeName = node->mName.C_Str();
             std::string lodOverviewName = aiNodeName.substr(0, aiNodeName.find_last_of('_'));
 
             if (nodeNameToNode.find(lodOverviewName) != nodeNameToNode.end()) {
-                getMeshNodes().at(getMeshNodeIndex(lodOverviewName)).lodMeshNodesTempMap.insert({Utils::String::toInt(nameParts[nameParts.size() - 1].substr(3)).value(), meshNodeIndex});
+                getMeshNodes().at(getMeshNodeIndex(lodOverviewName)).lodMeshNodesTempMap.insert({StringUtils::toInt(nameParts[nameParts.size() - 1].substr(3)).value(), meshNodeIndex});
             } else {
                 MeshNode& lodOverviewNode = meshNodes.emplace_back();
                 lodOverviewNode.aiNode = nullptr;
-                lodOverviewNode.lodMeshNodesTempMap.insert({Utils::String::toInt(nameParts[nameParts.size() - 1].substr(3)).value(), meshNodeIndex});
+                lodOverviewNode.lodMeshNodesTempMap.insert({StringUtils::toInt(nameParts[nameParts.size() - 1].substr(3)).value(), meshNodeIndex});
                 lodOverviewNode.parentNode = parentNode;
                 lodOverviewNode.localTransform = localTransform;
                 lodOverviewNode.transform = transform;

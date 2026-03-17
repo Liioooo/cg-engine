@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Scene/Entity.h"
 #include "Scene/Scene.h"
 #include "Events/MouseScrolledEvent.h"
 #include "Events/MouseButtonPressedEvent.h"
@@ -8,6 +7,9 @@
 #include "Events/KeyPressedEvent.h"
 #include "Physics/PhysicsSystem.h"
 #include "Application.h"
+#include "Scene/ComponentHandle.h"
+#include "Scene/EntityHandle.h"
+#include "ScriptParameterMap.h"
 
 namespace CgEngine {
 
@@ -20,17 +22,18 @@ namespace CgEngine {
         ~NativeScript() = default;
 
         virtual void onAttach() {};
+        virtual void onEnable() {};
         virtual void onDetach() {};
 
         virtual void fixedUpdate(TimeStep ts) {};
         virtual void update(TimeStep ts) {};
         virtual void lateUpdate(TimeStep ts) {};
 
-        virtual void onCollisionEnter(Entity other) {}
-        virtual void onCollisionExit(Entity other) {}
+        virtual void onCollisionEnter(EntityHandle other) {}
+        virtual void onCollisionExit(EntityHandle other) {}
 
-        virtual void onTriggerEnter(Entity other) {};
-        virtual void onTriggerExit(Entity other) {};
+        virtual void onTriggerEnter(EntityHandle other) {};
+        virtual void onTriggerExit(EntityHandle other) {};
 
         virtual void onMouseScrolled(MouseScrolledEvent& event) {}
         virtual void onMouseButtonPressed(MouseButtonPressedEvent& event) {}
@@ -39,35 +42,15 @@ namespace CgEngine {
 
         virtual void onRenderImGui() {};
 
-        Entity getOwingEntity();
-        void destroyEntity();
-        void destroyEntity(Entity entity);
-        Entity findEntityById(const std::string& id);
-        Entity getParentEntity();
-        Entity getParentEntity(Entity entity);
-        const std::unordered_set<Entity>& getChildEntities();
-        const std::unordered_set<Entity>& getChildEntities(Entity entity);
-        Entity createEntity();
-        Entity createEntity(Entity parent);
-        Entity instantiatePrefab(const std::string& prefabName, glm::vec3 position = {0.0f, 0.0f, 0.0f}, glm::vec3 rotation = {0.0f, 0.0f, 0.0f}, glm::vec3 scale = {1.0f, 1.0f, 1.0f}, const std::string& tag = "", const std::string& id = "");
-        Entity instantiatePrefab(const std::string& prefabName, Entity parent, glm::vec3 position = {0.0f, 0.0f, 0.0f}, glm::vec3 rotation = {0.0f, 0.0f, 0.0f}, glm::vec3 scale = {1.0f, 1.0f, 1.0f}, const std::string& tag = "", const std::string& id = "");
-        void setEntityTag(Entity entity, const std::string& tag);
-        std::string getEntityTag(Entity entity);
+        EntityHandle getOwingEntity();
+        EntityHandle createEntity();
+        EntityHandle findEntityById(const std::string& id);
+        EntityHandle createEntity(Entity parent);
+        EntityHandle instantiatePrefab(const std::string& prefabName, glm::vec3 position = {0.0f, 0.0f, 0.0f}, glm::vec3 rotation = {0.0f, 0.0f, 0.0f}, glm::vec3 scale = {1.0f, 1.0f, 1.0f}, const std::string& tag = "", const std::string& id = "");
+        EntityHandle instantiatePrefab(const std::string& prefabName, Entity parent, glm::vec3 position = {0.0f, 0.0f, 0.0f}, glm::vec3 rotation = {0.0f, 0.0f, 0.0f}, glm::vec3 scale = {1.0f, 1.0f, 1.0f}, const std::string& tag = "", const std::string& id = "");
         CameraComponent& getPrimaryCamaraComponent();
 
-        /*
-         * Called just before Meshes are submitted for rendering
-         * Please make sure to call removeOnPreRenderCallback(uuid) when the Script is detached to avoid memory leaks!
-         */
-        Uuid addOnPreRenderCallback(const std::function<void(const CameraFrustum& camaraFrustum)>& cb, bool once = false);
-        void removeOnPreRenderCallback(Uuid uuid);
-
-        /*
-         * Called after Meshes were submitted for rendering
-         * Please make sure to call removeOnPreRenderCallback(uuid) when the Script is detached to avoid memory leaks!
-        */
-        Uuid addOnRenderCallback(const std::function<void(SceneRenderer& renderer)>& cb, bool once = false);
-        void removeRenderCallback(Uuid uuid);
+        void addUiElementClickListener(UiElement& uiElement, const std::function<void()>& cb);
 
         void setActiveScene(const std::string& name);
 
@@ -87,49 +70,11 @@ namespace CgEngine {
             return Application::get().getResourceManager().getResource<R>(name, spec);
         }
 
-        template<typename C>
-        C& getComponent() {
-            return owningScene->getComponent<C>(owningEntity);
-        }
-
-        template<typename C>
-        C& getComponent(Entity entity) {
-            return owningScene->getComponent<C>(entity);
-        }
-
-        template<typename C>
-        bool hasEntityComponent() {
-            return owningScene->hasComponent<C>(owningEntity);
-        }
-
-        template<typename C>
-        bool hasEntityComponent(Entity entity) {
-            return owningScene->hasComponent<C>(entity);
-        }
-
-        template<typename C>
-        C& attachComponent(typename C::Params componentPrams = typename C::Params{}) {
-            return owningScene->attachComponent<C>(owningEntity, componentPrams);
-        }
-
-        template<typename C>
-        C& attachComponent(Entity entity, typename C::Params componentPrams = typename C::Params{}) {
-            return owningScene->attachComponent<C>(entity, componentPrams);
-        }
-
-        template<typename C>
-        void detachComponent() {
-            owningScene->detachComponent<C>(owningEntity);
-        }
-
-        template<typename C>
-        void detachComponent(Entity entity) {
-            owningScene->detachComponent<C>(entity);
-        }
-
     private:
         Scene* owningScene;
         Entity owningEntity;
+
+        std::vector<CallbackConnection<std::function<void()>>> uiElementCallbackConnections;
     };
 
 }

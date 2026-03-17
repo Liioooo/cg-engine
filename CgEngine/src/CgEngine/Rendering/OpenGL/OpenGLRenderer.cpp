@@ -11,6 +11,8 @@
 #include "OpenGLHelpers.h"
 #include "OpenGLDescriptorSet.h"
 #include "OpenGLPushConstants.h"
+#include "OpenGLDynamicGraphicsPipeline.h"
+#include "OpenGLAttachment.h"
 
 namespace CgEngine {
 
@@ -134,7 +136,7 @@ namespace CgEngine {
         computeEnvironmentMapIrradianceMap = OpenGLComputePipeline(environmentMapIrradianceMapSpec);
 
         RenderPassSpecification swapChainRenderPassSpec{};
-        swapChainRenderPassSpec.clearDepthAttachment = true;
+        swapChainRenderPassSpec.clearDepthStencilAttachment = true;
         swapChainRenderPassSpec.clearColorAttachments = true;
         swapChainRenderPassSpec.clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
         swapChainRenderPassSpec.hasDepthStencilAttachment = true;
@@ -143,9 +145,12 @@ namespace CgEngine {
 
         swapChainFramebuffer = OpenGLFramebuffer(window.getFramebufferWidth(), window.getFramebufferHeight(), true);
         glfwSwapInterval(window.isVsync() ? 1 : 0);
+
+        glCreateFramebuffers(1, &dynamicRenderingFramebufferHandle);
     }
 
     void OpenGLRenderer::shutdown() {
+        glDeleteFramebuffers(1, &dynamicRenderingFramebufferHandle);
         shutdownImGui();
     }
 
@@ -167,6 +172,7 @@ namespace CgEngine {
 
     void OpenGLRenderer::beginRenderPass(const RenderPass* renderPass, const Framebuffer* framebuffer) {
         CG_ASSERT(currentRenderPass == nullptr, "There already is an active RenderPass!")
+        CG_ASSERT(!currentlyDynamicRendering, "Cannot begin regular RenderPass while in dynamic rendering!")
 
         currentRenderPass = static_cast<const OpenGLRenderPass*>(renderPass);
         const RenderPassSpecification& spec = currentRenderPass->getSpecification();
@@ -180,13 +186,13 @@ namespace CgEngine {
             glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
             glClear(GL_COLOR_BUFFER_BIT);
         }
-        if (spec.clearDepthAttachment) {
+        if (spec.clearDepthStencilAttachment) {
             glDepthMask(GL_TRUE);
             glClear(GL_DEPTH_BUFFER_BIT);
+            if (fb->hasStencilAttachment()) {
+                glClear(GL_STENCIL_BUFFER_BIT);
+            }
             depthWrite = true;
-        }
-        if (spec.clearStencilBuffer) {
-            glClear(GL_STENCIL_BUFFER_BIT);
         }
     }
 
@@ -196,15 +202,156 @@ namespace CgEngine {
 
     void OpenGLRenderer::endRenderPass() {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
+        CG_ASSERT(!currentlyDynamicRendering, "Cannot end regular RenderPass while in dynamic rendering!")
         currentRenderPass = nullptr;
+        currentPipelineHandle = ~0;
+    }
+
+    void OpenGLRenderer::beginDynamicRendering(const DynamicRenderingInfo& renderingInfo) {
+        CG_ASSERT(currentRenderPass == nullptr, "There already is an active RenderPass!")
+        CG_ASSERT(!currentlyDynamicRendering, "Already in dynamic rendering!")
+
+        currentlyDynamicRendering = true;
+
+        glBindFramebuffer(GL_FRAMEBUFFER, dynamicRenderingFramebufferHandle);
+
+        std::vector<GLenum> drawBuffers;
+        drawBuffers.reserve(renderingInfo.colorAttachments.size());
+
+        for (size_t i = 0; i < renderingInfo.colorAttachments.size(); i++) {
+            const auto* attachment = static_cast<const OpenGLAttachment*>(renderingInfo.colorAttachments[i].attachment);
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, attachment->getOpenGLHandle(), 0);
+            drawBuffers.push_back(GL_COLOR_ATTACHMENT0 + i);
+        }
+
+        if (!drawBuffers.empty()) {
+            glDrawBuffers(static_cast<int>(drawBuffers.size()), drawBuffers.data());
+        } else {
+            glDrawBuffer(GL_NONE);
+            glReadBuffer(GL_NONE);
+        }
+
+        bool hasStencil = false;
+
+        if (renderingInfo.depthStencilAttachment.attachment != nullptr) {
+            const auto* depthAttachment = static_cast<const OpenGLAttachment*>(renderingInfo.depthStencilAttachment.attachment);
+            CG_ASSERT(depthAttachment->getType() == AttachmentType::Depth || depthAttachment->getType() == AttachmentType::DepthStencil, "DepthStencil attachment must be of type Depth or DepthStencil")
+            if (depthAttachment->getType() == AttachmentType::DepthStencil) {
+                glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depthAttachment->getOpenGLHandle(), 0);
+                hasStencil = true;
+            } else {
+                glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthAttachment->getOpenGLHandle(), 0);
+            }
+        }
+
+        glViewport(0, 0, static_cast<int>(renderingInfo.renderArea.x), static_cast<int>(renderingInfo.renderArea.y));
+
+        if (renderingInfo.clearColorAttachments) {
+            const glm::vec4& clearColor = renderingInfo.clearColor;
+            glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+            glClear(GL_COLOR_BUFFER_BIT);
+        }
+        if (renderingInfo.clearDepthStencilAttachment) {
+            glDepthMask(GL_TRUE);
+            glClear(GL_DEPTH_BUFFER_BIT);
+            if (hasStencil) {
+                glClear(GL_STENCIL_BUFFER_BIT);
+            }
+            depthWrite = true;
+        }
+    }
+
+    void OpenGLRenderer::endDynamicRendering() {
+        CG_ASSERT(currentRenderPass == nullptr, "There is a active RenderPass!")
+        CG_ASSERT(currentlyDynamicRendering, "Not in dynamic rendering!")
+        currentlyDynamicRendering = false;
         currentPipelineHandle = ~0;
     }
 
     void OpenGLRenderer::bindGraphicsPipeline(const GraphicsPipeline* graphicsPipeline) {
         CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
+        CG_ASSERT(!currentlyDynamicRendering, "Cannot bind regular GraphicsPipeline while in dynamic rendering!")
 
         auto* glGraphicsPipeline = static_cast<const OpenGLGraphicsPipeline*>(graphicsPipeline);
         const GraphicsPipelineSpecification& spec = glGraphicsPipeline->getSpecification();
+        currentPipelineHandle = glGraphicsPipeline->getOpenGLShaderHandle();
+        drawMode = glGraphicsPipeline->getDrawMode();
+
+        glUseProgram(glGraphicsPipeline->getOpenGLShaderHandle());
+
+        if (isWireframe != spec.wireframe) {
+            isWireframe = spec.wireframe;
+            if (isWireframe) {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            } else {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            }
+        }
+        if (isBackFaceCulling != spec.backfaceCulling || isFrontFaceCulling != spec.frontfaceCulling) {
+            isBackFaceCulling = spec.backfaceCulling;
+            isFrontFaceCulling = spec.frontfaceCulling;
+            if (isBackFaceCulling || isFrontFaceCulling) {
+                glEnable(GL_CULL_FACE);
+            } else {
+                glDisable(GL_CULL_FACE);
+            }
+            if (isBackFaceCulling) {
+                glCullFace(GL_BACK);
+            }
+            if (isFrontFaceCulling) {
+                glCullFace(GL_FRONT);
+            }
+        }
+        if (depthTest != spec.depthTest) {
+            depthTest = spec.depthTest;
+            if (depthTest) {
+                glEnable(GL_DEPTH_TEST);
+            } else {
+                glDisable(GL_DEPTH_TEST);
+            }
+        }
+        if (depthWrite != spec.depthWrite) {
+            depthWrite = spec.depthWrite;
+            if (depthWrite) {
+                glDepthMask(GL_TRUE);
+            } else {
+                glDepthMask(GL_FALSE);
+            }
+        }
+        if (depthCompareOperator != spec.depthCompareOperator) {
+            depthCompareOperator = spec.depthCompareOperator;
+            glDepthFunc(OpenGLHelpers::depthCompareOperatorToOpenGL(spec.depthCompareOperator));
+        }
+        if (useBlending != spec.useBlending) {
+            useBlending = spec.useBlending;
+            if (useBlending) {
+                glEnable(GL_BLEND);
+            } else {
+                glDisable(GL_BLEND);
+            }
+        }
+        if (blendingEquation != spec.blendingEquation) {
+            blendingEquation = spec.blendingEquation;
+            glBlendEquation(OpenGLHelpers::blendingEquationToOpenGL(blendingEquation));
+        }
+        if (srcBlendingFunction != spec.srcBlendingFunction || destBlendingFunction != spec.destBlendingFunction) {
+            srcBlendingFunction = spec.srcBlendingFunction;
+            destBlendingFunction = spec.destBlendingFunction;
+            glBlendFunc(OpenGLHelpers::blendingFunctionToOpenGL(srcBlendingFunction), OpenGLHelpers::blendingFunctionToOpenGL(destBlendingFunction));
+        }
+
+        if (spec.drawMode == DrawMode::Patches && spec.tesselationPatchSize != tessellationPatchSize) {
+            tessellationPatchSize = spec.tesselationPatchSize;
+            glPatchParameteri(GL_PATCH_VERTICES, tessellationPatchSize);
+        }
+    }
+
+    void OpenGLRenderer::bindDynamicGraphicsPipeline(const DynamicGraphicsPipeline* graphicsPipeline) {
+        CG_ASSERT(currentRenderPass == nullptr, "There is a active RenderPass!")
+        CG_ASSERT(currentlyDynamicRendering, "Not in dynamic rendering!")
+
+        auto* glGraphicsPipeline = static_cast<const OpenGLDynamicGraphicsPipeline*>(graphicsPipeline);
+        const DynamicGraphicsPipelineSpecification& spec = glGraphicsPipeline->getSpecification();
         currentPipelineHandle = glGraphicsPipeline->getOpenGLShaderHandle();
         drawMode = glGraphicsPipeline->getDrawMode();
 
@@ -289,6 +436,7 @@ namespace CgEngine {
 
     void OpenGLRenderer::clearPass(const RenderPass* renderPass, const Framebuffer* framebuffer) {
         CG_ASSERT(currentRenderPass == nullptr, "There already is an active RenderPass!")
+        CG_ASSERT(!currentlyDynamicRendering, "Cannot clear while in dynamic rendering!")
 
         auto* fb = static_cast<const OpenGLFramebuffer*>(framebuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, fb->getOpenGLHandle());
@@ -301,13 +449,13 @@ namespace CgEngine {
             glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
             glClear(GL_COLOR_BUFFER_BIT);
         }
-        if (spec.clearDepthAttachment) {
+        if (spec.clearDepthStencilAttachment) {
             glDepthMask(GL_TRUE);
             glClear(GL_DEPTH_BUFFER_BIT);
+            if (fb->hasStencilAttachment()) {
+                glClear(GL_STENCIL_BUFFER_BIT);
+            }
             depthWrite = true;
-        }
-        if (spec.clearStencilBuffer) {
-            glClear(GL_STENCIL_BUFFER_BIT);
         }
     }
 
@@ -337,7 +485,7 @@ namespace CgEngine {
     }
 
     void OpenGLRenderer::renderUnitQuad() {
-        CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
+        CG_ASSERT(currentRenderPass != nullptr || currentlyDynamicRendering, "There is no active RenderPass or dynamic rendering!")
         CG_ASSERT(currentPipelineHandle != ~0, "There is no active GraphicsPipeline!")
 
         quadVAO.bind();
@@ -345,7 +493,7 @@ namespace CgEngine {
     }
 
     void OpenGLRenderer::renderUnitCube() {
-        CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
+        CG_ASSERT(currentRenderPass != nullptr || currentlyDynamicRendering, "There is no active RenderPass or dynamic rendering!")
         CG_ASSERT(currentPipelineHandle != ~0, "There is no active GraphicsPipeline!")
 
         unitCubeVAO.bind();
@@ -353,7 +501,7 @@ namespace CgEngine {
     }
 
     void OpenGLRenderer::executeDrawCommand(const VertexArrayObject* vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, uint32_t instanceCount) {
-        CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
+        CG_ASSERT(currentRenderPass != nullptr || currentlyDynamicRendering, "There is no active RenderPass or dynamic rendering!")
         CG_ASSERT(currentPipelineHandle != ~0, "There is no active GraphicsPipeline!")
 
         auto* glVao = static_cast<const OpenGLVertexArrayObject*>(vao);
@@ -363,7 +511,7 @@ namespace CgEngine {
     }
 
     void OpenGLRenderer::executeDrawCommand(const CgEngine::VertexArrayObject* vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex) {
-        CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
+        CG_ASSERT(currentRenderPass != nullptr || currentlyDynamicRendering, "There is no active RenderPass or dynamic rendering!")
         CG_ASSERT(currentPipelineHandle != ~0, "There is no active GraphicsPipeline!")
 
         auto* glVao = static_cast<const OpenGLVertexArrayObject*>(vao);
@@ -373,7 +521,7 @@ namespace CgEngine {
     }
 
     void OpenGLRenderer::drawArrays(const VertexArrayObject* vao, uint32_t vertexCount) {
-        CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
+        CG_ASSERT(currentRenderPass != nullptr || currentlyDynamicRendering, "There is no active RenderPass or dynamic rendering!")
         CG_ASSERT(currentPipelineHandle != ~0, "There is no active GraphicsPipeline!")
 
         auto* glVao = static_cast<const OpenGLVertexArrayObject*>(vao);

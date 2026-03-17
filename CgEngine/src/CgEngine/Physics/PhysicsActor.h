@@ -7,9 +7,17 @@
 
 namespace CgEngine {
 
+    enum class PhysicsColliderType {
+        Box,
+        Sphere,
+        Capsule,
+        TriangleMesh,
+        ConvexMesh
+    };
+
     class PhysicsActor : public AbstractPhysicsActor {
     public:
-        PhysicsActor(Scene* scene, Entity entity, glm::vec3 pos, glm::quat orientation, bool isDynamic, PhysicsCollisionDetection collisionDetection);
+        PhysicsActor(Scene* scene, Entity entity, bool isDynamic, PhysicsCollisionDetection collisionDetection);
         ~PhysicsActor();
 
         PhysicsActorType getPhysicsActorType() const override;
@@ -41,12 +49,12 @@ namespace CgEngine {
         void setMaxLinearVelocity(float velocity);
         void setMaxAngularVelocity(float velocity);
 
-        uint32_t addBoxCollider(PhysicsMaterial& material, glm::vec3 halfSize, glm::vec3 offset, bool isTrigger);
-        uint32_t addSphereCollider(PhysicsMaterial& material, float radius, glm::vec3 offset, bool isTrigger);
-        uint32_t addCapsuleCollider(PhysicsMaterial& material, float radius, float halfHeight, glm::vec3 offset, bool isTrigger);
-        uint32_t addTriangleCollider(PhysicsMaterial& material, PhysicsTriangleMesh& physicsMesh, bool isTrigger);
-        uint32_t addConvexCollider(PhysicsMaterial& material, PhysicsConvexMesh& physicsMesh, bool isTrigger);
-        void removeCollider(uint32_t colliderUuid);
+        void addBoxCollider(PhysicsMaterial& material, glm::vec3 halfSize, glm::vec3 offset, bool isTrigger);
+        void addSphereCollider(PhysicsMaterial& material, float radius, glm::vec3 offset, bool isTrigger);
+        void addCapsuleCollider(PhysicsMaterial& material, float radius, float halfHeight, glm::vec3 offset, bool isTrigger);
+        void addTriangleCollider(PhysicsMaterial& material, PhysicsTriangleMesh& physicsMesh, bool isTrigger);
+        void addConvexCollider(PhysicsMaterial& material, PhysicsConvexMesh& physicsMesh, bool isTrigger);
+        void removeCollider(PhysicsColliderType colliderType);
 
     private:
         physx::PxRigidActor* physxActor;
@@ -54,7 +62,7 @@ namespace CgEngine {
         bool dynamic;
         bool kinematic = false;
 
-        std::unordered_map<uint32_t, PhysicsShape*> colliders;
+        std::unordered_map<PhysicsColliderType, PhysicsShape*> colliders;
     };
 
 }

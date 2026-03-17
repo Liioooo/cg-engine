@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Enums.h"
+#include "CgEngineSharedUtils/Enums.h"
 
 namespace CgEngine {
 
@@ -28,7 +28,7 @@ namespace CgEngine {
         Attachment& operator=(Attachment& other) = delete;
 
         virtual AttachmentType getType() const = 0;
-        virtual DepthAttachmentFormat getDepthAttachmentFormat() const = 0;
+        virtual DepthStencilAttachmentFormat getDepthStencilAttachmentFormat() const = 0;
         virtual bool isUsableAsTexture() const = 0;
         virtual uint32_t getLayerCount() const = 0;
         virtual uint32_t getWidth() const = 0;

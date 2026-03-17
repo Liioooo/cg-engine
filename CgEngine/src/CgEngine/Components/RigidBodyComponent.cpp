@@ -1,14 +1,18 @@
 #include "RigidBodyComponent.h"
 #include "Scene/Scene.h"
 #include "imgui.h"
+#include "Components/TransformComponent.h"
+#include "Components/BoxColliderComponent.h"
+#include "Components/SphereColliderComponent.h"
+#include "Components/CapsuleColliderComponent.h"
+#include "Components/TriangleColliderComponent.h"
+#include "Components/ConvexColliderComponent.h"
 
 namespace CgEngine {
     void RigidBodyComponentParams::verifyParams() const {}
 
     void RigidBodyComponent::onAttach(Scene& scene, RigidBodyComponentParams& params) {
-        auto& transform = scene.getComponent<TransformComponent>(entity);
-
-        actor = new PhysicsActor(&scene, entity, transform.getGlobalPosition(), transform.getGlobalRotationQuat(), params.isDynamic, params.collisionDetection);
+        actor = new PhysicsActor(&scene, entity, params.isDynamic, params.collisionDetection);
 
         if (params.isDynamic) {
             setKinematic(params.isKinematic);
@@ -17,35 +21,50 @@ namespace CgEngine {
             setLinearDrag(params.linearDrag);
             setAngularDrag(params.angularDrag);
         }
+    }
+
+    void RigidBodyComponent::onEnable(Scene& scene) {
+        auto transform = scene.getComponent<TransformComponent>(entity);
+        actor->getPhysxActor().setGlobalPose(physx::PxTransform(PhysXUtils::glmToPhysXVec(transform->getGlobalPosition()), PhysXUtils::glmToPhysXQuat(transform->getGlobalRotationQuat())));
 
         if (scene.hasComponent<BoxColliderComponent>(entity)) {
-            auto& colliderComp = scene.getComponent<BoxColliderComponent>(entity);
-            uint32_t colliderUuid = addBoxCollider(*colliderComp.getPhysicsMaterial().get(), colliderComp.getHalfSize(), colliderComp.getOffset(), colliderComp.getIsTrigger());
-            colliderComp.colliderUuid = colliderUuid;
+            auto colliderComp = scene.getComponent<BoxColliderComponent>(entity);
+            if (!colliderComp->isColliderAddedToActor) {
+                addBoxCollider(*colliderComp->getPhysicsMaterial().get(), colliderComp->getHalfSize(), colliderComp->getOffset(), colliderComp->getIsTrigger());
+                colliderComp->isColliderAddedToActor = true;
+            }
         }
 
         if (scene.hasComponent<SphereColliderComponent>(entity)) {
-            auto& colliderComp = scene.getComponent<SphereColliderComponent>(entity);
-            uint32_t colliderUuid = addSphereCollider(*colliderComp.getPhysicsMaterial().get(), colliderComp.getRadius(), colliderComp.getOffset(), colliderComp.getIsTrigger());
-            colliderComp.colliderUuid = colliderUuid;
+            auto colliderComp = scene.getComponent<SphereColliderComponent>(entity);
+            if (!colliderComp->isColliderAddedToActor) {
+                addSphereCollider(*colliderComp->getPhysicsMaterial().get(), colliderComp->getRadius(), colliderComp->getOffset(), colliderComp->getIsTrigger());
+                colliderComp->isColliderAddedToActor = true;
+            }
         }
 
         if (scene.hasComponent<CapsuleColliderComponent>(entity)) {
-            auto& colliderComp = scene.getComponent<CapsuleColliderComponent>(entity);
-            uint32_t colliderUuid = addCapsuleCollider(*colliderComp.getPhysicsMaterial().get(), colliderComp.getRadius(), colliderComp.getHalfHeight(), colliderComp.getOffset(), colliderComp.getIsTrigger());
-            colliderComp.colliderUuid = colliderUuid;
+            auto colliderComp = scene.getComponent<CapsuleColliderComponent>(entity);
+            if (!colliderComp->isColliderAddedToActor) {
+                addCapsuleCollider(*colliderComp->getPhysicsMaterial().get(), colliderComp->getRadius(), colliderComp->getHalfHeight(), colliderComp->getOffset(), colliderComp->getIsTrigger());
+                colliderComp->isColliderAddedToActor = true;
+            }
         }
 
         if (scene.hasComponent<TriangleColliderComponent>(entity)) {
-            auto& colliderComp = scene.getComponent<TriangleColliderComponent>(entity);
-            uint32_t colliderUuid = addTriangleCollider(*colliderComp.getPhysicsMaterial().get(), colliderComp.getPhysicsMesh(), colliderComp.getIsTrigger());
-            colliderComp.colliderUuid = colliderUuid;
+            auto colliderComp = scene.getComponent<TriangleColliderComponent>(entity);
+            if (!colliderComp->isColliderAddedToActor) {
+                addTriangleCollider(*colliderComp->getPhysicsMaterial().get(), colliderComp->getPhysicsMesh(), colliderComp->getIsTrigger());
+                colliderComp->isColliderAddedToActor = true;
+            }
         }
 
         if (scene.hasComponent<ConvexColliderComponent>(entity)) {
-            auto& colliderComp = scene.getComponent<ConvexColliderComponent>(entity);
-            uint32_t colliderUuid = addConvexCollider(*colliderComp.getPhysicsMaterial().get(), colliderComp.getPhysicsMesh(), colliderComp.getIsTrigger());
-            colliderComp.colliderUuid = colliderUuid;
+            auto colliderComp = scene.getComponent<ConvexColliderComponent>(entity);
+            if (!colliderComp->isColliderAddedToActor) {
+                addConvexCollider(*colliderComp->getPhysicsMaterial().get(), colliderComp->getPhysicsMesh(), colliderComp->getIsTrigger());
+                colliderComp->isColliderAddedToActor = true;
+            }
         }
 
         scene.getPhysicsScene().addActor(actor);
@@ -54,6 +73,26 @@ namespace CgEngine {
     void RigidBodyComponent::onDetach(Scene& scene) {
         scene.getPhysicsScene().removeActor(actor);
         delete actor;
+
+        if (scene.hasComponent<BoxColliderComponent>(entity)) {
+            scene.getComponent<BoxColliderComponent>(entity)->isColliderAddedToActor = false;
+        }
+
+        if (scene.hasComponent<SphereColliderComponent>(entity)) {
+            scene.getComponent<SphereColliderComponent>(entity)->isColliderAddedToActor = false;
+        }
+
+        if (scene.hasComponent<CapsuleColliderComponent>(entity)) {
+            scene.getComponent<CapsuleColliderComponent>(entity)->isColliderAddedToActor = false;
+        }
+
+        if (scene.hasComponent<TriangleColliderComponent>(entity)) {
+            scene.getComponent<TriangleColliderComponent>(entity)->isColliderAddedToActor = false;
+        }
+
+        if (scene.hasComponent<ConvexColliderComponent>(entity)) {
+            scene.getComponent<ConvexColliderComponent>(entity)->isColliderAddedToActor = false;
+        }
     }
 
     void RigidBodyComponent::setKinematic(bool isKinematic) {
@@ -116,28 +155,28 @@ namespace CgEngine {
         actor->setMaxAngularVelocity(velocity);
     }
 
-    uint32_t RigidBodyComponent::addBoxCollider(PhysicsMaterial& material, glm::vec3 halfSize, glm::vec3 offset, bool isTrigger) {
-        return actor->addBoxCollider(material, halfSize, offset, isTrigger);
+    void RigidBodyComponent::addBoxCollider(PhysicsMaterial& material, glm::vec3 halfSize, glm::vec3 offset, bool isTrigger) {
+        actor->addBoxCollider(material, halfSize, offset, isTrigger);
     }
 
-    uint32_t RigidBodyComponent::addSphereCollider(PhysicsMaterial& material, float radius, glm::vec3 offset, bool isTrigger) {
-        return actor->addSphereCollider(material, radius, offset, isTrigger);
+    void RigidBodyComponent::addSphereCollider(PhysicsMaterial& material, float radius, glm::vec3 offset, bool isTrigger) {
+        actor->addSphereCollider(material, radius, offset, isTrigger);
     }
 
-    uint32_t RigidBodyComponent::addCapsuleCollider(PhysicsMaterial& material, float radius, float halfHeight, glm::vec3 offset, bool isTrigger) {
-        return actor->addCapsuleCollider(material, radius, halfHeight, offset, isTrigger);
+    void RigidBodyComponent::addCapsuleCollider(PhysicsMaterial& material, float radius, float halfHeight, glm::vec3 offset, bool isTrigger) {
+        actor->addCapsuleCollider(material, radius, halfHeight, offset, isTrigger);
     }
 
-    uint32_t RigidBodyComponent::addTriangleCollider(PhysicsMaterial& material, PhysicsTriangleMesh& physicsMesh, bool isTrigger) {
-        return actor->addTriangleCollider(material, physicsMesh, isTrigger);
+    void RigidBodyComponent::addTriangleCollider(PhysicsMaterial& material, PhysicsTriangleMesh& physicsMesh, bool isTrigger) {
+        actor->addTriangleCollider(material, physicsMesh, isTrigger);
     }
 
-    uint32_t RigidBodyComponent::addConvexCollider(PhysicsMaterial& material, PhysicsConvexMesh& physicsMesh, bool isTrigger) {
-        return actor->addConvexCollider(material, physicsMesh, isTrigger);
+    void RigidBodyComponent::addConvexCollider(PhysicsMaterial& material, PhysicsConvexMesh& physicsMesh, bool isTrigger) {
+        actor->addConvexCollider(material, physicsMesh, isTrigger);
     }
 
-    void RigidBodyComponent::removeCollider(uint32_t colliderUuid) {
-        actor->removeCollider(colliderUuid);
+    void RigidBodyComponent::removeCollider(PhysicsColliderType colliderType) {
+        actor->removeCollider(colliderType);
     }
 
     void RigidBodyComponent::onRenderImGui() {

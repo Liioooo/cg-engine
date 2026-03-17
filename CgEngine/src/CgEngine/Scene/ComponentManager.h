@@ -1,71 +1,22 @@
 #pragma once
 
 #include "Entity.h"
-#include "Components/AnimationComponent.h"
-#include "Components/TransformComponent.h"
-#include "Components/ScriptComponent.h"
-#include "Components/MeshRendererComponent.h"
-#include "Components/AnimatedMeshRendererComponent.h"
-#include "Components/CameraComponent.h"
-#include "Components/DirectionalLightComponent.h"
-#include "Components/PointLightComponent.h"
-#include "Components/SpotLightComponent.h"
-#include "Components/SkyboxComponent.h"
-#include "Components/BoxColliderComponent.h"
-#include "Components/SphereColliderComponent.h"
-#include "Components/CapsuleColliderComponent.h"
-#include "Components/TriangleColliderComponent.h"
-#include "Components/ConvexColliderComponent.h"
-#include "Components/RigidBodyComponent.h"
-#include "Components/CharacterControllerComponent.h"
-#include "Components/UiCanvasComponent.h"
-#include "Components/AudioListenerComponent.h"
-#include "Components/AudioComponent.h"
-#include "Components/LodDistanceComponent.h"
-#include "Components/CustomShaderRendererComponent.h"
 #include "ComponentArray.h"
 
 namespace CgEngine {
 
     class ComponentManager {
     public:
-        ComponentManager() {
-            registerComponentType<TransformComponent>();
-            registerComponentType<ScriptComponent>();
-            registerComponentType<MeshRendererComponent>();
-            registerComponentType<AnimatedMeshRendererComponent>();
-            registerComponentType<CameraComponent>();
-            registerComponentType<DirectionalLightComponent>();
-            registerComponentType<PointLightComponent>();
-            registerComponentType<SpotLightComponent>();
-            registerComponentType<SkyboxComponent>();
-            registerComponentType<BoxColliderComponent>();
-            registerComponentType<SphereColliderComponent>();
-            registerComponentType<CapsuleColliderComponent>();
-            registerComponentType<TriangleColliderComponent>();
-            registerComponentType<ConvexColliderComponent>();
-            registerComponentType<RigidBodyComponent>();
-            registerComponentType<CharacterControllerComponent>();
-            registerComponentType<CharacterControllerComponent>();
-            registerComponentType<UiCanvasComponent>();
-            registerComponentType<AnimationComponent>();
-            registerComponentType<CustomShaderRendererComponent>();
-            registerComponentType<AudioListenerComponent>();
-            registerComponentType<AudioComponent>();
-            registerComponentType<LodDistanceComponent>();
-        }
+        ComponentManager();
 
         template<typename C>
-        C& attachComponent(Entity entity, Scene& scene, typename C::Params componentParams) {
+        void attachComponent(Entity entity, Scene& scene, typename C::Params& componentParams) {
             componentParams.verifyParams();
-            C& comp =  getComponentArray<C>()->attachComponent(entity);
-            comp.onAttach(scene, componentParams);
-            return comp;
+            getComponentArray<C>()->attachComponent(entity, scene, componentParams);
         }
 
         template<typename C>
         void detachComponent(Entity entity, Scene& scene) {
-            getComponentArray<C>()->getComponent(entity).onDetach(scene);
             getComponentArray<C>()->detachComponent(entity);
         }
 
@@ -113,13 +64,29 @@ namespace CgEngine {
 
         void destroyAllComponents(Scene& scene) {
             for (const auto &pair: componentArrays) {
-                pair.second->detachAllComponents(scene);
+                pair.second->detachAllComponentsInstantly(scene);
             }
         }
 
         void renderImGuiForEntity(Entity entity) {
             for (const auto &pair: componentArrays) {
                 pair.second->renderImGuiForEntity(entity);
+            }
+        }
+
+        bool executePendingOperations(Scene& scene) {
+            bool wereComponentsAdded = false;
+
+            for (const auto &pair: componentArrays) {
+                wereComponentsAdded |= pair.second->executePendingOperations(scene);
+            }
+
+            return wereComponentsAdded;
+        }
+
+        void callOnEnableForAddedComponents(Scene& scene) {
+            for (const auto &pair: componentArrays) {
+                pair.second->callOnEnableForAddedComponents(scene);
             }
         }
 

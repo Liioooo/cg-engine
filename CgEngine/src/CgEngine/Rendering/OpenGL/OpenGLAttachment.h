@@ -18,7 +18,7 @@ namespace CgEngine {
         OpenGLAttachment& operator=(OpenGLAttachment& other) = delete;
 
         AttachmentType getType() const override;
-        DepthAttachmentFormat getDepthAttachmentFormat() const override;
+        DepthStencilAttachmentFormat getDepthStencilAttachmentFormat() const override;
         bool isUsableAsTexture() const override;
         uint32_t getLayerCount() const override;
         uint32_t getWidth() const override;
@@ -31,7 +31,7 @@ namespace CgEngine {
 
     private:
         uint32_t attachmentHandle = ~0;
-        DepthAttachmentFormat depthFormat;
+        DepthStencilAttachmentFormat depthFormat;
         AttachmentType type;
         bool usableAsTexture = false;
         TextureWrap textureWrap = TextureWrap::Clamp;

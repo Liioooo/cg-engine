@@ -1,7 +1,9 @@
 #include "StringUtils.h"
 #include <charconv>
+#include <regex>
 
-namespace CgEngine::Utils::String {
+namespace CgEngine::StringUtils {
+
     bool equalsIgnoreCase(const std::string_view a, const std::string_view b) {
         if (a.size() != b.size()) {
             return false;

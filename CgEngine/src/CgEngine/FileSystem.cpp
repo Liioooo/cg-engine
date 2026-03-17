@@ -18,7 +18,7 @@ namespace CgEngine {
         return "";
     }
 
-    std::vector<char> FileSystem::readFileBinary(const std::filesystem::path& path) {
+    std::vector<uint8_t> FileSystem::readFileBinary(const std::filesystem::path& path) {
         std::ifstream file(path, std::ios::ate | std::ios::binary);
         if (!file.is_open()) {
             CG_LOGGING_ERROR("Unable to load File: {0}", path.string());
@@ -26,9 +26,9 @@ namespace CgEngine {
         }
 
         size_t fileSize = (size_t) file.tellg();
-        std::vector<char> buffer(fileSize);
+        std::vector<uint8_t> buffer(fileSize);
         file.seekg(0);
-        file.read(buffer.data(), fileSize);
+        file.read(reinterpret_cast<char*>(buffer.data()), fileSize);
         file.close();
 
         return buffer;

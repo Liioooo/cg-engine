@@ -1,0 +1,35 @@
+<UiCanvases>
+    <Canvas name="StartMenu" width="100vw" height="100vh">
+        <UiText id="gameName" left="50vw" top="25vh" y-align="center" x-align="center" font="SpaceMono-Bold.ttf" size="15vh" text="Pac3D" color="1 1 1 1" />
+
+        <UiRect id="playButton" left="50vw" top="50vh" width="25vw" height="12vh" fill-color="1 1 1 1" line-width-hover="5" line-color="0.8 0 0 1" y-align="center" x-align="center" z-index="0" />
+        <UiText id="playText" left="50vw" top="50vh" y-align="center" x-align="center" font="SpaceMono-Bold.ttf" size="9vh" text="Play" color="0 0 0 1" z-index="1" />
+
+        <UiRect id="controlsButton" left="50vw" top="70vh" width="22vw" height="9vh" fill-color="1 1 1 1" line-width-hover="5" line-color="0.8 0 0 1" y-align="center" x-align="center" z-index="0" />
+        <UiText id="controlsText" left="50vw" top="70vh" y-align="center" x-align="center" font="SpaceMono-Bold.ttf" size="5vh" text="Controls" color="0 0 0 1" z-index="1" />
+
+        <UiRect id="exitButton" left="50vw" top="85vh" width="22vw" height="10vh" fill-color="1 1 1 1" line-width-hover="5" line-color="0.8 0 0 1" y-align="center" x-align="center" z-index="0" />
+        <UiText id="exitText" left="50vw" top="85vh" y-align="center" x-align="center" font="SpaceMono-Bold.ttf" size="5vh" text="Exit Game" color="0 0 0 1" z-index="1" />
+    </Canvas>
+    <Canvas name="startMenuControls" width="100vw" height="100vh">
+        <UiRect id="overlay" left="50vw" top="50vh" width="80vw" height="85vh" fill-color="1 1 1 0.8" y-align="center" x-align="center" z-index="0" />
+        <UiRect id="controlsImage" left="50vw" top="50vh" width="65vw" height="80vh" texture="controls.png" y-align="center" x-align="center" z-index="1" />
+        <UiText id="controlsClose" left="86.5vw" top="12.5vh" size="5vw" y-align="center" x-align="center" text="X" color="0 0 0 1" font="SpaceMono-Bold.ttf" z-index="2" />
+        <UiRect id="controlsCloseRect" left="86.5vw" top="12.5vh" width="5vw" height="5vw" y-align="center" x-align="center" fill-color="1 1 1 0.7" line-width-hover="5" line-color="0.8 0 0 1" z-index="1" />
+    </Canvas>
+    <Canvas name="inGameUI" width="100vw" height="100vh">
+        <UiRect id="live0" left="0.5vw" top="0.5vw" width="4vw" height="4vw" texture="pacMan2D.png" line-width="0" y-align="top" x-align="left" />
+        <UiRect id="live1" left="5vw" top="0.5vw" width="4vw" height="4vw" texture="pacMan2D.png" line-width="0" y-align="top" x-align="left" />
+        <UiRect id="live2" left="9.5vw" top="0.5vw" width="4vw" height="4vw" texture="pacMan2D.png" line-width="0" y-align="top" x-align="left" />
+        <UiRect id="live3" left="14vw" top="0.5vw" width="4vw" height="4vw" texture="pacMan2D.png" line-width="0" y-align="top" x-align="left" />
+
+        <UiCircle id="cross" left="50vw" top="50vh" width="15" height="15" fill-color="0 0 0 0.8" line-width="0" y-align="top" x-align="center" />
+
+        <UiRect id="projectiles" right="0.5vw" top="0.5vw" width="15vw" height="2vw" line-width="0" y-align="top" x-align="right" fill-color="0.25 0.52 0.96 0.5" z-index="0" />
+        <UiRect id="projectilesAmount" right="15.5vw" top="0.5vw" width="15vw" height="2vw" line-width="0" y-align="top" x-align="left" fill-color="0.25 0.52 0.96 1" z-index="1" />
+
+        <UiRect id="coins" right="0.5vw" top="3vw" width="15vw" height="2vw" line-width="0" y-align="top" x-align="right" fill-color="1 0.1 0.1 0.5" z-index="0" />
+        <UiRect id="coinsAmount" right="15.5vw" top="3vw" width="0" height="2vw" line-width="0" y-align="top" x-align="left" fill-color="1 0.1 0.1 1" z-index="1" />
+        <UiRect id="winCoinsThreshold" right="2vw" top="3vw" width="0.1vw" height="2vw" line-width="0" y-align="top" x-align="left" fill-color="1 1 1 1" z-index="2" />
+    </Canvas>
+</UiCanvases>

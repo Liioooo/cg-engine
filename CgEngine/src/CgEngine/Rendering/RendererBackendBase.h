@@ -10,8 +10,22 @@
 #include "Rendering/DescriptorSet.h"
 #include "Rendering/ComputePipeline.h"
 #include "Rendering/GraphicsPipeline.h"
+#include "Rendering/DynamicGraphicsPipeline.h"
 
 namespace CgEngine {
+
+    struct DynamicRenderingAttachment {
+        const Attachment* attachment = nullptr;
+    };
+
+    struct DynamicRenderingInfo {
+        bool clearColorAttachments = true;
+        bool clearDepthStencilAttachment = true;
+        glm::vec4 clearColor;
+        glm::ivec2 renderArea;
+        std::vector<DynamicRenderingAttachment> colorAttachments;
+        DynamicRenderingAttachment depthStencilAttachment{};
+    };
 
     class RendererBackendBase {
     public:
@@ -29,7 +43,11 @@ namespace CgEngine {
         virtual void beginSwapChainRenderPass() = 0;
         virtual void endRenderPass() = 0;
 
+        virtual void beginDynamicRendering(const DynamicRenderingInfo& renderingInfo) = 0;
+        virtual void endDynamicRendering() = 0;
+
         virtual void bindGraphicsPipeline(const GraphicsPipeline* graphicsPipeline) = 0;
+        virtual void bindDynamicGraphicsPipeline(const DynamicGraphicsPipeline* graphicsPipeline) = 0;
         virtual void bindComputePipeline(const ComputePipeline* computePipeline) = 0;
         virtual void dispatchCompute(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
 

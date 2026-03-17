@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Enums.h"
+#include "CgEngineSharedUtils/Enums.h"
 
 namespace CgEngine {
 
@@ -36,7 +36,7 @@ namespace CgEngine {
         std::tuple<unsigned char*, int, int> loadImageData(const std::filesystem::path& path);
         void freeImageData(unsigned char* data);
         uint32_t calculateMipCount(uint32_t width, uint32_t height);
-        std::vector<char> loadShaderBinaryWithType(const std::string& name, const std::string& type, ShaderEnv env);
-        std::vector<char> loadShaderBinary(const std::string& name, ShaderEnv env);
+        std::vector<uint8_t> loadShaderBinaryWithType(const std::string& name, const std::string& type, ShaderEnv env);
+        std::vector<uint8_t> loadShaderBinary(const std::string& name, ShaderEnv env);
     }
 }

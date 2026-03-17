@@ -5,27 +5,18 @@
 
 namespace CgEngine {
 
-    class MouseButtonReleasedEvent : public Event {
+    class MouseButtonReleasedEvent : public Event, public IEventHasMousePosition {
     public:
-        MouseButtonReleasedEvent(const MouseButton button, const float x, const float y) : button(button), x(x), y(y) {}
+        MouseButtonReleasedEvent(const MouseButton button, const float x, const float y) : button(button), IEventHasMousePosition(x, y) {}
 
         inline MouseButton getButton() const {
             return button;
-        }
-
-        inline float getXPos() const {
-            return x;
-        }
-        inline float getYPos() const {
-            return y;
         }
 
         EVENT_TYPE_FN(MouseButtonReleased);
 
     private:
         MouseButton button;
-        float x;
-        float y;
     };
 
 }

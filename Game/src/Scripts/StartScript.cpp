@@ -1,97 +1,38 @@
 #include "StartScript.h"
 #include "CgEngine/Events/Input.h"
 #include "CgEngine/Application.h"
-#include "CgEngine/Rendering/CustomPipeline.h"
+#include "CgEngine/Components/UiCanvasComponent2D.h"
 
 namespace Game {
-    void StartScript::onAttach() {
+    void StartScript::onEnable() {
         CgEngine::Input::setCursorMode(CgEngine::CursorMode::Normal);
-    }
 
-    void StartScript::onMouseButtonPressed(CgEngine::MouseButtonPressedEvent& event) {
-        auto& canvas = getComponent<CgEngine::UiCanvasComponent>(findEntityById("canvas"));
+        auto canvasEntity = findEntityById("canvas");
+        auto canvas = canvasEntity.getComponent<CgEngine::UiCanvasComponent2D>();
 
-        if (canvas.hasUiElement("controlsOverlay")) {
-            canvas.removeUIElement("controlsOverlay");
-            canvas.removeUIElement("controlsImage");
-            canvas.removeUIElement("controlsClose");
-            return;
-        }
-
-        if (canvas.getUIElement<CgEngine::UiRect>("playButton")->isPointInside({event.getXPos(), event.getYPos()})) {
+        auto& playButton = *canvas->getCanvas()->getUIElement<CgEngine::UiRect>("playButton");
+        addUiElementClickListener(playButton, [this]() {
             setActiveScene("scenes/game_scene.xml");
-        }
+        });
 
-        if (!canvas.hasUiElement("controlsOverlay") && canvas.getUIElement<CgEngine::UiRect>("controlsButton")->isPointInside({event.getXPos(), event.getYPos()})) {
-            auto* overlay = canvas.addUiRect("controlsOverlay");
-            overlay->setWidth(0.8f, CgEngine::UIPosUnit::VWPercent);
-            overlay->setHeight(0.85f, CgEngine::UIPosUnit::VHPercent);
-            overlay->setFillColor({1.0f, 1.0f, 1.0f, 0.8f});
-            overlay->setLeft(0.5f, CgEngine::UIPosUnit::VWPercent);
-            overlay->setTop(0.5f, CgEngine::UIPosUnit::VHPercent);
-            overlay->setXAlignment(CgEngine::UIXAlignment::Center);
-            overlay->setYAlignment(CgEngine::UIYAlignment::Center);
-            overlay->setZIndex(10);
-
-            auto* controls = canvas.addUiRect("controlsImage");
-            controls->setWidth(0.65f, CgEngine::UIPosUnit::VWPercent);
-            controls->setHeight(0.8f, CgEngine::UIPosUnit::VHPercent);
-            controls->setTextureByName("controls.png");
-            controls->setLeft(0.5f, CgEngine::UIPosUnit::VWPercent);
-            controls->setTop(0.5f, CgEngine::UIPosUnit::VHPercent);
-            controls->setXAlignment(CgEngine::UIXAlignment::Center);
-            controls->setYAlignment(CgEngine::UIYAlignment::Center);
-            controls->setZIndex(11);
-
-            auto* close = canvas.addUiText("controlsClose");
-            close->setLeft(0.865f, CgEngine::UIPosUnit::VWPercent);
-            close->setTop(0.125f, CgEngine::UIPosUnit::VHPercent);
-            close->setXAlignment(CgEngine::UIXAlignment::Center);
-            close->setYAlignment(CgEngine::UIYAlignment::Center);
-            close->setZIndex(11);
-            close->setText("X");
-            close->setSize(0.05f, CgEngine::UIPosUnit::VWPercent);
-            close->setColor({0.0f, 0.0f, 0.0f, 1.0f});
-            close->setFont("SpaceMono-Bold.ttf");
-        }
-
-        if (canvas.getUIElement<CgEngine::UiRect>("exitButton")->isPointInside({event.getXPos(), event.getYPos()})) {
+        auto& exitButton = *canvas->getCanvas()->getUIElement<CgEngine::UiRect>("exitButton");
+        addUiElementClickListener(exitButton, []() {
             CgEngine::Application::get().shutdown();
-        }
+        });
 
-    }
+        auto& controlsButton = *canvas->getCanvas()->getUIElement<CgEngine::UiRect>("controlsButton");
+        addUiElementClickListener(controlsButton, [this, canvasEntity]() {
+            auto overlayEntity = instantiatePrefab("startMenuControlsOverlay");
+            auto overlayCanvas = overlayEntity.getComponent<CgEngine::UiCanvasComponent2D>();
 
-    void StartScript::onMouseMoved(CgEngine::MouseMovedEvent& event) {
-        auto& canvas = getComponent<CgEngine::UiCanvasComponent>(findEntityById("canvas"));
+            canvasEntity.getComponent<CgEngine::UiCanvasComponent2D>()->setReceiveInputEvents(false);
 
-        auto* playButton = canvas.getUIElement<CgEngine::UiRect>("playButton");
-        auto* playText = canvas.getUIElement<CgEngine::UiText>("playText");
-        if (playButton->isPointInside({event.getXPos(), event.getYPos()})) {
-            playText->setColor({0.8f, 0.0f, 0.0f, 1.0f});
-            playButton->setLineWidth(5);
-        } else {
-            playText->setColor({0.0f, 0.0f, 0.0f, 1.0f});
-            playButton->setLineWidth(0);
-        }
+            auto& overlayCloseButton = *overlayCanvas->getCanvas()->getUIElement<CgEngine::UiRect>("controlsCloseRect");
+            addUiElementClickListener(overlayCloseButton, [canvasEntity, overlayEntity]() mutable {
+                canvasEntity.getComponent<CgEngine::UiCanvasComponent2D>()->setReceiveInputEvents(true);
+                overlayEntity.destroy();
+            });
+        });
 
-        auto* controlsButton = canvas.getUIElement<CgEngine::UiRect>("controlsButton");
-        auto* controlsText = canvas.getUIElement<CgEngine::UiText>("controlsText");
-        if (controlsButton->isPointInside({event.getXPos(), event.getYPos()})) {
-            controlsText->setColor({0.8f, 0.0f, 0.0f, 1.0f});
-            controlsButton->setLineWidth(5);
-        } else {
-            controlsText->setColor({0.0f, 0.0f, 0.0f, 1.0f});
-            controlsButton->setLineWidth(0);
-        }
-
-        auto* exitButton = canvas.getUIElement<CgEngine::UiRect>("exitButton");
-        auto* exitText = canvas.getUIElement<CgEngine::UiText>("exitText");
-        if (exitButton->isPointInside({event.getXPos(), event.getYPos()})) {
-            exitText->setColor({0.8f, 0.0f, 0.0f, 1.0f});
-            exitButton->setLineWidth(5);
-        } else {
-            exitText->setColor({0.0f, 0.0f, 0.0f, 1.0f});
-            exitButton->setLineWidth(0);
-        }
     }
 }

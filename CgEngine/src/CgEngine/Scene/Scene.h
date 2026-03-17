@@ -7,10 +7,15 @@
 #include "Rendering/TextureCube.h"
 #include "Physics/PhysicsScene.h"
 #include "Rendering/CameraFrustum.h"
+#include "ComponentHandle.h"
+#include "Rendering/DescriptorSet.h"
+#include "Uuid.h"
+#include "Components/CameraComponent.h"
 
 namespace CgEngine {
 
     class SceneRenderer;
+    class EntityHandle;
 
     struct SceneSpotLight {
         glm::vec3 position;
@@ -48,39 +53,32 @@ namespace CgEngine {
 
     class Scene {
         friend class ImGuiSceneView;
+        friend class EntityHandle;
     public:
         Scene(int viewportWidth, int viewportHeight);
         ~Scene();
 
-        Entity createEntity(Entity parent);
-        Entity createEntity(Entity parent, const std::string& id);
-        void destroyEntity(Entity entity);
-        Entity findEntityById(const std::string& id);
-        std::optional<std::string> getIdForEntity(Entity entity) const;
-        const std::unordered_set<Entity>& getChildren(Entity entity);
-        Entity getParent(Entity entity);
-        bool hasParent(Entity entity) const;
+        EntityHandle createEntity(Entity parent);
+        EntityHandle createEntity(Entity parent, const std::string& id);
+        EntityHandle findEntityById(const std::string& id);
         bool hasEntity(Entity entity) const;
-        void setEntityTag(Entity entity, const std::string& tag);
-        std::string getEntityTag(Entity entity);
         void updateTransforms();
         void onViewportResize(int width, int height);
         int getViewportWidth() const;
         int getViewportHeight() const;
-        void submitPostUpdateFunction(std::function<void()>&& function);
-        Uuid submitOnPreRenderFunction(const std::function<void(const CameraFrustum& camaraFrustum)>& function, bool once = false);
-        void removeOnPreRenderFunction(Uuid uuid);
-        Uuid submitOnRenderFunction(const std::function<void(SceneRenderer& renderer)>& function, bool once = false);
-        void removeOnRenderFunction(Uuid uuid);
+        void executeOnRender(const std::function<void(SceneRenderer& renderer)>& function);
         void onUpdate(TimeStep ts);
         void onEvent(Event& event);
         void onRender(SceneRenderer& renderer);
 
         void executeFixedUpdate(TimeStep ts);
+        void executeAllPendingOperations(bool forceUpdateTransforms);
 
         template<typename C>
-        C& attachComponent(Entity entity, typename C::Params componentParams) {
-            return componentManager->attachComponent<C>(entity, *this, componentParams);
+        ComponentHandle<C> attachComponent(Entity entity, typename C::Params componentParams) {
+            CG_ASSERT(hasEntity(entity), "Scene::attachComponent: Entity does not exist in the scene.")
+            componentManager->attachComponent<C>(entity, *this, componentParams);
+            return ComponentHandle<C>(componentManager, entity);
         }
 
         template<typename C>
@@ -88,17 +86,11 @@ namespace CgEngine {
             componentManager->detachComponent<C>(entity, *this);
         }
 
-        /**
-         * References to Components must not be cached!!
-         * Because if an other component of the same type is detached, the memory address of this component might change.
-         * Which will lead to the reference pointing to a bad address!
-         * @tparam C ComponentType
-         * @param entity
-         * @return reference to Component: auto& comp = s.getComponent<SomeComp>(entity);
-         */
         template<typename C>
-        C& getComponent(Entity entity) {
-            return componentManager->getComponent<C>(entity);
+        ComponentHandle<C> getComponent(Entity entity) const {
+            CG_ASSERT(hasEntity(entity), "Scene::getComponent: Entity does not exist in the scene.")
+            CG_ASSERT(componentManager->hasComponent<C>(entity), "Scene::getComponent: Entity does not have the requested component.")
+            return ComponentHandle<C>(componentManager, entity);
         }
 
         template<typename C>
@@ -111,28 +103,8 @@ namespace CgEngine {
             return componentManager->getEntitiesWithComponent<C>();
         }
 
-        template<typename C>
-        typename ComponentArray<C>::Iterator begin() {
-            return componentManager->begin<C>();
-        }
-
-        template<typename C>
-        typename ComponentArray<C>::Iterator end() {
-            return componentManager->end<C>();
-        }
-
-        template<typename C>
-        typename ComponentArray<C>::Iterator cbegin() const {
-            return componentManager->cbegin<C>();
-        }
-
-        template<typename C>
-        typename ComponentArray<C>::Iterator cend() const {
-            return componentManager->cend<C>();
-        }
-
         inline uint32_t getEntityCount() const {
-            return entityCount;
+            return children.size();
         }
 
         PhysicsScene& getPhysicsScene() {
@@ -143,34 +115,29 @@ namespace CgEngine {
 
     private:
         Entity nextEntityId = 1;
-        uint32_t entityCount = 0;
         std::unordered_map<std::string, Entity> idToEntity{};
         std::unordered_map<Entity, std::string> entityTags{};
         std::unordered_map<Entity, std::unordered_set<Entity>> children{};
         std::unordered_map<Entity, Entity> parents{};
-        std::vector<std::function<void()>> postUpdateFunctions{};
+        std::unordered_set<Entity> entitiesToBeDestroyed{};
 
-        template<typename T>
-        struct FunctionCallback {
-            Uuid uuid;
-            bool once = false;
-            T function;
-
-            explicit FunctionCallback(const T& function, bool once = false) : function(function), once(once) {}
-        };
-
-        std::vector<FunctionCallback<std::function<void(const CameraFrustum& camaraFrustum)>>> onPreRenderFunctions{};
-        std::vector<FunctionCallback<std::function<void(SceneRenderer& renderer)>>> onRenderFunctions{};
+        std::vector<std::function<void(SceneRenderer& renderer)>> onRenderFunctions{};
 
         ComponentManager* componentManager = new ComponentManager();
         int viewportWidth;
         int viewportHeight;
         PhysicsScene* physicsScene;
 
-        void recursiveDestroyEntity(Entity entity);
+        void destroyEntity(Entity entity);
+        std::optional<std::string> getIdForEntity(Entity entity) const;
+        const std::unordered_set<Entity>& getChildren(Entity entity) const;
+        Entity getParent(Entity entity) const;
+        bool hasParent(Entity entity) const;
+        void setEntityTag(Entity entity, const std::string& tag);
+        std::string getEntityTag(Entity entity) const;
+
+        void findRecursiveEntitiesToDestroy(Entity entity, std::unordered_set<Entity>& recursivelyDestroyedEntities);
         void recursiveUpdateChildTransforms(Entity entity, const glm::mat4& parentModelMatrix, bool parentDirty);
-        void executePostUpdateFunctions();
-        void executeOnPreRenderFunctions(SceneRenderer& renderer);
         void executeOnRenderFunctions(SceneRenderer& renderer);
     };
 

@@ -173,6 +173,8 @@ set_property(TARGET PhysXSDK APPEND PROPERTY INTERFACE_PHYSX_RELEASE_DLLS "${PHY
 ################################################################################
 
 add_subdirectory(CgEngine)
+add_subdirectory(CgEngineSharedUtils)
+add_subdirectory(AssetPacker)
 add_subdirectory(Game)
 add_subdirectory(RealTimeRendering)
 #add_subdirectory(VulkanTest)

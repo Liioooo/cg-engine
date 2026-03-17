@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Rendering/Enums.h"
+#include "CgEngineSharedUtils/Enums.h"
 #include "Rendering/OpenGL/OpenGLRenderer.h"
 
 namespace CgEngine {
@@ -26,7 +26,7 @@ namespace CgEngine {
         uint32_t loadOpenGLCustomComputeShader(const std::string& name);
         bool checkShaderErrors(uint32_t shaderHandle, const std::string& type);
         int getShaderUniformLocation(uint32_t programHandle, const std::string& name);
-        bool createShaderType(unsigned int type, const std::string& sType, const std::vector<char>& source, unsigned int attachTo);
+        bool createShaderType(unsigned int type, const std::string& sType, const std::vector<uint8_t>& source, unsigned int attachTo);
         glm::vec3 textureBorderColorToGLMVec3(TextureBorderColor color);
     }
 

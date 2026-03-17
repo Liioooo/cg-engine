@@ -1,6 +1,7 @@
 #include "UiRect.h"
 #include "FileSystem.h"
 #include "Application.h"
+#include "CgEngineSharedUtils/UIPosUtils.h"
 
 namespace CgEngine {
     void UiRect::setWidth(float width, UIPosUnit unit) {
@@ -15,14 +16,38 @@ namespace CgEngine {
 
     void UiRect::setLineWidth(float lineWidth) {
         this->lineWidth = lineWidth;
+        if (!hasLineWidthHover) {
+            this->lineWidthHover = lineWidth;
+        }
+    }
+
+    void UiRect::setLineWidthHover(float lineWidth) {
+        this->lineWidthHover = lineWidth;
+        hasLineWidthHover = true;
     }
 
     void UiRect::setLineColor(const glm::vec4& lineColor) {
         this->lineColor = lineColor;
+        if (!hasLineColorHover) {
+            this->lineColorHover = lineColor;
+        }
+    }
+
+    void UiRect::setLineColorHover(const glm::vec4& lineColor) {
+        this->lineColorHover = lineColor;
+        hasLineColorHover = true;
     }
 
     void UiRect::setFillColor(const glm::vec4& fillColor) {
         this->fillColor = fillColor;
+        if (!hasFillColorHover) {
+            this->fillColorHover = fillColor;
+        }
+    }
+
+    void UiRect::setFillColorHover(const glm::vec4& fillColor) {
+        this->fillColorHover = fillColor;
+        hasFillColorHover = true;
     }
 
     void UiRect::setTexture(ResRef<Texture2D> texture) {
@@ -45,12 +70,24 @@ namespace CgEngine {
         return lineWidth;
     }
 
+    float UiRect::getLineWidthHover() const {
+        return lineWidthHover;
+    }
+
     const glm::vec4& UiRect::getLineColor() const {
         return lineColor;
     }
 
+    const glm::vec4& UiRect::getLineColorHover() const {
+        return lineColorHover;
+    }
+
     const glm::vec4& UiRect::getFillColor() const {
         return fillColor;
+    }
+
+    const glm::vec4& UiRect::getFillColorHover() const {
+        return fillColorHover;
     }
 
     const ResRef<Texture2D> UiRect::getTexture() const {
@@ -65,76 +102,54 @@ namespace CgEngine {
         return vertices;
     }
 
-    bool UiRect::isPointInside(const glm::vec2& point) const {
-        return point.x >= collisionPoints[0] && point.x <= collisionPoints[2] && point.y >= collisionPoints[1] && point.y <= collisionPoints[3];
+    uint32_t UiRect::getNumIndices() const {
+        return 6;
     }
 
-    void UiRect::updateElement(bool absolutePosDirty, bool viewportDirty, uint32_t viewportWidth, uint32_t viewportHeight) {
-        if (dirty || absolutePosDirty || viewportDirty) {
-            vertices.clear();
+    void UiRect::updateElement(uint32_t canvasWidth, uint32_t canvasHeight) {
+        vertices.clear();
 
-            switch (width.second) {
-                case UIPosUnit::Pixel:
-                    size.x = width.first;
+       size.x = UIPosUtils::convertUIPosToPixels(width, canvasWidth, canvasHeight);
+       size.y = UIPosUtils::convertUIPosToPixels(height, canvasWidth, canvasHeight);
+
+        vertices.emplace_back(0.0f, 0.0f, 0.0f, 1.0f);
+        vertices.emplace_back(size.x, 0.0f, 1.0f, 1.0f);
+        vertices.emplace_back(size.x, size.y, 1.0f, 0.0f);
+        vertices.emplace_back(0.0f, size.y, 0.0f, 0.0f);
+
+        for (auto& vertex: vertices) {
+            switch (xAlignment) {
+                case UIXAlignment::Left:
+                    vertex.x += absolutePos.x;
                     break;
-                case UIPosUnit::VWPercent:
-                    size.x = width.first * static_cast<float>(viewportWidth);
+                case UIXAlignment::Right:
+                    vertex.x += absolutePos.x - size.x;
                     break;
-                case UIPosUnit::VHPercent:
-                    size.x = width.first * static_cast<float>(viewportHeight);
+                case UIXAlignment::Center:
+                    vertex.x += absolutePos.x - size.x / 2;
                     break;
             }
 
-            switch (height.second) {
-                case UIPosUnit::Pixel:
-                    size.y = height.first;
+            switch (yAlignment) {
+                case UIYAlignment::Top:
+                    vertex.y += absolutePos.y - size.y;
                     break;
-                case UIPosUnit::VWPercent:
-                    size.y = height.first * static_cast<float>(viewportWidth);
+                case UIYAlignment::Bottom:
+                    vertex.y += absolutePos.y;
                     break;
-                case UIPosUnit::VHPercent:
-                    size.y = height.first * static_cast<float>(viewportHeight);
+                case UIYAlignment::Center:
+                    vertex.y += absolutePos.y - size.y / 2;
                     break;
-            }
-
-            vertices.emplace_back(0.0f, 0.0f, 0.0f, 1.0f);
-            vertices.emplace_back(size.x, 0.0f, 1.0f, 1.0f);
-            vertices.emplace_back(size.x, size.y, 1.0f, 0.0f);
-            vertices.emplace_back(0.0f, size.y, 0.0f, 0.0f);
-
-            for (auto& vertex: vertices) {
-                switch (xAlignment) {
-                    case UIXAlignment::Left:
-                        vertex.x += absolutePos.x;
-                        break;
-                    case UIXAlignment::Right:
-                        vertex.x += absolutePos.x - size.x;
-                        break;
-                    case UIXAlignment::Center:
-                        vertex.x += absolutePos.x - size.x / 2;
-                        break;
-                }
-
-                switch (yAlignment) {
-                    case UIYAlignment::Top:
-                        vertex.y += absolutePos.y - size.y;
-                        break;
-                    case UIYAlignment::Bottom:
-                        vertex.y += absolutePos.y;
-                        break;
-                    case UIYAlignment::Center:
-                        vertex.y += absolutePos.y - size.y / 2;
-                        break;
-                }
             }
         }
 
         collisionPoints[0] = vertices[0].x;
-        collisionPoints[1] = viewportHeight - vertices[2].y;
+        collisionPoints[1] = canvasHeight - vertices[2].y;
         collisionPoints[2] = vertices[2].x;
-        collisionPoints[3] = viewportHeight - vertices[0].y;
+        collisionPoints[3] = canvasHeight - vertices[0].y;
+    }
 
-
-        dirty = false;
+    bool UiRect::containsPoint(glm::vec2 point) const {
+        return point.x >= collisionPoints[0] && point.x <= collisionPoints[2] && point.y >= collisionPoints[1] && point.y <= collisionPoints[3];
     }
 }

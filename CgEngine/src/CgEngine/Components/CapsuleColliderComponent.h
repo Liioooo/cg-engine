@@ -23,6 +23,7 @@ namespace CgEngine {
         using Params = CapsuleColliderComponentParams;
 
         void onAttach(Scene& scene, CapsuleColliderComponentParams& params);
+        void onEnable(Scene& scene) override;
         void onDetach(Scene& scene) override;
         void onRenderImGui() override;
 
@@ -38,7 +39,7 @@ namespace CgEngine {
         float halfHeight;
         glm::vec3 offset;
         bool isTrigger;
-        uint32_t colliderUuid;
+        bool isColliderAddedToActor = false;
     };
 
 }

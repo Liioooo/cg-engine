@@ -22,7 +22,7 @@ namespace Game {
         int nextMapNode = -1;
         int lastMapNode = -1;
         int lives = 5;
-        CgEngine::Entity entity;
+        CgEngine::EntityHandle entity;
     };
 
     class GhostsController : public CgEngine::NativeScript {

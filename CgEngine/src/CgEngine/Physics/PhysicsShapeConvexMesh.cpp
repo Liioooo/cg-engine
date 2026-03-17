@@ -2,10 +2,11 @@
 #include "PhysicsActor.h"
 #include "Scene/Scene.h"
 #include "PhysicsSystem.h"
+#include "Components/TransformComponent.h"
 
 namespace CgEngine {
     PhysicsShapeConvexMesh::PhysicsShapeConvexMesh(PhysicsActor& actor, PhysicsMaterial& physicsMaterial, PhysicsConvexMesh& physicsMesh, bool isTrigger) : PhysicsShape() {
-        auto scale = actor.getScene().getComponent<TransformComponent>(actor.getEntity()).getGlobalScale();
+        auto scale = actor.getScene().getComponent<TransformComponent>(actor.getEntity())->getGlobalScale();
 
         physx::PxConvexMeshGeometry geometry = physx::PxConvexMeshGeometry(physicsMesh.getPhysxMesh(), physx::PxMeshScale(PhysXUtils::glmToPhysXVec(scale)));
         physxShape = physx::PxRigidActorExt::createExclusiveShape(actor.getPhysxActor(), geometry, *physicsMaterial.getPhysxMaterial());

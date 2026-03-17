@@ -2,6 +2,7 @@
 #include "Scene/Scene.h"
 #include "Application.h"
 #include "imgui.h"
+#include "Components/RigidBodyComponent.h"
 
 namespace CgEngine {
     void CapsuleColliderComponentParams::verifyParams() const {}
@@ -13,16 +14,18 @@ namespace CgEngine {
         halfHeight = params.halfHeight;
 
         physicsMaterial = Application::get().getResourceManager().getResource<PhysicsMaterial>(params.material);
+    }
 
-
-        if (scene.hasComponent<RigidBodyComponent>(entity)) {
-            colliderUuid = scene.getComponent<RigidBodyComponent>(entity).addCapsuleCollider(*physicsMaterial, radius, halfHeight, offset, isTrigger);
+    void CapsuleColliderComponent::onEnable(Scene& scene) {
+        if (scene.hasComponent<RigidBodyComponent>(entity) && !isColliderAddedToActor) {
+            scene.getComponent<RigidBodyComponent>(entity)->addCapsuleCollider(*physicsMaterial, radius, halfHeight, offset, isTrigger);
+            isColliderAddedToActor = true;
         }
     }
 
     void CapsuleColliderComponent::onDetach(Scene& scene) {
         if (scene.hasComponent<RigidBodyComponent>(entity)) {
-            scene.getComponent<RigidBodyComponent>(entity).removeCollider(colliderUuid);
+            scene.getComponent<RigidBodyComponent>(entity)->removeCollider(PhysicsColliderType::Capsule);
         }
     }
 

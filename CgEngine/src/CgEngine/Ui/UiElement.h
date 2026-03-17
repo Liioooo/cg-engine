@@ -1,24 +1,12 @@
 #pragma once
 
+#include "CgEngineSharedUtils/Enums.h"
+#include "CallbackConnectionManager.h"
+
 namespace CgEngine {
 
-    enum class UIElementType {
-        Circle, Rect, Text
-    };
-
-    enum class UIPosUnit {
-        Pixel, VWPercent, VHPercent
-    };
-
-    enum class UIXAlignment {
-        Left, Center, Right
-    };
-
-    enum class UIYAlignment {
-        Top, Center, Bottom
-    };
-
     class UiElement {
+        friend class UiCanvas;
     public:
         explicit UiElement(UIElementType type);
         virtual ~UiElement() = default;
@@ -38,16 +26,19 @@ namespace CgEngine {
         uint32_t getZIndex() const;
         void setZIndex(uint32_t zIndex);
 
-        void update(uint32_t viewportWidth, uint32_t viewportHeight, bool viewportDirty);
+        CallbackConnection<std::function<void()>> addClickListener(const std::function<void()>& listener);
+        void receiveClickEvent() const;
 
         virtual const std::vector<glm::vec4>& getVertices() const = 0;
+        virtual uint32_t getNumIndices() const = 0;
 
     protected:
-        virtual void updateElement(bool absolutePosDirty, bool viewportDirty, uint32_t viewportWidth, uint32_t viewportHeight) = 0;
+        virtual void updateElement(uint32_t canvasWidth, uint32_t canvasHeight) = 0;
 
         UIXAlignment xAlignment;
         UIYAlignment yAlignment;
         glm::vec2 absolutePos = glm::vec2(0.0f, 0.0f);
+        bool dirty = true;
 
     private:
         const UIElementType type;
@@ -58,7 +49,11 @@ namespace CgEngine {
         std::pair<float, UIPosUnit> left = {-1.0f, UIPosUnit::Pixel};
 
         uint32_t zIndex = 0;
-        bool dirty = true;
+
+        CallbackConnectionManager<std::function<void()>> callbackConnectionManager;
+
+        bool update(uint32_t canvasWidth, uint32_t canvasHeight, bool canvasSizeDirty);
+        virtual bool containsPoint(glm::vec2 point) const = 0;
     };
 
 }

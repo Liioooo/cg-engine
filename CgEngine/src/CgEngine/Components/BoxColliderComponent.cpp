@@ -2,6 +2,7 @@
 #include "Scene/Scene.h"
 #include "Application.h"
 #include "imgui.h"
+#include "Components/RigidBodyComponent.h"
 
 namespace CgEngine {
     void BoxColliderComponentParams::verifyParams() const {}
@@ -12,16 +13,18 @@ namespace CgEngine {
         isTrigger = params.isTrigger;
 
         physicsMaterial = Application::get().getResourceManager().getResource<PhysicsMaterial>(params.material);
+    }
 
-
-        if (scene.hasComponent<RigidBodyComponent>(entity)) {
-            colliderUuid = scene.getComponent<RigidBodyComponent>(entity).addBoxCollider(*physicsMaterial, halfSize, offset, isTrigger);
+    void BoxColliderComponent::onEnable(Scene& scene) {
+        if (scene.hasComponent<RigidBodyComponent>(entity) && !isColliderAddedToActor) {
+            scene.getComponent<RigidBodyComponent>(entity)->addBoxCollider(*physicsMaterial, halfSize, offset, isTrigger);
+            isColliderAddedToActor = true;
         }
     }
 
     void BoxColliderComponent::onDetach(Scene& scene) {
         if (scene.hasComponent<RigidBodyComponent>(entity)) {
-            scene.getComponent<RigidBodyComponent>(entity).removeCollider(colliderUuid);
+            scene.getComponent<RigidBodyComponent>(entity)->removeCollider(PhysicsColliderType::Box);
         }
     }
 

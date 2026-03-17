@@ -1,4 +1,4 @@
-# pragma once
+#pragma once
 
 namespace CgEngine {
 
@@ -35,6 +35,11 @@ namespace CgEngine {
             return eventType == EventType::MouseButtonPressed || eventType == EventType::MouseButtonReleased || eventType == EventType::MouseMoved || eventType == EventType::MouseScrolled;
         }
 
+        inline bool hasMousePosition() const {
+            const auto eventType = getEventType();
+            return eventType == EventType::MouseButtonPressed || eventType == EventType::MouseButtonReleased || eventType == EventType::MouseMoved;
+        }
+
         inline bool isKeyboardEvent() const {
             const auto eventType = getEventType();
             return eventType == EventType::KeyPressed || eventType == EventType::KeyReleased;
@@ -42,6 +47,23 @@ namespace CgEngine {
 
     private:
         bool handled = false;
+    };
+
+    class IEventHasMousePosition {
+    public:
+        IEventHasMousePosition(const float x, const float y) : x(x), y(y) {}
+        virtual ~IEventHasMousePosition() = default;
+
+        inline float getXPos() const {
+            return x;
+        }
+        inline float getYPos() const {
+            return y;
+        }
+
+    private:
+        float x;
+        float y;
     };
 
     class EventDispatcher {

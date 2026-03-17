@@ -1,7 +1,7 @@
 #include <Asserts.h>
 #include "FileSystem.h"
 #include "AudioFile.h"
-#include "Utils/StringUtils.h"
+#include "CgEngineSharedUtils/StringUtils.h"
 #include "Audio/AudioWavLoader.h"
 #include "Audio/AudioOggLoader.h"
 #include <al.h>
@@ -24,9 +24,9 @@ namespace CgEngine {
 
         std::string extension = FileSystem::getExtension(path);
 
-        if (Utils::String::equalsIgnoreCase(extension, ".wav")) {
+        if (StringUtils::equalsIgnoreCase(extension, ".wav")) {
             return AudioWavLoader::loadWavFile(path);
-        } else if (Utils::String::equalsIgnoreCase(extension, ".ogg")) {
+        } else if (StringUtils::equalsIgnoreCase(extension, ".ogg")) {
             return AudioOggLoader::loadOggFile(path);
         }
 

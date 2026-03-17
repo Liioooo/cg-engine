@@ -17,6 +17,10 @@ namespace CgEngine {
         script->onAttach();
     }
 
+    void ScriptComponent::onEnable(Scene& scene) {
+        script->onEnable();
+    }
+
     void ScriptComponent::onDetach(Scene& scene) {
         script->onDetach();
     }
@@ -33,23 +37,23 @@ namespace CgEngine {
         script->lateUpdate(ts);
     }
 
-    void ScriptComponent::onCollisionEnter(Entity other) {
+    void ScriptComponent::onCollisionEnter(EntityHandle other) {
         script->onCollisionEnter(other);
     }
 
-    void ScriptComponent::onCollisionExit(Entity other) {
+    void ScriptComponent::onCollisionExit(EntityHandle other) {
         script->onCollisionExit(other);
     }
 
-    void ScriptComponent::onTriggerEnter(Entity other) {
+    void ScriptComponent::onTriggerEnter(EntityHandle other) {
         script->onTriggerEnter(other);
     }
 
-    void ScriptComponent::onTriggerExit(Entity other) {
+    void ScriptComponent::onTriggerExit(EntityHandle other) {
         script->onTriggerExit(other);
     }
 
-    void ScriptComponent::onEvent(CgEngine::Event& event) {
+    void ScriptComponent::onEvent(Event& event) {
         EventDispatcher dispatcher(event);
         dispatcher.dispatch<MouseScrolledEvent>(EVENT_BIND_FN(script->onMouseScrolled));
         dispatcher.dispatch<MouseButtonPressedEvent>(EVENT_BIND_FN(script->onMouseButtonPressed));

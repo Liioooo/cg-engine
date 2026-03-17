@@ -1,6 +1,10 @@
 #include "FPSCounter.h"
 
 namespace Game {
+    void FPSCounter::onEnable() {
+        canvasComponent = getOwingEntity().getComponent<CgEngine::UiCanvasComponent2D>();
+    }
+
     void FPSCounter::update(CgEngine::TimeStep ts) {
         if (showing) {
             frameTimes[currentIndex] = ts.getSeconds();
@@ -22,16 +26,14 @@ namespace Game {
             if (showing) {
                 createUI();
             } else {
-                auto& gameCanvas = getComponent<CgEngine::UiCanvasComponent>();
-                gameCanvas.removeUIElement("fps");
+                canvasComponent->getCanvas()->removeUIElement("fps");
                 fps = nullptr;
             }
         }
     }
 
     void FPSCounter::createUI() {
-        auto& gameCanvas = getComponent<CgEngine::UiCanvasComponent>();
-        fps = gameCanvas.addUiText("fps");
+        fps = canvasComponent->getCanvas()->addUiText("fps");
 
         fps->setFont("SpaceMono-Bold.ttf");
         fps->setBottom(20.0f, CgEngine::UIPosUnit::Pixel);

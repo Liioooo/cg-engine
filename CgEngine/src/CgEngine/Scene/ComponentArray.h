@@ -12,8 +12,10 @@ namespace CgEngine {
         virtual ~IComponentArray() = default;
 
         virtual void checkedDetachComponent(Entity entity, Scene& scene) = 0;
-        virtual void detachAllComponents(Scene& scene) = 0;
+        virtual void detachAllComponentsInstantly(Scene& scene) = 0;
         virtual void renderImGuiForEntity(Entity entity) = 0;
+        virtual bool executePendingOperations(Scene& scene) = 0;
+        virtual void callOnEnableForAddedComponents(Scene& scene) = 0;
     };
 
     template<typename C>
@@ -23,38 +25,26 @@ namespace CgEngine {
         using Iterator = typename std::vector<C>::iterator;
 
     public:
-        C& attachComponent(Entity entity) {
+        void attachComponent(Entity entity, Scene& scene, typename C::Params& componentParams) {
             CG_ASSERT(entityToComponentsIndex.find(entity) == entityToComponentsIndex.end(), "Component added to same entity more than once.")
+            CG_ASSERT(componentsPendingAdd.find(entity) == componentsPendingAdd.end(), "Component added to same entity more than once.")
 
-            entityToComponentsIndex[entity] = components.size();
-            componentsIndexToEntity[components.size()] = entity;
-            return components.emplace_back(entity);
+            componentsPendingAdd.emplace(entity, C(entity));
+            componentsPendingAdd.at(entity).onAttach(scene, componentParams);
         }
 
         void detachComponent(Entity entity) {
             CG_ASSERT(entityToComponentsIndex.find(entity) != entityToComponentsIndex.end(), "Removing non-existent component.")
-
-            size_t indexRemovedEntity = entityToComponentsIndex[entity];
-
-            components[indexRemovedEntity] = std::move(components.back());
-            components.pop_back();
-
-            Entity entityLastElement = componentsIndexToEntity[components.size()];
-            entityToComponentsIndex[entityLastElement] = indexRemovedEntity;
-            componentsIndexToEntity[indexRemovedEntity] = entityLastElement;
-
-            entityToComponentsIndex.erase(entity);
-            componentsIndexToEntity.erase(components.size());
+            componentsPendingRemove.push_back(entity);
         }
 
         void checkedDetachComponent(Entity entity, Scene& scene) override {
             if (hasComponent(entity)) {
-                components[entityToComponentsIndex[entity]].onDetach(scene);
                 detachComponent(entity);
             }
         }
 
-        void detachAllComponents(Scene& scene) override {
+        void detachAllComponentsInstantly(Scene& scene) override {
             entityToComponentsIndex.clear();
             componentsIndexToEntity.clear();
             for (auto& item: components) {
@@ -63,13 +53,17 @@ namespace CgEngine {
         }
 
         C& getComponent(Entity entity) {
-            CG_ASSERT(entityToComponentsIndex.find(entity) != entityToComponentsIndex.end(), "Getting non-existent component. Entity: " + std::to_string(entity) + ", Component: " + typeid(C).name())
+            CG_ASSERT(entityToComponentsIndex.find(entity) != entityToComponentsIndex.end() || componentsPendingAdd.find(entity) != componentsPendingAdd.end(), "Getting non-existent component. Entity: " + std::to_string(entity) + ", Component: " + typeid(C).name())
 
-            return components[entityToComponentsIndex[entity]];
+            if (entityToComponentsIndex.find(entity) != entityToComponentsIndex.end()) {
+                return components[entityToComponentsIndex[entity]];
+            }
+            return componentsPendingAdd.at(entity);
+
         }
 
         bool hasComponent(Entity entity) const {
-            return entityToComponentsIndex.find(entity) != entityToComponentsIndex.end();
+            return entityToComponentsIndex.find(entity) != entityToComponentsIndex.end() || componentsPendingAdd.find(entity) != componentsPendingAdd.end();
         }
 
         std::vector<Entity> getAllEntities() {
@@ -104,10 +98,45 @@ namespace CgEngine {
             getComponent(entity).onRenderImGui();
         }
 
+        bool executePendingOperations(Scene& scene) override {
+            for (auto& [entity, component] : componentsPendingAdd) {
+                entityToComponentsIndex[entity] = components.size();
+                componentsIndexToEntity[components.size()] = entity;
+                components.push_back(std::move(component));
+            }
+
+            for (auto& entity : componentsPendingRemove) {
+                size_t indexRemovedEntity = entityToComponentsIndex[entity];
+                components[indexRemovedEntity].onDetach(scene);
+
+                components[indexRemovedEntity] = std::move(components.back());
+                components.pop_back();
+
+                Entity entityLastElement = componentsIndexToEntity[components.size()];
+                entityToComponentsIndex[entityLastElement] = indexRemovedEntity;
+                componentsIndexToEntity[indexRemovedEntity] = entityLastElement;
+
+                entityToComponentsIndex.erase(entity);
+                componentsIndexToEntity.erase(components.size());
+            }
+            componentsPendingRemove.clear();
+
+            return !componentsPendingAdd.empty();
+        }
+
+        void callOnEnableForAddedComponents(Scene& scene) override {
+            for (auto& [entity, _] : componentsPendingAdd) {
+                components[entityToComponentsIndex[entity]].onEnable(scene);
+            }
+            componentsPendingAdd.clear();
+        }
+
     private:
         std::vector<C> components{};
+        std::unordered_map<Entity, C> componentsPendingAdd{};
+        std::vector<Entity> componentsPendingRemove{};
         std::unordered_map<Entity, size_t> entityToComponentsIndex{};
-        std::unordered_map<size_t , Entity> componentsIndexToEntity{};
+        std::unordered_map<size_t, Entity> componentsIndexToEntity{};
     };
 
 }

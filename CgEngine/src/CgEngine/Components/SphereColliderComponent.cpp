@@ -2,6 +2,7 @@
 #include "Scene/Scene.h"
 #include "Application.h"
 #include "imgui.h"
+#include "Components/RigidBodyComponent.h"
 
 namespace CgEngine {
     void SphereColliderComponentParams::verifyParams() const {}
@@ -12,16 +13,18 @@ namespace CgEngine {
         isTrigger = params.isTrigger;
 
         physicsMaterial = Application::get().getResourceManager().getResource<PhysicsMaterial>(params.material);
+    }
 
-
-        if (scene.hasComponent<RigidBodyComponent>(entity)) {
-            colliderUuid = scene.getComponent<RigidBodyComponent>(entity).addSphereCollider(*physicsMaterial, radius, offset, isTrigger);
+    void SphereColliderComponent::onEnable(Scene& scene) {
+        if (scene.hasComponent<RigidBodyComponent>(entity) && !isColliderAddedToActor) {
+            scene.getComponent<RigidBodyComponent>(entity)->addSphereCollider(*physicsMaterial, radius, offset, isTrigger);
+            isColliderAddedToActor = true;
         }
     }
 
     void SphereColliderComponent::onDetach(Scene& scene) {
         if (scene.hasComponent<RigidBodyComponent>(entity)) {
-            scene.getComponent<RigidBodyComponent>(entity).removeCollider(colliderUuid);
+            scene.getComponent<RigidBodyComponent>(entity)->removeCollider(PhysicsColliderType::Sphere);
         }
     }
 

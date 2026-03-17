@@ -3,6 +3,27 @@
 #include "Rendering/SceneRenderer.h"
 #include "Application.h"
 #include "Audio/AudioComponentUpdateData.h"
+#include "EntityHandle.h"
+#include "Components/TransformComponent.h"
+#include "Components/ScriptComponent.h"
+#include "Components/UiCanvasComponent2D.h"
+#include "Components/AnimationComponent.h"
+#include "Components/MeshRendererComponent.h"
+#include "Components/AnimatedMeshRendererComponent.h"
+#include "Components/AudioComponent.h"
+#include "Components/AudioListenerComponent.h"
+#include "Components/RigidBodyComponent.h"
+#include "Components/DirectionalLightComponent.h"
+#include "Components/PointLightComponent.h"
+#include "Components/SpotLightComponent.h"
+#include "Components/LodDistanceComponent.h"
+#include "Components/SkyboxComponent.h"
+#include "Components/BoxColliderComponent.h"
+#include "Components/SphereColliderComponent.h"
+#include "Components/CapsuleColliderComponent.h"
+#include "Components/TriangleColliderComponent.h"
+#include "Components/ConvexColliderComponent.h"
+#include "Components/CustomShaderRendererComponent.h"
 
 namespace CgEngine {
     Scene::Scene(int viewportWidth, int viewportHeight) : viewportWidth(viewportWidth), viewportHeight(viewportHeight) {
@@ -15,64 +36,57 @@ namespace CgEngine {
         delete physicsScene;
     }
 
-    Entity Scene::createEntity(Entity parent) {
+    EntityHandle Scene::createEntity(Entity parent) {
         if (parent == NoEntity) {
-            entityCount++;
             Entity entity = nextEntityId++;
             children[entity] = std::unordered_set<Entity>();
-            return entity;
-        } else if (children.find(parent) == children.end()) {
+            return {this, entity};
+        } else if (!hasEntity(parent)) {
             CG_ASSERT(false, "Entity parent doesn't exist")
-            return NoEntity;
+            return {this, NoEntity};
         } else {
-            entityCount++;
             Entity entity = nextEntityId++;
             children[parent].insert(entity);
             children[entity] = std::unordered_set<Entity>();
             parents[entity] = parent;
-            return entity;
+            return {this, entity};
         }
     }
 
-    Entity Scene::createEntity(Entity parent, const std::string& id) {
+    EntityHandle Scene::createEntity(Entity parent, const std::string& id) {
         if (idToEntity.find(id) != idToEntity.end()) {
             CG_ASSERT(false, "Entity-Id is already used")
-            return NoEntity;
+            return {this, NoEntity};
         }
 
         if (parent == NoEntity) {
-            entityCount++;
             Entity entity = nextEntityId++;
             idToEntity[id] = entity;
             children[entity] = std::unordered_set<Entity>();
-            return entity;
-        } else if (children.find(parent) == children.end()) {
+            return {this, entity};
+        } else if (!hasEntity(parent)) {
             CG_ASSERT(false, "Entity parent doesn't exist")
-            return NoEntity;
+            return {this, NoEntity};
         } else {
-            entityCount++;
             Entity entity = nextEntityId++;
             idToEntity[id] = entity;
             children[parent].insert(entity);
             children[entity] = std::unordered_set<Entity>();
             parents[entity] = parent;
-            return entity;
+            return {this, entity};
         }
     }
 
     void Scene::destroyEntity(Entity entity) {
-        if (parents.find(entity) != parents.end()) {
-            children[parents[entity]].erase(entity);
-        }
-        recursiveDestroyEntity(entity);
+        entitiesToBeDestroyed.insert(entity);
     }
 
-    Entity Scene::findEntityById(const std::string &id) {
+    EntityHandle Scene::findEntityById(const std::string &id) {
         if (idToEntity.find(id) == idToEntity.end()) {
-            CG_LOGGING_WARNING("Entity {0} doesn't exist!", id)
-            return NoEntity;
+            CG_LOGGING_WARNING("Entity with ID: {0} doesn't exist!", id)
+            return {this, NoEntity};
         }
-        return idToEntity[id];
+        return {this, idToEntity.at(id)};
     }
 
     std::optional<std::string> Scene::getIdForEntity(Entity entity) const {
@@ -87,11 +101,11 @@ namespace CgEngine {
         return std::nullopt;
     }
 
-    const std::unordered_set<Entity>& Scene::getChildren(Entity entity) {
-        return children[entity];
+    const std::unordered_set<Entity>& Scene::getChildren(Entity entity) const {
+        return children.at(entity);
     }
 
-    Entity Scene::getParent(Entity entity) {
+    Entity Scene::getParent(Entity entity) const {
         if (parents.find(entity) == parents.end()) {
             return NoEntity;
         }
@@ -112,7 +126,7 @@ namespace CgEngine {
         }
     }
 
-    std::string Scene::getEntityTag(CgEngine::Entity entity) {
+    std::string Scene::getEntityTag(CgEngine::Entity entity) const {
         if (entityTags.find(entity) != entityTags.end()) {
             return entityTags.at(entity);
         }
@@ -140,35 +154,13 @@ namespace CgEngine {
         viewportWidth = width;
         viewportHeight = height;
 
-        auto cameras = componentManager->getEntitiesWithComponent<CameraComponent>();
-        for (const auto &item: cameras) {
-            auto& camaraComp = getComponent<CameraComponent>(item);
-            camaraComp.getCamera().setViewportSize(width, height);
+        for (auto it = componentManager->begin<CameraComponent>(); it != componentManager->end<CameraComponent>(); it++) {
+            it->getCamera().setViewportSize(width, height);
         }
     }
 
-    void Scene::submitPostUpdateFunction(std::function<void()>&& function) {
-        postUpdateFunctions.emplace_back(function);
-    }
-
-    Uuid Scene::submitOnPreRenderFunction(const std::function<void(const CameraFrustum& camaraFrustum)>& function, bool once) {
-        return onPreRenderFunctions.emplace_back(function, once).uuid;
-    }
-
-    void Scene::removeOnPreRenderFunction(Uuid uuid) {
-        onPreRenderFunctions.erase(std::remove_if(onPreRenderFunctions.begin(), onPreRenderFunctions.end(), [uuid](const auto& fc) {
-            return uuid == fc.uuid;
-        }), onPreRenderFunctions.end());
-    }
-
-    Uuid Scene::submitOnRenderFunction(const std::function<void(SceneRenderer&)>& function, bool once) {
-        return onRenderFunctions.emplace_back(function, once).uuid;
-    }
-
-    void Scene::removeOnRenderFunction(Uuid uuid) {
-        onRenderFunctions.erase(std::remove_if(onRenderFunctions.begin(), onRenderFunctions.end(), [uuid](const auto& fc) {
-            return uuid == fc.uuid;
-        }), onRenderFunctions.end());
+    void Scene::executeOnRender(const std::function<void(SceneRenderer&)>& function) {
+        onRenderFunctions.emplace_back(function);
     }
 
     void Scene::onUpdate(TimeStep ts) {
@@ -177,22 +169,17 @@ namespace CgEngine {
         for (auto it = componentManager->begin<ScriptComponent>(); it != componentManager->end<ScriptComponent>(); it++) {
             it->update(ts);
         }
-        executePostUpdateFunctions();
-
         for (auto it = componentManager->begin<AnimationComponent>(); it != componentManager->end<AnimationComponent>(); it++) {
             it->update(ts, componentManager->getComponent<TransformComponent>(it->getEntity()));
         }
-
-        updateTransforms();
+        executeAllPendingOperations(true);
 
         for (auto it = componentManager->begin<ScriptComponent>(); it != componentManager->end<ScriptComponent>(); it++) {
             it->lateUpdate(ts);
         }
-        executePostUpdateFunctions();
+        executeAllPendingOperations(true);
 
-        updateTransforms();
-
-        for (auto it = componentManager->begin<UiCanvasComponent>(); it != componentManager->end<UiCanvasComponent>(); it++) {
+        for (auto it = componentManager->begin<UiCanvasComponent2D>(); it != componentManager->end<UiCanvasComponent2D>(); it++) {
             it->update(viewportWidth, viewportHeight);
         }
 
@@ -267,16 +254,21 @@ namespace CgEngine {
         for (const auto& entity: audioComponentsToDestroy) {
             detachComponent<AudioComponent>(entity);
         }
+        executeAllPendingOperations(false);
     }
 
     void Scene::onEvent(Event& event) {
+        for (auto it = componentManager->begin<UiCanvasComponent2D>(); it != componentManager->end<UiCanvasComponent2D>(); it++) {
+           it->onEvent(event, viewportWidth, viewportHeight);
+        }
+
         for (auto it = componentManager->begin<ScriptComponent>(); it != componentManager->end<ScriptComponent>(); it++) {
             it->onEvent(event);
             if (event.wasHandled()) {
                 return;
             }
         }
-        executePostUpdateFunctions();
+        executeAllPendingOperations(false);
     }
 
     void Scene::onRender(SceneRenderer& renderer) {
@@ -334,8 +326,6 @@ namespace CgEngine {
         auto cameraTransformWithoutScale = glm::translate(glm::mat4(1.0f), cameraTransform.getGlobalPosition()) * glm::toMat4(cameraTransform.getGlobalRotationQuat());
         renderer.beginScene(cameraComponent.getCamera(), cameraTransformWithoutScale, lightEnvironment, sceneEnvironment);
 
-        executeOnPreRenderFunctions(renderer);
-
         auto& applicationOptions = Application::get().getApplicationOptions();
 
         for (auto it = componentManager->begin<MeshRendererComponent>(); it != componentManager->end<MeshRendererComponent>(); it++) {
@@ -356,8 +346,8 @@ namespace CgEngine {
             }
         }
 
-        for (auto it = componentManager->cbegin<UiCanvasComponent>(); it != componentManager->cend<UiCanvasComponent>(); it++) {
-            renderer.submitUiElements(it->getUiElements());
+        for (auto it = componentManager->cbegin<UiCanvasComponent2D>(); it != componentManager->cend<UiCanvasComponent2D>(); it++) {
+            renderer.submitUiCanvas2D(it->getCanvas(), it->getFinalTransform(), it->getZIndex());
         }
 
         executeOnRenderFunctions(renderer);
@@ -429,7 +419,47 @@ namespace CgEngine {
         for (auto it = componentManager->begin<ScriptComponent>(); it != componentManager->end<ScriptComponent>(); it++) {
             it->fixedUpdate(ts);
         }
-        executePostUpdateFunctions();
+        executeAllPendingOperations(false);
+    }
+
+    void Scene::executeAllPendingOperations(bool forceUpdateTransforms) {
+        std::unordered_set<Entity> recursivelyDestroyedEntities{};
+
+        for (const auto& entity: entitiesToBeDestroyed) {
+            recursivelyDestroyedEntities.insert(entity);
+            findRecursiveEntitiesToDestroy(entity, recursivelyDestroyedEntities);
+        }
+
+        for (const auto& entity : recursivelyDestroyedEntities) {
+            componentManager->destroyEntity(entity, *this);
+        }
+
+        for (const auto& entity: entitiesToBeDestroyed) {
+            if (parents.find(entity) != parents.end()) {
+                children[parents[entity]].erase(entity);
+            }
+        }
+        entitiesToBeDestroyed.clear();
+
+        bool wereComponentsAdded = componentManager->executePendingOperations(*this);
+
+        for (const auto& entity: recursivelyDestroyedEntities) {
+            std::optional<std::string> entityId = getIdForEntity(entity);
+            if (entityId.has_value()) {
+                idToEntity.erase(entityId->erase());
+            }
+
+            entityTags.erase(entity);
+            parents.erase(entity);
+            children.erase(entity);
+        }
+
+
+        if (wereComponentsAdded || forceUpdateTransforms) {
+            updateTransforms();
+        }
+
+        componentManager->callOnEnableForAddedComponents(*this);
     }
 
     int Scene::getViewportWidth() const {
@@ -447,22 +477,11 @@ namespace CgEngine {
         return *cameraComponent;
     }
 
-    void Scene::recursiveDestroyEntity(Entity entity) {
+    void Scene::findRecursiveEntitiesToDestroy(Entity entity, std::unordered_set<Entity>& recursivelyDestroyedEntities) {
         for (const auto &child : children[entity]) {
-            recursiveDestroyEntity(child);
+            recursivelyDestroyedEntities.insert(child);
+            findRecursiveEntitiesToDestroy(child, recursivelyDestroyedEntities);
         }
-
-        std::optional<std::string> entityId = getIdForEntity(entity);
-        if (entityId.has_value()) {
-            idToEntity.erase(entityId->erase());
-        }
-
-        entityTags.erase(entity);
-
-        componentManager->destroyEntity(entity, *this);
-        parents.erase(entity);
-        children.erase(entity);
-        entityCount--;
     }
 
     void Scene::recursiveUpdateChildTransforms(Entity entity, const glm::mat4& parentModelMatrix, bool parentDirty) {
@@ -474,34 +493,10 @@ namespace CgEngine {
         }
     }
 
-    void Scene::executePostUpdateFunctions() {
-        for (const auto &fn: postUpdateFunctions) {
-            fn();
-        }
-        postUpdateFunctions.clear();
-    }
-
-    void Scene::executeOnPreRenderFunctions(SceneRenderer& renderer) {
-        for (auto it = onPreRenderFunctions.begin(); it != onPreRenderFunctions.end();) {
-            it->function(renderer.getCamaraFrustum());
-
-            if (it->once) {
-                it = onPreRenderFunctions.erase(it);
-            } else {
-                ++it;
-            }
-        }
-    }
-
     void Scene::executeOnRenderFunctions(SceneRenderer& renderer) {
-        for (auto it = onRenderFunctions.begin(); it != onRenderFunctions.end();) {
-            it->function(renderer);
-
-            if (it->once) {
-                it = onRenderFunctions.erase(it);
-            } else {
-                ++it;
-            }
+        for (const auto& function : onRenderFunctions) {
+            function(renderer);
         }
+        onRenderFunctions.clear();
     }
 }

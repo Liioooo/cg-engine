@@ -19,7 +19,7 @@ namespace CgEngine {
         uint32_t height;
         const RenderPass* renderPass;
         std::vector<FramebufferAttachment> colorAttachments;
-        FramebufferAttachment depthAttachment;
+        FramebufferAttachment depthStencilAttachment;
     };
 
     class Framebuffer {

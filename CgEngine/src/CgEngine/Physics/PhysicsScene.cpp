@@ -2,6 +2,9 @@
 #include "Asserts.h"
 #include "Scene/Scene.h"
 #include "Application.h"
+#include "Components/TransformComponent.h"
+#include "Components/BoxColliderComponent.h"
+#include "Components/CapsuleColliderComponent.h"
 
 namespace CgEngine {
     physx::PxQueryHitType::Enum RaycastQueryFilterCallback::preFilter(const physx::PxFilterData& filterData, const physx::PxShape* shape, const physx::PxRigidActor* actor, physx::PxHitFlags& queryFlags) {
@@ -60,41 +63,41 @@ namespace CgEngine {
 
         physx::PxController* physXController = nullptr;
 
-        auto& transform = scene.getComponent<TransformComponent>(entity);
+        auto transform = scene.getComponent<TransformComponent>(entity);
 
         if (scene.hasComponent<BoxColliderComponent>(entity)) {
-            auto& collider = scene.getComponent<BoxColliderComponent>(entity);
+            auto collider = scene.getComponent<BoxColliderComponent>(entity);
 
-            glm::vec3 scale = collider.getHalfSize() * transform.getGlobalScale();
+            glm::vec3 scale = collider->getHalfSize() * transform->getGlobalScale();
 
             physx::PxBoxControllerDesc desc;
             desc.halfHeight = scale.y;
             desc.halfSideExtent = scale.x;
             desc.halfForwardExtent = scale.z;
-            desc.position = PhysXUtils::glmToExtendedPhysXVec(transform.getGlobalPosition() + collider.getOffset());
+            desc.position = PhysXUtils::glmToExtendedPhysXVec(transform->getGlobalPosition() + collider->getOffset());
             desc.upDirection = {0.0f, 1.0f, 0.0f};
             desc.stepOffset = stepOffset;
             desc.slopeLimit = glm::max(0.0f, glm::cos(glm::radians(slopeLimit)));
             desc.nonWalkableMode = physx::PxControllerNonWalkableMode::ePREVENT_CLIMBING;
             desc.contactOffset = 0.05f;
-            desc.material = collider.getPhysicsMaterial()->getPhysxMaterial();
+            desc.material = collider->getPhysicsMaterial()->getPhysxMaterial();
             desc.reportCallback = &physicsSystem.getControllerHitReportCallback();
 
             physXController = physXControllerManager->createController(desc);
         } else if (scene.hasComponent<CapsuleColliderComponent>(entity)) {
-            auto& collider = scene.getComponent<CapsuleColliderComponent>(entity);
+            auto collider = scene.getComponent<CapsuleColliderComponent>(entity);
 
             physx::PxCapsuleControllerDesc desc;
-            desc.height = collider.getHalfHeight() * 2.0f * transform.getGlobalScale().y;
-            desc.radius = collider.getRadius() * glm::max(transform.getGlobalScale().x, transform.getGlobalScale().z);
-            desc.position = PhysXUtils::glmToExtendedPhysXVec(transform.getGlobalPosition() + collider.getOffset());
+            desc.height = collider->getHalfHeight() * 2.0f * transform->getGlobalScale().y;
+            desc.radius = collider->getRadius() * glm::max(transform->getGlobalScale().x, transform->getGlobalScale().z);
+            desc.position = PhysXUtils::glmToExtendedPhysXVec(transform->getGlobalPosition() + collider->getOffset());
             desc.upDirection = {0.0f, 1.0f, 0.0f};
             desc.stepOffset = stepOffset;
             desc.slopeLimit = glm::max(0.0f, glm::cos(glm::radians(slopeLimit)));
             desc.nonWalkableMode = physx::PxControllerNonWalkableMode::ePREVENT_CLIMBING;
             desc.climbingMode = physx::PxCapsuleClimbingMode::eCONSTRAINED;
             desc.contactOffset = 0.05f;
-            desc.material = collider.getPhysicsMaterial()->getPhysxMaterial();
+            desc.material = collider->getPhysicsMaterial()->getPhysxMaterial();
             desc.reportCallback = &physicsSystem.getControllerHitReportCallback();
 
             physXController = physXControllerManager->createController(desc);

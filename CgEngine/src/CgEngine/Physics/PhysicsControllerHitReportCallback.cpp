@@ -9,10 +9,10 @@ namespace CgEngine {
         auto* otherActor = static_cast<AbstractPhysicsActor*>(hit.actor->userData);
 
         if (controllerActor->getScene().hasComponent<ScriptComponent>(controllerActor->getEntity())) {
-            controllerActor->getScene().getComponent<ScriptComponent>(controllerActor->getEntity()).onCollisionEnter(otherActor->getEntity());
+            controllerActor->getScene().getComponent<ScriptComponent>(controllerActor->getEntity())->onCollisionEnter({&otherActor->getScene(), otherActor->getEntity()});
         }
         if (otherActor->getScene().hasComponent<ScriptComponent>(otherActor->getEntity())) {
-            otherActor->getScene().getComponent<ScriptComponent>(otherActor->getEntity()).onCollisionEnter(controllerActor->getEntity());
+            otherActor->getScene().getComponent<ScriptComponent>(otherActor->getEntity())->onCollisionEnter({&otherActor->getScene(), otherActor->getEntity()});
         }
     }
 

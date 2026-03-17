@@ -40,8 +40,18 @@ namespace CgEngine {
         this->zIndex = zIndex;
     }
 
-    void UiElement::update(uint32_t viewportWidth, uint32_t viewportHeight, bool viewportDirty) {
-        if (dirty || viewportDirty) {
+    CallbackConnection<std::function<void()>> UiElement::addClickListener(const std::function<void()>& listener) {
+        return callbackConnectionManager.addCallback(listener);
+    }
+
+    void UiElement::receiveClickEvent() const {
+        callbackConnectionManager.callCallbacks();
+    }
+
+    bool UiElement::update(uint32_t canvasWidth, uint32_t canvasHeight, bool canvasSizeDirty) {
+        bool updated = dirty || canvasSizeDirty;
+
+        if (dirty || canvasSizeDirty) {
 
             absolutePos = {0.0f, 0.0f};
 
@@ -51,22 +61,22 @@ namespace CgEngine {
                         absolutePos.x = left.first;
                         break;
                     case UIPosUnit::VWPercent:
-                        absolutePos.x = static_cast<float>(viewportWidth) * left.first;
+                        absolutePos.x = static_cast<float>(canvasWidth) * left.first;
                         break;
                     case UIPosUnit::VHPercent:
-                        absolutePos.x = static_cast<float>(viewportHeight) * left.first;
+                        absolutePos.x = static_cast<float>(canvasHeight) * left.first;
                         break;
                 }
             } else if (right.first >= 0) {
                 switch (right.second) {
                     case UIPosUnit::Pixel:
-                        absolutePos.x = static_cast<float>(viewportWidth) - right.first;
+                        absolutePos.x = static_cast<float>(canvasWidth) - right.first;
                         break;
                     case UIPosUnit::VWPercent:
-                        absolutePos.x = static_cast<float>(viewportWidth) - static_cast<float>(viewportWidth) * right.first;
+                        absolutePos.x = static_cast<float>(canvasWidth) - static_cast<float>(canvasWidth) * right.first;
                         break;
                     case UIPosUnit::VHPercent:
-                        absolutePos.x = static_cast<float>(viewportWidth) - static_cast<float>(viewportHeight) * right.first;
+                        absolutePos.x = static_cast<float>(canvasWidth) - static_cast<float>(canvasHeight) * right.first;
                         break;
                 }
             }
@@ -74,13 +84,13 @@ namespace CgEngine {
             if (top.first >= 0) {
                 switch (top.second) {
                     case UIPosUnit::Pixel:
-                        absolutePos.y = static_cast<float>(viewportHeight) - top.first;
+                        absolutePos.y = static_cast<float>(canvasHeight) - top.first;
                         break;
                     case UIPosUnit::VWPercent:
-                        absolutePos.y = static_cast<float>(viewportHeight) - static_cast<float>(viewportWidth) * top.first;
+                        absolutePos.y = static_cast<float>(canvasHeight) - static_cast<float>(canvasWidth) * top.first;
                         break;
                     case UIPosUnit::VHPercent:
-                        absolutePos.y = static_cast<float>(viewportHeight) - static_cast<float>(viewportHeight) * top.first;
+                        absolutePos.y = static_cast<float>(canvasHeight) - static_cast<float>(canvasHeight) * top.first;
                         break;
                 }
             } else if (bottom.first >= 0) {
@@ -89,17 +99,19 @@ namespace CgEngine {
                         absolutePos.y = bottom.first;
                         break;
                     case UIPosUnit::VWPercent:
-                        absolutePos.y = static_cast<float>(viewportWidth) * bottom.first;
+                        absolutePos.y = static_cast<float>(canvasWidth) * bottom.first;
                         break;
                     case UIPosUnit::VHPercent:
-                        absolutePos.y = static_cast<float>(viewportHeight) * bottom.first;
+                        absolutePos.y = static_cast<float>(canvasHeight) * bottom.first;
                         break;
                 }
             }
+
+            updateElement(canvasWidth, canvasHeight);
         }
 
-        updateElement(dirty, viewportDirty, viewportWidth, viewportHeight);
-
         dirty = false;
+
+        return updated;
     }
 }

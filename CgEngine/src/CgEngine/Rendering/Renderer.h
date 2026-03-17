@@ -9,6 +9,7 @@
 #include "RendererBackendBase.h"
 #include "ComputePipeline.h"
 #include "GraphicsPipeline.h"
+#include "DynamicGraphicsPipeline.h"
 
 namespace CgEngine {
 
@@ -29,7 +30,11 @@ namespace CgEngine {
         static void beginSwapChainRenderPass();
         static void endRenderPass();
 
+        static void beginDynamicRendering(const DynamicRenderingInfo& renderingInfo);
+        static void endDynamicRendering();
+
         static void bindGraphicsPipeline(const GraphicsPipeline* graphicsPipeline);
+        static void bindDynamicGraphicsPipeline(const DynamicGraphicsPipeline* graphicsPipeline);
         static void bindComputePipeline(const ComputePipeline* computePipeline);
         static void dispatchCompute(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
 

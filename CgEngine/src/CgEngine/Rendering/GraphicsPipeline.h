@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Enums.h"
+#include "CgEngineSharedUtils/Enums.h"
 #include "DescriptorSetLayout.h"
 #include "VertexBuffer.h"
 #include "RenderPass.h"
