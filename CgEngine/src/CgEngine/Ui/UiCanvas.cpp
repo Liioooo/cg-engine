@@ -72,6 +72,21 @@ namespace CgEngine {
         attachmentSamplerDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(attachmentSamplerDescriptorSetSpec);
     }
 
+    UiCanvas::~UiCanvas() {
+        delete uiCircleVAO;
+        delete uiRectVAO;
+        delete uiTextVAO;
+        delete uiAttachment;
+        delete attachmentSamplerDescriptorSet;
+
+        for (auto& item: uiDescriptorSets) {
+            delete item;
+        }
+        for (auto& item: uiTextDescriptorSets) {
+            delete item;
+        }
+    }
+
     void UiCanvas::update(uint32_t viewportWidth, uint32_t viewportHeight) {
         if (viewportWidth == 0 && viewportHeight == 0) {
             return;

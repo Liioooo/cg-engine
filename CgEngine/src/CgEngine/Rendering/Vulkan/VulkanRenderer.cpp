@@ -88,11 +88,23 @@ namespace CgEngine {
 
     }
 
+    void VulkanRenderer::beginDynamicRendering(const DynamicRenderingInfo &renderingInfo) {
+
+    }
+
+    void VulkanRenderer::endDynamicRendering() {
+
+    }
+
     void VulkanRenderer::bindGraphicsPipeline(const GraphicsPipeline* graphicsPipeline) {
 
     }
 
     void VulkanRenderer::bindComputePipeline(const ComputePipeline* computePipeline) {
+
+    }
+
+    void VulkanRenderer::bindDynamicGraphicsPipeline(const DynamicGraphicsPipeline *graphicsPipeline) {
 
     }
 

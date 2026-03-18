@@ -25,17 +25,8 @@
     </Entity>
     <Entity id="canvas">
         <Components>
-            <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
+            <UiCanvasComponent2D canvas="lostScreen" width="100vw" height="100vh" pos-x="50vw" pos-y="50vh" x-align="center" y-align="center"/>
             <ScriptComponent script-name="endScript" />
-            <UiCanvasComponent2D>
-                <UiText id="lost" left="50vw" top="30vh" y-align="center" x-align="center" font="SpaceMono-Bold.ttf" size="15vh" text="You Lost" color="1 1 1 1" />
-
-                <UiRect id="againButton" left="50vw" top="50vh" width="35vw" height="12vh" fill-color="1 1 1 1" line-color="0.8 0 0 1" y-align="center" x-align="center" z-index="0" />
-                <UiText id="againText" left="50vw" top="50vh" y-align="center" x-align="center" font="SpaceMono-Bold.ttf" size="9vh" text="Play Again" color="0 0 0 1" z-index="1" />
-
-                <UiRect id="exitButton" left="50vw" top="80vh" width="22vw" height="10vh" fill-color="1 1 1 1" line-color="0.8 0 0 1" y-align="center" x-align="center" z-index="0" />
-                <UiText id="exitText" left="50vw" top="80vh" y-align="center" x-align="center" font="SpaceMono-Bold.ttf" size="5vh" text="Exit Game" color="0 0 0 1" z-index="1" />
-            </UiCanvasComponent2D>
         </Components>
     </Entity>
 </Scene>

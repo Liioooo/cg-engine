@@ -29,8 +29,7 @@ namespace CgEngine {
     RendererBackendBase* GraphicsObjectsFactory::createRendererBackend() {
         switch (api) {
             case GraphicsAPI::Vulkan:
-//                return new VulkanRenderer();
-                return nullptr;
+                return new VulkanRenderer();
             case GraphicsAPI::OpenGL:
                 return new OpenGLRenderer();
         }

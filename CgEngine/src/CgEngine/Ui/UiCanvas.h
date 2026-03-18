@@ -53,6 +53,7 @@ namespace CgEngine {
     class UiCanvas {
     public:
         UiCanvas(const pugi::xml_node& canvasNode);
+        ~UiCanvas();
 
         void update(uint32_t viewportWidth, uint32_t viewportHeight);
 

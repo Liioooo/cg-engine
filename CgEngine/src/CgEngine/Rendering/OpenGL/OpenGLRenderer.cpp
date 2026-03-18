@@ -154,6 +154,7 @@ namespace CgEngine {
 
     void OpenGLRenderer::shutdown() {
         glDeleteFramebuffers(1, &dynamicRenderingFramebufferHandle);
+        glDeleteBuffers(1, &pushConstantsBuffer);
         shutdownImGui();
     }
 

@@ -17,27 +17,30 @@ namespace Game {
         prevMousePos = CgEngine::Input::getMousePosition();
 
         cameraRaycastExcluded.insert(getOwingEntity());
+        inGameUICanvas = findEntityById("inGameCanvas").getComponent<CgEngine::UiCanvasComponent2D>();
 
         createStartText();
     }
 
     void PlayerScript::fixedUpdate(CgEngine::TimeStep ts) {
-        auto playerMeshTransform = findEntityById("playerMesh").getComponent<CgEngine::TransformComponent>();
+        auto playerMesh = findEntityById("playerMesh");
+        auto playerMeshTransform = playerMesh.getComponent<CgEngine::TransformComponent>();
         playerMeshTransform->setLocalRotationVec({0.0f, yaw, 0.0f});
 
         if (respawnTimer > 0.0f) {
             respawnTimer -= ts.getSeconds();
 
-            auto gameCanvas = findEntityById("inGameCanvas").getComponent<CgEngine::UiCanvasComponent2D>();
+            CgEngine::UiCanvas* canvas = inGameUICanvas->getCanvas();
+
             if (respawnTimer > 0.0f) {
-//                std::string timerStr = std::to_string(respawnTimer);
-//                gameCanvas.getUIElement<CgEngine::UiText>("startTimer")->setText(timerStr.substr(0, timerStr.find('.') + 3));
-//                getComponent<CgEngine::AnimatedMeshRendererComponent>(findEntityById("playerMesh")).setAnimationPlaying(false);
+                std::string timerStr = std::to_string(respawnTimer);
+                canvas->getUIElement<CgEngine::UiText>("startTimer")->setText(timerStr.substr(0, timerStr.find('.') + 3));
+                playerMesh.getComponent<CgEngine::AnimatedMeshRendererComponent>()->setAnimationPlaying(false);
             } else {
-//                gameCanvas.removeUIElement("startTimer");
-//                gameCanvas.removeUIElement("start");
-//                gameCanvas.getUIElement<CgEngine::UiCircle>("cross")->setFillColor({0.0f, 0.0f, 0.0f, 0.8f});
-//                getComponent<CgEngine::AnimatedMeshRendererComponent>(findEntityById("playerMesh")).reset();
+                canvas->removeUIElement("startTimer");
+                canvas->removeUIElement("start");
+                canvas->getUIElement<CgEngine::UiCircle>("cross")->setFillColor({0.0f, 0.0f, 0.0f, 0.8f});
+                playerMesh.getComponent<CgEngine::AnimatedMeshRendererComponent>()->reset();
             }
             return;
         }
@@ -136,8 +139,7 @@ namespace Game {
             respawnTimer = 3.0f;
             playerLives--;
 
-            auto gameCanvas = findEntityById("inGameCanvas").getComponent<CgEngine::UiCanvasComponent2D>();
-//            gameCanvas.removeUIElement("live" + std::to_string(playerLives));
+            inGameUICanvas->getCanvas()->removeUIElement("live" + std::to_string(playerLives));
 
             if (playerLives == 0) {
                 setActiveScene("scenes/lost_scene.xml");
@@ -184,44 +186,45 @@ namespace Game {
     }
 
     void PlayerScript::createStartText() {
-//        auto& gameCanvas = getComponent<CgEngine::UiCanvasComponent2D>(findEntityById("inGameCanvas"));
-//        auto* start = gameCanvas.addUiText("start");
-//        auto* startTimer = gameCanvas.addUiText("startTimer");
-//
-//        start->setFont("SpaceMono-Bold.ttf");
-//        start->setText("START IN");
-//        start->setTop(0.3f, CgEngine::UIPosUnit::VHPercent);
-//        start->setLeft(0.5f, CgEngine::UIPosUnit::VWPercent);
-//        start->setSize(0.12f, CgEngine::UIPosUnit::VHPercent);
-//        start->setXAlignment(CgEngine::UIXAlignment::Center);
-//        start->setYAlignment(CgEngine::UIYAlignment::Center);
-//        start->setColor({0.8f, 0.0f, 0.0f, 1.0f});
-//
-//        std::string timerStr = std::to_string(respawnTimer);
-//
-//        startTimer->setFont("SpaceMono-Bold.ttf");
-//        startTimer->setText(timerStr.substr(0, timerStr.find('.') + 3));
-//        startTimer->setTop(0.44f, CgEngine::UIPosUnit::VHPercent);
-//        startTimer->setLeft(0.5f, CgEngine::UIPosUnit::VWPercent);
-//        startTimer->setSize(0.18f, CgEngine::UIPosUnit::VHPercent);
-//        startTimer->setXAlignment(CgEngine::UIXAlignment::Center);
-//        startTimer->setYAlignment(CgEngine::UIYAlignment::Center);
-//        startTimer->setColor({0.0f, 0.0f, 0.0f, 1.0f});
-//        startTimer->setUseKerning(false);
-//
-//        gameCanvas.getUIElement<CgEngine::UiCircle>("cross")->setFillColor({0.0f, 0.0f, 0.0f, 0.0f});
+        CgEngine::UiCanvas* canvas = inGameUICanvas->getCanvas();
+
+        auto* start = canvas->addUiText("start");
+        auto* startTimer = canvas->addUiText("startTimer");
+
+        start->setFont("SpaceMono-Bold.ttf");
+        start->setText("START IN");
+        start->setTop(0.3f, CgEngine::UIPosUnit::VHPercent);
+        start->setLeft(0.5f, CgEngine::UIPosUnit::VWPercent);
+        start->setSize(0.12f, CgEngine::UIPosUnit::VHPercent);
+        start->setXAlignment(CgEngine::UIXAlignment::Center);
+        start->setYAlignment(CgEngine::UIYAlignment::Center);
+        start->setColor({0.8f, 0.0f, 0.0f, 1.0f});
+
+        std::string timerStr = std::to_string(respawnTimer);
+
+        startTimer->setFont("SpaceMono-Bold.ttf");
+        startTimer->setText(timerStr.substr(0, timerStr.find('.') + 3));
+        startTimer->setTop(0.44f, CgEngine::UIPosUnit::VHPercent);
+        startTimer->setLeft(0.5f, CgEngine::UIPosUnit::VWPercent);
+        startTimer->setSize(0.18f, CgEngine::UIPosUnit::VHPercent);
+        startTimer->setXAlignment(CgEngine::UIXAlignment::Center);
+        startTimer->setYAlignment(CgEngine::UIYAlignment::Center);
+        startTimer->setColor({0.0f, 0.0f, 0.0f, 1.0f});
+        startTimer->setUseKerning(false);
+
+        canvas->getUIElement<CgEngine::UiCircle>("cross")->setFillColor({0.0f, 0.0f, 0.0f, 0.0f});
     }
 
     void PlayerScript::updateGuiStats() {
-//        auto& gameCanvas = getComponent<CgEngine::UiCanvasComponent2D>(findEntityById("inGameCanvas"));
-//        auto* projectilesAmount = gameCanvas.getUIElement<CgEngine::UiRect>("projectilesAmount");
-//
-//        float projectileWidth = (static_cast<float>(projectiles) / static_cast<float>(maxProjectiles)) * 0.15f;
-//        projectilesAmount->setWidth(projectileWidth, CgEngine::UIPosUnit::VWPercent);
-//
-//        auto* coinsAmount = gameCanvas.getUIElement<CgEngine::UiRect>("coinsAmount");
-//        float coinWidth = (1.0f - (static_cast<float>(leftCoins) / static_cast<float>(totalCoins))) * 0.15f;
-//        coinsAmount->setWidth(coinWidth, CgEngine::UIPosUnit::VWPercent);
+        CgEngine::UiCanvas* canvas = inGameUICanvas->getCanvas();
+        auto* projectilesAmount = canvas->getUIElement<CgEngine::UiRect>("projectilesAmount");
+
+        float projectileWidth = (static_cast<float>(projectiles) / static_cast<float>(maxProjectiles)) * 0.15f;
+        projectilesAmount->setWidth(projectileWidth, CgEngine::UIPosUnit::VWPercent);
+
+        auto* coinsAmount = canvas->getUIElement<CgEngine::UiRect>("coinsAmount");
+        float coinWidth = (1.0f - (static_cast<float>(leftCoins) / static_cast<float>(totalCoins))) * 0.15f;
+        coinsAmount->setWidth(coinWidth, CgEngine::UIPosUnit::VWPercent);
 
     }
 }

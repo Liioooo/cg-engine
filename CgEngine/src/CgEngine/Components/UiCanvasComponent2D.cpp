@@ -1,11 +1,8 @@
 #include <Asserts.h>
-#include <Events/MouseMovedEvent.h>
 #include "UiCanvasComponent2D.h"
 #include "imgui.h"
 #include "Ui/UiCanvasFactory.h"
 #include "CgEngineSharedUtils/UIPosUtils.h"
-
-#include "Events/Input.h"
 
 namespace CgEngine {
     void UiCanvasComponent2DParams::verifyParams() const {

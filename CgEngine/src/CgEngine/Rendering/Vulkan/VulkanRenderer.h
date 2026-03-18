@@ -34,8 +34,12 @@ namespace CgEngine {
         void beginSwapChainRenderPass() override;
         void endRenderPass() override;
 
+        void beginDynamicRendering(const DynamicRenderingInfo& renderingInfo) override;
+        void endDynamicRendering() override;
+
         void bindGraphicsPipeline(const GraphicsPipeline* graphicsPipeline) override;
         void bindComputePipeline(const ComputePipeline* computePipeline) override;
+        void bindDynamicGraphicsPipeline(const DynamicGraphicsPipeline* graphicsPipeline) override;
         void dispatchCompute(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
         void clearPass(const RenderPass* renderPass, const Framebuffer* framebuffer) override;
