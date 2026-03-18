@@ -14,7 +14,7 @@ layout(location = 10) in VS_OUT {
 
 const float KERNEL_RADIUS = 3;
 
-PUSH_CONSTANT(HbaoBlurPC, 10) {
+PUSH_CONSTANT(HbaoBlurPC) {
     float sharpness;
     vec2 invResolutionDirection;
 } pc_hbaoBlur;

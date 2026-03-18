@@ -31,11 +31,6 @@
             "description": "Debug (Linux)",
             "generator": "Ninja",
             "binaryDir": "bin/Debug",
-            "vendor": {
-                "jetbrains.com/clion": {
-                    "toolchain": "Visual Studio 22"
-                }
-            },
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_COMPILER": "gcc",
@@ -69,11 +64,6 @@
             "description": "Release (Linux)",
             "generator": "Ninja",
             "binaryDir": "bin/Release",
-            "vendor": {
-                "jetbrains.com/clion": {
-                    "toolchain": "Visual Studio 22"
-                }
-            },
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_C_COMPILER": "gcc",
@@ -99,6 +89,20 @@
                 "CMAKE_CXX_COMPILER": "cl.exe",
                 "CMAKE_C_FLAGS_INIT": "/GL /O2 /W3",
                 "CMAKE_CXX_FLAGS_INIT": "/GL /O2 /W3 /sdl"
+            }
+        },
+        {
+            "name": "distLinux",
+            "displayName": "Distribution (Linux)",
+            "description": "Distribution (Linux)",
+            "generator": "Ninja",
+            "binaryDir": "bin/Dist",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Dist",
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_C_FLAGS_INIT": "-O3 -w",
+                "CMAKE_CXX_FLAGS_INIT": "-O3 -w -fpermissive"
             }
         }
     ]

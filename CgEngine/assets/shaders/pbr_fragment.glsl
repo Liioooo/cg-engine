@@ -16,7 +16,7 @@ layout(binding = 1) uniform sampler2D u_gBuffer_EmissionMetallic;
 layout(binding = 2) uniform sampler2D u_gBuffer_WorldNormal;
 layout(binding = 3) uniform sampler2D u_Depth;
 
-PUSH_CONSTANT(PbrPC, 10) {
+PUSH_CONSTANT(PbrPC) {
     float environmentIntensity;
 } pc_pbr;
 

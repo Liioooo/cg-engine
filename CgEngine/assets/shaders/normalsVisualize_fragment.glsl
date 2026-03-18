@@ -4,7 +4,7 @@ layout(early_fragment_tests) in;
 
 #include "Macros.glsl"
 
-PUSH_CONSTANT(CollidersPC, 10) {
+PUSH_CONSTANT(CollidersPC) {
     vec3 color;
     int transformsOffset;
 } pc_colliders;

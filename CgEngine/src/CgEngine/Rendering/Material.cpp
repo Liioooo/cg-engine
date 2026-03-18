@@ -4,13 +4,11 @@
 namespace CgEngine {
 
     Material::Material() : uuid(Uuid()) {
-        pushConstants = GraphicsObjectsFactory::createPushConstants("pc_material");
         descriptorSet = GraphicsObjectsFactory::createDescriptorSet();
     }
 
     Material::~Material() {
         delete descriptorSet;
-        delete pushConstants;
     }
 
     const Uuid& Material::getUuid() const {
@@ -24,10 +22,5 @@ namespace CgEngine {
     DescriptorSet* Material::getDescriptorSet() const {
         return descriptorSet;
     }
-
-    PushConstants* Material::getPushConstants() const {
-        return pushConstants;
-    }
-
 
 }

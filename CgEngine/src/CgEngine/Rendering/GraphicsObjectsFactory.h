@@ -19,7 +19,6 @@ namespace CgEngine {
     class DescriptorSetLayout;
     class DescriptorSet;
     class TextureCube;
-    class PushConstants;
     class ComputePipeline;
     class GraphicsPipeline;
     class DynamicGraphicsPipeline;
@@ -69,7 +68,6 @@ namespace CgEngine {
         static TextureCube* createTextureCube();
         static TextureCube* createTextureCube(TextureFormat format, uint32_t width, uint32_t height, MipMapFiltering mipMapFiltering = MipMapFiltering::Bilinear);
         static TextureCube* createTextureCube(TextureFormat format, uint32_t width, uint32_t height, const void* data, MipMapFiltering mipMapFiltering = MipMapFiltering::Bilinear);       ;
-        static PushConstants* createPushConstants(std::string prefix);
         static ComputePipeline* createComputePipeline();
         static ComputePipeline* createComputePipeline(const ComputePipelineSpecification& spec);
         static GraphicsPipeline* createGraphicsPipeline();

@@ -15,15 +15,6 @@ namespace CgEngine {
         ubHBAOData = GraphicsObjectsFactory::createUniformBuffer(sizeof(UBHBAOData));
         ubCustomPipelineData = GraphicsObjectsFactory::createUniformBuffer(sizeof(CustomPipelineData));
 
-        transformOffsetPushConstant = GraphicsObjectsFactory::createPushConstants("pc_transformsOffset");
-        transformOffsetPushConstant->init<TransformsOffsetPushConstants>();
-        transformOffsetPushConstant->mapUniform(&TransformsOffsetPushConstants::transformsOffset, "transformsOffset");
-
-        collidersPushConstants = GraphicsObjectsFactory::createPushConstants("pc_colliders");
-        collidersPushConstants->init<CollidersPushConstants>();
-        collidersPushConstants->mapUniform(&CollidersPushConstants::color, "color");
-        collidersPushConstants->mapUniform(&CollidersPushConstants::transformsOffset, "transformsOffset");
-
         DescriptorSetSpecification environmentMapDescriptorSetSpec{};
         environmentMapDescriptorSetSpec.textureCubeBindings = {
             {5, Renderer::getBlackCubeTexture()},
@@ -168,10 +159,6 @@ namespace CgEngine {
         }
         {
             glm::uvec2 quarterSize = (glm::uvec2(viewportWidth, viewportHeight) + 3u) / 4u;
-
-            hbaoUVOffsetPushConstants = GraphicsObjectsFactory::createPushConstants("pc_uvOffset");
-            hbaoUVOffsetPushConstants->init<HbaoUVOffsetPushConstants>();
-            hbaoUVOffsetPushConstants->mapUniform(&HbaoUVOffsetPushConstants::uvOffset, "uvOffset");
 
             AttachmentSpecification hbaoDeinterleavingAttachmentSpec{};
             hbaoDeinterleavingAttachmentSpec.width = quarterSize.x;
@@ -408,11 +395,6 @@ namespace CgEngine {
             hbaoBlurDescriptorSetSpec1.attachmentTextureBindings[0].allLayers = true;
 
             hbaoBlurDescriptorSet1 = GraphicsObjectsFactory::createDescriptorSet(hbaoBlurDescriptorSetSpec1);
-
-            hbaoBlurPushConstants = GraphicsObjectsFactory::createPushConstants("pc_hbaoBlur");
-            hbaoBlurPushConstants->init<HbaoBlurPushConstants>();
-            hbaoBlurPushConstants->mapUniform(&HbaoBlurPushConstants::sharpness, "sharpness");
-            hbaoBlurPushConstants->mapUniform(&HbaoBlurPushConstants::invResolutionDirection, "invResolutionDirection");
         }
         {
             RenderPassSpecification pbrRenderPassSpec{};
@@ -484,10 +466,6 @@ namespace CgEngine {
             };
 
             pbrDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(pbrDescriptorSetSpec);
-
-            pbrPushConstants = GraphicsObjectsFactory::createPushConstants("pc_pbr");
-            pbrPushConstants->init<PbrPushConstants>();
-            pbrPushConstants->mapUniform(&PbrPushConstants::environmentIntensity, "environmentIntensity");
         }
         {
             RenderPassSpecification afterPbrRenderPassSpec{};
@@ -522,11 +500,6 @@ namespace CgEngine {
             skyboxPipelineSpec.vertexInputLayout = Renderer::getUnitCubeVertexInputLayout();
 
             skyboxPipeline = GraphicsObjectsFactory::createGraphicsPipeline(skyboxPipelineSpec);
-
-            skyboxPushConstants = GraphicsObjectsFactory::createPushConstants("pc_skybox");
-            skyboxPushConstants->init<SkyboxPushConstants>();
-            skyboxPushConstants->mapUniform(&SkyboxPushConstants::intensity, "intensity");
-            skyboxPushConstants->mapUniform(&SkyboxPushConstants::lod, "lod");
         }
         {
             GraphicsPipelineSpecification physicsCollidersPipelineSpec;
@@ -681,10 +654,6 @@ namespace CgEngine {
                 bloomUpsampleFramebuffers[i] = GraphicsObjectsFactory::createFramebuffer(bloomFramebufferSpec);
             }
 
-            bloomDownsamplePushConstants = GraphicsObjectsFactory::createPushConstants("pc_bloomDownsample");
-            bloomDownsamplePushConstants->init<BloomDownsamplePushConstants>();
-            bloomDownsamplePushConstants->mapUniform(&BloomDownsamplePushConstants::useThreshold, "useThreshold");
-
             DescriptorSetSpecification bloomDescriptorSetSpec0{};
             bloomDescriptorSetSpec0.attachmentTextureBindings.resize(1);
             bloomDescriptorSetSpec0.attachmentTextureBindings[0].attachment = pbrColorAttachment;
@@ -784,10 +753,6 @@ namespace CgEngine {
 
             uiTextPipeline = GraphicsObjectsFactory::createDynamicGraphicsPipeline(uiTextPipelineSpec);
 
-            uiPushConstants = GraphicsObjectsFactory::createPushConstants("pc_ui");
-            uiPushConstants->init<UiPushConstants>();
-            uiPushConstants->mapUniform(&UiPushConstants::projection, "projection");
-
         }
         {
             DescriptorSetLayoutSpecification ui2DCameraBufferDescriptorSetLayoutSpec{};
@@ -819,10 +784,6 @@ namespace CgEngine {
 
             ui2DPipeline = GraphicsObjectsFactory::createGraphicsPipeline(ui2DPipelineSpec);
 
-            ui2DPushConstants = GraphicsObjectsFactory::createPushConstants("pc_ui2D");
-            ui2DPushConstants->init<Ui2DPushConstants>();
-            ui2DPushConstants->mapUniform(&Ui2DPushConstants::transform, "transform");
-
             uiProjectionMatrix = glm::ortho(0.0f, static_cast<float>(viewportWidth), 0.0f, static_cast<float>(viewportHeight));
         }
         {
@@ -832,10 +793,6 @@ namespace CgEngine {
             skinningPipelineSpec.engineShaderName = "skinning";
 
             skinningComputePipeline = GraphicsObjectsFactory::createComputePipeline(skinningPipelineSpec);
-
-            skinningPushConstants = GraphicsObjectsFactory::createPushConstants("pc_skinning");
-            skinningPushConstants->init<SkinningPushConstants>();
-            skinningPushConstants->mapUniform(&SkinningPushConstants::componentIndex, "componentIndex");
 
             DescriptorSetSpecification skinningDescriptorSetSpec{};
             skinningDescriptorSetSpec.ssboBindings = {
@@ -998,16 +955,12 @@ namespace CgEngine {
         ubLightData->setData(&lightData, sizeof(UBLightData));
 
 
-        SkyboxPushConstants skyboxPushConstantsData{};
-        skyboxPushConstantsData.intensity = sceneEnvironment.environmentIntensity;
-        skyboxPushConstantsData.lod = sceneEnvironment.environmentLod;
-        skyboxPushConstants->setData(&skyboxPushConstantsData, sizeof(SkyboxPushConstants));
+        skyboxPushConstants.intensity = sceneEnvironment.environmentIntensity;
+        skyboxPushConstants.lod = sceneEnvironment.environmentLod;
 
         currentSceneEnvironment.environmentIntensity = sceneEnvironment.environmentIntensity;
         currentSceneEnvironment.environmentMapDescriptorSet = sceneEnvironment.environmentMapDescriptorSet != nullptr ? sceneEnvironment.environmentMapDescriptorSet : environmentMapDescriptorSetBlack;
         currentSceneEnvironment.dirLightCastShadows = lightEnvironment.dirLightCastShadows && lightEnvironment.dirLightIntensity != 0.0f;
-
-        pbrPushConstants->setData(&currentSceneEnvironment.environmentIntensity, sizeof(float));
 
         setupShadowMapData(lightEnvironment.dirLightDirection, cameraData.viewProjection, camera);
 
@@ -1347,8 +1300,7 @@ namespace CgEngine {
         for (uint32_t i = 0; i < skinningQueue.size(); i++) {
             Renderer::bindDescriptorSet(skinningQueue[i].descriptorSet, 1);
             pc.componentIndex = i;
-            skinningPushConstants->setData(&pc, sizeof(SkinningPushConstants));
-            Renderer::setPushConstants({skinningPushConstants}, 1);
+            Renderer::setPushConstants(&pc, sizeof(SkinningPushConstants));
             Renderer::dispatchCompute((skinningQueue[i].numVertices / 32) + 1, 1, 1);
             Renderer::memoryBarrierForVertexBufferAfterCompute(skinningQueue[i].skinnedVertexBuffer);
         }
@@ -1368,8 +1320,7 @@ namespace CgEngine {
         Renderer::bindDescriptorSet(dirShadowMapDescriptorSet, 0);
 
         for (const auto [mk, command]: shadowMapDrawCommandQueue) {
-            transformOffsetPushConstant->setData(&command.transformsBufferOffset, sizeof(int));
-            Renderer::setPushConstants({transformOffsetPushConstant}, 1);
+            Renderer::setPushConstants(&command.transformsBufferOffset, sizeof(int));
             Renderer::executeDrawCommand(command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount);
         }
 
@@ -1384,8 +1335,7 @@ namespace CgEngine {
         Renderer::bindDescriptorSet(gBufferDescriptorSet, 0);
 
         for (const auto [mk, command]: drawCommandQueue) {
-            transformOffsetPushConstant->setData(&command.transformsBufferOffset, sizeof(int));
-            Renderer::setPushConstants({transformOffsetPushConstant, command.material->getPushConstants()}, 2);
+            Renderer::setPushConstants(&command.transformsBufferOffset, sizeof(int));
             Renderer::bindDescriptorSet(command.material->getDescriptorSet(), 1);
             Renderer::executeDrawCommand(command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount);
         }
@@ -1400,8 +1350,7 @@ namespace CgEngine {
         Renderer::beginRenderPass(hbaoDeinterleavingRenderPass, hbaoDeinterleavingFramebuffers[0]);
         Renderer::bindGraphicsPipeline(hbaoDeinterleavingPipeline);
         Renderer::bindDescriptorSet(hbaoDeinterleavingDescriptorSet, 0);
-        hbaoUVOffsetPushConstants->setData(&uvOffset, sizeof(int));
-        Renderer::setPushConstants({hbaoUVOffsetPushConstants}, 1);
+        Renderer::setPushConstants(&uvOffset, sizeof(int));
         Renderer::renderUnitQuad();
         Renderer::endRenderPass();
 
@@ -1410,8 +1359,7 @@ namespace CgEngine {
         Renderer::beginRenderPass(hbaoDeinterleavingRenderPass, hbaoDeinterleavingFramebuffers[1]);
         Renderer::bindGraphicsPipeline(hbaoDeinterleavingPipeline);
         Renderer::bindDescriptorSet(hbaoDeinterleavingDescriptorSet, 0);
-        hbaoUVOffsetPushConstants->setData(&uvOffset, sizeof(int));
-        Renderer::setPushConstants({hbaoUVOffsetPushConstants}, 1);
+        Renderer::setPushConstants(&uvOffset, sizeof(int));
         Renderer::renderUnitQuad();
         Renderer::endRenderPass();
     }
@@ -1448,8 +1396,7 @@ namespace CgEngine {
         Renderer::beginRenderPass(hbaoBlurRenderPass0, hbaoBlurFramebuffer0);
         Renderer::bindGraphicsPipeline(hbaoBlurPipeline0);
         Renderer::bindDescriptorSet(hbaoBlurDescriptorSet0, 0);
-        hbaoBlurPushConstants->setData(&pc, sizeof(HbaoBlurPushConstants));
-        Renderer::setPushConstants({hbaoBlurPushConstants}, 1);
+        Renderer::setPushConstants(&pc, sizeof(HbaoBlurPushConstants));
         Renderer::renderUnitQuad();
         Renderer::endRenderPass();
 
@@ -1457,8 +1404,7 @@ namespace CgEngine {
         Renderer::bindGraphicsPipeline(hbaoBlurPipeline1);
         Renderer::bindDescriptorSet(hbaoBlurDescriptorSet1, 0);
         pc.invResolutionDirection = glm::vec2(0.0f, invViewportHeight);
-        hbaoBlurPushConstants->setData(&pc, sizeof(HbaoBlurPushConstants));
-        Renderer::setPushConstants({hbaoBlurPushConstants}, 1);
+        Renderer::setPushConstants(&pc, sizeof(HbaoBlurPushConstants));
         Renderer::renderUnitQuad();
         Renderer::endRenderPass();
     }
@@ -1471,7 +1417,7 @@ namespace CgEngine {
         Renderer::bindGraphicsPipeline(pbrPipeline);
         Renderer::bindDescriptorSet(pbrDescriptorSet, 0);
         Renderer::bindDescriptorSet(currentSceneEnvironment.environmentMapDescriptorSet, 1);
-        Renderer::setPushConstants({pbrPushConstants}, 1);
+        Renderer::setPushConstants(&currentSceneEnvironment.environmentIntensity, sizeof(float));
         Renderer::renderUnitQuad();
         Renderer::endRenderPass();
     }
@@ -1505,7 +1451,7 @@ namespace CgEngine {
 
         Renderer::bindGraphicsPipeline(skyboxPipeline);
         Renderer::bindDescriptorSet(currentSceneEnvironment.environmentMapDescriptorSet, 0);
-        Renderer::setPushConstants({skyboxPushConstants}, 1);
+        Renderer::setPushConstants(&skyboxPushConstants, sizeof(SkyboxPushConstants));
         Renderer::renderUnitCube();
     }
 
@@ -1520,8 +1466,7 @@ namespace CgEngine {
 
         for (const auto [mk, command]: physicsCollidersDrawCommandQueue) {
             pc.transformsOffset = command.transformsBufferOffset;
-            collidersPushConstants->setData(&pc, sizeof(CollidersPushConstants));
-            Renderer::setPushConstants({collidersPushConstants}, 1);
+            Renderer::setPushConstants(&pc, sizeof(CollidersPushConstants));
             Renderer::executeDrawCommand(command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount);
         }
     }
@@ -1537,8 +1482,7 @@ namespace CgEngine {
 
         for (const auto [mk, command]: boundingBoxDrawCommandQueue) {
             pc.transformsOffset = command.transformsBufferOffset;
-            collidersPushConstants->setData(&pc, sizeof(CollidersPushConstants));
-            Renderer::setPushConstants({collidersPushConstants}, 1);
+            Renderer::setPushConstants(&pc, sizeof(CollidersPushConstants));
             Renderer::executeDrawCommand(command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount);
         }
     }
@@ -1554,8 +1498,7 @@ namespace CgEngine {
 
         for (const auto [mk, command]: drawCommandQueue) {
             pc.transformsOffset = command.transformsBufferOffset;
-            collidersPushConstants->setData(&pc, sizeof(CollidersPushConstants));
-            Renderer::setPushConstants({collidersPushConstants}, 1);
+            Renderer::setPushConstants(&pc, sizeof(CollidersPushConstants));
             Renderer::executeDrawCommand(command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount);
         }
     }
@@ -1570,30 +1513,27 @@ namespace CgEngine {
         CG_GPU_DEBUG_GROUP("BloomPass")
         CG_GPU_TIME_FN(&renderingStats.bloomTimer)
 
-        BloomDownsamplePushConstants pc{};
-        pc.useThreshold = true;
-        bloomDownsamplePushConstants->setData(&pc, sizeof(BloomDownsamplePushConstants));
+        uint32_t useThreshold = 1;
 
         Renderer::beginRenderPass(bloomDownSamplePass, bloomDownsampleFramebuffers[0]);
         Renderer::bindGraphicsPipeline(bloomDownsamplePipeline);
-        Renderer::setPushConstants({bloomDownsamplePushConstants}, 1);
+        Renderer::setPushConstants(&useThreshold, sizeof(uint32_t));
         Renderer::bindDescriptorSet(bloomDescriptorSets[0], 0);
         Renderer::renderUnitQuad();
         Renderer::endRenderPass();
 
-        pc.useThreshold = false;
-        bloomDownsamplePushConstants->setData(&pc, sizeof(BloomDownsamplePushConstants));
+        useThreshold = 0;
 
         for (uint32_t i = 0; i < bloomDownsampleFramebuffers.size() - 1; ++i) {
             Renderer::beginRenderPass(bloomDownSamplePass, bloomDownsampleFramebuffers[i + 1]);
             Renderer::bindGraphicsPipeline(bloomDownsamplePipeline);
-            Renderer::setPushConstants({bloomDownsamplePushConstants}, 1);
+            Renderer::setPushConstants(&useThreshold, sizeof(uint32_t));
             Renderer::bindDescriptorSet(bloomDescriptorSets[i + 1], 0);
             Renderer::renderUnitQuad();
             Renderer::endRenderPass();
         }
 
-        for (uint32_t i = bloomUpsampleFramebuffers.size() - 1; i > 0; i--) {
+        for (int32_t i = bloomUpsampleFramebuffers.size() - 1; i >= 0; i--) {
             Renderer::beginRenderPass(bloomUpSamplePass, bloomUpsampleFramebuffers[i]);
             Renderer::bindGraphicsPipeline(bloomUpsamplePipeline);
             Renderer::bindDescriptorSet(bloomDescriptorSets[i + 2], 0);
@@ -1629,7 +1569,6 @@ namespace CgEngine {
             Renderer::beginDynamicRendering(renderingInfo);
 
             uiPushConstantsData.projection = canvasCommand.projectionMatrix;
-            uiPushConstants->setData(&uiPushConstantsData, sizeof(UiPushConstants));
 
             size_t circleOffset = 0;
             size_t rectOffset = 0;
@@ -1638,7 +1577,7 @@ namespace CgEngine {
             for (const auto& command: canvasCommand.drawCommands) {
                 if (command.circleIndexCount > 0) {
                     Renderer::bindDynamicGraphicsPipeline(uiCirclePipeline);
-                    Renderer::setPushConstants({uiPushConstants}, 1);
+                    Renderer::setPushConstants(&uiPushConstantsData, sizeof(UiPushConstants));
                     Renderer::bindDescriptorSet(command.descriptorSet, 0);
                     Renderer::executeDrawCommand(command.circleVAO, command.circleIndexCount, 0, circleOffset);
 
@@ -1646,7 +1585,7 @@ namespace CgEngine {
                 }
                 if (command.rectIndexCount > 0) {
                     Renderer::bindDynamicGraphicsPipeline(uiRectPipeline);
-                    Renderer::setPushConstants({uiPushConstants}, 1);
+                    Renderer::setPushConstants(&uiPushConstantsData, sizeof(UiPushConstants));
                     Renderer::bindDescriptorSet(command.descriptorSet, 0);
                     Renderer::executeDrawCommand(command.rectVAO, command.rectIndexCount, 0, rectOffset);
 
@@ -1654,7 +1593,7 @@ namespace CgEngine {
                 }
                 if (command.textIndexCount > 0) {
                     Renderer::bindDynamicGraphicsPipeline(uiTextPipeline);
-                    Renderer::setPushConstants({uiPushConstants}, 1);
+                    Renderer::setPushConstants(&uiPushConstantsData, sizeof(UiPushConstants));
                     Renderer::bindDescriptorSet(command.textDescriptorSet, 0);
                     Renderer::executeDrawCommand(command.textVAO, command.textIndexCount, 0, textOffset);
 
@@ -1678,8 +1617,7 @@ namespace CgEngine {
             Renderer::bindGraphicsPipeline(ui2DPipeline);
             Renderer::bindDescriptorSet(ui2DDescriptorSetCameraBuffer, 0);
             Renderer::bindDescriptorSet(command.sampleCanvasDescriptorSet, 1);
-            ui2DPushConstants->setData(&command.finalTransform, sizeof(glm::mat4));
-            Renderer::setPushConstants({ui2DPushConstants}, 1);
+            Renderer::setPushConstants(&command.finalTransform, sizeof(glm::mat4));
             Renderer::renderUnitQuad();
         }
     }
@@ -1779,7 +1717,7 @@ namespace CgEngine {
             -(1.0f - P[4 * 3 + 1]) / P[4 * 1 + 1],  // B
         };
 
-        hbaoData.isOrtho = camera.getProjectionType() == CameraProjectionType::Orthographic;
+        hbaoData.isOrtho = camera.getProjectionType() == CameraProjectionType::Orthographic ? 1 : 0;
         hbaoData.perspectiveInfo = camera.getProjectionType() == CameraProjectionType::Orthographic ? projInfoOrtho : projInfoPerspective;
 
         const float meters2viewSpace = 1.0f;

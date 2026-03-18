@@ -15,7 +15,6 @@
 #include "Rendering/OpenGL/OpenGLDescriptorSetLayout.h"
 #include "Rendering/OpenGL/OpenGLDescriptorSet.h"
 #include "Rendering/OpenGL/OpenGLTextureCube.h"
-#include "Rendering/OpenGL/OpenGLPushConstants.h"
 #include "Rendering/OpenGL/OpenGLComputePipeline.h"
 #include "Rendering/OpenGL/OpenGLGraphicsPipeline.h"
 #include "Rendering/OpenGL/OpenGLDynamicGraphicsPipeline.h"
@@ -313,15 +312,6 @@ namespace CgEngine {
                 return nullptr;
             case GraphicsAPI::OpenGL:
                 return new OpenGLTextureCube(format, width, height, data, mipMapFiltering);
-        }
-    }
-
-    PushConstants* GraphicsObjectsFactory::createPushConstants(std::string prefix) {
-        switch (api) {
-            case GraphicsAPI::Vulkan:
-                return nullptr;
-            case GraphicsAPI::OpenGL:
-                return new OpenGLPushConstants(std::move(prefix));
         }
     }
 

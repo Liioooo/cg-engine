@@ -3,6 +3,7 @@
 #include "XMLFile.h"
 #include "Resources/ResRef.h"
 #include "Material.h"
+#include "UniformBuffer.h"
 
 namespace CgEngine {
 
@@ -18,12 +19,14 @@ namespace CgEngine {
         ResRef<Texture2D> normalTexture;
     };
 
-    struct PBRMaterialPushConstants {
-        glm::vec3 albedoColor;
+    struct PBRMaterialData {
+        alignas(16) glm::vec3 albedoColor;
         float metalness;
         float roughness;
-        glm::vec3 emission;
-        bool useNormals;
+        float _padding_0[2];
+        alignas(16) glm::vec3 emission;
+        uint32_t useNormals;
+        float _padding_1[3];
     };
 
     class PBRMaterial : public Material {
@@ -33,7 +36,7 @@ namespace CgEngine {
         explicit PBRMaterial(PBRMaterialSpecification spec);
 
     private:
-        PBRMaterialPushConstants pushConstantsData;
+        UniformBuffer* materialBuffer;
         ResRef<Texture2D> emissionTexture;
         ResRef<Texture2D> albedoTexture;
         ResRef<Texture2D> metalnessTexture;

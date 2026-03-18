@@ -5,7 +5,6 @@ From: https://github.com/nvpro-samples/gl_ssao/blob/master/hbao.frag.glsl and Th
 #version 450 core
 
 #include "HBAODataBuffer.glsl"
-#include "ScreenDataBuffer.glsl"
 #include "PI.glsl"
 
 #pragma optionNV(unroll all)

@@ -41,7 +41,7 @@ namespace CgEngine {
         static void clearPass(const RenderPass* renderPass, const Framebuffer* framebuffer);
 
         static void bindDescriptorSet(const DescriptorSet* descriptorSet, uint32_t setIndex);
-        static void setPushConstants(const std::array<PushConstants*, 2>& pushConstants, uint32_t pushConstantsCount);
+        static void setPushConstants(const void* data, size_t size);
 
         static void transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition);
         static void memoryBarrierForVertexBufferAfterCompute(const VertexBuffer* vertexBuffer);

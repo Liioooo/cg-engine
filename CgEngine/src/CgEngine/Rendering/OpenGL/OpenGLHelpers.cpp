@@ -399,6 +399,18 @@ namespace CgEngine {
         int getShaderUniformLocation(uint32_t programHandle, const std::string& name) {
             int32_t location = glGetUniformLocation(programHandle, name.c_str());
 
+            GLint count;
+            glGetProgramiv(programHandle, GL_ACTIVE_UNIFORMS, &count);
+
+            for (int i = 0; i < count; i++) {
+                char name[256];
+                GLsizei length;
+                GLint size;
+                GLenum type;
+                glGetActiveUniform(programHandle, i, sizeof(name), &length, &size, &type, name);
+                printf("Uniform: %s\n", name);
+            }
+
             #ifdef CG_ENABLE_DEBUG_FEATURES
                 if (location == -1) {
                     CG_LOGGING_WARNING("Uniform doesn't exist! Uniform: {}", name)
@@ -412,7 +424,7 @@ namespace CgEngine {
             uint32_t id = glCreateShader(type);
             glShaderBinary(1, &id, GL_SHADER_BINARY_FORMAT_SPIR_V_ARB, source.data(), static_cast<int>(source.size()) * sizeof(char));
             glSpecializeShader(id, "main", 0, nullptr, nullptr);
-            bool error = OpenGLHelpers::checkShaderErrors(id, sType);
+            bool error = checkShaderErrors(id, sType);
             glAttachShader(attachTo, id);
             glDeleteShader(id);
             return error;

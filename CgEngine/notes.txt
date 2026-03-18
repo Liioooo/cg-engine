@@ -4,6 +4,7 @@ UniformBuffers:
 2: DirShadowData
 3: ScreenData
 4: HBAOData
+5: PBRMaterialData
 Normal uniforms: >10
 
 SSBO:

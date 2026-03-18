@@ -6,7 +6,7 @@ layout (location = 0) in vec4 a_PosUV;
 layout (location = 1) in vec4 a_Color;
 layout (location = 2) in float a_FontAtlasIndex;
 
-PUSH_CONSTANT(UIPushConstants, 10) {
+PUSH_CONSTANT(UIPushConstants) {
     mat4 projection;
 } pc_ui;
 

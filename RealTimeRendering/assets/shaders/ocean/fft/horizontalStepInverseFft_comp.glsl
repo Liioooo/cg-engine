@@ -10,7 +10,7 @@ layout(rgba32f, binding = 0) uniform restrict readonly image2D u_precomputedData
 layout(rg32f, binding = 1) uniform restrict image2D u_buffer0;
 layout(rg32f, binding = 2) uniform restrict image2D u_buffer1;
 
-PUSH_CONSTANT(PCFFT, 10) {
+PUSH_CONSTANT(PCFFT) {
 bool pingPong;
 int step;
 } pc_fft;

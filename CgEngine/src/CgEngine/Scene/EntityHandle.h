@@ -45,7 +45,7 @@ namespace CgEngine {
         }
 
         template<typename C>
-        ComponentHandle<C> attachComponent(typename C::Params componentParams) {
+        ComponentHandle<C> attachComponent(typename C::Params componentParams = typename C::Params{}) {
             CG_ASSERT(isValid(), "Invalid EntityHandle. Entity: " + std::to_string(entity))
             return scene->attachComponent<C>(entity, componentParams);
         }

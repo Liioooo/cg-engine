@@ -2,6 +2,8 @@
 #include "CgEngine/FileSystem.h"
 #include "CgEngine/Rendering/GraphicsObjectsFactory.h"
 #include "imgui.h"
+#include "Components/CustomShaderRendererComponent.h"
+#include "Components/TransformComponent.h"
 
 namespace RTR {
 
@@ -13,8 +15,8 @@ namespace RTR {
 
         heightGrassMap = getResource<CgEngine::Texture2D>(CgEngine::FileSystem::getAsGamePath("./textures/island_height_grass_map.png").string());
 
-        CgEngine::Entity islandEntity = getParentEntity();
-        glm::vec3 islandCenter = getComponent<CgEngine::TransformComponent>(islandEntity).getGlobalPosition();
+        CgEngine::EntityHandle islandEntity = getParentEntity();
+        glm::vec3 islandCenter = islandEntity.getComponent<CgEngine::TransformComponent>()->getGlobalPosition();
         glm::vec2 islandSize = glm::vec2(400.0f, 400.0f);
 
         glm::mat4 grassColorsUniform = glm::mat4(glm::vec4(baseColor1, 0.0f), glm::vec4(baseColor2, 0.0f), glm::vec4(tipColor1, 0.0f), glm::vec4(tipColor2, 0.0f));
@@ -70,17 +72,17 @@ namespace RTR {
 
         grassContainer = createEntity();
         CgEngine::TransformComponentParams p;
-        attachComponent<CgEngine::TransformComponent>(grassContainer, p);
+        grassContainer.attachComponent<CgEngine::TransformComponent>(p);
 
         for (const auto& pos: GRASS_POSITIONS) {
-            CgEngine::Entity grassTileEntity = createEntity(grassContainer);
+            CgEngine::EntityHandle grassTileEntity = createEntity(grassContainer);
 
             CgEngine::TransformComponentParams transformParams;
             transformParams.position = {pos.x, 0.0f, pos.y};
-            attachComponent<CgEngine::TransformComponent>(grassTileEntity, transformParams);
+            grassTileEntity.attachComponent<CgEngine::TransformComponent>(transformParams);
 
-            CgEngine::Entity grassLowEntity = createEntity(grassTileEntity);
-            attachComponent<CgEngine::TransformComponent>(grassLowEntity);
+            CgEngine::EntityHandle grassLowEntity = createEntity(grassTileEntity);
+            grassLowEntity.attachComponent<CgEngine::TransformComponent>();
 
             CgEngine::CustomShaderRendererComponentParams rendererLowParams;
             rendererLowParams.customMesh = geometryLow;
@@ -88,10 +90,10 @@ namespace RTR {
             rendererLowParams.instanceCount = NUM_GRASS;
             rendererLowParams.pipeline = "grass/render";
             rendererLowParams.enableCulling = true;
-            attachComponent<CgEngine::CustomShaderRendererComponent>(grassLowEntity, rendererLowParams);
+            grassLowEntity.attachComponent<CgEngine::CustomShaderRendererComponent>(rendererLowParams);
 
-            CgEngine::Entity grassHighEntity = createEntity(grassTileEntity);
-            attachComponent<CgEngine::TransformComponent>(grassHighEntity);
+            CgEngine::EntityHandle grassHighEntity = createEntity(grassTileEntity);
+            grassHighEntity.attachComponent<CgEngine::TransformComponent>();
 
             CgEngine::CustomShaderRendererComponentParams rendererHighParams;
             rendererHighParams.customMesh = geometryHigh;
@@ -99,7 +101,7 @@ namespace RTR {
             rendererHighParams.instanceCount = NUM_GRASS;
             rendererHighParams.pipeline = "grass/render";
             rendererHighParams.enableCulling = true;
-            attachComponent<CgEngine::CustomShaderRendererComponent>(grassHighEntity, rendererHighParams);
+            grassHighEntity.attachComponent<CgEngine::CustomShaderRendererComponent>(rendererHighParams);
 
             grassEntities.emplace_back(grassLowEntity, grassHighEntity);
         }
@@ -112,23 +114,23 @@ namespace RTR {
     }
 
     void GrassScript::update(CgEngine::TimeStep ts) {
-        auto& primaryCamPos = getComponent<CgEngine::TransformComponent>(getPrimaryCamaraComponent().getEntity()).getGlobalPosition();
+        auto& primaryCamPos = getPrimaryCameraEntity().getComponent<CgEngine::TransformComponent>()->getGlobalPosition();
 
         for (const auto& [lowEntity, highEntity]: grassEntities) {
-            auto distance = glm::distance(primaryCamPos, getComponent<CgEngine::TransformComponent>(lowEntity).getGlobalPosition());
+            auto distance = glm::distance(primaryCamPos, lowEntity.getComponent<CgEngine::TransformComponent>()->getGlobalPosition());
 
-            auto& lowRenderer = getComponent<CgEngine::CustomShaderRendererComponent>(lowEntity);
-            auto& highRenderer = getComponent<CgEngine::CustomShaderRendererComponent>(highEntity);
+            auto lowRenderer = lowEntity.getComponent<CgEngine::CustomShaderRendererComponent>();
+            auto highRenderer = highEntity.getComponent<CgEngine::CustomShaderRendererComponent>();
 
             if (distance >= GRASS_MAX_DIST) {
-                lowRenderer.setActive(false);
-                highRenderer.setActive(false);
+                lowRenderer->setActive(false);
+                highRenderer->setActive(false);
             } else if (distance >= GRASS_LOD_DIST) {
-                lowRenderer.setActive(true);
-                highRenderer.setActive(false);
+                lowRenderer->setActive(true);
+                highRenderer->setActive(false);
             } else {
-                lowRenderer.setActive(false);
-                highRenderer.setActive(true);
+                lowRenderer->setActive(false);
+                highRenderer->setActive(true);
             }
         }
 

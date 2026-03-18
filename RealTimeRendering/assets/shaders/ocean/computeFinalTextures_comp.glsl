@@ -12,7 +12,7 @@ layout(rgba32f, binding = 4) uniform restrict writeonly image2D u_displacement;
 layout(rgba32f, binding = 5) uniform restrict writeonly image2D u_derivatives;
 layout(rgba32f, binding = 6) uniform restrict image2D u_turbulence;
 
-PUSH_CONSTANT(PCFinalTextures, 10) {
+PUSH_CONSTANT(PCFinalTextures) {
     float deltaTime;
     float lambda;
 } pc_finalTextures;

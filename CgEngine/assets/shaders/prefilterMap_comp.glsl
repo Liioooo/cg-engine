@@ -5,7 +5,7 @@
 layout(binding = 0) uniform samplerCube u_cubeMap;
 layout(binding = 1, rgba32f) restrict writeonly uniform imageCube o_prefilterMap;
 
-PUSH_CONSTANT(PrefilterMapRoughnessPC, 10) {
+PUSH_CONSTANT(PrefilterMapRoughnessPC) {
     float roughness;
 } pc_Roughness;
 

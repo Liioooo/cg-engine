@@ -72,8 +72,8 @@ namespace CgEngine {
         backend->bindDescriptorSet(descriptorSet, setIndex);
     }
 
-    void Renderer::setPushConstants(const std::array<PushConstants*, 2>& pushConstants, uint32_t pushConstantsCount) {
-        backend->setPushConstants(pushConstants, pushConstantsCount);
+    void Renderer::setPushConstants(const void* data, size_t size) {
+        backend->setPushConstants(data, size);
     }
 
     void Renderer::transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition) {

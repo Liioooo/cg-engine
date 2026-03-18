@@ -3,7 +3,7 @@
 #include "CameraDataBuffer.glsl"
 #include "Macros.glsl"
 
-PUSH_CONSTANT(CollidersPC, 10) {
+PUSH_CONSTANT(CollidersPC) {
     vec3 color;
     int transformsOffset;
 } pc_colliders;

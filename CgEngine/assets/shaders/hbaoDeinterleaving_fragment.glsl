@@ -8,7 +8,7 @@ From https://github.com/nvpro-samples/gl_ssao/blob/master/hbao_deinterleave.frag
 #include "ScreenDataBuffer.glsl"
 #include "Macros.glsl"
 
-PUSH_CONSTANT(HbaoUvOffset, 10) {
+PUSH_CONSTANT(HbaoUvOffset) {
     int uvOffset;
 } pc_uvOffset;
 

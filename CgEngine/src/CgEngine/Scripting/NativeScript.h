@@ -43,12 +43,14 @@ namespace CgEngine {
         virtual void onRenderImGui() {};
 
         EntityHandle getOwingEntity();
+        EntityHandle getParentEntity();
         EntityHandle createEntity();
         EntityHandle findEntityById(const std::string& id);
         EntityHandle createEntity(Entity parent);
         EntityHandle instantiatePrefab(const std::string& prefabName, glm::vec3 position = {0.0f, 0.0f, 0.0f}, glm::vec3 rotation = {0.0f, 0.0f, 0.0f}, glm::vec3 scale = {1.0f, 1.0f, 1.0f}, const std::string& tag = "", const std::string& id = "");
         EntityHandle instantiatePrefab(const std::string& prefabName, Entity parent, glm::vec3 position = {0.0f, 0.0f, 0.0f}, glm::vec3 rotation = {0.0f, 0.0f, 0.0f}, glm::vec3 scale = {1.0f, 1.0f, 1.0f}, const std::string& tag = "", const std::string& id = "");
-        CameraComponent& getPrimaryCamaraComponent();
+        EntityHandle getPrimaryCameraEntity();
+        ComponentHandle<CameraComponent> getPrimaryCamaraComponent();
 
         void addUiElementClickListener(UiElement& uiElement, const std::function<void()>& cb);
 

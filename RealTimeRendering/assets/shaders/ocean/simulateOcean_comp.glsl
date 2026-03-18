@@ -11,7 +11,7 @@ layout(rg32f, binding = 3) uniform restrict writeonly image2D u_DyDxz;
 layout(rg32f, binding = 4) uniform restrict writeonly image2D u_DyxDyz;
 layout(rg32f, binding = 5) uniform restrict writeonly image2D u_DxxDzz;
 
-PUSH_CONSTANT(PCSimulateOcean, 10) {
+PUSH_CONSTANT(PCSimulateOcean) {
     float time;
 } pc_simulateOcean;
 

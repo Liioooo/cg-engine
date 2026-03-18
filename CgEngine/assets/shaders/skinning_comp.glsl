@@ -37,7 +37,7 @@ layout(binding = 4, std430) writeonly buffer VertexBufferOut {
 layout(local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
 
 
-PUSH_CONSTANT(SkinningPC, 10) {
+PUSH_CONSTANT(SkinningPC) {
     int componentIndex;
 } pc_skinning;
 

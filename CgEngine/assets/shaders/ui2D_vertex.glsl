@@ -6,7 +6,7 @@
 layout (location = 0) in vec3 a_Pos;
 layout (location = 1) in vec2 a_TexCoord;
 
-PUSH_CONSTANT(UI2DPushConstants, 10) {
+PUSH_CONSTANT(UI2DPushConstants) {
     mat4 transform;
 } pc_ui2D;
 

@@ -477,6 +477,11 @@ namespace CgEngine {
         return *cameraComponent;
     }
 
+    ComponentHandle<CameraComponent> Scene::getPrimaryCameraComponentHandle() {
+        const auto& primaryCameraComponent = getPrimaryCamaraComponent();
+        return {componentManager, primaryCameraComponent.getEntity()};
+    }
+
     void Scene::findRecursiveEntitiesToDestroy(Entity entity, std::unordered_set<Entity>& recursivelyDestroyedEntities) {
         for (const auto &child : children[entity]) {
             recursivelyDestroyedEntities.insert(child);

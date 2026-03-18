@@ -75,6 +75,7 @@ namespace CgEngine {
             auto* depthAttachmentGL = static_cast<const OpenGLAttachment*>(depthStencilAttachment.attachment);
             return depthAttachmentGL->getType() == AttachmentType::DepthStencil;
         }
+        return false;
     }
 
     void OpenGLFramebuffer::init() {

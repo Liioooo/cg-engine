@@ -10,6 +10,10 @@ namespace CgEngine {
         return {owningScene, owningEntity};
     }
 
+    EntityHandle NativeScript::getParentEntity() {
+        return getOwingEntity().getParent();
+    }
+
     EntityHandle NativeScript::findEntityById(const std::string& id) {
         return owningScene->findEntityById(id);
     }
@@ -30,8 +34,12 @@ namespace CgEngine {
         return {owningScene, PrefabManager::instantiatePrefab(owningScene, prefabName, parent, position, rotation, scale, tag, id)};
     }
 
-    CameraComponent& NativeScript::getPrimaryCamaraComponent() {
-        return owningScene->getPrimaryCamaraComponent();
+    EntityHandle NativeScript::getPrimaryCameraEntity() {
+        return {owningScene, owningScene->getPrimaryCamaraComponent().getEntity()};
+    }
+
+    ComponentHandle<CameraComponent> NativeScript::getPrimaryCamaraComponent() {
+        return owningScene->getPrimaryCameraComponentHandle();
     }
 
     void NativeScript::addUiElementClickListener(UiElement& uiElement, const std::function<void()>& cb) {

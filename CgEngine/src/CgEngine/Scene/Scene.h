@@ -112,6 +112,7 @@ namespace CgEngine {
         }
 
         CameraComponent& getPrimaryCamaraComponent();
+        ComponentHandle<CameraComponent> getPrimaryCameraComponentHandle();
 
     private:
         Entity nextEntityId = 1;

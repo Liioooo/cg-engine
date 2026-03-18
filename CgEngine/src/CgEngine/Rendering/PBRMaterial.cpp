@@ -81,18 +81,16 @@ namespace CgEngine {
     }
 
     PBRMaterial::PBRMaterial(PBRMaterialSpecification spec) : Material() {
-        pushConstantsData.roughness = spec.roughness;
-        pushConstantsData.metalness = spec.metalness;
-        pushConstantsData.albedoColor = spec.albedoColor;
-        pushConstantsData.emission = spec.emission;
+        materialBuffer = GraphicsObjectsFactory::createUniformBuffer(sizeof(PBRMaterialData));
 
-        pushConstants->init<PBRMaterialPushConstants>();
-        pushConstants->mapUniform(&PBRMaterialPushConstants::roughness, "roughness");
-        pushConstants->mapUniform(&PBRMaterialPushConstants::metalness, "metalness");
-        pushConstants->mapUniform(&PBRMaterialPushConstants::albedoColor, "albedoColor");
-        pushConstants->mapUniform(&PBRMaterialPushConstants::emission, "emission");
-        pushConstants->mapUniform(&PBRMaterialPushConstants::useNormals, "useNormals");
-        pushConstants->setData(&pushConstantsData, sizeof(PBRMaterialPushConstants));
+        PBRMaterialData materialData{};
+        materialData.roughness = spec.roughness;
+        materialData.metalness = spec.metalness;
+        materialData.albedoColor = spec.albedoColor;
+        materialData.emission = spec.emission;
+        materialData.useNormals = spec.normalTexture != nullptr ? 1 : 0;
+
+        materialBuffer->setData(&materialData, sizeof(PBRMaterialData));
 
         DescriptorSetSpecification descriptorSetSpec{};
         descriptorSetSpec.texture2DBindings = {
@@ -101,6 +99,9 @@ namespace CgEngine {
             {2, spec.metalnessTexture ? spec.metalnessTexture.get() : Renderer::getWhiteTexture()},
             {3, spec.roughnessTexture ? spec.roughnessTexture.get() : Renderer::getWhiteTexture()},
             {4, spec.emissionTexture ? spec.emissionTexture.get() : Renderer::getWhiteTexture()}
+        };
+        descriptorSetSpec.uboBindings = {
+            {5, materialBuffer}
         };
 
         descriptorSet = GraphicsObjectsFactory::createDescriptorSet(descriptorSetSpec);

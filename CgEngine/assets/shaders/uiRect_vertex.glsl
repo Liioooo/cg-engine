@@ -9,7 +9,7 @@ layout (location = 3) in vec2 a_Size;
 layout (location = 4) in float a_LineWidth;
 layout (location = 5) in float a_TextureIndex;
 
-PUSH_CONSTANT(UIPushConstants, 10) {
+PUSH_CONSTANT(UIPushConstants) {
     mat4 projection;
 } pc_ui;
 

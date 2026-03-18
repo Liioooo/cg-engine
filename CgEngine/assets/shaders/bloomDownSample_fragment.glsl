@@ -11,7 +11,7 @@ layout (binding = 0) uniform sampler2D u_BloomTexture;
 
 layout(location = 0) out vec3 o_FragColor;
 
-PUSH_CONSTANT(BloomDownsamplePC, 10) {
+PUSH_CONSTANT(BloomDownsamplePC) {
     bool useThreshold;
 } pc_bloomDownsample;
 

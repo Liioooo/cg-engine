@@ -2,7 +2,6 @@
 
 #include "Uuid.h"
 #include "DescriptorSet.h"
-#include "PushConstants.h"
 
 namespace CgEngine {
 
@@ -16,11 +15,9 @@ namespace CgEngine {
         bool operator ==(const Material& other) const;
 
         DescriptorSet* getDescriptorSet() const;
-        PushConstants* getPushConstants() const;
 
     protected:
         DescriptorSet* descriptorSet = nullptr;
-        PushConstants* pushConstants = nullptr;
 
     private:
         Uuid uuid;

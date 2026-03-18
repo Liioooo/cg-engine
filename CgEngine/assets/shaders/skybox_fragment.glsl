@@ -8,7 +8,7 @@ layout(location = 10) in VS_OUT {
 
 layout (binding = 6) uniform samplerCube u_Texture;
 
-PUSH_CONSTANT(SkyboxPC, 10) {
+PUSH_CONSTANT(SkyboxPC) {
     float intensity;
     float lod;
 } pc_skybox;

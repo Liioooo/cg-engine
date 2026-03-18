@@ -12,6 +12,8 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(USE_MSVC_RUNTIME_LIBRARY_DLL OFF CACHE BOOL "" FORCE)
 set(GLFW_USE_HYBRID_HPG ON CACHE BOOL "" FORCE)
+set(GLFW_BUILD_WAYLAND ON CACHE BOOL "" FORCE)
+set(GLFW_BUILD_X11 ON CACHE BOOL "" FORCE)
 add_subdirectory(vendor/glfw)
 ################################################################################
 
@@ -97,6 +99,10 @@ add_library(imgui STATIC ${IMGUI_GLOB})
 target_include_directories(imgui PUBLIC ${IMGUI_PATH})
 target_link_libraries(imgui PRIVATE glfw)
 set_target_properties(imgui PROPERTIES MSVC_RUNTIME_LIBRARY ${MSVC_RUNTIME_LIBRARY_STR})
+if (UNIX)
+    find_package(X11 REQUIRED)
+    target_link_libraries(imgui PRIVATE ${X11_LIBRARIES})
+endif()
 ################################################################################
 
 # DR_LIBS ######################################################################
@@ -137,22 +143,27 @@ if (WIN32)
     )
 endif()
 if (UNIX)
-    target_link_libraries(PhysXSDK INTERFACE
-        optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysX_static_64.a"
-        optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysXCommon_static_64.a"
-        optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysXExtensions_static_64.a"
-        optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysXPvdSDK_static_64.a"
-        optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysXCooking_static_64.a"
-        optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysXFoundation_static_64.a"
-        optimized "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysXCharacterKinematic_static_64.a"
-        debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysX_static_64.a"
-        debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysXCommon_static_64.a"
-        debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysXExtensions_static_64.a"
-        debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysXPvdSDK_static_64.a"
-        debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysXCooking_static_64.a"
-        debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysXFoundation_static_64.a"
-        debug "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysXCharacterKinematic_static_64.a"
+    set(PHYSX_LIBS
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysX_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysXCommon_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysXExtensions_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysXPvdSDK_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysXCooking_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysXFoundation_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/release/libPhysXCharacterKinematic_static_64.a"
     )
+    target_link_libraries(PhysXSDK INTERFACE optimized "$<LINK_GROUP:RESCAN,${PHYSX_LIBS}>")
+
+    set(PHYSX_LIBS_DEBUG
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysX_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysXCommon_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysXExtensions_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysXPvdSDK_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysXCooking_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysXFoundation_static_64.a"
+            "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysXCharacterKinematic_static_64.a"
+    )
+    target_link_libraries(PhysXSDK INTERFACE debug "$<LINK_GROUP:RESCAN,${PHYSX_LIBS_DEBUG}>")
 
     set(PHYSX_DEBUG_DLLS
         "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/lib/linux/checked/libPhysX_64.so"

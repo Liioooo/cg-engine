@@ -10,7 +10,6 @@
 #include "OpenGLFramebuffer.h"
 #include "OpenGLHelpers.h"
 #include "OpenGLDescriptorSet.h"
-#include "OpenGLPushConstants.h"
 #include "OpenGLDynamicGraphicsPipeline.h"
 #include "OpenGLAttachment.h"
 
@@ -147,6 +146,10 @@ namespace CgEngine {
         glfwSwapInterval(window.isVsync() ? 1 : 0);
 
         glCreateFramebuffers(1, &dynamicRenderingFramebufferHandle);
+
+        glCreateBuffers(1, &pushConstantsBuffer);
+        glNamedBufferStorage(pushConstantsBuffer, 128 * sizeof(std::byte), nullptr, GL_DYNAMIC_STORAGE_BIT);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 16, pushConstantsBuffer);
     }
 
     void OpenGLRenderer::shutdown() {
@@ -464,12 +467,9 @@ namespace CgEngine {
         glDescriptorSet->bind();
     }
 
-    void OpenGLRenderer::setPushConstants(const std::array<PushConstants*, 2>& pushConstants, uint32_t pushConstantsCount) {
-        CG_ASSERT(currentPipelineHandle != ~0, "There is no active Pipeline!")
-        for (uint32_t i = 0; i < pushConstantsCount; i++) {
-            const auto* pc = static_cast<const OpenGLPushConstants*>(pushConstants[i]);
-            pc->upload(currentPipelineHandle);
-        }
+    void OpenGLRenderer::setPushConstants(const void* data, size_t size) {
+        CG_ASSERT(size <= 128 * sizeof(std::byte), "Push constant data size exceeds the maximum allowed size of 128 bytes.")
+        glNamedBufferSubData(pushConstantsBuffer, 0, size, data);
     }
 
     void OpenGLRenderer::transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition) {
@@ -568,9 +568,6 @@ namespace CgEngine {
             float roughness;
         } prefilterPushConstantsData{};
 
-        OpenGLPushConstants pushConstants("pc_Roughness");
-        pushConstants.init<PrefilterPushConstants>();
-        pushConstants.mapUniform(&PrefilterPushConstants::roughness, "roughness");
 
         glUseProgram(computeEnvironmentMapPrefilterMap.getOpenGLShaderHandle());
         glBindTextureUnit(0, cubeMap.getOpenGLHandle());
@@ -579,8 +576,7 @@ namespace CgEngine {
             uint32_t numGroups = glm::max(1u, size / 32);
             float roughness = static_cast<float>(i) / static_cast<float>(mipCount - 1);
             prefilterPushConstantsData.roughness = roughness;
-            pushConstants.setData(&prefilterPushConstantsData, sizeof(PrefilterPushConstants));
-            pushConstants.upload(computeEnvironmentMapPrefilterMap.getOpenGLShaderHandle());
+            setPushConstants(&prefilterPushConstantsData, sizeof(PrefilterPushConstants));
             glBindImageTexture(1, prefilterMap->getOpenGLHandle(), static_cast<int>(i), GL_TRUE, 0, OpenGLHelpers::shaderImageAccessToOpenGL(ShaderImageAccess::WriteOnly), OpenGLHelpers::getOpenGLTextureFormatForImageBind(prefilterMap->getFormat()));
             glDispatchCompute(numGroups, numGroups, 6);
             glMemoryBarrier(GL_ALL_BARRIER_BITS);

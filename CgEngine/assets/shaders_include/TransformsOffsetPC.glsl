@@ -3,7 +3,7 @@
 
 #include "Macros.glsl"
 
-PUSH_CONSTANT(TransformsOffset, 10) {
+PUSH_CONSTANT(TransformsOffset) {
     int transformsOffset;
 } pc_transformsOffset;
 

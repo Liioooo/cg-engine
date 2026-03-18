@@ -108,7 +108,7 @@ namespace CgEngine {
 
     }
 
-    void VulkanRenderer::setPushConstants(const std::array<PushConstants*, 2>& pushConstants, uint32_t pushConstantsCount) {
+    void VulkanRenderer::setPushConstants(const void* data, size_t size) {
 
     }
 

@@ -8,7 +8,7 @@ const float PI = 3.141592653589793;
 
 layout(rgba32f, binding = 0) uniform restrict writeonly image2D u_precomputeBuffer;
 
-PUSH_CONSTANT(PCPrecompute, 10) {
+PUSH_CONSTANT(PCPrecompute) {
     int size;
 } pc_precompute;
 

@@ -77,12 +77,6 @@ namespace CgEngine {
         bool needsResize = true;
         bool activeRendering = false;
 
-        struct TransformsOffsetPushConstants {
-            int transformsOffset;
-        };
-
-        PushConstants* transformOffsetPushConstant;
-
         DescriptorSet* environmentMapDescriptorSetBlack;
 
         RenderPass* dirShadowMapRenderPass;
@@ -105,12 +99,6 @@ namespace CgEngine {
 
         glm::uvec3 hbaoWorkGroupSize;
 
-        struct HbaoUVOffsetPushConstants {
-            int uvOffset;
-        };
-
-        PushConstants* hbaoUVOffsetPushConstants;
-
         RenderPass* hbaoDeinterleavingRenderPass;
         GraphicsPipeline* hbaoDeinterleavingPipeline;
         Attachment* hbaoDeinterleavingAttachment;
@@ -127,12 +115,11 @@ namespace CgEngine {
         Framebuffer* hbaoReinterleavingFramebuffer;
         DescriptorSet* hbaoReinterleavingDescriptorSet;
 
-        struct HbaoBlurPushConstants {
+        struct alignas(8) HbaoBlurPushConstants {
             float sharpness;
+            float _padding;
             glm::vec2 invResolutionDirection;
         };
-
-        PushConstants* hbaoBlurPushConstants;
 
         RenderPass* hbaoBlurRenderPass0;
         RenderPass* hbaoBlurRenderPass1;
@@ -145,33 +132,26 @@ namespace CgEngine {
         DescriptorSet* hbaoBlurDescriptorSet0;
         DescriptorSet* hbaoBlurDescriptorSet1;
 
-        struct PbrPushConstants {
-            float environmentIntensity;
-        };
-
         RenderPass* pbrRenderPass;
         GraphicsPipeline* pbrPipeline;
         Attachment* pbrColorAttachment;
         Framebuffer* pbrFramebuffer;
         DescriptorSet* pbrDescriptorSet;
-        PushConstants* pbrPushConstants;
 
         struct SkyboxPushConstants {
             float intensity;
             float lod;
-        };
+        } skyboxPushConstants;
 
         RenderPass* afterPbrRenderPass;
         Framebuffer* afterPbrFramebuffer;
 
         GraphicsPipeline* skyboxPipeline;
-        PushConstants* skyboxPushConstants;
 
         struct CollidersPushConstants {
             glm::vec3 color;
             int transformsOffset;
         };
-        PushConstants* collidersPushConstants;
 
         GraphicsPipeline* boundingBoxPipeline;
         ShaderStorageBuffer* boundingBoxTransformsBuffer;
@@ -183,9 +163,6 @@ namespace CgEngine {
 
         GraphicsPipeline* normalsDebugPipeline;
 
-        struct BloomDownsamplePushConstants {
-            bool useThreshold;
-        };
         RenderPass* bloomDownSamplePass;
         RenderPass* bloomUpSamplePass;
         GraphicsPipeline* bloomDownsamplePipeline;
@@ -194,7 +171,6 @@ namespace CgEngine {
         std::array<Framebuffer*, 7> bloomDownsampleFramebuffers;
         std::array<Framebuffer*, 6> bloomUpsampleFramebuffers;
         std::array<DescriptorSet*, 8> bloomDescriptorSets;
-        PushConstants* bloomDownsamplePushConstants;
 
         GraphicsPipeline* screenPipeline;
         DescriptorSet* screenDescriptorSet;
@@ -205,16 +181,11 @@ namespace CgEngine {
         DynamicGraphicsPipeline* uiCirclePipeline;
         DynamicGraphicsPipeline* uiRectPipeline;
         DynamicGraphicsPipeline* uiTextPipeline;
-        PushConstants* uiPushConstants;
 
-        struct Ui2DPushConstants {
-            glm::mat4 transform;
-        };
         GraphicsPipeline* ui2DPipeline;
         DescriptorSetLayout* ui2DDescriptorSetLayoutCameraBuffer;
         DescriptorSet* ui2DDescriptorSetCameraBuffer;
         DescriptorSetLayout* uiCanvasSampleDescriptorSetLayout;
-        PushConstants* ui2DPushConstants;
 
         GraphicsPipeline* debugLinesPipeline;
         DescriptorSet* debugLinesDescriptorSet;
@@ -227,7 +198,6 @@ namespace CgEngine {
         };
         ShaderStorageBuffer* boneTransformsBuffer;
         ComputePipeline* skinningComputePipeline;
-        PushConstants* skinningPushConstants;
         DescriptorSet* skinningDescriptorSet;
 
         CameraFrustum cameraFrustum;
@@ -327,7 +297,7 @@ namespace CgEngine {
             float nDotVBias;
             float aoMultiplier;
             float powExponent;
-            bool isOrtho;
+            uint32_t isOrtho;
 
             glm::vec4 float2Offsets[16];
             glm::vec4 jitters[16];

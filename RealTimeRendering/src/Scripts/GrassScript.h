@@ -2,9 +2,7 @@
 
 #include "CgEngine/Scripting/NativeScript.h"
 #include "CgEngine/Resources/ResRef.h"
-#include "CgEngine/Rendering/CustomPipeline.h"
 #include "CgEngine/Resources/CustomMesh.h"
-
 
 namespace RTR {
 
@@ -73,10 +71,10 @@ namespace RTR {
         };
 
         // <low, high>
-        std::vector<std::pair<CgEngine::Entity, CgEngine::Entity>> grassEntities;
+        std::vector<std::pair<CgEngine::EntityHandle, CgEngine::EntityHandle>> grassEntities;
 
         float currentTime = 0.0f;
-        CgEngine::Entity grassContainer;
+        CgEngine::EntityHandle grassContainer;
 
         CgEngine::UniformBuffer* grassMatHigh;
         CgEngine::UniformBuffer* grassMatLow;
