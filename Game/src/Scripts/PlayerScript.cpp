@@ -12,8 +12,8 @@
 #include "CgEngine/Components/RigidBodyComponent.h"
 
 namespace Game {
-    void PlayerScript::onAttach() {
-        //CgEngine::Input::setCursorMode(CgEngine::CursorMode::Locked);
+    void PlayerScript::onEnable() {
+        // CgEngine::Input::setCursorMode(CgEngine::CursorMode::Locked);
         prevMousePos = CgEngine::Input::getMousePosition();
 
         cameraRaycastExcluded.insert(getOwingEntity());

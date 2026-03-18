@@ -13,7 +13,7 @@ namespace Game {
         }
 
     protected:
-        void onAttach() override;
+        void onEnable() override;
         void fixedUpdate(CgEngine::TimeStep ts) override;
         void update(CgEngine::TimeStep ts) override;
         void lateUpdate(CgEngine::TimeStep ts) override;

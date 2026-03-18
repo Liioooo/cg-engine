@@ -4,6 +4,7 @@
 namespace CgEngine {
     void UiText::setColor(const glm::vec4& c) {
         color = c;
+        dirty = true;
     }
 
     void UiText::setSize(float s, UIPosUnit unit) {
@@ -23,6 +24,7 @@ namespace CgEngine {
 
     void UiText::setUseKerning(bool use) {
         useKerning = use;
+        dirty = true;
     }
 
     const glm::vec4& UiText::getColor() const {

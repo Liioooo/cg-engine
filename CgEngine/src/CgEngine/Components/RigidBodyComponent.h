@@ -56,6 +56,9 @@ namespace CgEngine {
     private:
         PhysicsActor* actor = nullptr;
 
+        bool wasEnabled = false;
+        std::vector<std::function<void()>> toCallAfterEnable{};
+
         void addBoxCollider(PhysicsMaterial& material, glm::vec3 halfSize, glm::vec3 offset, bool isTrigger);
         void addSphereCollider(PhysicsMaterial& material, float radius, glm::vec3 offset, bool isTrigger);
         void addCapsuleCollider(PhysicsMaterial& material, float radius, float halfHeight, glm::vec3 offset, bool isTrigger);

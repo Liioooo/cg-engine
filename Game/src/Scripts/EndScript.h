@@ -11,7 +11,7 @@ namespace Game {
         }
 
     protected:
-        void onAttach() override;
+        void onEnable() override;
 
     };
 

@@ -24,6 +24,8 @@ namespace CgEngine {
     }
 
     void RigidBodyComponent::onEnable(Scene& scene) {
+        wasEnabled = true;
+
         auto transform = scene.getComponent<TransformComponent>(entity);
         actor->getPhysxActor().setGlobalPose(physx::PxTransform(PhysXUtils::glmToPhysXVec(transform->getGlobalPosition()), PhysXUtils::glmToPhysXQuat(transform->getGlobalRotationQuat())));
 
@@ -68,6 +70,11 @@ namespace CgEngine {
         }
 
         scene.getPhysicsScene().addActor(actor);
+
+        for (auto& func : toCallAfterEnable) {
+            func();
+        }
+        toCallAfterEnable.clear();
     }
 
     void RigidBodyComponent::onDetach(Scene& scene) {
@@ -124,14 +131,35 @@ namespace CgEngine {
     }
 
     void RigidBodyComponent::addForce(glm::vec3 force, PhysicsForceMode forceMode) {
+        if (!wasEnabled) {
+            toCallAfterEnable.emplace_back([this, force, forceMode] {
+                actor->addForce(force, forceMode);
+            });
+            return;
+        }
+
         actor->addForce(force, forceMode);
     }
 
     void RigidBodyComponent::addTorque(glm::vec3 force, PhysicsForceMode forceMode) {
+        if (!wasEnabled) {
+            toCallAfterEnable.emplace_back([this, force, forceMode] {
+                actor->addTorque(force, forceMode);
+            });
+            return;
+        }
+
         actor->addTorque(force, forceMode);
     }
 
     void RigidBodyComponent::setKinematicTarget(glm::vec3 target, glm::quat rotation) {
+        if (!wasEnabled) {
+            toCallAfterEnable.emplace_back([this, target, rotation] {
+                actor->setKinematicTarget(target, rotation);
+            });
+            return;
+        }
+
         actor->setKinematicTarget(target, rotation);
     }
 

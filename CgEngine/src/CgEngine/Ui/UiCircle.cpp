@@ -12,11 +12,13 @@ namespace CgEngine {
         if (!hasLineWidthHover) {
             this->lineWidthHover = lineWidth;
         }
+        dirty = true;
     }
 
     void UiCircle::setLineWidthHover(float lineWidth) {
         this->lineWidthHover = lineWidth;
         hasLineWidthHover = true;
+        dirty = true;
     }
 
     void UiCircle::setLineColor(const glm::vec4& lineColor) {
@@ -24,11 +26,13 @@ namespace CgEngine {
         if (!hasLineColorHover) {
             this->lineColorHover = lineColor;
         }
+        dirty = true;
     }
 
     void UiCircle::setLineColorHover(const glm::vec4& lineColor) {
         this->lineColorHover = lineColor;
         hasLineColorHover = true;
+        dirty = true;
     }
 
     void UiCircle::setFillColor(const glm::vec4& fillColor) {
@@ -36,15 +40,18 @@ namespace CgEngine {
         if (!hasFillColorHover) {
             this->fillColorHover = fillColor;
         }
+        dirty = true;
     }
 
     void UiCircle::setFillColorHover(const glm::vec4& fillColor) {
         this->fillColorHover = fillColor;
         hasFillColorHover = true;
+        dirty = true;
     }
 
     void UiCircle::setTexture(ResRef<Texture2D> texture) {
         this->texture = texture;
+        dirty = true;
     }
 
     float UiCircle::getPixelDiameter() const {

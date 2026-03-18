@@ -23,7 +23,7 @@
         <UiRect id="live2" left="9.5vw" top="0.5vw" width="4vw" height="4vw" texture="pacMan2D.png" line-width="0" y-align="top" x-align="left" />
         <UiRect id="live3" left="14vw" top="0.5vw" width="4vw" height="4vw" texture="pacMan2D.png" line-width="0" y-align="top" x-align="left" />
 
-        <UiCircle id="cross" left="50vw" top="50vh" width="15" height="15" fill-color="0 0 0 0.8" line-width="0" y-align="top" x-align="center" />
+        <UiCircle id="cross" left="50vw" top="50vh" diameter="15" fill-color="0 0 0 0.8" line-width="0" y-align="top" x-align="center" />
 
         <UiRect id="projectiles" right="0.5vw" top="0.5vw" width="15vw" height="2vw" line-width="0" y-align="top" x-align="right" fill-color="0.25 0.52 0.96 0.5" z-index="0" />
         <UiRect id="projectilesAmount" right="15.5vw" top="0.5vw" width="15vw" height="2vw" line-width="0" y-align="top" x-align="left" fill-color="0.25 0.52 0.96 1" z-index="1" />

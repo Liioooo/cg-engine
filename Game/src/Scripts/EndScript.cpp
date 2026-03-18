@@ -4,7 +4,7 @@
 #include "CgEngine/Components/UiCanvasComponent2D.h"
 
 namespace Game {
-    void EndScript::onAttach() {
+    void EndScript::onEnable() {
         CgEngine::Input::setCursorMode(CgEngine::CursorMode::Normal);
 
         auto canvasEntity = findEntityById("canvas");
