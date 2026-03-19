@@ -5,7 +5,6 @@
 #include "Rendering/Framebuffer.h"
 #include "Rendering/Texture2D.h"
 #include "Rendering/TextureCube.h"
-#include "Rendering/Material.h"
 #include "Rendering/VertexArrayObject.h"
 #include "Rendering/DescriptorSet.h"
 #include "Rendering/ComputePipeline.h"

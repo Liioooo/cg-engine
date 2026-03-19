@@ -307,7 +307,7 @@ namespace CgEngine {
         descriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(spec.descriptorSetLayoutSpecification);
 
         ComputePipelineSpecification pipelineSpec{};
-        pipelineSpec.descriptorSetLayout = descriptorSetLayout;
+        pipelineSpec.descriptorSetLayouts = {descriptorSetLayout};
         pipelineSpec.customShader = spec.shader;
 
         computePipeline = GraphicsObjectsFactory::createComputePipeline(pipelineSpec);

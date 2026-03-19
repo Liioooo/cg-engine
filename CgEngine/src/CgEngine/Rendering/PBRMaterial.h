@@ -1,9 +1,11 @@
 #pragma once
 
+#include "DescriptorSet.h"
+#include "Texture2D.h"
 #include "XMLFile.h"
 #include "Resources/ResRef.h"
-#include "Material.h"
 #include "UniformBuffer.h"
+#include "Uuid.h"
 
 namespace CgEngine {
 
@@ -29,11 +31,18 @@ namespace CgEngine {
         float _padding_1[3];
     };
 
-    class PBRMaterial : public Material {
+    class PBRMaterial {
     public:
         static PBRMaterial* createResource(const std::string& name);
 
         explicit PBRMaterial(PBRMaterialSpecification spec);
+        ~PBRMaterial();
+
+        const Uuid& getUuid() const;
+
+        bool operator ==(const PBRMaterial& other) const;
+
+        DescriptorSet* getDescriptorSet() const;
 
     private:
         UniformBuffer* materialBuffer;
@@ -42,6 +51,9 @@ namespace CgEngine {
         ResRef<Texture2D> metalnessTexture;
         ResRef<Texture2D> roughnessTexture;
         ResRef<Texture2D> normalTexture;
+
+        DescriptorSet* descriptorSet = nullptr;
+        Uuid uuid;
 
         static inline XMLFile xmlMaterialFile;
     };

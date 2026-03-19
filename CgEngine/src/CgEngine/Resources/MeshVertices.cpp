@@ -92,7 +92,7 @@ namespace CgEngine {
         return indexBuffer;
     }
 
-    const Material* MeshVertices::getMaterial(size_t index) const {
+    const PBRMaterial* MeshVertices::getMaterial(size_t index) const {
         return materials.at(index).get();
     }
 

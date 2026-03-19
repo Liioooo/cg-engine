@@ -64,6 +64,7 @@ namespace CgEngine {
         }
 
         DescriptorSetSpecification skinningDescriptorSetSpecification{};
+        skinningDescriptorSetSpecification.layout = Application::get().getSceneRenderer().getAnimatedMeshDescriptorSetLayout();
         skinningDescriptorSetSpecification.immutableSsboBindings = {
             {1, mesh->getBoneInfluencesBuffer()}
         };

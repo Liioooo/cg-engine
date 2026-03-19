@@ -6,7 +6,7 @@
 namespace CgEngine {
 
     struct ComputePipelineSpecification {
-        const DescriptorSetLayout* descriptorSetLayout = nullptr;
+        std::vector<const DescriptorSetLayout*> descriptorSetLayouts;
         std::string engineShaderName;
         std::string customShader;
     };

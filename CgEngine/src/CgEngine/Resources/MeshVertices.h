@@ -26,8 +26,8 @@ namespace CgEngine {
         const std::vector<MeshProps::Vertex>& getVertices() const;
         const std::vector<uint32_t>& getIndexBuffer() const;
 
-        virtual const Material* getMaterial(size_t index) const override;
-        virtual const uint32_t getMaterialCount() const override;
+        const PBRMaterial* getMaterial(size_t index) const override;
+        const uint32_t getMaterialCount() const override;
 
         PhysicsTriangleMesh& getPhysicsTriangleMeshForNode(const std::string& nodeName);
         PhysicsConvexMesh& getPhysicsConvexMeshForNode(const std::string& nodeName);

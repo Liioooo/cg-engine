@@ -1,9 +1,7 @@
 #pragma once
 
 #include "RenderPass.h"
-#include "Material.h"
 #include "VertexArrayObject.h"
-#include "ShaderStorageBuffer.h"
 #include "Resources/ResRef.h"
 #include "Window.h"
 #include "RendererBackendBase.h"

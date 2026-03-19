@@ -1,13 +1,14 @@
 #include <Asserts.h>
-
 #include <utility>
 #include <Rendering/GraphicsObjectsFactory.h>
 #include "CustomMesh.h"
+#include "Application.h"
 
 namespace CgEngine {
 
     CustomMesh::CustomMesh(std::vector<VertexBufferElement> vertexBufferLayout) : vertexBufferLayout(std::move(vertexBufferLayout)) {
         vao = GraphicsObjectsFactory::createVertexArrayObject();
+        material = Application::get().getResourceManager().getResource<PBRMaterial>("default-pbr-material");
     }
 
     CustomMesh::~CustomMesh() {
@@ -16,16 +17,16 @@ namespace CgEngine {
         }
     }
 
-    const Material* CustomMesh::getMaterial(size_t index) const {
-        return material;
+    const PBRMaterial* CustomMesh::getMaterial(size_t index) const {
+        return material.get();
     }
 
     const uint32_t CustomMesh::getMaterialCount() const {
-        return material != nullptr ? 1 : 0;
+        return material.get() == nullptr ? 0 : 1;
     }
 
-    void CustomMesh::setMaterial(Material* material) {
-        this->material = material;
+    void CustomMesh::setMaterial(const std::string& mat) {
+        material = Application::get().getResourceManager().getResource<PBRMaterial>(mat);
     }
 
     AABoundingBox& CustomMesh::getBoundingBox()  {

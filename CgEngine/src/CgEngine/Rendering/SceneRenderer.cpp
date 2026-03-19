@@ -15,13 +15,28 @@ namespace CgEngine {
         ubHBAOData = GraphicsObjectsFactory::createUniformBuffer(sizeof(UBHBAOData));
         ubCustomPipelineData = GraphicsObjectsFactory::createUniformBuffer(sizeof(CustomPipelineData));
 
-        DescriptorSetSpecification environmentMapDescriptorSetSpec{};
-        environmentMapDescriptorSetSpec.textureCubeBindings = {
-            {5, Renderer::getBlackCubeTexture()},
-            {6, Renderer::getBlackCubeTexture()}
-        };
-        environmentMapDescriptorSetBlack = GraphicsObjectsFactory::createDescriptorSet(environmentMapDescriptorSetSpec);
+        {
+            DescriptorSetLayoutSpecification pbrMaterialDescriptorSetLayoutSpec{};
+            pbrMaterialDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
+            pbrMaterialDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {0, 1, 2, 3, 4};
+            pbrMaterialDescriptorSetLayoutSpec.uboBindingPoints = {5};
+            pbrMaterialDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(pbrMaterialDescriptorSetLayoutSpec);
+        }
+        {
+            DescriptorSetLayoutSpecification environmentMapDescriptorSetLayoutSpec{};
+            environmentMapDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
+            environmentMapDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {5, 6};
 
+            environmentMapDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(environmentMapDescriptorSetLayoutSpec);
+
+            DescriptorSetSpecification environmentMapDescriptorSetSpec{};
+            environmentMapDescriptorSetSpec.layout = environmentMapDescriptorSetLayout;
+            environmentMapDescriptorSetSpec.textureCubeBindings = {
+                {5, Renderer::getBlackCubeTexture()},
+                {6, Renderer::getBlackCubeTexture()}
+            };
+            environmentMapDescriptorSetBlack = GraphicsObjectsFactory::createDescriptorSet(environmentMapDescriptorSetSpec);
+        }
         {
             ApplicationOptions& applicationOptions = Application::get().getApplicationOptions();
 
@@ -44,12 +59,19 @@ namespace CgEngine {
 
             dirShadowMapRenderPass = GraphicsObjectsFactory::createRenderPass(shadowMapRenderPassSpec);
 
+            DescriptorSetLayoutSpecification dirShadowMapDescriptorSetLayoutSpec{};
+            dirShadowMapDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
+            dirShadowMapDescriptorSetLayoutSpec.uboBindingPoints = {2};
+            dirShadowMapDescriptorSetLayoutSpec.ssboBindingPoints = {0};
+            dirShadowMapDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(dirShadowMapDescriptorSetLayoutSpec);
+
             GraphicsPipelineSpecification dirShadowMapPipelineSpec{};
             dirShadowMapPipelineSpec.renderPass = dirShadowMapRenderPass;
             dirShadowMapPipelineSpec.engineShaderName = "dirShadowMap";
             dirShadowMapPipelineSpec.frontfaceCulling = false;
             dirShadowMapPipelineSpec.backfaceCulling = true;
             dirShadowMapPipelineSpec.vertexInputLayout = MeshProps::DEFAULT_VERT_BUFF_LAYOUTS;
+            dirShadowMapPipelineSpec.descriptorSetLayouts = {dirShadowMapDescriptorSetLayout};
 
             dirShadowMapPipeline = GraphicsObjectsFactory::createGraphicsPipeline(dirShadowMapPipelineSpec);
 
@@ -64,6 +86,7 @@ namespace CgEngine {
             dirShadowMapTransformsBuffer = GraphicsObjectsFactory::createShaderStorageBuffer(MAX_OBJECTS * sizeof(glm::mat4));
 
             DescriptorSetSpecification dirShadowMapDescriptorSetSpec{};
+            dirShadowMapDescriptorSetSpec.layout = dirShadowMapDescriptorSetLayout;
             dirShadowMapDescriptorSetSpec.uboBindings = {
                 {2, ubDirShadowData}
             };
@@ -106,11 +129,18 @@ namespace CgEngine {
 
             gBufferRenderPass = GraphicsObjectsFactory::createRenderPass(gBufferRenderPassSpec);
 
+            DescriptorSetLayoutSpecification gBufferDescriptorSetLayoutSpec{};
+            gBufferDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
+            gBufferDescriptorSetLayoutSpec.uboBindingPoints = {0};
+            gBufferDescriptorSetLayoutSpec.ssboBindingPoints = {1};
+            gBufferDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(gBufferDescriptorSetLayoutSpec);
+
             GraphicsPipelineSpecification gBufferPipelineSpec{};
             gBufferPipelineSpec.renderPass = gBufferRenderPass;
             gBufferPipelineSpec.engineShaderName = "gBuffer";
             gBufferPipelineSpec.depthCompareOperator = DepthCompareOperator::Less;
             gBufferPipelineSpec.vertexInputLayout = MeshProps::DEFAULT_VERT_BUFF_LAYOUTS;
+            gBufferPipelineSpec.descriptorSetLayouts = {gBufferDescriptorSetLayout, pbrMaterialDescriptorSetLayout};
 
             gBufferPipeline = GraphicsObjectsFactory::createGraphicsPipeline(gBufferPipelineSpec);
 
@@ -132,6 +162,7 @@ namespace CgEngine {
             gBufferTransformsBuffer = GraphicsObjectsFactory::createShaderStorageBuffer(MAX_OBJECTS * sizeof(glm::mat4));
 
             DescriptorSetSpecification gBufferDescriptorSetSpec{};
+            gBufferDescriptorSetSpec.layout = gBufferDescriptorSetLayout;
             gBufferDescriptorSetSpec.uboBindings = {
                     {0, ubCameraData}
             };
@@ -143,6 +174,7 @@ namespace CgEngine {
         }
         {
             DescriptorSetLayoutSpecification customPipelineDescriptorSetLayoutSpec{};
+            customPipelineDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
             customPipelineDescriptorSetLayoutSpec.uboBindingPoints = {0, 3, 5};
 
             customPipelineDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(customPipelineDescriptorSetLayoutSpec);
@@ -178,8 +210,15 @@ namespace CgEngine {
 
             hbaoDeinterleavingRenderPass = GraphicsObjectsFactory::createRenderPass(hbaoDeinterleavingRenderPassSpec);
 
+            DescriptorSetLayoutSpecification hbaoDeinterleavingDescriptorSetLayoutSpec{};
+            hbaoDeinterleavingDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
+            hbaoDeinterleavingDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {0};
+            hbaoDeinterleavingDescriptorSetLayoutSpec.uboBindingPoints = {0, 3};
+            hbaoDeinterleavingDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(hbaoDeinterleavingDescriptorSetLayoutSpec);
+
             GraphicsPipelineSpecification hbaoDeinterleavingPipelineSpec{};
             hbaoDeinterleavingPipelineSpec.renderPass = hbaoDeinterleavingRenderPass;
+            hbaoDeinterleavingPipelineSpec.descriptorSetLayouts = {hbaoDeinterleavingDescriptorSetLayout};
             hbaoDeinterleavingPipelineSpec.engineShaderName = "hbaoDeinterleaving";
             hbaoDeinterleavingPipelineSpec.depthWrite = false;
             hbaoDeinterleavingPipelineSpec.depthTest = false;
@@ -222,6 +261,7 @@ namespace CgEngine {
             hbaoDeinterleavingFramebuffers[1] = GraphicsObjectsFactory::createFramebuffer(hbaoDeinterleavingFramebufferSpec1);
 
             DescriptorSetSpecification hbaoDeinterleavingDescriptorSetSpec{};
+            hbaoDeinterleavingDescriptorSetSpec.layout = hbaoDeinterleavingDescriptorSetLayout;
             hbaoDeinterleavingDescriptorSetSpec.attachmentTextureBindings.resize(1);
             hbaoDeinterleavingDescriptorSetSpec.attachmentTextureBindings[0].attachment = gBufferDepthAttachment;
             hbaoDeinterleavingDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 0;
@@ -233,7 +273,15 @@ namespace CgEngine {
 
             hbaoDeinterleavingDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(hbaoDeinterleavingDescriptorSetSpec);
 
+            DescriptorSetLayoutSpecification hbaoComputeDescriptorSetLayoutSpec{};
+            hbaoComputeDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Compute;
+            hbaoComputeDescriptorSetLayoutSpec.uboBindingPoints = {3, 4};
+            hbaoComputeDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {0, 1};
+            hbaoComputeDescriptorSetLayoutSpec.imageBindingPoints = {0};
+            hbaoComputeDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(hbaoComputeDescriptorSetLayoutSpec);
+
             ComputePipelineSpecification hbaoComputePipelineSpec{};
+            hbaoComputePipelineSpec.descriptorSetLayouts = {hbaoComputeDescriptorSetLayout};
             hbaoComputePipelineSpec.engineShaderName = "hbao";
 
             hbaoComputePipeline = GraphicsObjectsFactory::createComputePipeline(hbaoComputePipelineSpec);
@@ -255,6 +303,7 @@ namespace CgEngine {
             hbaoResult = GraphicsObjectsFactory::createAttachment(hbaoResultSpec);
 
             DescriptorSetSpecification hbaoComputeDescriptorSetSpec{};
+            hbaoComputeDescriptorSetSpec.layout = hbaoComputeDescriptorSetLayout;
             hbaoComputeDescriptorSetSpec.attachmentTextureBindings.resize(2);
             hbaoComputeDescriptorSetSpec.attachmentTextureBindings[0].attachment = hbaoDeinterleavingAttachment;
             hbaoComputeDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 0;
@@ -275,7 +324,7 @@ namespace CgEngine {
             hbaoComputeDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(hbaoComputeDescriptorSetSpec);
 
             AttachmentSpecification hbaoReinterleavingAttachmentSpec{};
-            hbaoDeinterleavingAttachmentSpec.layerCount = 1;
+            hbaoReinterleavingAttachmentSpec.layerCount = 1;
             hbaoReinterleavingAttachmentSpec.width = viewportWidth;
             hbaoReinterleavingAttachmentSpec.height = viewportHeight;
             hbaoReinterleavingAttachmentSpec.type = AttachmentType::RG16F;
@@ -292,6 +341,11 @@ namespace CgEngine {
 
             hbaoReinterleavingRenderPass = GraphicsObjectsFactory::createRenderPass(hbaoReinterleavingRenderPassSpec);
 
+            DescriptorSetLayoutSpecification hbaoReinterleavingDescriptorSetLayoutSpec{};
+            hbaoReinterleavingDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
+            hbaoReinterleavingDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {0};
+            hbaoReinterleavingDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(hbaoReinterleavingDescriptorSetLayoutSpec);
+
             GraphicsPipelineSpecification hbaoReinterleavingPipelineSpec{};
             hbaoReinterleavingPipelineSpec.renderPass = hbaoReinterleavingRenderPass;
             hbaoReinterleavingPipelineSpec.engineShaderName = "hbaoReinterleaving";
@@ -300,6 +354,7 @@ namespace CgEngine {
             hbaoReinterleavingPipelineSpec.depthWrite = false;
             hbaoReinterleavingPipelineSpec.depthTest = false;
             hbaoReinterleavingPipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
+            hbaoReinterleavingPipelineSpec.descriptorSetLayouts = {hbaoReinterleavingDescriptorSetLayout};
 
             hbaoReinterleavingPipeline = GraphicsObjectsFactory::createGraphicsPipeline(hbaoReinterleavingPipelineSpec);
 
@@ -314,6 +369,7 @@ namespace CgEngine {
             hbaoReinterleavingFramebuffer = GraphicsObjectsFactory::createFramebuffer(hbaoReinterleavingFramebufferSpec);
 
             DescriptorSetSpecification hbaoReinterleavingDescriptorSetSpec{};
+            hbaoReinterleavingDescriptorSetSpec.layout = hbaoReinterleavingDescriptorSetLayout;
             hbaoReinterleavingDescriptorSetSpec.attachmentTextureBindings.resize(1);
             hbaoReinterleavingDescriptorSetSpec.attachmentTextureBindings[0].attachment = hbaoResult;
             hbaoReinterleavingDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 0;
@@ -340,6 +396,10 @@ namespace CgEngine {
             hbaoBlurRenderPassSpec1.clearDepthStencilAttachment = false;
             hbaoBlurRenderPass1 = GraphicsObjectsFactory::createRenderPass(hbaoBlurRenderPassSpec1);
 
+            DescriptorSetLayoutSpecification hbaoBlurDescriptorSetLayoutSpec{};
+            hbaoBlurDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {0};
+            hbaoBlurDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(hbaoBlurDescriptorSetLayoutSpec);
+
             GraphicsPipelineSpecification hbaoBlurPipelineSpec0{};
             hbaoBlurPipelineSpec0.renderPass = hbaoBlurRenderPass0;
             hbaoBlurPipelineSpec0.engineShaderName = "hbaoBlur";
@@ -347,16 +407,19 @@ namespace CgEngine {
             hbaoBlurPipelineSpec0.backfaceCulling = false;
             hbaoBlurPipelineSpec0.depthTest = false;
             hbaoBlurPipelineSpec0.depthWrite = false;
+            hbaoBlurPipelineSpec0.descriptorSetLayouts = {hbaoBlurDescriptorSetLayout};
+
 
             hbaoBlurPipeline0 = GraphicsObjectsFactory::createGraphicsPipeline(hbaoBlurPipelineSpec0);
 
             GraphicsPipelineSpecification hbaoBlurPipelineSpec1{};
-            hbaoBlurPipelineSpec1.renderPass = hbaoBlurRenderPass0;
+            hbaoBlurPipelineSpec1.renderPass = hbaoBlurRenderPass1;
             hbaoBlurPipelineSpec1.engineShaderName = "hbaoBlur";
             hbaoBlurPipelineSpec1.frontfaceCulling = false;
             hbaoBlurPipelineSpec1.backfaceCulling = false;
             hbaoBlurPipelineSpec1.depthTest = false;
             hbaoBlurPipelineSpec1.depthWrite = false;
+            hbaoBlurPipelineSpec1.descriptorSetLayouts = {hbaoBlurDescriptorSetLayout};
 
             hbaoBlurPipeline1 = GraphicsObjectsFactory::createGraphicsPipeline(hbaoBlurPipelineSpec1);
 
@@ -381,6 +444,7 @@ namespace CgEngine {
             hbaoBlurFramebuffer1 = GraphicsObjectsFactory::createFramebuffer(hbaoBlurFramebufferSpec1);
 
             DescriptorSetSpecification hbaoBlurDescriptorSetSpec0{};
+            hbaoBlurDescriptorSetSpec0.layout = hbaoBlurDescriptorSetLayout;
             hbaoBlurDescriptorSetSpec0.attachmentTextureBindings.resize(1);
             hbaoBlurDescriptorSetSpec0.attachmentTextureBindings[0].attachment = hbaoReinterleavingAttachment;
             hbaoBlurDescriptorSetSpec0.attachmentTextureBindings[0].bindingPoint = 0;
@@ -389,6 +453,7 @@ namespace CgEngine {
             hbaoBlurDescriptorSet0 = GraphicsObjectsFactory::createDescriptorSet(hbaoBlurDescriptorSetSpec0);
 
             DescriptorSetSpecification hbaoBlurDescriptorSetSpec1{};
+            hbaoBlurDescriptorSetSpec1.layout = hbaoBlurDescriptorSetLayout;
             hbaoBlurDescriptorSetSpec1.attachmentTextureBindings.resize(1);
             hbaoBlurDescriptorSetSpec1.attachmentTextureBindings[0].attachment = hbaoBlurAttachment0;
             hbaoBlurDescriptorSetSpec1.attachmentTextureBindings[0].bindingPoint = 0;
@@ -406,12 +471,19 @@ namespace CgEngine {
 
             pbrRenderPass = GraphicsObjectsFactory::createRenderPass(pbrRenderPassSpec);
 
+            DescriptorSetLayoutSpecification pbrDescriptorSetLayoutSpec{};
+            pbrDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
+            pbrDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {0, 1, 2, 3, 7, 8, 9};
+            pbrDescriptorSetLayoutSpec.uboBindingPoints = {0, 1, 2};
+            pbrDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(pbrDescriptorSetLayoutSpec);
+
             GraphicsPipelineSpecification pbrPipelineSpec{};
             pbrPipelineSpec.renderPass = pbrRenderPass;
             pbrPipelineSpec.engineShaderName = "pbr";
             pbrPipelineSpec.depthWrite = false;
             pbrPipelineSpec.depthTest = false;
             pbrPipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
+            pbrPipelineSpec.descriptorSetLayouts = {pbrDescriptorSetLayout, environmentMapDescriptorSetLayout};
 
             pbrPipeline = GraphicsObjectsFactory::createGraphicsPipeline(pbrPipelineSpec);
 
@@ -437,6 +509,7 @@ namespace CgEngine {
             pbrFramebuffer = GraphicsObjectsFactory::createFramebuffer(pbrFramebufferSpec);
 
             DescriptorSetSpecification pbrDescriptorSetSpec{};
+            pbrDescriptorSetSpec.layout = pbrDescriptorSetLayout;
             pbrDescriptorSetSpec.attachmentTextureBindings.resize(6);
             pbrDescriptorSetSpec.attachmentTextureBindings[0].attachment = gBufferAlbedoRoughnessAttachment;
             pbrDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 0;
@@ -494,6 +567,7 @@ namespace CgEngine {
         {
             GraphicsPipelineSpecification skyboxPipelineSpec{};
             skyboxPipelineSpec.renderPass = afterPbrRenderPass;
+            skyboxPipelineSpec.descriptorSetLayouts = {environmentMapDescriptorSetLayout};
             skyboxPipelineSpec.engineShaderName = "skybox";
             skyboxPipelineSpec.depthCompareOperator = DepthCompareOperator::LessOrEqual;
             skyboxPipelineSpec.depthTest = true;
@@ -502,6 +576,12 @@ namespace CgEngine {
             skyboxPipeline = GraphicsObjectsFactory::createGraphicsPipeline(skyboxPipelineSpec);
         }
         {
+            DescriptorSetLayoutSpecification physicsCollidersDescriptorSetLayoutSpec{};
+            physicsCollidersDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
+            physicsCollidersDescriptorSetLayoutSpec.uboBindingPoints = {0};
+            physicsCollidersDescriptorSetLayoutSpec.ssboBindingPoints = {1};
+            physicsCollidersDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(physicsCollidersDescriptorSetLayoutSpec);
+
             GraphicsPipelineSpecification physicsCollidersPipelineSpec;
             physicsCollidersPipelineSpec.renderPass = afterPbrRenderPass;
             physicsCollidersPipelineSpec.engineShaderName = "colliders";
@@ -509,12 +589,14 @@ namespace CgEngine {
             physicsCollidersPipelineSpec.depthWrite = false;
             physicsCollidersPipelineSpec.wireframe = true;
             physicsCollidersPipelineSpec.vertexInputLayout = MeshProps::DEFAULT_VERT_BUFF_LAYOUTS;
+            physicsCollidersPipelineSpec.descriptorSetLayouts = {physicsCollidersDescriptorSetLayout};
 
             physicsCollidersPipeline = GraphicsObjectsFactory::createGraphicsPipeline(physicsCollidersPipelineSpec);
 
             physicsCollidersTransformsBuffer = GraphicsObjectsFactory::createShaderStorageBuffer(MAX_OBJECTS * sizeof(glm::mat4));
 
             DescriptorSetSpecification physicsCollidersDescriptorSetSpec{};
+            physicsCollidersDescriptorSetSpec.layout = physicsCollidersDescriptorSetLayout;
             physicsCollidersDescriptorSetSpec.uboBindings = {
                     {0, ubCameraData}
             };
@@ -525,6 +607,12 @@ namespace CgEngine {
             physicsCollidersDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(physicsCollidersDescriptorSetSpec);
         }
         {
+            DescriptorSetLayoutSpecification boundingBoxDescriptorSetLayoutSpec{};
+            boundingBoxDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
+            boundingBoxDescriptorSetLayoutSpec.uboBindingPoints = {0};
+            boundingBoxDescriptorSetLayoutSpec.ssboBindingPoints = {1};
+            boundingBoxDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(boundingBoxDescriptorSetLayoutSpec);
+
             GraphicsPipelineSpecification boundingBoxPipelineSpec;
             boundingBoxPipelineSpec.renderPass = afterPbrRenderPass;
             boundingBoxPipelineSpec.engineShaderName = "colliders";
@@ -534,12 +622,14 @@ namespace CgEngine {
             boundingBoxPipelineSpec.wireframe = true;
             boundingBoxPipelineSpec.backfaceCulling = false;
             boundingBoxPipelineSpec.vertexInputLayout = MeshProps::DEFAULT_VERT_BUFF_LAYOUTS;
+            boundingBoxPipelineSpec.descriptorSetLayouts = {boundingBoxDescriptorSetLayout};
 
             boundingBoxPipeline = GraphicsObjectsFactory::createGraphicsPipeline(boundingBoxPipelineSpec);
 
             boundingBoxTransformsBuffer = GraphicsObjectsFactory::createShaderStorageBuffer(MAX_OBJECTS * sizeof(glm::mat4));
 
             DescriptorSetSpecification boundingBoxDescriptorSetSpec{};
+            boundingBoxDescriptorSetSpec.layout = boundingBoxDescriptorSetLayout;
             boundingBoxDescriptorSetSpec.uboBindings = {
                     {0, ubCameraData}
             };
@@ -556,6 +646,7 @@ namespace CgEngine {
             mormalsDebugPipelineSpec.depthTest = true;
             mormalsDebugPipelineSpec.depthWrite = false;
             mormalsDebugPipelineSpec.vertexInputLayout = MeshProps::DEFAULT_VERT_BUFF_LAYOUTS;
+            mormalsDebugPipelineSpec.descriptorSetLayouts = {gBufferDescriptorSetLayout};
 
             normalsDebugPipeline = GraphicsObjectsFactory::createGraphicsPipeline(mormalsDebugPipelineSpec);
         }
@@ -565,15 +656,22 @@ namespace CgEngine {
             linesVertexBuffer->setLayout({{ShaderDataType::Float3, false}, {ShaderDataType::Float3, false}});
             debugLinesVAO->addVertexBuffer(linesVertexBuffer);
 
+            DescriptorSetLayoutSpecification debugLinesDescriptorSetLayoutSpec{};
+            debugLinesDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
+            debugLinesDescriptorSetLayoutSpec.uboBindingPoints = {0};
+            debugLinesDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(debugLinesDescriptorSetLayoutSpec);
+
             GraphicsPipelineSpecification debugLinesPipelineSpec{};
             debugLinesPipelineSpec.engineShaderName = "lines";
             debugLinesPipelineSpec.depthTest = true;
             debugLinesPipelineSpec.depthWrite = false;
             debugLinesPipelineSpec.drawMode = DrawMode::Lines;
+            debugLinesPipelineSpec.descriptorSetLayouts = {debugLinesDescriptorSetLayout};
 
             debugLinesPipeline = GraphicsObjectsFactory::createGraphicsPipeline(debugLinesPipelineSpec);
 
             DescriptorSetSpecification debugLinesDescriptorSetSpec{};
+            debugLinesDescriptorSetSpec.layout = debugLinesDescriptorSetLayout;
             debugLinesDescriptorSetSpec.uboBindings = {
                 {0, ubCameraData}
             };
@@ -605,11 +703,17 @@ namespace CgEngine {
 
             bloomDownSamplePass = GraphicsObjectsFactory::createRenderPass(bloomDownSamplePassSpec);
 
+            DescriptorSetLayoutSpecification bloomDescriptorSetLayoutSpec{};
+            bloomDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
+            bloomDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {0};
+            bloomDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(bloomDescriptorSetLayoutSpec);
+
             GraphicsPipelineSpecification bloomDownsamplePipelineSpec{};
             bloomDownsamplePipelineSpec.renderPass = bloomDownSamplePass;
             bloomDownsamplePipelineSpec.engineShaderName = "bloomDownSample";
             bloomDownsamplePipelineSpec.depthTest = false;
             bloomDownsamplePipelineSpec.depthWrite = false;
+            bloomDownsamplePipelineSpec.descriptorSetLayouts = {bloomDescriptorSetLayout};
 
             bloomDownsamplePipeline = GraphicsObjectsFactory::createGraphicsPipeline(bloomDownsamplePipelineSpec);
 
@@ -640,6 +744,7 @@ namespace CgEngine {
             bloomUpsamplePipelineSpec.blendingEquation = BlendingEquation::Add;
             bloomUpsamplePipelineSpec.srcBlendingFunction = BlendingFunction::One;
             bloomUpsamplePipelineSpec.destBlendingFunction = BlendingFunction::One;
+            bloomUpsamplePipelineSpec.descriptorSetLayouts = {bloomDescriptorSetLayout};
 
             bloomUpsamplePipeline = GraphicsObjectsFactory::createGraphicsPipeline(bloomUpsamplePipelineSpec);
 
@@ -655,6 +760,7 @@ namespace CgEngine {
             }
 
             DescriptorSetSpecification bloomDescriptorSetSpec0{};
+            bloomDescriptorSetSpec0.layout = bloomDescriptorSetLayout;
             bloomDescriptorSetSpec0.attachmentTextureBindings.resize(1);
             bloomDescriptorSetSpec0.attachmentTextureBindings[0].attachment = pbrColorAttachment;
             bloomDescriptorSetSpec0.attachmentTextureBindings[0].bindingPoint = 0;
@@ -664,6 +770,7 @@ namespace CgEngine {
 
             for (size_t i = 1; i < bloomDescriptorSets.size(); i++) {
                 DescriptorSetSpecification bloomDescriptorSetSpec{};
+                bloomDescriptorSetSpec.layout = bloomDescriptorSetLayout;
                 bloomDescriptorSetSpec.attachmentTextureBindings.resize(1);
                 bloomDescriptorSetSpec.attachmentTextureBindings[0].attachment = bloomAttachments[i - 1];
                 bloomDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 0;
@@ -673,16 +780,23 @@ namespace CgEngine {
             }
         }
         {
+            DescriptorSetLayoutSpecification screenDescriptorSetLayoutSpec{};
+            screenDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
+            screenDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {0, 1};
+            screenDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(screenDescriptorSetLayoutSpec);
+
             GraphicsPipelineSpecification screenPipelineSpec;
             screenPipelineSpec.renderPass = Renderer::getSwapChainRenderPass();
             screenPipelineSpec.engineShaderName = "screen";
             screenPipelineSpec.depthTest = false;
             screenPipelineSpec.depthWrite = false;
             screenPipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
+            screenPipelineSpec.descriptorSetLayouts = {screenDescriptorSetLayout};
 
             screenPipeline = GraphicsObjectsFactory::createGraphicsPipeline(screenPipelineSpec);
 
             DescriptorSetSpecification screenDescriptorSetSpec{};
+            screenDescriptorSetSpec.layout = screenDescriptorSetLayout;
             screenDescriptorSetSpec.attachmentTextureBindings.resize(2);
             screenDescriptorSetSpec.attachmentTextureBindings[0].attachment = pbrColorAttachment;
             screenDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 0;
@@ -752,7 +866,6 @@ namespace CgEngine {
             uiTextPipelineSpec.renderingInfo.colorAttachments = { UI_CANVAS_ATTACHMENT_TYPE };
 
             uiTextPipeline = GraphicsObjectsFactory::createDynamicGraphicsPipeline(uiTextPipelineSpec);
-
         }
         {
             DescriptorSetLayoutSpecification ui2DCameraBufferDescriptorSetLayoutSpec{};
@@ -789,12 +902,24 @@ namespace CgEngine {
         {
             boneTransformsBuffer = GraphicsObjectsFactory::createShaderStorageBuffer(MAX_BONES * MAX_ANIMATED_COMPONENTS * sizeof(glm::mat4));
 
+            DescriptorSetLayoutSpecification animatedMeshDescriptorSetLayoutSpec{};
+            animatedMeshDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Compute;
+            animatedMeshDescriptorSetLayoutSpec.ssboBindingPoints = {1, 3, 4};
+            animatedMeshDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(animatedMeshDescriptorSetLayoutSpec);
+
+            DescriptorSetLayoutSpecification skinningDescriptorSetLayoutSpec{};
+            skinningDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Compute;
+            skinningDescriptorSetLayoutSpec.ssboBindingPoints = {2};
+            skinningDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(skinningDescriptorSetLayoutSpec);
+
             ComputePipelineSpecification skinningPipelineSpec{};
             skinningPipelineSpec.engineShaderName = "skinning";
+            skinningPipelineSpec.descriptorSetLayouts = {skinningDescriptorSetLayout, animatedMeshDescriptorSetLayout};
 
             skinningComputePipeline = GraphicsObjectsFactory::createComputePipeline(skinningPipelineSpec);
 
             DescriptorSetSpecification skinningDescriptorSetSpec{};
+            skinningDescriptorSetSpec.layout = skinningDescriptorSetLayout;
             skinningDescriptorSetSpec.ssboBindings = {
                     {2, boneTransformsBuffer}
             };
@@ -1056,7 +1181,7 @@ namespace CgEngine {
         activeRendering = false;
     }
 
-    void SceneRenderer::submitMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, bool enableCulling, const glm::mat4& transform, const std::vector<float>& lodDistances) {
+    void SceneRenderer::submitMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, PBRMaterial* overrideMaterial, bool castShadows, bool enableCulling, const glm::mat4& transform, const std::vector<float>& lodDistances) {
         auto& submeshes = mesh->getSubmeshes();
 
         for (const auto& meshNodeIndex: meshNodes) {
@@ -1074,7 +1199,7 @@ namespace CgEngine {
                 const Submesh& submesh = submeshes.at(submeshIndex);
 
                 if (isInCameraFrustum) {
-                    const Material* material = overrideMaterial != nullptr ? overrideMaterial : mesh->getMaterial(submesh.materialIndex);
+                    const PBRMaterial* material = overrideMaterial != nullptr ? overrideMaterial : mesh->getMaterial(submesh.materialIndex);
                     MeshKey mk = {mesh->getVAO(), submeshIndex, material->getUuid().getUuid()};
 
                     meshTransforms[mk].emplace_back(finalTransform);
@@ -1105,7 +1230,7 @@ namespace CgEngine {
         }
     }
 
-    void SceneRenderer::submitAnimatedMesh(MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms, VertexArrayObject* skinnedVAO, const DescriptorSet* descriptorSet) {
+    void SceneRenderer::submitAnimatedMesh(MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, PBRMaterial* overrideMaterial, bool castShadows, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms, VertexArrayObject* skinnedVAO, const DescriptorSet* descriptorSet) {
         CG_ASSERT(boneTransforms.size() <= MAX_BONES, "Mesh contains to many bones")
         CG_ASSERT(skinningQueue.size() < MAX_ANIMATED_COMPONENTS, "Cannot render that many AnimatedMeshRendererComponents")
 
@@ -1124,7 +1249,7 @@ namespace CgEngine {
 
             for (const auto& submeshIndex: meshNode.submeshIndices) {
                 const Submesh& submesh = submeshes.at(submeshIndex);
-                const Material* material = overrideMaterial != nullptr ? overrideMaterial : mesh->getMaterial(submesh.materialIndex);
+                const PBRMaterial* material = overrideMaterial != nullptr ? overrideMaterial : mesh->getMaterial(submesh.materialIndex);
                 MeshKey mk = {skinnedVAO, submeshIndex, material->getUuid().getUuid()};
 
                 meshTransforms[mk].emplace_back(transform);
@@ -1282,6 +1407,18 @@ namespace CgEngine {
 
     const DescriptorSetLayout* SceneRenderer::getUiCanvasSampleDescriptorSetLayout() const {
         return uiCanvasSampleDescriptorSetLayout;
+    }
+
+    const DescriptorSetLayout* SceneRenderer::getEnvironmentMapDescriptorSetLayout() const {
+        return environmentMapDescriptorSetLayout;
+    }
+
+    const DescriptorSetLayout* SceneRenderer::getPBRMaterialDescriptorSetLayout() const {
+        return pbrMaterialDescriptorSetLayout;
+    }
+
+    const DescriptorSetLayout* SceneRenderer::getAnimatedMeshDescriptorSetLayout() const {
+        return animatedMeshDescriptorSetLayout;
     }
 
     const RenderingStats& SceneRenderer::getRenderingStats() {

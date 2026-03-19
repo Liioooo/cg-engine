@@ -45,8 +45,8 @@ namespace CgEngine {
         void setViewportSize(uint32_t width, uint32_t height);
         void beginScene(const Camera& camera, glm::mat4 cameraTransform, const SceneLightEnvironment& lightEnvironment, const SceneEnvironment& sceneEnvironment);
         void endScene();
-        void submitMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, bool enableCulling, const glm::mat4& transform, const std::vector<float>& lodDistances);
-        void submitAnimatedMesh(MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, Material* overrideMaterial, bool castShadows, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms, VertexArrayObject* skinnedVAO, const DescriptorSet* descriptorSet);
+        void submitMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, PBRMaterial* overrideMaterial, bool castShadows, bool enableCulling, const glm::mat4& transform, const std::vector<float>& lodDistances);
+        void submitAnimatedMesh(MeshVertices* mesh, const std::vector<uint32_t>& meshNodes, PBRMaterial* overrideMaterial, bool castShadows, const glm::mat4& transform, const std::vector<glm::mat4>& boneTransforms, VertexArrayObject* skinnedVAO, const DescriptorSet* descriptorSet);
         void submitCustomShaderMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, bool enableCulling, const AABoundingBox* boundingBox, const glm::mat4& transform, CustomGraphicsPipeline* pipeline, uint32_t instanceCount, const std::vector<float>& lodDistances, const DescriptorSet* descriptorSet);
         void submitPhysicsColliderMesh(MeshVertices* mesh, const glm::mat4& transform);
         void submitBoundingBoxMesh(MeshVertices* boundingBoxMesh, Mesh* mesh, const std::vector<uint32_t>& meshNodes, const glm::mat4& transform);
@@ -59,6 +59,10 @@ namespace CgEngine {
         const DescriptorSetLayout* getCustomPipelineDescriptorSetLayout() const;
         const IndexBuffer* getUiIndexBuffer() const;
         const DescriptorSetLayout* getUiCanvasSampleDescriptorSetLayout() const;
+
+        const DescriptorSetLayout* getEnvironmentMapDescriptorSetLayout() const;
+        const DescriptorSetLayout* getPBRMaterialDescriptorSetLayout() const;
+        const DescriptorSetLayout* getAnimatedMeshDescriptorSetLayout() const;
 
         const RenderingStats& getRenderingStats();
 
@@ -77,8 +81,10 @@ namespace CgEngine {
         bool needsResize = true;
         bool activeRendering = false;
 
+        DescriptorSetLayout* environmentMapDescriptorSetLayout;
         DescriptorSet* environmentMapDescriptorSetBlack;
 
+        DescriptorSetLayout* dirShadowMapDescriptorSetLayout;
         RenderPass* dirShadowMapRenderPass;
         GraphicsPipeline* dirShadowMapPipeline;
         Attachment* dirShadowMaps;
@@ -86,6 +92,9 @@ namespace CgEngine {
         ShaderStorageBuffer* dirShadowMapTransformsBuffer;
         DescriptorSet* dirShadowMapDescriptorSet;
 
+        DescriptorSetLayout* pbrMaterialDescriptorSetLayout;
+
+        DescriptorSetLayout* gBufferDescriptorSetLayout;
         RenderPass* gBufferRenderPass;
         GraphicsPipeline* gBufferPipeline;
         Attachment* gBufferAlbedoRoughnessAttachment;
@@ -99,16 +108,19 @@ namespace CgEngine {
 
         glm::uvec3 hbaoWorkGroupSize;
 
+        DescriptorSetLayout* hbaoDeinterleavingDescriptorSetLayout;
         RenderPass* hbaoDeinterleavingRenderPass;
         GraphicsPipeline* hbaoDeinterleavingPipeline;
         Attachment* hbaoDeinterleavingAttachment;
         std::array<Framebuffer*, 2> hbaoDeinterleavingFramebuffers;
         DescriptorSet* hbaoDeinterleavingDescriptorSet;
 
+        DescriptorSetLayout* hbaoComputeDescriptorSetLayout;
         ComputePipeline* hbaoComputePipeline;
         Attachment* hbaoResult;
         DescriptorSet* hbaoComputeDescriptorSet;
 
+        DescriptorSetLayout* hbaoReinterleavingDescriptorSetLayout;
         RenderPass* hbaoReinterleavingRenderPass;
         GraphicsPipeline* hbaoReinterleavingPipeline;
         Attachment* hbaoReinterleavingAttachment;
@@ -121,6 +133,7 @@ namespace CgEngine {
             glm::vec2 invResolutionDirection;
         };
 
+        DescriptorSetLayout* hbaoBlurDescriptorSetLayout;
         RenderPass* hbaoBlurRenderPass0;
         RenderPass* hbaoBlurRenderPass1;
         GraphicsPipeline* hbaoBlurPipeline0;
@@ -132,6 +145,7 @@ namespace CgEngine {
         DescriptorSet* hbaoBlurDescriptorSet0;
         DescriptorSet* hbaoBlurDescriptorSet1;
 
+        DescriptorSetLayout* pbrDescriptorSetLayout;
         RenderPass* pbrRenderPass;
         GraphicsPipeline* pbrPipeline;
         Attachment* pbrColorAttachment;
@@ -153,16 +167,19 @@ namespace CgEngine {
             int transformsOffset;
         };
 
+        DescriptorSetLayout* boundingBoxDescriptorSetLayout;
         GraphicsPipeline* boundingBoxPipeline;
         ShaderStorageBuffer* boundingBoxTransformsBuffer;
         DescriptorSet* boundingBoxDescriptorSet;
 
+        DescriptorSetLayout* physicsCollidersDescriptorSetLayout;
         GraphicsPipeline* physicsCollidersPipeline;
         ShaderStorageBuffer* physicsCollidersTransformsBuffer;
         DescriptorSet* physicsCollidersDescriptorSet;
 
         GraphicsPipeline* normalsDebugPipeline;
 
+        DescriptorSetLayout* bloomDescriptorSetLayout;
         RenderPass* bloomDownSamplePass;
         RenderPass* bloomUpSamplePass;
         GraphicsPipeline* bloomDownsamplePipeline;
@@ -172,6 +189,7 @@ namespace CgEngine {
         std::array<Framebuffer*, 6> bloomUpsampleFramebuffers;
         std::array<DescriptorSet*, 8> bloomDescriptorSets;
 
+        DescriptorSetLayout* screenDescriptorSetLayout;
         GraphicsPipeline* screenPipeline;
         DescriptorSet* screenDescriptorSet;
 
@@ -187,6 +205,7 @@ namespace CgEngine {
         DescriptorSet* ui2DDescriptorSetCameraBuffer;
         DescriptorSetLayout* uiCanvasSampleDescriptorSetLayout;
 
+        DescriptorSetLayout* debugLinesDescriptorSetLayout;
         GraphicsPipeline* debugLinesPipeline;
         DescriptorSet* debugLinesDescriptorSet;
 
@@ -196,6 +215,8 @@ namespace CgEngine {
         struct SkinningPushConstants {
             int componentIndex;
         };
+        DescriptorSetLayout* animatedMeshDescriptorSetLayout;
+        DescriptorSetLayout* skinningDescriptorSetLayout;
         ShaderStorageBuffer* boneTransformsBuffer;
         ComputePipeline* skinningComputePipeline;
         DescriptorSet* skinningDescriptorSet;
@@ -327,7 +348,7 @@ namespace CgEngine {
 
         struct DrawCommand {
             VertexArrayObject* vao;
-            const Material* material;
+            const PBRMaterial* material;
             uint32_t baseIndex;
             uint32_t baseVertex;
             uint32_t indexCount;

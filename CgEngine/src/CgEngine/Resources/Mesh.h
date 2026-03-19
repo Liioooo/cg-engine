@@ -4,7 +4,7 @@
 #include "Physics/PhysicsTriangleMesh.h"
 #include "Physics/PhysicsConvexMesh.h"
 #include "Rendering/AABoundingBox.h"
-#include "Rendering/Material.h"
+#include "Rendering/PBRMaterial.h"
 #include "Rendering/VertexArrayObject.h"
 
 namespace CgEngine {
@@ -73,7 +73,7 @@ namespace CgEngine {
         virtual const std::vector<Submesh>& getSubmeshes() const;
         virtual std::vector<MeshNode>& getMeshNodes();
         virtual uint32_t getMeshNodeIndex(const std::string& nodeName) const;
-        virtual const Material* getMaterial(size_t index) const = 0;
+        virtual const PBRMaterial* getMaterial(size_t index) const = 0;
         virtual const uint32_t getMaterialCount() const = 0;
 
     protected:

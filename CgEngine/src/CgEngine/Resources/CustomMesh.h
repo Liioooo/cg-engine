@@ -9,10 +9,10 @@ namespace CgEngine {
         explicit CustomMesh(std::vector<VertexBufferElement> vertexBufferLayout);
         ~CustomMesh() override;
 
-        const Material* getMaterial(size_t index) const override;
+        const PBRMaterial* getMaterial(size_t index) const override;
         const uint32_t getMaterialCount() const override;
 
-        void setMaterial(Material* material);
+        void setMaterial(const std::string& mat);
         AABoundingBox& getBoundingBox();
 
         void buildMeshData();
@@ -45,7 +45,7 @@ namespace CgEngine {
         void freeVertexData(LodMesh& lodMesh);
 
         AABoundingBox boundingBox;
-        Material* material = nullptr;
+        ResRef<PBRMaterial> material;
         std::map<uint32_t, LodMesh> lodMeshes;
         std::vector<VertexBufferElement> vertexBufferLayout;
     };

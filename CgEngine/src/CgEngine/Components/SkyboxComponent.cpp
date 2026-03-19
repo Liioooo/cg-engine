@@ -1,4 +1,6 @@
 #include "SkyboxComponent.h"
+
+#include "Application.h"
 #include "Rendering/Renderer.h"
 #include "Asserts.h"
 #include "imgui.h"
@@ -17,6 +19,7 @@ namespace CgEngine {
         lod = params.lod;
 
         DescriptorSetSpecification spec;
+        spec.layout = Application::get().getSceneRenderer().getEnvironmentMapDescriptorSetLayout();
         spec.textureCubeBindings = {
                 {5, irradianceMap.get()},
                 {6, prefilterMap.get()},

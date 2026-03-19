@@ -32,8 +32,6 @@ namespace CgEngine {
         std::string emissionTexture = materialNode.child("EmissionTexture").child_value();
         std::string normalTexture = materialNode.child("NormalTexture").child_value();
 
-        ApplicationOptions& applicationOptions = Application::get().getApplicationOptions();
-
         PBRMaterialSpecification materialSpecification;
 
         if (!albedo.empty()) {
@@ -80,7 +78,7 @@ namespace CgEngine {
         return new PBRMaterial(materialSpecification);
     }
 
-    PBRMaterial::PBRMaterial(PBRMaterialSpecification spec) : Material() {
+    PBRMaterial::PBRMaterial(PBRMaterialSpecification spec) {
         materialBuffer = GraphicsObjectsFactory::createUniformBuffer(sizeof(PBRMaterialData));
 
         PBRMaterialData materialData{};
@@ -93,6 +91,7 @@ namespace CgEngine {
         materialBuffer->setData(&materialData, sizeof(PBRMaterialData));
 
         DescriptorSetSpecification descriptorSetSpec{};
+        descriptorSetSpec.layout = Application::get().getSceneRenderer().getPBRMaterialDescriptorSetLayout();
         descriptorSetSpec.texture2DBindings = {
             {0, spec.albedoTexture ? spec.albedoTexture.get() : Renderer::getWhiteTexture()},
             {1, spec.normalTexture ? spec.normalTexture.get() : Renderer::getWhiteTexture()},
@@ -135,5 +134,21 @@ namespace CgEngine {
         } else {
             emissionTexture = nullptr;
         }
+    }
+
+    PBRMaterial::~PBRMaterial() {
+        delete descriptorSet;
+    }
+
+    const Uuid& PBRMaterial::getUuid() const {
+        return uuid;
+    }
+
+    bool PBRMaterial::operator==(const PBRMaterial& other) const {
+        return uuid == other.uuid;
+    }
+
+    DescriptorSet* PBRMaterial::getDescriptorSet() const {
+        return descriptorSet;
     }
 }
