@@ -7,6 +7,7 @@
 #include "CgEngineSharedUtils/StringUtils.h"
 #include <filesystem>
 #include <Rendering/GraphicsObjectsFactory.h>
+#include <assimp/postprocess.h>
 
 namespace CgEngine {
     MeshVertices* MeshVertices::createResource(const std::string &name) {

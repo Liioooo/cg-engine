@@ -1,8 +1,32 @@
 <Scene>
     <Entity id="camera">
         <Components>
+            <TransformComponent position="0 2 5" rotation="0 0 0" scale="1 1 1" />
+            <CameraComponent primary="true" projection="perspective" near="0.1" far="500" fov="80" bloom-threshold="0.5" bloom-intensity="0.6" />
+            <ScriptComponent script-name="flyingCameraScript" />
+        </Components>
+    </Entity>
+    <Entity>
+        <Components>
+            <SkyboxComponent hdri-path="kloppenheim_02_2k.hdr" lod="0.1" intensity="0.05" />
+        </Components>
+    </Entity>
+    <Entity>
+        <Components>
+            <TransformComponent position="0 0 0" rotation="25 0 -35" scale="1 1 1" />
+            <DirectionalLightComponent color="#ffffff" intensity="0.6" />
+        </Components>
+    </Entity>
+    <Entity>
+        <Components>
             <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />
-            <CameraComponent primary="true" projection="perspective" />
+            <MeshRendererComponent mesh="CG_CubeMesh" />
+        </Components>
+    </Entity>
+    <Entity>
+        <Components>
+            <TransformComponent position="0 -1 0" rotation="0 0 0" scale="10 0.1 10" />
+            <MeshRendererComponent mesh="CG_CubeMesh" />
         </Components>
     </Entity>
 </Scene>
