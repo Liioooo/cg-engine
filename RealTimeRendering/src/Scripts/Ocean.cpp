@@ -3,6 +3,7 @@
 #include "imgui.h"
 #include "OpenGLDebugGroup.h"
 #include "CgEngine/Rendering/GraphicsObjectsFactory.h"
+#include "Components/CustomShaderRendererComponent.h"
 
 namespace RTR {
     CgEngine::CustomMesh* Ocean::createPlane(glm::vec2 center, glm::vec2 size, int segments) {
@@ -91,7 +92,7 @@ namespace RTR {
         matUniformBuffer->setData(&matData, sizeof(MaterialUniformBufferData));
 
         CgEngine::DescriptorSetSpecification matSpec{};
-        matSpec.layout = getComponent<CgEngine::CustomShaderRendererComponent>().getPipeline()->getDescriptorSetLayout();
+        matSpec.layout = getOwingEntity().getComponent<CgEngine::CustomShaderRendererComponent>()->getPipeline()->getDescriptorSetLayout();
         matSpec.uboBindings = {
             {2, matUniformBuffer}
         };
@@ -110,7 +111,7 @@ namespace RTR {
         mat->reconfigure(matSpec);
     }
 
-    void Ocean::onAttach() {
+    void Ocean::onEnable() {
         materialParams = {
             glm::vec3(1.0),
             glm::vec3(0.1541919, 0.8857628, 0.990566),
@@ -145,17 +146,22 @@ namespace RTR {
 
         createMesh();
 
-        mat = CgEngine::GraphicsObjectsFactory::createDescriptorSet();
+        const auto* layout = getResource<CgEngine::CustomGraphicsPipeline>("ocean/render")->getDescriptorSetLayout();
+
+        CgEngine::DescriptorSetSpecification matSpec{};
+        matSpec.layout = layout;
+
+        mat = CgEngine::GraphicsObjectsFactory::createDescriptorSet(matSpec);
         matUniformBuffer = CgEngine::GraphicsObjectsFactory::createUniformBuffer(sizeof(MaterialUniformBufferData));
 
         CgEngine::CustomShaderRendererComponentParams params;
         params.pipeline = "ocean/render";
+        params.descriptorSet = mat;
         params.customMesh = mesh;
         params.instanceCount = 1;
-        params.descriptorSet = mat;
         params.enableCulling = true;
 
-        attachComponent<CgEngine::CustomShaderRendererComponent>(params);
+        getOwingEntity().attachComponent<CgEngine::CustomShaderRendererComponent>(params);
         reinitialise();
     }
 

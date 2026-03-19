@@ -27,10 +27,7 @@ namespace RTR {
         delete turbulence;
 
         delete timeSpectrumDescriptorSet;
-        delete timeSpectrumPushConstants;
-
         delete finalTexturesDescriptorSet;
-        delete finalTexturesPushConstants;
     }
 
     void OceanCascade::calculateInitialState() {
@@ -116,9 +113,6 @@ namespace RTR {
         };
 
         timeSpectrumDescriptorSet = CgEngine::GraphicsObjectsFactory::createDescriptorSet(timeSpectrumDescriptorSetSpec);
-        timeSpectrumPushConstants = CgEngine::GraphicsObjectsFactory::createPushConstants("pc_simulateOcean");
-        timeSpectrumPushConstants->init<SimulateOceanPC>();
-        timeSpectrumPushConstants->mapUniform(&SimulateOceanPC::time, "time");
 
         CgEngine::DescriptorSetSpecification finalTexturesDescriptorSetSpec{};
         finalTexturesDescriptorSetSpec.layout = finalTexturesShader->getDescriptorSetLayout();
@@ -132,21 +126,15 @@ namespace RTR {
             {6, ~0u, true, CgEngine::ShaderImageAccess::ReadWrite, turbulence},
         };
         finalTexturesDescriptorSet = CgEngine::GraphicsObjectsFactory::createDescriptorSet(finalTexturesDescriptorSetSpec);
-
-        finalTexturesPushConstants = CgEngine::GraphicsObjectsFactory::createPushConstants("pc_finalTextures");
-        finalTexturesPushConstants->init<FinalTexturesPC>();
-        finalTexturesPushConstants->mapUniform(&FinalTexturesPC::lambda, "lambda");
-        finalTexturesPushConstants->mapUniform(&FinalTexturesPC::deltaTime, "deltaTime");
     }
 
     void OceanCascade::calculateStateAtTime(float time, float deltaT) {
         CgEngine::Renderer::bindComputePipeline(timeSpectrumShader->getComputePipeline());
         CgEngine::Renderer::bindDescriptorSet(timeSpectrumDescriptorSet, 0);
 
-        SimulateOceanPC simulateOceanPc;
+        SimulateOceanPC simulateOceanPc{};
         simulateOceanPc.time = time;
-        timeSpectrumPushConstants->setData(&simulateOceanPc, sizeof(SimulateOceanPC));
-        CgEngine::Renderer::setPushConstants({timeSpectrumPushConstants}, 1);
+        CgEngine::Renderer::setPushConstants(&simulateOceanPc, sizeof(SimulateOceanPC));
         CgEngine::Renderer::dispatchCompute(oceanParams.size / 8, oceanParams.size / 8, 1);
         CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(dxDz);
         CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(dyDxz);
@@ -161,11 +149,10 @@ namespace RTR {
         CgEngine::Renderer::bindComputePipeline(finalTexturesShader->getComputePipeline());
         CgEngine::Renderer::bindDescriptorSet(finalTexturesDescriptorSet, 0);
 
-        FinalTexturesPC finalTexturesPc;
+        FinalTexturesPC finalTexturesPc{};
         finalTexturesPc.lambda = 1.0f;
         finalTexturesPc.deltaTime = deltaT;
-        finalTexturesPushConstants->setData(&finalTexturesPc, sizeof(FinalTexturesPC));
-        CgEngine::Renderer::setPushConstants({finalTexturesPushConstants}, 1);
+        CgEngine::Renderer::setPushConstants(&finalTexturesPc, sizeof(FinalTexturesPC));
         CgEngine::Renderer::dispatchCompute(oceanParams.size / 8, oceanParams.size / 8, 1);
         CgEngine::Renderer::transitionImageLayoutFromComputeToShaderReadOnly(displacement, CgEngine::ShaderStage::Fragment);
         CgEngine::Renderer::transitionImageLayoutFromComputeToShaderReadOnly(turbulence, CgEngine::ShaderStage::Fragment);

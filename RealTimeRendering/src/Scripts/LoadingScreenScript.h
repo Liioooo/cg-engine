@@ -10,7 +10,6 @@ class LoadingScreenScript : public CgEngine::NativeScript {
             return std::make_shared<LoadingScreenScript>();
         }
 
-    public:
         void update(CgEngine::TimeStep ts) override;
 
     private:

@@ -1,10 +1,10 @@
 #pragma once
 
 #include <OceanCascade.h>
-#include <FastFourierTransform.h>
 #include "CgEngine/Scripting/NativeScript.h"
 #include "CgEngine/Rendering/DescriptorSet.h"
 #include "CgEngine/Rendering/UniformBuffer.h"
+#include "CgEngine/Resources/CustomMesh.h"
 
 namespace RTR {
 
@@ -26,7 +26,7 @@ namespace RTR {
         };
 
     protected:
-        void onAttach() override;
+        void onEnable() override;
 
         void onDetach() override;
 

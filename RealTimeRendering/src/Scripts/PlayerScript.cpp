@@ -3,20 +3,25 @@
 #include "CgEngine/Events/KeyCodes.h"
 #include "glm/gtx/rotate_vector.hpp"
 #include "CgEngine/Application.h"
+#include "CgEngine/Components/AnimatedMeshRendererComponent.h"
+#include "CgEngine/Components/CharacterControllerComponent.h"
+#include "CgEngine/Components/TransformComponent.h"
 
 namespace RTR {
-    void PlayerScript::onAttach() {
+    void PlayerScript::onEnable() {
         prevMousePos = CgEngine::Input::getMousePosition();
     }
 
     void PlayerScript::fixedUpdate(CgEngine::TimeStep ts) {
-        CgEngine::Entity cameraEntity = findEntityById("humanCam");
-        if (!getComponent<CgEngine::CameraComponent>(cameraEntity).isPrimary() || CgEngine::Input::getCursorMode() != CgEngine::CursorMode::Locked) {
+        CgEngine::EntityHandle cameraEntity = findEntityById("humanCam");
+        if (!cameraEntity.getComponent<CgEngine::CameraComponent>()->isPrimary() || CgEngine::Input::getCursorMode() != CgEngine::CursorMode::Locked) {
             return;
         }
 
-        auto& playerMeshTransform = getComponent<CgEngine::TransformComponent>(findEntityById("humanMesh"));
-        playerMeshTransform.setLocalRotationVec({0.0f, yaw + glm::pi<float>(), 0.0f});
+        auto humanMeshEntity = findEntityById("humanMesh");
+
+        auto playerMeshTransform = humanMeshEntity.getComponent<CgEngine::TransformComponent>();
+        playerMeshTransform->setLocalRotationVec({0.0f, yaw + glm::pi<float>(), 0.0f});
 
         glm::vec3 cameraDirection = glm::normalize(glm::quat({0.0f, yaw, 0.0f}) * glm::vec3(0, 0, -1));
         auto movement = glm::vec3(0.0f);
@@ -31,7 +36,7 @@ namespace RTR {
             movement += glm::rotateY(cameraDirection, glm::radians(-90.0f));
         }
 
-        auto& comp = getComponent<CgEngine::CharacterControllerComponent>();
+        auto comp = getOwingEntity().getComponent<CgEngine::CharacterControllerComponent>();
 
         bool back = false;
 
@@ -42,16 +47,16 @@ namespace RTR {
             movement = (glm::length(movement) == 0.0f ? movement : normalize(movement)) * ts.getSeconds() * 6.0f;
         }
 
-        auto& animComp = getComponent<CgEngine::AnimatedMeshRendererComponent>(findEntityById("humanMesh"));
-        animComp.setAnimationPlaying(glm::length(movement) > 0.0f);
-        animComp.setAnimationSpeed(back ? -1.0f : 1.0f);
+        auto animComp = humanMeshEntity.getComponent<CgEngine::AnimatedMeshRendererComponent>();
+        animComp->setAnimationPlaying(glm::length(movement) > 0.0f);
+        animComp->setAnimationSpeed(back ? -1.0f : 1.0f);
 
-        comp.move(movement);
+        comp->move(movement);
     }
 
     void PlayerScript::lateUpdate(CgEngine::TimeStep ts) {
-        CgEngine::Entity cameraEntity = findEntityById("humanCam");
-        if (!getComponent<CgEngine::CameraComponent>(cameraEntity).isPrimary() || CgEngine::Input::getCursorMode() != CgEngine::CursorMode::Locked) {
+        CgEngine::EntityHandle cameraEntity = findEntityById("humanCam");
+        if (!cameraEntity.getComponent<CgEngine::CameraComponent>()->isPrimary()  || CgEngine::Input::getCursorMode() != CgEngine::CursorMode::Locked) {
             return;
         }
 
@@ -62,7 +67,7 @@ namespace RTR {
 
         prevMousePos = mousePos;
 
-        auto& cameraTransform = getComponent<CgEngine::TransformComponent>(cameraEntity);
+        auto cameraTransform = cameraEntity.getComponent<CgEngine::TransformComponent>();
 
         pitch = glm::clamp(pitch + mouseDeltaY, glm::radians(-80.0f), glm::radians(10.0f));
         yaw = glm::fmod(yaw + mouseDeltaX, glm::two_pi<float>());
@@ -71,13 +76,13 @@ namespace RTR {
 
         if (CgEngine::Input::isKeyPressed(CgEngine::KeyCode::V)) {
             cameraDirection = glm::normalize(glm::quat({pitch, yaw + glm::pi<float>(), 0}) * glm::vec3(0, 0, -1));
-            cameraTransform.setYawPitchRoll(yaw + glm::pi<float>(), pitch, 0);
+            cameraTransform->setYawPitchRoll(yaw + glm::pi<float>(), pitch, 0);
 
         } else {
             cameraDirection = glm::normalize(glm::quat({pitch, yaw, 0}) * glm::vec3(0, 0, -1));
-            cameraTransform.setYawPitchRoll(yaw, pitch, 0);
+            cameraTransform->setYawPitchRoll(yaw, pitch, 0);
         }
-        cameraTransform.setLocalPosition((cameraDirection * -cameraDistance) + cameraOffset);
+        cameraTransform->setLocalPosition((cameraDirection * -cameraDistance) + cameraOffset);
     }
 
     void PlayerScript::onMouseScrolled(CgEngine::MouseScrolledEvent& event) {

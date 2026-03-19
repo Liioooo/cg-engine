@@ -16,15 +16,15 @@ namespace RTR {
         if (event.getKeyCode() == CgEngine::KeyCode::F10) {
             flyCam = !flyCam;
 
-            auto& flyCamera = getComponent<CgEngine::CameraComponent>(findEntityById("camera"));
-            auto& humanCamera = getComponent<CgEngine::CameraComponent>(findEntityById("humanCam"));
+            auto flyCamera = findEntityById("camera").getComponent<CgEngine::CameraComponent>();
+            auto humanCamera = findEntityById("humanCam").getComponent<CgEngine::CameraComponent>();
 
             if (flyCam) {
-                flyCamera.setPrimary(true);
-                humanCamera.setPrimary(false);
+                flyCamera->setPrimary(true);
+                humanCamera->setPrimary(false);
             } else {
-                flyCamera.setPrimary(false);
-                humanCamera.setPrimary(true);
+                flyCamera->setPrimary(false);
+                humanCamera->setPrimary(true);
             }
         }
     }

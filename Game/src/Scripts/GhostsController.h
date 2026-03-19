@@ -35,7 +35,7 @@ namespace Game {
         void notifyGhostHitByProjectile(CgEngine::Entity ghostEntity);
 
     protected:
-        void onAttach() override;
+        void onEnable() override;
         void update(CgEngine::TimeStep ts) override;
 
         void fixedUpdate(CgEngine::TimeStep ts) override;

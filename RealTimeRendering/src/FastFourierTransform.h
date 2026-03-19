@@ -22,9 +22,8 @@ namespace RTR {
 
         struct PCFft {
             int step;
-            bool pingPong;
+            uint32_t pingPong;
         };
-        CgEngine::PushConstants* pushConstants = nullptr;
 
         std::unordered_map<CgEngine::Attachment*, std::unique_ptr<CgEngine::DescriptorSet>> fftDescriptorSets{};
         std::unordered_map<CgEngine::Attachment*, std::unique_ptr<CgEngine::DescriptorSet>> permuteDescriptorSets{};

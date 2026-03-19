@@ -7,7 +7,7 @@
 #include "CgEngine/Components/AnimatedMeshRendererComponent.h"
 
 namespace Game {
-    void GhostsController::onAttach() {
+    void GhostsController::onEnable() {
         /*
          * 28--32--------------29--33
          * |    |               |   |

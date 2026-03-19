@@ -10,17 +10,13 @@ class FPSCounter : public CgEngine::NativeScript {
             return std::make_shared<FPSCounter>();
         }
 
-
-    public:
-        void onAttach() override;
+        void onEnable() override;
         void update(CgEngine::TimeStep ts) override;
 
     private:
         CgEngine::UiText* fps = nullptr;
         std::array<float, 60> frameTimes;
         uint32_t currentIndex = 0;
-
-        void createUI();
 };
 
 }

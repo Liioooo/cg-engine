@@ -1,10 +1,12 @@
 #include "FlyingCameraScript.h"
 #include "CgEngine/Events/Input.h"
 #include "CgEngine/Events/KeyCodes.h"
+#include "CgEngine/Components/AnimationComponent.h"
+#include "CgEngine/Components/TransformComponent.h"
 
 namespace RTR {
     void FlyingCameraScript::update(CgEngine::TimeStep ts) {
-        if (!getComponent<CgEngine::CameraComponent>().isPrimary()) {
+        if (!getOwingEntity().getComponent<CgEngine::CameraComponent>()->isPrimary()) {
             return;
         }
 
@@ -19,8 +21,8 @@ namespace RTR {
 
         prevMousePos = mousePos;
 
-        auto& comp = getComponent<CgEngine::TransformComponent>();
-        glm::vec3 pos = comp.getLocalPosition();
+        auto comp = getOwingEntity().getComponent<CgEngine::TransformComponent>();
+        glm::vec3 pos = comp->getLocalPosition();
 
         if (CgEngine::Input::getCursorMode() == CgEngine::CursorMode::Locked) {
             pitch = glm::clamp(pitch + mouseDeltaY, glm::radians(-80.0f), glm::radians(80.0f));
@@ -55,22 +57,22 @@ namespace RTR {
             pos += glm::normalize(glm::vec3(0, 1, 0)) * factor * ts.getSeconds();
         }
 
-        comp.setLocalPosition(pos);
-        comp.setYawPitchRoll(yaw, pitch, 0);
+        comp->setLocalPosition(pos);
+        comp->setYawPitchRoll(yaw, pitch, 0);
     }
 
     void FlyingCameraScript::onKeyPressed(CgEngine::KeyPressedEvent& event) {
-        if (!getComponent<CgEngine::CameraComponent>().isPrimary()) {
+        if (!getOwingEntity().getComponent<CgEngine::CameraComponent>()->isPrimary()) {
             return;
         }
 
         if (event.getKeyCode() == CgEngine::KeyCode::F12) {
-            // getComponent<CgEngine::AnimationComponent>().setAnimationPlaying(manualControl);
+            getOwingEntity().getComponent<CgEngine::AnimationComponent>()->setAnimationPlaying(manualControl);
             manualControl = !manualControl;
             if (!manualControl) {
                 return;
             }
-            auto rot = getComponent<CgEngine::TransformComponent>().getLocalRotationVec();
+            auto rot =  getOwingEntity().getComponent<CgEngine::TransformComponent>()->getLocalRotationVec();
             yaw = rot.y;
             pitch = rot.x;
             if (glm::abs(glm::fmod(rot.z + glm::two_pi<float>(), glm::two_pi<float>()) - glm::pi<float>()) < 0.01) {

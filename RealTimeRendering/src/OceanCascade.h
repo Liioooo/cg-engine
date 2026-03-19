@@ -3,7 +3,6 @@
 #include <Rendering/Attachment.h>
 #include <Rendering/Texture2D.h>
 #include <Rendering/CustomPipeline.h>
-#include <Rendering/PushConstants.h>
 #include <Resources/ResRef.h>
 #include <Resources/ResourceManager.h>
 #include "FastFourierTransform.h"
@@ -50,14 +49,12 @@ namespace RTR {
             float time;
         };
         CgEngine::DescriptorSet* timeSpectrumDescriptorSet = nullptr;
-        CgEngine::PushConstants* timeSpectrumPushConstants = nullptr;
 
         struct FinalTexturesPC {
             float deltaTime;
             float lambda;
         };
         CgEngine::DescriptorSet* finalTexturesDescriptorSet = nullptr;
-        CgEngine::PushConstants* finalTexturesPushConstants = nullptr;
 
     public:
         OceanParams oceanParams;

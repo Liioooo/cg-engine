@@ -9,12 +9,6 @@ namespace RTR {
         permuteShader = resourceManager.getResource<CgEngine::CustomComputePipeline>("ocean/fft/permute");
         horizontalStepInverseFftShader = resourceManager.getResource<CgEngine::CustomComputePipeline>("ocean/fft/horizontalStepInverseFft");
         verticalStepInverseFftShader = resourceManager.getResource<CgEngine::CustomComputePipeline>("ocean/fft/verticalStepInverseFft");
-
-        pushConstants = CgEngine::GraphicsObjectsFactory::createPushConstants("pc_fft");
-        pushConstants->init<PCFft>();
-        pushConstants->mapUniform(&PCFft::step, "step");
-        pushConstants->mapUniform(&PCFft::pingPong, "pingPong");
-
     }
 
     FastFourierTransform::~FastFourierTransform() {
@@ -51,20 +45,13 @@ namespace RTR {
             PushConstantData pcData{};
             pcData.size = input->getWidth();
 
-
-            auto* pc = CgEngine::GraphicsObjectsFactory::createPushConstants("pc_precompute");
-            pc->init<PushConstantData>();
-            pc->mapUniform(&PushConstantData::size, "size");
-            pc->setData(&pcData, sizeof(int));
-
             CgEngine::Renderer::bindComputePipeline(precomputeTwiddleFactorsAndInputIndicesShader->getComputePipeline());
             CgEngine::Renderer::bindDescriptorSet(descSet, 0);
-            CgEngine::Renderer::setPushConstants({pc}, 1);
+            CgEngine::Renderer::setPushConstants(&pcData, sizeof(int));
             CgEngine::Renderer::dispatchCompute(logSize, static_cast<int>(input->getHeight() / 2.0 / 8.0), 1);
             CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(twiddleFactors);
 
             delete descSet;
-            delete pc;
         }
         if (buffer == nullptr || buffer->getWidth() != input->getWidth()) {
             delete buffer;
@@ -101,10 +88,9 @@ namespace RTR {
             pingPong = !pingPong;
 
             pcData.step = i;
-            pcData.pingPong = pingPong;
-            pushConstants->setData(&pcData, sizeof(PCFft));
+            pcData.pingPong = pingPong ? 1 : 0;
 
-            CgEngine::Renderer::setPushConstants({pushConstants}, 1);
+            CgEngine::Renderer::setPushConstants(&pcData, sizeof(PCFft));
             CgEngine::Renderer::dispatchCompute(input->getWidth() / 8, input->getHeight() / 8, 1);
             CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(input);
             CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(buffer);
@@ -117,10 +103,9 @@ namespace RTR {
             pingPong = !pingPong;
 
             pcData.step = i;
-            pcData.pingPong = pingPong;
-            pushConstants->setData(&pcData, sizeof(PCFft));
+            pcData.pingPong = pingPong ? 1 : 0;
 
-            CgEngine::Renderer::setPushConstants({pushConstants}, 1);
+            CgEngine::Renderer::setPushConstants(&pcData, sizeof(PCFft));
             CgEngine::Renderer::dispatchCompute(input->getWidth() / 8, input->getHeight() / 8, 1);
             CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(input);
             CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(buffer);

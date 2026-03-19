@@ -7,7 +7,7 @@
 
 namespace RTR {
 
-    void GrassScript::onAttach() {
+    void GrassScript::onEnable() {
         createOffsetsBuffer();
 
         geometryHigh = createGeometry(GRASS_SEGMENTS_HIGH);

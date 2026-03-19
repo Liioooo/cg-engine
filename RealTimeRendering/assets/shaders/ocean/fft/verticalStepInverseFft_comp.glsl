@@ -11,8 +11,8 @@ layout(rg32f, binding = 1) uniform restrict image2D u_buffer0;
 layout(rg32f, binding = 2) uniform restrict image2D u_buffer1;
 
 PUSH_CONSTANT(PCFFT) {
-    bool pingPong;
     int step;
+    bool pingPong;
 } pc_fft;
 
 vec2 ComplexMult(vec2 a, vec2 b) {

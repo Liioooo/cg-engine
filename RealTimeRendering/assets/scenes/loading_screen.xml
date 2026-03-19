@@ -8,16 +8,7 @@
     <Entity id="canvas">
         <Components>
             <ScriptComponent script-name="loadingScreen" />
-            <UiCanvasComponent2D>
-                <UiRect id="background" left="0" top="0" width="100vw" height="100vh" y-align="top" x-align="left" z-index="0" texture="loading_screen.png" />
-                <UiText id="text0" left="50vw" top="15vh" y-align="center" x-align="center" font="SpaceMono-Bold.ttf" size="8vh" text="RTR24-Island" color="0 0 0 1" z-index="1" />
-                <UiText id="text1" left="50vw" top="25vh" y-align="center" x-align="center" font="SpaceMono-Bold.ttf" size="8vh" text="Loading..." color="0 0 0 1" z-index="1" />
-
-                <UiText id="f12" right="280" bottom="10" y-align="bottom" x-align="left" font="SpaceMono-Bold.ttf" size="16" text="F12: Toggle Animation/FlyCam" color="0 0 0 1" z-index="1" />
-                <UiText id="f11" right="280" bottom="30" y-align="bottom" x-align="left" font="SpaceMono-Bold.ttf" size="16" text="F11: Show Debug Menu" color="0 0 0 1" z-index="1" />
-                <UiText id="f10" right="280" bottom="50" y-align="bottom" x-align="left" font="SpaceMono-Bold.ttf" size="16" text="F10: Switch to Player" color="0 0 0 1" z-index="1" />
-                <UiText id="esc" right="280" bottom="70" y-align="bottom" x-align="left" font="SpaceMono-Bold.ttf" size="16" text="ESC: Unlock Mouse" color="0 0 0 1" z-index="1" />
-            </UiCanvasComponent2D>
+            <UiCanvasComponent2D canvas="startScreenCanvas" width="100vw" height="100vh" pos-x="50vw" pos-y="50vh" x-align="center" y-align="center" />
         </Components>
     </Entity>
 </Scene>

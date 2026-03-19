@@ -24,7 +24,7 @@ namespace RTR {
             return std::make_shared<GrassScript>();
         }
 
-        void onAttach() override;
+        void onEnable() override;
         void onDetach() override;
         void update(CgEngine::TimeStep ts) override;
 
