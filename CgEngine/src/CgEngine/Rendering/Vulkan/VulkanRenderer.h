@@ -2,6 +2,7 @@
 
 #include "Rendering/RendererBackendBase.h"
 #include <vulkan/vulkan.hpp>
+#include "VulkanDescriptorAllocator.h"
 
 namespace CgEngine {
 
@@ -71,11 +72,13 @@ namespace CgEngine {
 
         GraphicsAPI getGraphicsAPI() const override { return GraphicsAPI::Vulkan; }
 
+        const uint32_t getMaxFramesInFlight() const;
         vk::PhysicalDevice getVkPhysicalDevice() const;
         vk::Device getVkDevice() const;
 
     private:
         static inline bool ENABLE_VALIDATION_LAYERS = false;
+        static inline const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
         static inline const std::array<const char*, 1> validationLayers = { "VK_LAYER_KHRONOS_validation" };
         static inline const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
@@ -99,10 +102,21 @@ namespace CgEngine {
         static inline vk::Format vkSwapChainImageFormat;
         static inline vk::Extent2D vkSwapChainExtent;
 
+        static inline vk::CommandPool vkGraphicsComputeCommandPool;
+        static inline vk::CommandPool vkTransientCommandPool;
+        static inline std::vector<vk::CommandBuffer> vkGraphicsComputeCommandBuffers;
+
+        static inline std::vector<vk::Semaphore> vkImageAvailableSemaphores;
+        static inline std::vector<vk::Semaphore> vkRenderFinishedSemaphores;
+        static inline std::vector<vk::Fence> vkInFlightFences;
+
+        static inline VulkanDescriptorAllocator descriptorAllocator;
+
         bool checkValidationLayerSupport();
         void populateDebugMessengerCreateInfo(vk::DebugUtilsMessengerCreateInfoEXT& createInfo);
         void setupDebugMessenger();
         void pickPhysicalDevice();
+        void printDeviceInfo();
         uint32_t rateDeviceSuitability(vk::PhysicalDevice dev, vk::SurfaceKHR surf);
         VulkanQueueFamilyIndices findQueueFamilies(vk::PhysicalDevice device);
         bool checkDeviceExtensionSupport(vk::PhysicalDevice device);
@@ -113,6 +127,9 @@ namespace CgEngine {
         vk::PresentModeKHR chooseSwapPresentMode(const std::vector<vk::PresentModeKHR>& availablePresentModes, const Window& window);
         vk::Extent2D chooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities, const Window& window);
         void createSwapChainImageViews();
+        void createCommandPools();
+        void createGraphicsComputeCommandBuffers();
+        void createSyncObjects();
 
         static VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT messageSeverity, vk::DebugUtilsMessageTypeFlagsEXT messageType,const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData,void* pUserData);
     };

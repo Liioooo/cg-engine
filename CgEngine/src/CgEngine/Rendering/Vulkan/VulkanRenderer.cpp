@@ -44,7 +44,7 @@ namespace CgEngine {
             CG_LOGGING_ERROR("VulkanRenderer: Failed to create Vulkan instance!")
         }
         vkInstance = instanceResult.value;
-        vkDispatchLoaderDynamic.init(static_cast<VkInstance>(vkInstance), vkGetInstanceProcAddr);
+        vkDispatchLoaderDynamic.init(vkInstance, vkGetInstanceProcAddr);
 
         setupDebugMessenger();
 
@@ -55,13 +55,18 @@ namespace CgEngine {
         vkSurface = vk::SurfaceKHR(cSurface);
 
         pickPhysicalDevice();
+        printDeviceInfo();
         createLogicalDevice();
         createSwapChain(window, VK_NULL_HANDLE);
         createSwapChainImageViews();
+        createCommandPools();
+        createGraphicsComputeCommandBuffers();
+        createSyncObjects();
+        descriptorAllocator.init(vkDevice);
     }
 
     void VulkanRenderer::shutdown() {
-
+        descriptorAllocator.shutdown();
     }
 
     void VulkanRenderer::setFramebufferResized() {
@@ -192,6 +197,10 @@ namespace CgEngine {
 
     }
 
+    const uint32_t VulkanRenderer::getMaxFramesInFlight() const {
+        return MAX_FRAMES_IN_FLIGHT;
+    }
+
     vk::PhysicalDevice VulkanRenderer::getVkPhysicalDevice() const {
         return vkPhysicalDevice;
     }
@@ -269,6 +278,38 @@ namespace CgEngine {
         } else {
             CG_LOGGING_ERROR("VulkanRenderer: Failed to find suitable GPU!")
         }
+    }
+
+    void VulkanRenderer::printDeviceInfo() {
+        vk::PhysicalDeviceProperties props = vkPhysicalDevice.getProperties();
+
+        std::string vendorName;
+        switch (props.vendorID) {
+            case 0x10DE: vendorName = "NVIDIA"; break;
+            case 0x1002: vendorName = "AMD"; break;
+            case 0x8086: vendorName = "Intel"; break;
+            case 0x13B5: vendorName = "ARM"; break;
+            case 0x5143: vendorName = "Qualcomm"; break;
+            default:     vendorName = "Unknown"; break;
+        }
+
+        CG_LOGGING_INFO("RENDERER: API: Vulkan");
+        CG_LOGGING_INFO("RENDERER: Vendor ID: {0}", props.vendorID);
+        CG_LOGGING_INFO("RENDERER: Vendor: {0}", vendorName);
+        CG_LOGGING_INFO("RENDERER: Name: {0}", std::string(props.deviceName));
+        CG_LOGGING_INFO("RENDERER: Device ID: {0}", props.deviceID);
+
+        uint32_t major = VK_VERSION_MAJOR(props.apiVersion);
+        uint32_t minor = VK_VERSION_MINOR(props.apiVersion);
+        uint32_t patch = VK_VERSION_PATCH(props.apiVersion);
+
+        CG_LOGGING_INFO("RENDERER: API Version: {0}.{1}.{2}", major, minor, patch);
+
+        auto limits = props.limits;
+
+        CG_LOGGING_INFO("Max UBO size: {0}", limits.maxUniformBufferRange);
+        CG_LOGGING_INFO("Max SSBO size: {0}", limits.maxStorageBufferRange);
+        CG_LOGGING_INFO("Max bound descriptor sets: {0}", limits.maxBoundDescriptorSets);
     }
 
     uint32_t VulkanRenderer::rateDeviceSuitability(vk::PhysicalDevice dev, vk::SurfaceKHR surf) {
@@ -462,26 +503,82 @@ namespace CgEngine {
     vk::Extent2D VulkanRenderer::chooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities, const Window& window) {
         if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
             return capabilities.currentExtent;
-        } else {
-            int width = window.getFramebufferWidth();
-            int height = window.getFramebufferHeight();
-
-            vk::Extent2D actualExtent = {
-                    static_cast<uint32_t>(width),
-                    static_cast<uint32_t>(height)
-            };
-
-            actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
-            actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
-
-            return actualExtent;
         }
+
+        int width = window.getFramebufferWidth();
+        int height = window.getFramebufferHeight();
+
+        vk::Extent2D actualExtent = {
+            static_cast<uint32_t>(width),
+            static_cast<uint32_t>(height)
+        };
+
+        actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+        actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+
+        return actualExtent;
     }
 
     void VulkanRenderer::createSwapChainImageViews() {
         vkSwapChainImageViews.resize(vkSwapChainImages.size());
         for (size_t i = 0; i < vkSwapChainImages.size(); i++) {
             vkSwapChainImageViews[i] = VulkanHelpers::createImageView2D(vkSwapChainImages[i], vkSwapChainImageFormat, 1, 1, vk::ImageAspectFlagBits::eColor);
+        }
+    }
+
+    void VulkanRenderer::createCommandPools() {
+        vk::CommandPoolCreateInfo graphicsComputePoolInfo{};
+        graphicsComputePoolInfo.setQueueFamilyIndex(vkQueueIndices.graphicsComputeFamily);
+        graphicsComputePoolInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
+
+        auto graphicsComputePool = vkDevice.createCommandPool(graphicsComputePoolInfo);
+        if (!graphicsComputePool.has_value()) {
+            CG_LOGGING_ERROR("VulkanRenderer: Failed to create graphics/compute command pool!")
+        }
+        vkGraphicsComputeCommandPool = graphicsComputePool.value;
+
+        vk::CommandPoolCreateInfo transientPoolInfo{};
+        transientPoolInfo.setQueueFamilyIndex(vkQueueIndices.graphicsComputeFamily);
+        transientPoolInfo.setFlags(vk::CommandPoolCreateFlagBits::eTransient);
+
+        auto transientPool = vkDevice.createCommandPool(transientPoolInfo);
+        if (!transientPool.has_value()) {
+            CG_LOGGING_ERROR("VulkanRenderer: Failed to create graphics/compute command pool!")
+        }
+        vkTransientCommandPool = transientPool.value;
+    }
+
+    void VulkanRenderer::createGraphicsComputeCommandBuffers() {
+        vk::CommandBufferAllocateInfo commandBufferAllocateInfo{};
+        commandBufferAllocateInfo.setCommandPool(vkGraphicsComputeCommandPool);
+        commandBufferAllocateInfo.setLevel(vk::CommandBufferLevel::ePrimary);
+        commandBufferAllocateInfo.setCommandBufferCount(MAX_FRAMES_IN_FLIGHT);
+
+        auto commandBuffersResult = vkDevice.allocateCommandBuffers(commandBufferAllocateInfo);
+        if (!commandBuffersResult.has_value()) {
+            CG_LOGGING_ERROR("VulkanRenderer: Failed to allocate graphics/compute command buffers!")
+        }
+        vkGraphicsComputeCommandBuffers = std::move(commandBuffersResult.value);
+    }
+
+    void VulkanRenderer::createSyncObjects() {
+        vk::SemaphoreCreateInfo semaphoreCreateInfo{};
+
+        vk::FenceCreateInfo fenceCreateInfo{};
+        fenceCreateInfo.setFlags(vk::FenceCreateFlagBits::eSignaled);
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            auto imageAvailableSemaphoreResult = vkDevice.createSemaphore(semaphoreCreateInfo);
+            auto renderFinishedSemaphoreResult = vkDevice.createSemaphore(semaphoreCreateInfo);
+            auto inFlightFenceResult = vkDevice.createFence(fenceCreateInfo);
+
+            if (!imageAvailableSemaphoreResult.has_value() || !renderFinishedSemaphoreResult.has_value() || !inFlightFenceResult.has_value()) {
+                CG_LOGGING_ERROR("VulkanRenderer: Failed to create synchronization objects for a frame!")
+            }
+
+            vkImageAvailableSemaphores.push_back(imageAvailableSemaphoreResult.value);
+            vkRenderFinishedSemaphores.push_back(renderFinishedSemaphoreResult.value);
+            vkInFlightFences.push_back(inFlightFenceResult.value);
         }
     }
 

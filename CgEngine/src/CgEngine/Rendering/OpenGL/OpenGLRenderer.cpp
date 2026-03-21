@@ -25,6 +25,7 @@ namespace CgEngine {
         const char* rendererVendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
         const char* rendererVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
 
+        CG_LOGGING_INFO("RENDERER: API: OpenGL")
         CG_LOGGING_INFO("RENDERER: Vendor: {0}", rendererVendor)
         CG_LOGGING_INFO("RENDERER: Name: {0}", rendererName)
         CG_LOGGING_INFO("RENDERER: Version: {0}", rendererVersion)

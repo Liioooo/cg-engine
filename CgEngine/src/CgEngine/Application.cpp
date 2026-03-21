@@ -12,9 +12,9 @@
 
 namespace CgEngine {
     Application::Application(const std::string &settingsIni) : iniReader(settingsIni) {
-        CgEngine::Logging::init();
+        Logging::init();
         CG_LOGGING_INFO("Starting Application");
-        Application::instance = this;
+        instance = this;
     }
 
     Application::~Application() {
@@ -28,7 +28,7 @@ namespace CgEngine {
     }
 
     Application &Application::get() {
-        return *Application::instance;
+        return *instance;
     }
 
     void Application::init() {
