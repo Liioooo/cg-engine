@@ -28,7 +28,26 @@ namespace CgEngine {
         virtual uint32_t getWidth() const = 0;
         virtual uint32_t getHeight() const = 0;
         virtual TextureFormat getFormat() const = 0;
-        virtual void bufferSubData(int x, int y, int w, int h, const void* data, int alignment) = 0;
+    };
+
+    class Texture2DBuilder {
+    public:
+        Texture2DBuilder(TextureFormat format, uint32_t width, uint32_t height);
+
+        void setPixel(int x, int y, const void* data);
+        void setSubRegion(int x, int y, int w, int h, const void* data);
+        void setSubRegionWithPitch(int x, int y, int w, int h, const void* data, int srcPitchBytes);
+
+        Texture2D* build(TextureWrap wrap, MipMapFiltering mipMapFiltering) const;
+
+    private:
+        TextureFormat format;
+        uint32_t width;
+        uint32_t height;
+
+        std::vector<unsigned char> pixels;
+
+        uint32_t getBytesPerPixel(TextureFormat format) const;
     };
 
 }

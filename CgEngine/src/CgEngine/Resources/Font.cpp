@@ -36,7 +36,7 @@ namespace CgEngine {
             atlasHeight = glm::max(atlasHeight, glyphSlot->bitmap.rows);
         }
 
-        fontAtlas = GraphicsObjectsFactory::createTexture2D(TextureFormat::R, atlasWidth, atlasHeight, TextureWrap::Clamp, MipMapFiltering::Bilinear);
+        Texture2DBuilder fontAtlasBuilder(TextureFormat::R, atlasWidth, atlasHeight);
 
         int currentAtlasOffset = 0;
 
@@ -54,10 +54,11 @@ namespace CgEngine {
             fontCharacterInfos[i].textureCoord = static_cast<float>(currentAtlasOffset) / static_cast<float>(atlasWidth);
             fontCharacterInfos[i].glyphIndex = FT_Get_Char_Index(ftFace, i);
 
-            fontAtlas->bufferSubData(currentAtlasOffset, 0, glyphSlot->bitmap.width, glyphSlot->bitmap.rows, glyphSlot->bitmap.buffer, 1);
-
+            fontAtlasBuilder.setSubRegionWithPitch(currentAtlasOffset, 0, glyphSlot->bitmap.width, glyphSlot->bitmap.rows, glyphSlot->bitmap.buffer, glyphSlot->bitmap.pitch);
             currentAtlasOffset += static_cast<int>(glyphSlot->bitmap.width) + 2;
         }
+
+        fontAtlas = fontAtlasBuilder.build(TextureWrap::Clamp, MipMapFiltering::Bilinear);
     }
 
     Font::~Font() {

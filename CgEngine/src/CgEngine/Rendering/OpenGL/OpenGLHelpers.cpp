@@ -99,36 +99,37 @@ namespace CgEngine {
         int getOpenGLTextureInternalFormat(TextureFormat format) {
             switch (format) {
                 case TextureFormat::R:               return GL_RED;
+                case TextureFormat::RG:              return GL_RG;
+                case TextureFormat::RGBA:            return GL_RGBA;
+                case TextureFormat::RGBA_SRGB:       return GL_SRGB_ALPHA;
                 case TextureFormat::RedFloat16:      return GL_R16F;
                 case TextureFormat::RedFloat32:      return GL_R32F;
                 case TextureFormat::RedGreenFloat16: return GL_RG16F;
                 case TextureFormat::RedGreenFloat32: return GL_RG32F;
-                case TextureFormat::RGB:             return GL_RGB;
-                case TextureFormat::RGBA:            return GL_RGBA;
                 case TextureFormat::Float16A:        return GL_RGBA16F;
                 case TextureFormat::Float32A:        return GL_RGBA32F;
-                case TextureFormat::Float16:         return GL_RGB16F;
-                case TextureFormat::Float32:         return GL_RGB32F;
             }
             return 0;
         }
 
         int getOpenGLTextureType(TextureFormat format) {
-            if (format == TextureFormat::RGB || format == TextureFormat::RGBA || format == TextureFormat::R) {
+            if (format == TextureFormat::R || format == TextureFormat::RG || format == TextureFormat::RGBA || format == TextureFormat::RGBA_SRGB) {
                 return GL_UNSIGNED_BYTE;
             }
             return GL_FLOAT;
         }
 
         int getOpenGLTextureFormat(TextureFormat format) {
-            if (format == TextureFormat::RGBA || format == TextureFormat::Float16A || format == TextureFormat::Float32A) {
+            if (format == TextureFormat::RGBA || format == TextureFormat::RGBA_SRGB || format == TextureFormat::Float16A || format == TextureFormat::Float32A) {
                 return GL_RGBA;
-            } else if (format == TextureFormat::R || format == TextureFormat::RedFloat16 || format == TextureFormat::RedFloat32) {
+            }
+            if (format == TextureFormat::R || format == TextureFormat::RedFloat16 || format == TextureFormat::RedFloat32) {
                 return GL_RED;
-            } else if (format == TextureFormat::RedGreenFloat16 || format == TextureFormat::RedGreenFloat32) {
+            }
+            if (format == TextureFormat::RG || format == TextureFormat::RedGreenFloat16 || format == TextureFormat::RedGreenFloat32) {
                 return GL_RG;
             }
-            return GL_RGB;
+            return GL_RGBA;
         }
 
         int getOpenGLWrapMode(TextureWrap wrap) {
@@ -222,10 +223,10 @@ namespace CgEngine {
         }
 
         int getOpenGLTextureFormatForImageBind(TextureFormat format) {
-            if (format == TextureFormat::Float32 || format == TextureFormat::Float32A) {
+            if (format == TextureFormat::Float32A) {
                 return GL_RGBA32F;
             }
-            if (format == TextureFormat::Float16 || format == TextureFormat::Float16A) {
+            if (format == TextureFormat::Float16A) {
                 return GL_RGBA16F;
             }
             if (format == TextureFormat::RedFloat16) {
@@ -242,6 +243,9 @@ namespace CgEngine {
             }
             if (format == TextureFormat::R) {
                 return GL_R8;
+            }
+            if (format == TextureFormat::RG) {
+                return GL_RG8;
             }
             return GL_RGBA8;
         }
@@ -300,23 +304,23 @@ namespace CgEngine {
             bool error = false;
 
             if (!vertexSource.empty()) {
-                error |= OpenGLHelpers::createShaderType(GL_VERTEX_SHADER, "VERTEX", vertexSource, handle);
+                error |= createShaderType(GL_VERTEX_SHADER, "VERTEX", vertexSource, handle);
             }
             if (!fragmentSource.empty()) {
-                error |= OpenGLHelpers::createShaderType(GL_FRAGMENT_SHADER, "FRAGMENT", fragmentSource, handle);
+                error |= createShaderType(GL_FRAGMENT_SHADER, "FRAGMENT", fragmentSource, handle);
             }
             if (!geometrySource.empty()) {
-                error |= OpenGLHelpers::createShaderType(GL_GEOMETRY_SHADER, "GEOMETRY", geometrySource, handle);
+                error |= createShaderType(GL_GEOMETRY_SHADER, "GEOMETRY", geometrySource, handle);
             }
             if (!tcsSource.empty()) {
-                error |= OpenGLHelpers::createShaderType(GL_TESS_CONTROL_SHADER, "TCS", tcsSource, handle);
+                error |= createShaderType(GL_TESS_CONTROL_SHADER, "TCS", tcsSource, handle);
             }
             if (!tesSource.empty()) {
-                error |= OpenGLHelpers::createShaderType(GL_TESS_EVALUATION_SHADER, "TES", tesSource, handle);
+                error |= createShaderType(GL_TESS_EVALUATION_SHADER, "TES", tesSource, handle);
             }
 
             glLinkProgram(handle);
-            error |= OpenGLHelpers::checkShaderErrors(handle, "PROGRAM");
+            error |= checkShaderErrors(handle, "PROGRAM");
 
             if (error) {
                 glDeleteProgram(handle);

@@ -66,7 +66,7 @@ namespace CgEngine {
     };
 
     enum class TextureFormat {
-        R, RedFloat16, RedFloat32, RedGreenFloat16, RedGreenFloat32, RGB, RGBA, Float16A, Float32A, Float16, Float32
+        R, RG, RGBA, RGBA_SRGB, RedFloat16, RedFloat32, RedGreenFloat16, RedGreenFloat32, Float16A, Float32A
     };
 
     enum class AttachmentType {

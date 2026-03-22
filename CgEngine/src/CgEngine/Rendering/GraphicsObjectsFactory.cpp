@@ -83,24 +83,6 @@ namespace CgEngine {
         }
     }
 
-    Texture2D* GraphicsObjectsFactory::createTexture2D() {
-        switch (api) {
-            case GraphicsAPI::Vulkan:
-                return nullptr;
-            case GraphicsAPI::OpenGL:
-                return new OpenGLTexture2D();
-        }
-    }
-
-    Texture2D* GraphicsObjectsFactory::createTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, MipMapFiltering mipMapFiltering) {
-        switch (api) {
-            case GraphicsAPI::Vulkan:
-                return nullptr;
-            case GraphicsAPI::OpenGL:
-                return new OpenGLTexture2D(format, width, height, wrap, mipMapFiltering);
-        }
-    }
-
     Texture2D* GraphicsObjectsFactory::createTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, const void* data, MipMapFiltering mipMapFiltering) {
         switch (api) {
             case GraphicsAPI::Vulkan:

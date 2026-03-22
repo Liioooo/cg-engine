@@ -24,7 +24,6 @@ namespace CgEngine {
         using ConstIterator = typename std::vector<C>::const_iterator;
         using Iterator = typename std::vector<C>::iterator;
 
-    public:
         void attachComponent(Entity entity, Scene& scene, typename C::Params& componentParams) {
             CG_ASSERT(entityToComponentsIndex.find(entity) == entityToComponentsIndex.end(), "Component added to same entity more than once.")
             CG_ASSERT(componentsPendingAdd.find(entity) == componentsPendingAdd.end(), "Component added to same entity more than once.")
@@ -125,10 +124,17 @@ namespace CgEngine {
         }
 
         void callOnEnableForAddedComponents(Scene& scene) override {
-            for (auto& [entity, _] : componentsPendingAdd) {
-                components[entityToComponentsIndex[entity]].onEnable(scene);
+            for (auto it = componentsPendingAdd.begin(); it != componentsPendingAdd.end(); ) {
+                Entity entity = it->first;
+
+                auto found = entityToComponentsIndex.find(entity);
+                if (found != entityToComponentsIndex.end()) {
+                    components[found->second].onEnable(scene);
+                    it = componentsPendingAdd.erase(it);
+                } else {
+                    ++it;
+                }
             }
-            componentsPendingAdd.clear();
         }
 
     private:
