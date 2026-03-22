@@ -2,7 +2,9 @@
 
 #include "Rendering/RendererBackendBase.h"
 #include <vulkan/vulkan.hpp>
+#include "vk_mem_alloc.h"
 #include "VulkanDescriptorAllocator.h"
+#include "VulkanVertexArrayObject.h"
 
 namespace CgEngine {
 
@@ -70,47 +72,59 @@ namespace CgEngine {
         void beginImGuiFrame() override;
         void renderImGuiFrame() override;
 
+        vk::CommandBuffer beginSingleTimeCommandBuffer();
+        void endAndSubmitSingleTimeCommandBuffer(vk::CommandBuffer commandBuffer);
+
         GraphicsAPI getGraphicsAPI() const override { return GraphicsAPI::Vulkan; }
 
         const uint32_t getMaxFramesInFlight() const;
+        const uint32_t getCurrentFrameIndex() const;
         vk::PhysicalDevice getVkPhysicalDevice() const;
         vk::Device getVkDevice() const;
+        VmaAllocator getVmaAllocator() const;
 
     private:
-        static inline bool ENABLE_VALIDATION_LAYERS = false;
-        static inline const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
+        bool ENABLE_VALIDATION_LAYERS = false;
+        const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
-        static inline const std::array<const char*, 1> validationLayers = { "VK_LAYER_KHRONOS_validation" };
-        static inline const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+        const std::array<const char*, 1> validationLayers = { "VK_LAYER_KHRONOS_validation" };
+        const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
-        static inline vk::Instance vkInstance;
-        static inline vk::detail::DispatchLoaderDynamic vkDispatchLoaderDynamic;
-        static inline vk::DebugUtilsMessengerEXT debugMessenger;
-        static inline vk::SurfaceKHR vkSurface;
-        static inline vk::PhysicalDevice vkPhysicalDevice;
-        static inline vk::Device vkDevice;
-        static inline vk::Queue vkGraphicsComputeQueue;
-        static inline vk::Queue vkPresentQueue;
-        static inline struct QueueIndices {
+        uint32_t currentFrameIndex = 0;
+
+        vk::Instance vkInstance;
+        vk::detail::DispatchLoaderDynamic vkDispatchLoaderDynamic;
+        vk::DebugUtilsMessengerEXT debugMessenger;
+        vk::SurfaceKHR vkSurface;
+        vk::PhysicalDevice vkPhysicalDevice;
+        vk::Device vkDevice;
+        vk::Queue vkGraphicsComputeQueue;
+        vk::Queue vkPresentQueue;
+        struct QueueIndices {
             uint32_t graphicsComputeFamily;
             uint32_t presentFamily;
         } vkQueueIndices;
 
-        static inline vk::SwapchainKHR vkSwapChain;
-        static inline std::vector<vk::Image> vkSwapChainImages;
-        static inline std::vector<vk::ImageView> vkSwapChainImageViews;
-        static inline vk::Format vkSwapChainImageFormat;
-        static inline vk::Extent2D vkSwapChainExtent;
+        vk::SwapchainKHR vkSwapChain;
+        std::vector<vk::Image> vkSwapChainImages;
+        std::vector<vk::ImageView> vkSwapChainImageViews;
+        vk::Format vkSwapChainImageFormat;
+        vk::Extent2D vkSwapChainExtent;
 
-        static inline vk::CommandPool vkGraphicsComputeCommandPool;
-        static inline vk::CommandPool vkTransientCommandPool;
-        static inline std::vector<vk::CommandBuffer> vkGraphicsComputeCommandBuffers;
+        vk::CommandPool vkGraphicsComputeCommandPool;
+        vk::CommandPool vkTransientCommandPool;
+        std::vector<vk::CommandBuffer> vkGraphicsComputeCommandBuffers;
 
-        static inline std::vector<vk::Semaphore> vkImageAvailableSemaphores;
-        static inline std::vector<vk::Semaphore> vkRenderFinishedSemaphores;
-        static inline std::vector<vk::Fence> vkInFlightFences;
+        std::vector<vk::Semaphore> vkImageAvailableSemaphores;
+        std::vector<vk::Semaphore> vkRenderFinishedSemaphores;
+        std::vector<vk::Fence> vkInFlightFences;
 
-        static inline VulkanDescriptorAllocator descriptorAllocator;
+        VulkanDescriptorAllocator descriptorAllocator;
+
+        VmaAllocator vmaAllocator;
+
+        VulkanVertexArrayObject quadVAO;
+        VulkanVertexArrayObject unitCubeVAO;
 
         bool checkValidationLayerSupport();
         void populateDebugMessengerCreateInfo(vk::DebugUtilsMessengerCreateInfoEXT& createInfo);
@@ -130,6 +144,7 @@ namespace CgEngine {
         void createCommandPools();
         void createGraphicsComputeCommandBuffers();
         void createSyncObjects();
+        void createVmaAllocator();
 
         static VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT messageSeverity, vk::DebugUtilsMessageTypeFlagsEXT messageType,const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData,void* pUserData);
     };

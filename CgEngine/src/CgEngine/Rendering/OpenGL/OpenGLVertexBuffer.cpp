@@ -4,9 +4,9 @@
 
 namespace CgEngine {
 
-    OpenGLVertexBuffer::OpenGLVertexBuffer(VertexBufferUsage usage) : usage(usage) {}
-
     OpenGLVertexBuffer::OpenGLVertexBuffer(size_t size, VertexBufferUsage usage) : usage(usage) {
+        CG_ASSERT(usage == VertexBufferUsage::Dynamic, "Static VertexBuffer must be created with data")
+
         glCreateBuffers(1, &vbo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, size, nullptr, getOpenGLUsage(usage));

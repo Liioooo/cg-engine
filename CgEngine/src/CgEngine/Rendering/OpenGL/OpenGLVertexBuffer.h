@@ -6,7 +6,6 @@ namespace CgEngine {
 
     class OpenGLVertexBuffer : public VertexBuffer {
     public:
-        OpenGLVertexBuffer(VertexBufferUsage usage);
         explicit OpenGLVertexBuffer(size_t size, VertexBufferUsage usage = VertexBufferUsage::Dynamic);
         OpenGLVertexBuffer(const void* data, size_t size, VertexBufferUsage usage = VertexBufferUsage::Static);
 

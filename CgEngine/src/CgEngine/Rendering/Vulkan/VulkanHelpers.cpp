@@ -1,4 +1,5 @@
 #include "VulkanHelpers.h"
+#include "VulkanRenderer.h"
 #include "Rendering/Renderer.h"
 
 namespace CgEngine {
@@ -24,6 +25,27 @@ namespace CgEngine {
             auto result = device.createImageView(createInfo);
             CG_ASSERT(result.has_value(), "VulkanHelpers::createImageView2D: Failed to create image view.")
             return result.value;
+        }
+
+        void copyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size) {
+            auto backend = Renderer::getVulkanBackend();
+
+            vk::CommandBuffer commandBuffer = backend->beginSingleTimeCommandBuffer();
+
+            vk::BufferCopy2 copyRegion{};
+            copyRegion.setSize(size);
+            copyRegion.setSrcOffset(0);
+            copyRegion.setDstOffset(0);
+
+            vk::CopyBufferInfo2 copyRegionInfo{};
+            copyRegionInfo.setSrcBuffer(srcBuffer);
+            copyRegionInfo.setDstBuffer(dstBuffer);
+            copyRegionInfo.setPRegions(&copyRegion);
+            copyRegionInfo.setRegionCount(1);
+
+            commandBuffer.copyBuffer2(&copyRegionInfo);
+
+            backend->endAndSubmitSingleTimeCommandBuffer(commandBuffer);
         }
     }
 }

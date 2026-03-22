@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Rendering/VertexBuffer.h"
+#include "Rendering/VertexArrayObject.h"
 
 namespace CgEngine {
 

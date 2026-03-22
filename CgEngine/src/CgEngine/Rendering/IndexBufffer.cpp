@@ -25,7 +25,7 @@ namespace CgEngine {
         return indexCount;
     }
 
-    size_t IndexBuffer::getSizeOfIndexBufferDataType(CgEngine::IndexBufferDataType type) const {
+    size_t IndexBuffer::getSizeOfIndexBufferDataType(IndexBufferDataType type) const {
         switch (type) {
             case IndexBufferDataType::UInt8:
                 return sizeof(uint8_t);

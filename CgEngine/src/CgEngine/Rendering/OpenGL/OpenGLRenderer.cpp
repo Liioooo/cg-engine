@@ -32,61 +32,21 @@ namespace CgEngine {
 
         initImGui(window);
 
-        struct QuadVertex {
-            glm::vec3 pos;
-            glm::vec2 uv;
-        };
-        QuadVertex quadVertexData[4];
-        quadVertexData[0].pos = {-1.0f, -1.0f, 0.0f};
-        quadVertexData[0].uv = {0.0f, 0.0f};
-
-        quadVertexData[1].pos = {1.0f, -1.0f, 0.0f};
-        quadVertexData[1].uv = {1.0f, 0.0f};
-
-        quadVertexData[2].pos = {1.0f, 1.0f, 0.0f};
-        quadVertexData[2].uv = {1.0f, 1.0f};
-
-        quadVertexData[3].pos = {-1.0f, 1.0f, 0.0f};
-        quadVertexData[3].uv = {0.0f, 1.0f};
+        auto unitQuadVertexData = getUnitQuadVerticesAndIndices();
 
         quadVAO = OpenGLVertexArrayObject();
-        auto* quadVertexBuffer = new OpenGLVertexBuffer(quadVertexData, 4 * sizeof(QuadVertex), VertexBufferUsage::Static);
-        quadVertexBuffer->setLayout({{ShaderDataType::Float3, true}, {ShaderDataType::Float2, true}});
+        auto* quadVertexBuffer = new OpenGLVertexBuffer(std::get<0>(unitQuadVertexData).data(), std::get<0>(unitQuadVertexData).size() * sizeof(QuadVertex), VertexBufferUsage::Static);
+        quadVertexBuffer->setLayout(std::get<2>(unitQuadVertexData));
         quadVAO.addVertexBuffer(quadVertexBuffer);
-        uint32_t quadIndices[6] = {0, 1, 2, 2, 3, 0 };
-        quadVAO.setIndexBuffer(new OpenGLIndexBuffer(quadIndices, 6, IndexBufferDataType::UInt32));
+        quadVAO.setIndexBuffer(new OpenGLIndexBuffer(std::get<1>(unitQuadVertexData).data(), std::get<1>(unitQuadVertexData).size(), IndexBufferDataType::UInt32));
 
-        float unitCubeVertices[] = {
-                -1.0f, 1.0f, 1.0f, // left_top_front_0
-                -1.0f, -1.0f, 1.0f, // left_bottom_front_1
-                1.0f, 1.0f, 1.0f, // right_top_front_2
-                1.0f, -1.0f, 1.0f, // right_bottom_front_3
-                1.0f, 1.0f, -1.0f, // right_top_back_4
-                1.0f, -1.0f, -1.0f, // right_bottom_back_5
-                -1.0f, 1.0f, -1.0f, // left_top_back_6
-                -1.0f, -1.0f, -1.0f, // left_bottom_back_7
-        };
-
-        uint32_t unitCubeIndices[] = {
-                7, 5, 4,
-                4, 6, 7,
-                3, 2, 4,
-                4, 5, 3,
-                1, 7, 0,
-                0, 7, 6,
-                0, 2, 3,
-                3, 1, 0,
-                6, 4, 0,
-                0, 4, 2,
-                1, 3, 7,
-                5, 7, 3
-        };
+        auto unitCubeVertexData = getUnitCubeVerticesAndIndices();
 
         unitCubeVAO = OpenGLVertexArrayObject();
-        auto* unitCubeVertexBuffer = new OpenGLVertexBuffer(unitCubeVertices, sizeof(unitCubeVertices));
-        unitCubeVertexBuffer->setLayout({{ShaderDataType::Float3, false}});
+        auto* unitCubeVertexBuffer = new OpenGLVertexBuffer(std::get<0>(unitCubeVertexData).data(), std::get<0>(unitCubeVertexData).size() * sizeof(float), VertexBufferUsage::Static);
+        unitCubeVertexBuffer->setLayout(std::get<2>(unitCubeVertexData));
         unitCubeVAO.addVertexBuffer(unitCubeVertexBuffer);
-        unitCubeVAO.setIndexBuffer(new OpenGLIndexBuffer(unitCubeIndices, 36));
+        unitCubeVAO.setIndexBuffer(new OpenGLIndexBuffer(std::get<1>(unitCubeVertexData).data(), std::get<1>(unitCubeVertexData).size()));
 
         isWireframe = false;
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -482,7 +442,7 @@ namespace CgEngine {
         glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
     }
 
-    void OpenGLRenderer::memoryBarrierForAttachmentAfterComputeToCompute(CgEngine::Attachment* attachment) {
+    void OpenGLRenderer::memoryBarrierForAttachmentAfterComputeToCompute(Attachment* attachment) {
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     }
 
@@ -512,7 +472,7 @@ namespace CgEngine {
         glDrawElementsInstancedBaseVertex(drawMode, indexCount, OpenGLHelpers::getOpenGLIndexType(glVao->getIndexBuffer()->getDataType()), (void*)(baseIndex * sizeof(uint32_t)), instanceCount, baseVertex);
     }
 
-    void OpenGLRenderer::executeDrawCommand(const CgEngine::VertexArrayObject* vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex) {
+    void OpenGLRenderer::executeDrawCommand(const VertexArrayObject* vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex) {
         CG_ASSERT(currentRenderPass != nullptr || currentlyDynamicRendering, "There is no active RenderPass or dynamic rendering!")
         CG_ASSERT(currentPipelineHandle != ~0, "There is no active GraphicsPipeline!")
 

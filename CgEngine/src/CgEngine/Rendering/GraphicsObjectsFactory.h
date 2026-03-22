@@ -39,7 +39,6 @@ namespace CgEngine {
         static RendererBackendBase* createRendererBackend();
         static IndexBuffer* createIndexBuffer();
         static IndexBuffer* createIndexBuffer(const void* indices, uint32_t indexCount, IndexBufferDataType type = IndexBufferDataType::UInt32);
-        static VertexBuffer* createVertexBuffer(VertexBufferUsage usage);
         static VertexBuffer* createVertexBuffer(size_t size, VertexBufferUsage usage = VertexBufferUsage::Dynamic);
         static VertexBuffer* createVertexBuffer(const void* data, size_t size, VertexBufferUsage usage = VertexBufferUsage::Static);
         static VertexArrayObject* createVertexArrayObject();

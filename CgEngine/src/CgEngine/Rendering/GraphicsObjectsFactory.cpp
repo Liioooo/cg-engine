@@ -19,6 +19,9 @@
 #include "Rendering/OpenGL/OpenGLGraphicsPipeline.h"
 #include "Rendering/OpenGL/OpenGLDynamicGraphicsPipeline.h"
 #include "Rendering/Vulkan/VulkanRenderer.h"
+#include "Rendering/Vulkan/VulkanVertexBuffer.h"
+#include "Rendering/Vulkan/VulkanIndexBuffer.h"
+#include "Rendering/Vulkan/VulkanVertexArrayObject.h"
 
 namespace CgEngine {
 
@@ -38,7 +41,7 @@ namespace CgEngine {
     IndexBuffer* GraphicsObjectsFactory::createIndexBuffer() {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanIndexBuffer();
             case GraphicsAPI::OpenGL:
                 return new OpenGLIndexBuffer();
         }
@@ -47,25 +50,16 @@ namespace CgEngine {
     IndexBuffer* GraphicsObjectsFactory::createIndexBuffer(const void* indices, uint32_t indexCount, IndexBufferDataType type) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanIndexBuffer(indices, indexCount, type);
             case GraphicsAPI::OpenGL:
                 return new OpenGLIndexBuffer(indices, indexCount, type);
-        }
-    }
-
-    VertexBuffer* GraphicsObjectsFactory::createVertexBuffer(VertexBufferUsage usage) {
-        switch (api) {
-            case GraphicsAPI::Vulkan:
-                return nullptr;
-            case GraphicsAPI::OpenGL:
-                return new OpenGLVertexBuffer(usage);
         }
     }
 
     VertexBuffer* GraphicsObjectsFactory::createVertexBuffer(size_t size, VertexBufferUsage usage) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanVertexBuffer(size, usage);
             case GraphicsAPI::OpenGL:
                 return new OpenGLVertexBuffer(size, usage);
         }
@@ -74,7 +68,7 @@ namespace CgEngine {
     VertexBuffer* GraphicsObjectsFactory::createVertexBuffer(const void* data, size_t size, VertexBufferUsage usage) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanVertexBuffer(data, size, usage);
             case GraphicsAPI::OpenGL:
                 return new OpenGLVertexBuffer(data, size, usage);
         }
@@ -83,7 +77,7 @@ namespace CgEngine {
     VertexArrayObject* GraphicsObjectsFactory::createVertexArrayObject() {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanVertexArrayObject();
             case GraphicsAPI::OpenGL:
                 return new OpenGLVertexArrayObject();
         }

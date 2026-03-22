@@ -1,6 +1,9 @@
 #include "VulkanRenderer.h"
 #include "VulkanHelpers.h"
 
+#define VMA_IMPLEMENTATION
+#include "vk_mem_alloc.h"
+
 namespace CgEngine {
     void VulkanRenderer::init(Window& window) {
         #ifdef CG_ENABLE_DEBUG_FEATURES
@@ -62,7 +65,24 @@ namespace CgEngine {
         createCommandPools();
         createGraphicsComputeCommandBuffers();
         createSyncObjects();
+        createVmaAllocator();
         descriptorAllocator.init(vkDevice);
+
+        auto unitQuadVertexData = getUnitQuadVerticesAndIndices();
+
+        quadVAO = VulkanVertexArrayObject();
+        auto* quadVertexBuffer = new VulkanVertexBuffer(std::get<0>(unitQuadVertexData).data(), std::get<0>(unitQuadVertexData).size() * sizeof(QuadVertex), VertexBufferUsage::Static);
+        quadVertexBuffer->setLayout(std::get<2>(unitQuadVertexData));
+        quadVAO.addVertexBuffer(quadVertexBuffer);
+        quadVAO.setIndexBuffer(new VulkanIndexBuffer(std::get<1>(unitQuadVertexData).data(), std::get<1>(unitQuadVertexData).size(), IndexBufferDataType::UInt32));
+
+        auto unitCubeVertexData = getUnitCubeVerticesAndIndices();
+
+        unitCubeVAO = VulkanVertexArrayObject();
+        auto* unitCubeVertexBuffer = new VulkanVertexBuffer(std::get<0>(unitCubeVertexData).data(), std::get<0>(unitCubeVertexData).size() * sizeof(float), VertexBufferUsage::Static);
+        unitCubeVertexBuffer->setLayout(std::get<2>(unitCubeVertexData));
+        unitCubeVAO.addVertexBuffer(unitCubeVertexBuffer);
+        unitCubeVAO.setIndexBuffer(new VulkanIndexBuffer(std::get<1>(unitCubeVertexData).data(), std::get<1>(unitCubeVertexData).size()));
     }
 
     void VulkanRenderer::shutdown() {
@@ -197,8 +217,54 @@ namespace CgEngine {
 
     }
 
+    vk::CommandBuffer VulkanRenderer::beginSingleTimeCommandBuffer() {
+        vk::CommandBufferAllocateInfo allocInfo{};
+        allocInfo.setLevel(vk::CommandBufferLevel::ePrimary);
+        allocInfo.setCommandPool(vkTransientCommandPool);
+        allocInfo.setCommandBufferCount(1);
+
+        auto commandBufferResult = vkDevice.allocateCommandBuffers(allocInfo);
+        CG_ASSERT(commandBufferResult.has_value(), "VulkanRenderer::beginSingleTimeCommandBuffer: Failed to allocate command buffer for single time commands!")
+
+        vk::CommandBuffer commandBuffer = commandBufferResult.value[0];
+
+        vk::CommandBufferBeginInfo beginInfo{};
+        beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+
+        auto beginResult = commandBuffer.begin(beginInfo);
+        CG_ASSERT(beginResult == vk::Result::eSuccess, "VulkanRenderer::beginSingleTimeCommandBuffer: Failed to begin command buffer for single time commands!")
+
+        return commandBuffer;
+    }
+
+    void VulkanRenderer::endAndSubmitSingleTimeCommandBuffer(vk::CommandBuffer commandBuffer) {
+        auto endResult = commandBuffer.end();
+        CG_ASSERT(endResult == vk::Result::eSuccess, "VulkanRenderer::endAndSubmitSingleTimeCommandBuffer: Failed to end command buffer for single time commands!")
+
+        vk::SubmitInfo submitInfo{};
+        submitInfo.setPCommandBuffers(&commandBuffer);
+        submitInfo.setCommandBufferCount(1);
+
+        vk::FenceCreateInfo fenceInfo{};
+        auto fenceResult = vkDevice.createFence(fenceInfo);
+        CG_ASSERT(fenceResult.has_value(), "VulkanRenderer::endAndSubmitSingleTimeCommandBuffer: Failed to create fence for single time command buffer submission!")
+
+        auto submitResult = vkGraphicsComputeQueue.submit(1, &submitInfo, fenceResult.value);
+        CG_ASSERT(submitResult == vk::Result::eSuccess, "VulkanRenderer::endAndSubmitSingleTimeCommandBuffer: Failed to submit command buffer for single time commands!")
+
+        auto waitFenceResult = vkDevice.waitForFences(fenceResult.value, VK_TRUE, UINT64_MAX);
+        CG_ASSERT(waitFenceResult == vk::Result::eSuccess, "VulkanRenderer::endAndSubmitSingleTimeCommandBuffer: Failed to wait for fence after submitting single time command buffer!")
+
+        vkDevice.destroyFence(fenceResult.value);
+        vkDevice.freeCommandBuffers(vkTransientCommandPool, commandBuffer);
+    }
+
     const uint32_t VulkanRenderer::getMaxFramesInFlight() const {
         return MAX_FRAMES_IN_FLIGHT;
+    }
+
+    const uint32_t VulkanRenderer::getCurrentFrameIndex() const {
+        return currentFrameIndex;
     }
 
     vk::PhysicalDevice VulkanRenderer::getVkPhysicalDevice() const {
@@ -207,6 +273,10 @@ namespace CgEngine {
 
     vk::Device VulkanRenderer::getVkDevice() const {
         return vkDevice;
+    }
+
+    VmaAllocator VulkanRenderer::getVmaAllocator() const {
+        return vmaAllocator;
     }
 
     bool VulkanRenderer::checkValidationLayerSupport() {
@@ -307,9 +377,9 @@ namespace CgEngine {
 
         auto limits = props.limits;
 
-        CG_LOGGING_INFO("Max UBO size: {0}", limits.maxUniformBufferRange);
-        CG_LOGGING_INFO("Max SSBO size: {0}", limits.maxStorageBufferRange);
-        CG_LOGGING_INFO("Max bound descriptor sets: {0}", limits.maxBoundDescriptorSets);
+        CG_LOGGING_INFO("RENDERER: Max UBO size: {0}", limits.maxUniformBufferRange);
+        CG_LOGGING_INFO("RENDERER: Max SSBO size: {0}", limits.maxStorageBufferRange);
+        CG_LOGGING_INFO("RENDERER: Max bound descriptor sets: {0}", limits.maxBoundDescriptorSets);
     }
 
     uint32_t VulkanRenderer::rateDeviceSuitability(vk::PhysicalDevice dev, vk::SurfaceKHR surf) {
@@ -579,6 +649,20 @@ namespace CgEngine {
             vkImageAvailableSemaphores.push_back(imageAvailableSemaphoreResult.value);
             vkRenderFinishedSemaphores.push_back(renderFinishedSemaphoreResult.value);
             vkInFlightFences.push_back(inFlightFenceResult.value);
+        }
+    }
+
+    void VulkanRenderer::createVmaAllocator() {
+        VmaAllocatorCreateInfo allocatorInfo{};
+        allocatorInfo.physicalDevice = vkPhysicalDevice;
+        allocatorInfo.device = vkDevice;
+        allocatorInfo.instance = vkInstance;
+        allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_3;
+
+        auto result = vmaCreateAllocator(&allocatorInfo, &vmaAllocator);
+
+        if (result != VK_SUCCESS) {
+            CG_LOGGING_ERROR("VulkanRenderer: Failed to create VMA allocator!")
         }
     }
 

@@ -78,6 +78,15 @@ namespace CgEngine {
         virtual void renderImGuiFrame() = 0;
 
         virtual GraphicsAPI getGraphicsAPI() const = 0;
+
+    protected:
+        struct QuadVertex {
+            glm::vec3 pos;
+            glm::vec2 uv;
+        };
+
+        std::tuple<std::vector<QuadVertex>, std::vector<uint32_t>, std::vector<VertexBufferElement>> getUnitQuadVerticesAndIndices() const;
+        std::tuple<std::vector<float>, std::vector<uint32_t>, std::vector<VertexBufferElement>> getUnitCubeVerticesAndIndices() const;
     };
 
 }

@@ -110,6 +110,11 @@ add_library(dr_libs INTERFACE)
 target_include_directories(dr_libs INTERFACE "${CMAKE_CURRENT_LIST_DIR}/vendor/dr_libs")
 ################################################################################
 
+# VMA ##########################################################################
+add_library(vma INTERFACE)
+target_include_directories(vma INTERFACE "${CMAKE_CURRENT_LIST_DIR}/vendor/vma/include")
+################################################################################
+
 # PHYSX ########################################################################
 add_library(PhysXSDK INTERFACE)
 target_include_directories(PhysXSDK INTERFACE "${CMAKE_CURRENT_LIST_DIR}/vendor/PhysX/include")

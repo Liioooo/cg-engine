@@ -46,6 +46,10 @@ namespace CgEngine {
                 delete indexBuffer;
             }
 
+            for (auto* item: vertexBuffers) {
+                delete item;
+            }
+
             vao = other.vao;
             usingExistingIndexBuffer = other.usingExistingIndexBuffer;
             vertexBufferIndex = other.vertexBufferIndex;
