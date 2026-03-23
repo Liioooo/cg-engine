@@ -20,8 +20,10 @@ namespace CgEngine {
 
     class Window {
     public:
-        Window(const WindowSpecification& spec, std::function<void(Event&)>&& eventCallback);
+        Window() = default;
         ~Window();
+
+        void init(const WindowSpecification& spec, std::function<void(Event&)>&& eventCallback);
 
         bool isVsync() const;
         void pollEvents();
@@ -41,8 +43,8 @@ namespace CgEngine {
         int windowHeight;
         int framebufferWidth;
         int framebufferHeight;
-        GLFWwindow* window;
-        const std::function<void(Event&)> eventCallback;
+        GLFWwindow* window = nullptr;
+        std::function<void(Event&)> eventCallback;
 
         static void errorCallback(int error, const char* description);
     };

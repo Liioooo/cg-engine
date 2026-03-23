@@ -74,9 +74,9 @@ namespace CgEngine {
         PhysXErrorCallback physxErrorCallback;
         PhysicsSimulationEventCallbacks simulationEventCallbacks;
         PhysicsControllerHitReportCallback controllerHitReportCallback;
-        PhysicsCooking* physicsCooking;
+        PhysicsCooking physicsCooking;
 
-        const PhysXSettings physxSettings;
+        const PhysXSettings physxSettings{};
     };
 
 }

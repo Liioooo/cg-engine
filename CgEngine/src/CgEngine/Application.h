@@ -58,12 +58,12 @@ namespace CgEngine {
         INIReader iniReader;
         ApplicationOptions applicationOptions;
         ScriptManager scriptManager;
-        SceneManager* sceneManager;
+        SceneManager sceneManager;
         PhysicsSystem physicsSystem;
         AudioSystem audioSystem;
         ResourceManager resourceManager;
-        SceneRenderer* sceneRenderer;
-        Window* window;
+        SceneRenderer* sceneRenderer = nullptr;
+        Window window;
         bool isRunning = true;
         float lastFrameTime = getTime();
         TimeStep timeStep{};

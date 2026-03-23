@@ -49,6 +49,9 @@ namespace CgEngine {
             for (auto& item: components) {
                 item.onDetach(scene);
             }
+            for (auto& [entity, component] : componentsPendingAdd) {
+                component.onDetach(scene);
+            }
         }
 
         C& getComponent(Entity entity) {

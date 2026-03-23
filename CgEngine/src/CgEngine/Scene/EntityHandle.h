@@ -10,7 +10,7 @@ namespace CgEngine {
     class EntityHandle {
         friend struct std::hash<EntityHandle>;
     public:
-        EntityHandle() : scene(nullptr), entity(NoEntity) {}
+        EntityHandle() = default;
         EntityHandle(Scene* scene, Entity entity) : scene(scene), entity(entity) {}
 
         bool isValid() const;
@@ -51,8 +51,8 @@ namespace CgEngine {
         }
 
     private:
-        Scene* scene;
-        Entity entity;
+        Scene* scene = nullptr;
+        Entity entity = NoEntity;
     };
 
 }

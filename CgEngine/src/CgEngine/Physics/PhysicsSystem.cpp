@@ -94,7 +94,7 @@ namespace CgEngine {
         physxPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *physxFoundation, tolerancesScale, false, pvd);
         CG_ASSERT(physxPhysics, "Error while creating PhysXPhysics")
 
-        physicsCooking = new PhysicsCooking(physxFoundation, tolerancesScale);
+        physicsCooking = std::move(PhysicsCooking(physxFoundation, tolerancesScale));
 
         physxCpuDispatcher = physx::PxDefaultCpuDispatcherCreate(1);
     }
@@ -106,7 +106,7 @@ namespace CgEngine {
         physxPhysics->release();
         physxPhysics = nullptr;
 
-        delete physicsCooking;
+        physicsCooking.~PhysicsCooking();
 
         physxFoundation->release();
         physxFoundation = nullptr;
@@ -137,7 +137,7 @@ namespace CgEngine {
     }
 
     PhysicsCooking& PhysicsSystem::getPhysicsCooking() {
-        return *physicsCooking;
+        return physicsCooking;
     }
 
     const PhysXSettings &PhysicsSystem::getPhysxSettings() const {

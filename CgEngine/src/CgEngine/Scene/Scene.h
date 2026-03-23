@@ -4,12 +4,10 @@
 #include "Entity.h"
 #include "ComponentManager.h"
 #include "TimeStep.h"
-#include "Rendering/TextureCube.h"
 #include "Physics/PhysicsScene.h"
 #include "Rendering/CameraFrustum.h"
 #include "ComponentHandle.h"
 #include "Rendering/DescriptorSet.h"
-#include "Uuid.h"
 #include "Components/CameraComponent.h"
 
 namespace CgEngine {
@@ -77,38 +75,38 @@ namespace CgEngine {
         template<typename C>
         ComponentHandle<C> attachComponent(Entity entity, typename C::Params componentParams) {
             CG_ASSERT(hasEntity(entity), "Scene::attachComponent: Entity does not exist in the scene.")
-            componentManager->attachComponent<C>(entity, *this, componentParams);
-            return ComponentHandle<C>(componentManager, entity);
+            componentManager.attachComponent<C>(entity, *this, componentParams);
+            return ComponentHandle<C>(&componentManager, entity);
         }
 
         template<typename C>
         void detachComponent(Entity entity) {
-            componentManager->detachComponent<C>(entity, *this);
+            componentManager.detachComponent<C>(entity, *this);
         }
 
         template<typename C>
         ComponentHandle<C> getComponent(Entity entity) const {
             CG_ASSERT(hasEntity(entity), "Scene::getComponent: Entity does not exist in the scene.")
-            CG_ASSERT(componentManager->hasComponent<C>(entity), "Scene::getComponent: Entity does not have the requested component.")
-            return ComponentHandle<C>(componentManager, entity);
+            CG_ASSERT(componentManager.hasComponent<C>(entity), "Scene::getComponent: Entity does not have the requested component.")
+            return ComponentHandle<C>(&componentManager, entity);
         }
 
         template<typename C>
         bool hasComponent(Entity entity) const {
-            return componentManager->hasComponent<C>(entity);
+            return componentManager.hasComponent<C>(entity);
         }
 
         template<typename C>
         std::vector<Entity> getEntitiesWithComponent() {
-            return componentManager->getEntitiesWithComponent<C>();
+            return componentManager.getEntitiesWithComponent<C>();
         }
 
-        inline uint32_t getEntityCount() const {
+        uint32_t getEntityCount() const {
             return children.size();
         }
 
         PhysicsScene& getPhysicsScene() {
-            return *physicsScene;
+            return physicsScene;
         }
 
         CameraComponent& getPrimaryCamaraComponent();
@@ -124,10 +122,10 @@ namespace CgEngine {
 
         std::vector<std::function<void(SceneRenderer& renderer)>> onRenderFunctions{};
 
-        ComponentManager* componentManager = new ComponentManager();
+        ComponentManager componentManager;
         int viewportWidth;
         int viewportHeight;
-        PhysicsScene* physicsScene;
+        PhysicsScene physicsScene;
 
         void destroyEntity(Entity entity);
         std::optional<std::string> getIdForEntity(Entity entity) const;

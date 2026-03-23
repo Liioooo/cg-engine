@@ -8,7 +8,7 @@ namespace CgEngine {
     template<typename C>
     class ComponentHandle {
     public:
-        ComponentHandle() : componentManager(nullptr), owningEntity(NoEntity) {}
+        ComponentHandle() = default;
         ComponentHandle(ComponentManager* compManager, Entity entity) : componentManager(compManager), owningEntity(entity) {}
 
         bool isValid() const {
@@ -24,8 +24,8 @@ namespace CgEngine {
         }
 
     private:
-        ComponentManager* componentManager;
-        Entity owningEntity;
+        ComponentManager* componentManager = nullptr;
+        Entity owningEntity = NoEntity;
     };
 
 }

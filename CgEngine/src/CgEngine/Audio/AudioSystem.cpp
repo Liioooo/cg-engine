@@ -13,7 +13,7 @@ namespace CgEngine {
         AudioThread::setOnShutdownCallback<&AudioSystem::shutdown>(this);
         AudioThread::start();
         AudioThread::addTask([this] { init(); });
-        AudioSystem::instance = this;
+        instance = this;
     }
 
     AudioSystem::~AudioSystem() {
@@ -21,7 +21,7 @@ namespace CgEngine {
     }
 
     AudioSystem& AudioSystem::get() {
-        return *AudioSystem::instance;
+        return *instance;
     }
 
     void AudioSystem::updateListenerVolume(float volume) {

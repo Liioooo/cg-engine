@@ -13,8 +13,26 @@ namespace CgEngine {
     }
 
     PhysicsCooking::~PhysicsCooking() {
-        physxCooking->release();
+        if (physxCooking) {
+            physxCooking->release();
+        }
         physxCooking = nullptr;
+    }
+
+    PhysicsCooking::PhysicsCooking(PhysicsCooking &&other) noexcept {
+        physxCooking = other.physxCooking;
+        other.physxCooking = nullptr;
+    }
+
+    PhysicsCooking & PhysicsCooking::operator=(PhysicsCooking &&other) noexcept {
+        if (this != &other) {
+            if (physxCooking) {
+                physxCooking->release();
+            }
+            physxCooking = other.physxCooking;
+            other.physxCooking = nullptr;
+        }
+        return *this;
     }
 
     PhysicsTriangleMesh* PhysicsCooking::cookTriangleMesh(glm::vec3* vertices, uint32_t numVertices, uint32_t* indices, uint32_t indexCount) {

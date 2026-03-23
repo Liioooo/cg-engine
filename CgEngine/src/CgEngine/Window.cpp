@@ -14,7 +14,9 @@
 #include "FileSystem.h"
 
 namespace CgEngine {
-    Window::Window(const WindowSpecification& spec, std::function<void(Event&)>&& eventCallback) : eventCallback(std::move(eventCallback)) {
+    void Window::init(const WindowSpecification& spec, std::function<void(Event&)>&& eventCallback) {
+        this->eventCallback = std::move(eventCallback);
+
         if (!glfwInit()) {
             CG_LOGGING_ERROR("Failed to init GLFW");
         }

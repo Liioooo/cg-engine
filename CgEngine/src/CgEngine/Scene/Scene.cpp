@@ -26,14 +26,10 @@
 #include "Components/CustomShaderRendererComponent.h"
 
 namespace CgEngine {
-    Scene::Scene(int viewportWidth, int viewportHeight) : viewportWidth(viewportWidth), viewportHeight(viewportHeight) {
-        physicsScene = new PhysicsScene();
-    }
+    Scene::Scene(int viewportWidth, int viewportHeight) : viewportWidth(viewportWidth), viewportHeight(viewportHeight) {}
 
     Scene::~Scene() {
-        componentManager->destroyAllComponents(*this);
-        delete componentManager;
-        delete physicsScene;
+        componentManager.destroyAllComponents(*this);
     }
 
     EntityHandle Scene::createEntity(Entity parent) {
@@ -122,13 +118,13 @@ namespace CgEngine {
         return children.find(entity) != children.end();
     }
 
-    void Scene::setEntityTag(CgEngine::Entity entity, const std::string& tag) {
+    void Scene::setEntityTag(Entity entity, const std::string& tag) {
         if (hasEntity(entity)) {
             entityTags[entity] = tag;
         }
     }
 
-    std::string Scene::getEntityTag(CgEngine::Entity entity) const {
+    std::string Scene::getEntityTag(Entity entity) const {
         if (entityTags.find(entity) != entityTags.end()) {
             return entityTags.at(entity);
         }
@@ -138,7 +134,7 @@ namespace CgEngine {
     void Scene::updateTransforms() {
         for (const auto &[entity, _] : children) {
             if (parents.find(entity) == parents.end()) {
-                auto& topLevelTransform = componentManager->getComponent<TransformComponent>(entity);
+                auto& topLevelTransform = componentManager.getComponent<TransformComponent>(entity);
                 bool topLevelDirty = topLevelTransform._calculateTopLevelTransforms();
                 const glm::mat4& topLevelModelMatrix = topLevelTransform.getModelMatrix();
 
@@ -156,7 +152,7 @@ namespace CgEngine {
         viewportWidth = width;
         viewportHeight = height;
 
-        for (auto it = componentManager->begin<CameraComponent>(); it != componentManager->end<CameraComponent>(); it++) {
+        for (auto it = componentManager.begin<CameraComponent>(); it != componentManager.end<CameraComponent>(); it++) {
             it->getCamera().setViewportSize(width, height);
         }
     }
@@ -166,41 +162,41 @@ namespace CgEngine {
     }
 
     void Scene::onUpdate(TimeStep ts) {
-        physicsScene->simulate(ts, *this);
+        physicsScene.simulate(ts, *this);
 
-        for (auto it = componentManager->begin<ScriptComponent>(); it != componentManager->end<ScriptComponent>(); it++) {
+        for (auto it = componentManager.begin<ScriptComponent>(); it != componentManager.end<ScriptComponent>(); it++) {
             it->update(ts);
         }
-        for (auto it = componentManager->begin<AnimationComponent>(); it != componentManager->end<AnimationComponent>(); it++) {
-            it->update(ts, componentManager->getComponent<TransformComponent>(it->getEntity()));
+        for (auto it = componentManager.begin<AnimationComponent>(); it != componentManager.end<AnimationComponent>(); it++) {
+            it->update(ts, componentManager.getComponent<TransformComponent>(it->getEntity()));
         }
         executeAllPendingOperations(true);
 
-        for (auto it = componentManager->begin<ScriptComponent>(); it != componentManager->end<ScriptComponent>(); it++) {
+        for (auto it = componentManager.begin<ScriptComponent>(); it != componentManager.end<ScriptComponent>(); it++) {
             it->lateUpdate(ts);
         }
         executeAllPendingOperations(true);
 
-        for (auto it = componentManager->begin<UiCanvasComponent2D>(); it != componentManager->end<UiCanvasComponent2D>(); it++) {
+        for (auto it = componentManager.begin<UiCanvasComponent2D>(); it != componentManager.end<UiCanvasComponent2D>(); it++) {
             it->update(viewportWidth, viewportHeight);
         }
 
-        for (auto it = componentManager->begin<AnimatedMeshRendererComponent>(); it != componentManager->end<AnimatedMeshRendererComponent>(); it++) {
+        for (auto it = componentManager.begin<AnimatedMeshRendererComponent>(); it != componentManager.end<AnimatedMeshRendererComponent>(); it++) {
             if (it->isActive()) it->update(ts);
         }
 
         bool usePrimaryCameraAsListener = true;
-        if (!componentManager->getEntitiesWithComponent<AudioListenerComponent>().empty()) {
-            for (auto it = componentManager->begin<AudioListenerComponent>(); it != componentManager->end<AudioListenerComponent>(); it++) {
+        if (!componentManager.getEntitiesWithComponent<AudioListenerComponent>().empty()) {
+            for (auto it = componentManager.begin<AudioListenerComponent>(); it != componentManager.end<AudioListenerComponent>(); it++) {
                 if (it->isActive()) {
                     usePrimaryCameraAsListener = false;
                     auto& audioSystem = AudioSystem::get();
 
-                    auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
+                    auto& transform = componentManager.getComponent<TransformComponent>(it->getEntity());
                     audioSystem.updateListenerPosition({transform.getGlobalRotationQuat(), transform.getGlobalPosition()});
                     audioSystem.updateListenerVolume(it->getVolume());
-                    if (componentManager->hasComponent<RigidBodyComponent>(it->getEntity())) {
-                        auto& rigidBody = componentManager->getComponent<RigidBodyComponent>(it->getEntity());
+                    if (componentManager.hasComponent<RigidBodyComponent>(it->getEntity())) {
+                        auto& rigidBody = componentManager.getComponent<RigidBodyComponent>(it->getEntity());
                         if (rigidBody.isDynamic()) {
                             audioSystem.updateListenerVelocity(rigidBody.getLinearVelocity());
                         }
@@ -213,11 +209,11 @@ namespace CgEngine {
             auto& primaryCamera = getPrimaryCamaraComponent();
             auto& audioSystem = AudioSystem::get();
 
-            auto& transform = componentManager->getComponent<TransformComponent>(primaryCamera.getEntity());
+            auto& transform = componentManager.getComponent<TransformComponent>(primaryCamera.getEntity());
             audioSystem.updateListenerPosition({transform.getGlobalRotationQuat(), transform.getGlobalPosition()});
             audioSystem.updateListenerVolume(1.0f);
-            if (componentManager->hasComponent<RigidBodyComponent>(primaryCamera.getEntity())) {
-                auto& rigidBody = componentManager->getComponent<RigidBodyComponent>(primaryCamera.getEntity());
+            if (componentManager.hasComponent<RigidBodyComponent>(primaryCamera.getEntity())) {
+                auto& rigidBody = componentManager.getComponent<RigidBodyComponent>(primaryCamera.getEntity());
                 if (rigidBody.isDynamic()) {
                     audioSystem.updateListenerVelocity(rigidBody.getLinearVelocity());
                 }
@@ -229,13 +225,13 @@ namespace CgEngine {
         audioComponentsToDestroy.reserve(audioComponentsMarkedForDestroy.size());
 
         std::vector<AudioComponentUpdateData> audioComponentUpdateData;
-        for (auto it = componentManager->begin<AudioComponent>(); it != componentManager->end<AudioComponent>(); it++) {
+        for (auto it = componentManager.begin<AudioComponent>(); it != componentManager.end<AudioComponent>(); it++) {
             if (audioComponentsMarkedForDestroy.find(it->getUuid()) != audioComponentsMarkedForDestroy.end()) {
                 audioComponentsToDestroy.emplace_back(it->getEntity());
                 continue;
             }
 
-            auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
+            auto& transform = componentManager.getComponent<TransformComponent>(it->getEntity());
 
             auto& updateData = audioComponentUpdateData.emplace_back();
             updateData.uuid = it->getUuid();
@@ -244,8 +240,8 @@ namespace CgEngine {
             updateData.pitch = it->getPitch();
             updateData.transform = {transform.getGlobalRotationQuat(), transform.getGlobalPosition()};
 
-            if (componentManager->hasComponent<RigidBodyComponent>(it->getEntity())) {
-                auto& rigidBody = componentManager->getComponent<RigidBodyComponent>(it->getEntity());
+            if (componentManager.hasComponent<RigidBodyComponent>(it->getEntity())) {
+                auto& rigidBody = componentManager.getComponent<RigidBodyComponent>(it->getEntity());
                 if (rigidBody.isDynamic()) {
                     updateData.velocity = rigidBody.getLinearVelocity();
                 }
@@ -260,11 +256,11 @@ namespace CgEngine {
     }
 
     void Scene::onEvent(Event& event) {
-        for (auto it = componentManager->begin<UiCanvasComponent2D>(); it != componentManager->end<UiCanvasComponent2D>(); it++) {
+        for (auto it = componentManager.begin<UiCanvasComponent2D>(); it != componentManager.end<UiCanvasComponent2D>(); it++) {
            it->onEvent(event, viewportWidth, viewportHeight);
         }
 
-        for (auto it = componentManager->begin<ScriptComponent>(); it != componentManager->end<ScriptComponent>(); it++) {
+        for (auto it = componentManager.begin<ScriptComponent>(); it != componentManager.end<ScriptComponent>(); it++) {
             it->onEvent(event);
             if (event.wasHandled()) {
                 return;
@@ -276,21 +272,21 @@ namespace CgEngine {
     void Scene::onRender(SceneRenderer& renderer) {
         auto& cameraComponent = getPrimaryCamaraComponent();
 
-        auto cameraTransform = componentManager->getComponent<TransformComponent>(cameraComponent.getEntity());
+        auto cameraTransform = componentManager.getComponent<TransformComponent>(cameraComponent.getEntity());
 
         SceneLightEnvironment lightEnvironment{};
 
-        auto dirLightComponentIt = componentManager->cbegin<DirectionalLightComponent>();
-        if (dirLightComponentIt != componentManager->cend<DirectionalLightComponent>()) {
-            lightEnvironment.dirLightDirection = glm::normalize(glm::mat3(componentManager->getComponent<TransformComponent>(dirLightComponentIt->getEntity()).getModelMatrix()) * glm::vec3(0.0f, 1.0f, 0.0f));
+        auto dirLightComponentIt = componentManager.cbegin<DirectionalLightComponent>();
+        if (dirLightComponentIt != componentManager.cend<DirectionalLightComponent>()) {
+            lightEnvironment.dirLightDirection = glm::normalize(glm::mat3(componentManager.getComponent<TransformComponent>(dirLightComponentIt->getEntity()).getModelMatrix()) * glm::vec3(0.0f, 1.0f, 0.0f));
             lightEnvironment.dirLightColor = dirLightComponentIt->getColor();
             lightEnvironment.dirLightIntensity = dirLightComponentIt->getIntensity();
             lightEnvironment.dirLightCastShadows = dirLightComponentIt->getCastShadows();
         }
 
-        for(auto it = componentManager->cbegin<PointLightComponent>(); it != componentManager->cend<PointLightComponent>(); it++) {
+        for(auto it = componentManager.cbegin<PointLightComponent>(); it != componentManager.cend<PointLightComponent>(); it++) {
             ScenePointLight pointLight{};
-            pointLight.position = componentManager->getComponent<TransformComponent>(it->getEntity()).getGlobalPosition();
+            pointLight.position = componentManager.getComponent<TransformComponent>(it->getEntity()).getGlobalPosition();
             pointLight.color = it->getColor();
             pointLight.falloff = it->getFalloff();
             pointLight.radius = it->getRadius();
@@ -298,10 +294,10 @@ namespace CgEngine {
             lightEnvironment.pointLights.push_back(pointLight);
         }
 
-        for(auto it = componentManager->cbegin<SpotLightComponent>(); it != componentManager->cend<SpotLightComponent>(); it++) {
+        for(auto it = componentManager.cbegin<SpotLightComponent>(); it != componentManager.cend<SpotLightComponent>(); it++) {
             SceneSpotLight spotLight{};
-            spotLight.position = componentManager->getComponent<TransformComponent>(it->getEntity()).getGlobalPosition();
-            spotLight.direction = glm::normalize(glm::mat3(componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix()) * glm::vec3(0.0f, -1.0f, 0.0f));
+            spotLight.position = componentManager.getComponent<TransformComponent>(it->getEntity()).getGlobalPosition();
+            spotLight.direction = glm::normalize(glm::mat3(componentManager.getComponent<TransformComponent>(it->getEntity()).getModelMatrix()) * glm::vec3(0.0f, -1.0f, 0.0f));
             spotLight.color = it->getColor();
             spotLight.falloff = it->getFalloff();
             spotLight.radius = it->getRadius();
@@ -313,8 +309,8 @@ namespace CgEngine {
 
         SceneEnvironment sceneEnvironment{};
 
-        auto skyboxComponentIt = componentManager->cbegin<SkyboxComponent>();
-        if (skyboxComponentIt != componentManager->cend<SkyboxComponent>()) {
+        auto skyboxComponentIt = componentManager.cbegin<SkyboxComponent>();
+        if (skyboxComponentIt != componentManager.cend<SkyboxComponent>()) {
             sceneEnvironment.environmentMapDescriptorSet = skyboxComponentIt->getDescriptorSet();
             sceneEnvironment.environmentIntensity = skyboxComponentIt->getIntensity();
             sceneEnvironment.environmentLod = skyboxComponentIt->getLod();
@@ -330,25 +326,25 @@ namespace CgEngine {
 
         auto& applicationOptions = Application::get().getApplicationOptions();
 
-        for (auto it = componentManager->begin<MeshRendererComponent>(); it != componentManager->end<MeshRendererComponent>(); it++) {
+        for (auto it = componentManager.begin<MeshRendererComponent>(); it != componentManager.end<MeshRendererComponent>(); it++) {
             if (it->isActive()) {
-                bool hasLodDistanceComponent = componentManager->hasComponent<LodDistanceComponent>(it->getEntity());
-                renderer.submitMesh(it->getRenderMesh(), it->getMeshNodes(), it->getMaterial().get(), it->getCastShadows(), it->getCullingEnabled(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), hasLodDistanceComponent ? componentManager->getComponent<LodDistanceComponent>(it->getEntity()).getLodDistances() : applicationOptions.defaultLodDistances);
+                bool hasLodDistanceComponent = componentManager.hasComponent<LodDistanceComponent>(it->getEntity());
+                renderer.submitMesh(it->getRenderMesh(), it->getMeshNodes(), it->getMaterial().get(), it->getCastShadows(), it->getCullingEnabled(), componentManager.getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), hasLodDistanceComponent ? componentManager.getComponent<LodDistanceComponent>(it->getEntity()).getLodDistances() : applicationOptions.defaultLodDistances);
             }
         }
 
-        for (auto it = componentManager->begin<AnimatedMeshRendererComponent>(); it != componentManager->end<AnimatedMeshRendererComponent>(); it++) {
-            if (it->isActive()) renderer.submitAnimatedMesh(it->getMeshVertices().get(), it->getMeshNodes(), it->getMaterial().get(), it->getCastShadows(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getBoneTransforms(), it->getSkinnedVAO(), it->getSkinningDescriptorSet());
+        for (auto it = componentManager.begin<AnimatedMeshRendererComponent>(); it != componentManager.end<AnimatedMeshRendererComponent>(); it++) {
+            if (it->isActive()) renderer.submitAnimatedMesh(it->getMeshVertices().get(), it->getMeshNodes(), it->getMaterial().get(), it->getCastShadows(), componentManager.getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getBoneTransforms(), it->getSkinnedVAO(), it->getSkinningDescriptorSet());
         }
 
-        for (auto it = componentManager->begin<CustomShaderRendererComponent>(); it != componentManager->end<CustomShaderRendererComponent>(); it++) {
+        for (auto it = componentManager.begin<CustomShaderRendererComponent>(); it != componentManager.end<CustomShaderRendererComponent>(); it++) {
             if (it->isActive()) {
-                bool hasLodDistanceComponent = componentManager->hasComponent<LodDistanceComponent>(it->getEntity());
-                renderer.submitCustomShaderMesh(it->getRenderMesh(), it->getMeshNodes(), it->getCullingEnabled(), it->getBoundingBox(), componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getPipeline().get(), it->getInstanceCount(), hasLodDistanceComponent ? componentManager->getComponent<LodDistanceComponent>(it->getEntity()).getLodDistances() : applicationOptions.defaultLodDistances, it->getDescriptorSet());
+                bool hasLodDistanceComponent = componentManager.hasComponent<LodDistanceComponent>(it->getEntity());
+                renderer.submitCustomShaderMesh(it->getRenderMesh(), it->getMeshNodes(), it->getCullingEnabled(), it->getBoundingBox(), componentManager.getComponent<TransformComponent>(it->getEntity()).getModelMatrix(), it->getPipeline().get(), it->getInstanceCount(), hasLodDistanceComponent ? componentManager.getComponent<LodDistanceComponent>(it->getEntity()).getLodDistances() : applicationOptions.defaultLodDistances, it->getDescriptorSet());
             }
         }
 
-        for (auto it = componentManager->cbegin<UiCanvasComponent2D>(); it != componentManager->cend<UiCanvasComponent2D>(); it++) {
+        for (auto it = componentManager.cbegin<UiCanvasComponent2D>(); it != componentManager.cend<UiCanvasComponent2D>(); it++) {
             renderer.submitUiCanvas2D(it->getCanvas(), it->getFinalTransform(), it->getZIndex());
         }
 
@@ -359,34 +355,34 @@ namespace CgEngine {
             auto& resourceManager = Application::get().getResourceManager();
 
             auto* cubeMesh = resourceManager.getResource<MeshVertices>("CG_CubeMesh").get();
-            for (auto it = componentManager->begin<BoxColliderComponent>(); it != componentManager->end<BoxColliderComponent>(); it++) {
-                auto modelMatrix = componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix();
+            for (auto it = componentManager.begin<BoxColliderComponent>(); it != componentManager.end<BoxColliderComponent>(); it++) {
+                auto modelMatrix = componentManager.getComponent<TransformComponent>(it->getEntity()).getModelMatrix();
                 glm::mat4 colliderTransform = glm::translate(glm::mat4(1.0), it->getOffset()) * modelMatrix * glm::scale(glm::mat4(1.0f), it->getHalfSize() * 2.0f);
                 renderer.submitPhysicsColliderMesh(cubeMesh, colliderTransform);
             }
 
             auto* sphereMesh = resourceManager.getResource<MeshVertices>("CG_SphereMesh_16_16").get();
-            for (auto it = componentManager->begin<SphereColliderComponent>(); it != componentManager->end<SphereColliderComponent>(); it++) {
-                auto modelMatrix = componentManager->getComponent<TransformComponent>(it->getEntity()).getModelMatrix();
+            for (auto it = componentManager.begin<SphereColliderComponent>(); it != componentManager.end<SphereColliderComponent>(); it++) {
+                auto modelMatrix = componentManager.getComponent<TransformComponent>(it->getEntity()).getModelMatrix();
                 glm::mat4 colliderTransform = glm::translate(glm::mat4(1.0), it->getOffset()) * modelMatrix * glm::scale(glm::mat4(1.0f), glm::vec3(it->getRadius()));
                 renderer.submitPhysicsColliderMesh(sphereMesh, colliderTransform);
             }
 
-            for (auto it = componentManager->begin<CapsuleColliderComponent>(); it != componentManager->end<CapsuleColliderComponent>(); it++) {
-                auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
+            for (auto it = componentManager.begin<CapsuleColliderComponent>(); it != componentManager.end<CapsuleColliderComponent>(); it++) {
+                auto& transform = componentManager.getComponent<TransformComponent>(it->getEntity());
                 float radius = it->getRadius() * glm::max(transform.getGlobalScale().x, transform.getGlobalScale().z);
                 auto* capsuleMesh = resourceManager.getResource<MeshVertices>("CG_CapsuleMesh_" + std::to_string(radius) + "_" + std::to_string(it->getHalfHeight() * 2.0f * transform.getGlobalScale().y)).get();
                 glm::mat4 colliderTransform = glm::translate(glm::mat4(1.0), transform.getGlobalPosition() + it->getOffset());
                 renderer.submitPhysicsColliderMesh(capsuleMesh, colliderTransform);
             }
 
-            for (auto it = componentManager->begin<TriangleColliderComponent>(); it != componentManager->end<TriangleColliderComponent>(); it++) {
-                auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
+            for (auto it = componentManager.begin<TriangleColliderComponent>(); it != componentManager.end<TriangleColliderComponent>(); it++) {
+                auto& transform = componentManager.getComponent<TransformComponent>(it->getEntity());
                 renderer.submitPhysicsColliderMesh(it->getPhysicsMesh().getVisualizationMesh(), glm::translate(glm::scale(glm::mat4(1.0), transform.getGlobalScale()), transform.getGlobalPosition()));
             }
 
-            for (auto it = componentManager->begin<ConvexColliderComponent>(); it != componentManager->end<ConvexColliderComponent>(); it++) {
-                auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
+            for (auto it = componentManager.begin<ConvexColliderComponent>(); it != componentManager.end<ConvexColliderComponent>(); it++) {
+                auto& transform = componentManager.getComponent<TransformComponent>(it->getEntity());
                 renderer.submitPhysicsColliderMesh(it->getPhysicsMesh().getVisualizationMesh(), glm::scale(glm::translate(glm::mat4(1.0f), transform.getGlobalPosition()), transform.getGlobalScale()));
             }
         }
@@ -395,15 +391,15 @@ namespace CgEngine {
             auto& resourceManager = Application::get().getResourceManager();
 
             auto* cubeMesh = resourceManager.getResource<MeshVertices>("CG_CubeMesh").get();
-            for (auto it = componentManager->begin<MeshRendererComponent>(); it != componentManager->end<MeshRendererComponent>(); it++) {
+            for (auto it = componentManager.begin<MeshRendererComponent>(); it != componentManager.end<MeshRendererComponent>(); it++) {
                 if (it->isActive()) {
-                    auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
+                    auto& transform = componentManager.getComponent<TransformComponent>(it->getEntity());
                     renderer.submitBoundingBoxMesh(cubeMesh, it->getRenderMesh(), it->getMeshNodes(), transform.getModelMatrix());
                 }
             }
-            for (auto it = componentManager->begin<CustomShaderRendererComponent>(); it != componentManager->end<CustomShaderRendererComponent>(); it++) {
+            for (auto it = componentManager.begin<CustomShaderRendererComponent>(); it != componentManager.end<CustomShaderRendererComponent>(); it++) {
                 if (it->isActive()) {
-                    auto& transform = componentManager->getComponent<TransformComponent>(it->getEntity());
+                    auto& transform = componentManager.getComponent<TransformComponent>(it->getEntity());
                     if (it->getBoundingBox() != nullptr) {
                         renderer.submitBoundingBoxMesh(cubeMesh, *it->getBoundingBox(), transform.getModelMatrix());
                     } else {
@@ -418,7 +414,7 @@ namespace CgEngine {
     }
 
     void Scene::executeFixedUpdate(TimeStep ts) {
-        for (auto it = componentManager->begin<ScriptComponent>(); it != componentManager->end<ScriptComponent>(); it++) {
+        for (auto it = componentManager.begin<ScriptComponent>(); it != componentManager.end<ScriptComponent>(); it++) {
             it->fixedUpdate(ts);
         }
         executeAllPendingOperations(false);
@@ -433,7 +429,7 @@ namespace CgEngine {
         }
 
         for (const auto& entity : recursivelyDestroyedEntities) {
-            componentManager->destroyEntity(entity, *this);
+            componentManager.destroyEntity(entity, *this);
         }
 
         for (const auto& entity: entitiesToBeDestroyed) {
@@ -443,7 +439,7 @@ namespace CgEngine {
         }
         entitiesToBeDestroyed.clear();
 
-        bool wereComponentsAdded = componentManager->executePendingOperations(*this);
+        bool wereComponentsAdded = componentManager.executePendingOperations(*this);
 
         for (const auto& entity: recursivelyDestroyedEntities) {
             std::optional<std::string> entityId = getIdForEntity(entity);
@@ -461,7 +457,7 @@ namespace CgEngine {
             updateTransforms();
         }
 
-        componentManager->callOnEnableForAddedComponents(*this);
+        componentManager.callOnEnableForAddedComponents(*this);
     }
 
     int Scene::getViewportWidth() const {
@@ -473,15 +469,15 @@ namespace CgEngine {
     }
 
     CameraComponent& Scene::getPrimaryCamaraComponent() {
-        auto cameraComponent = std::find_if(componentManager->begin<CameraComponent>(), componentManager->end<CameraComponent>(), [](auto&& c) { return c.isPrimary();});
-        CG_ASSERT(cameraComponent != componentManager->end<CameraComponent>(), "Scene must have a Primary Camera")
+        auto cameraComponent = std::find_if(componentManager.begin<CameraComponent>(), componentManager.end<CameraComponent>(), [](auto&& c) { return c.isPrimary();});
+        CG_ASSERT(cameraComponent != componentManager.end<CameraComponent>(), "Scene must have a Primary Camera")
 
         return *cameraComponent;
     }
 
     ComponentHandle<CameraComponent> Scene::getPrimaryCameraComponentHandle() {
         const auto& primaryCameraComponent = getPrimaryCamaraComponent();
-        return {componentManager, primaryCameraComponent.getEntity()};
+        return {&componentManager, primaryCameraComponent.getEntity()};
     }
 
     void Scene::findRecursiveEntitiesToDestroy(Entity entity, std::unordered_set<Entity>& recursivelyDestroyedEntities) {
@@ -492,7 +488,7 @@ namespace CgEngine {
     }
 
     void Scene::recursiveUpdateChildTransforms(Entity entity, const glm::mat4& parentModelMatrix, bool parentDirty) {
-        auto& transform = componentManager->getComponent<TransformComponent>(entity);
+        auto& transform = componentManager.getComponent<TransformComponent>(entity);
         bool dirty = transform._calculateChildTransformsWithParent(parentModelMatrix, parentDirty);
 
         for (const auto &child: children[entity]) {

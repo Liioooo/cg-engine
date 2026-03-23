@@ -24,7 +24,7 @@ namespace CgEngine {
 
             ImGuiWindowFlags components_flags = ImGuiWindowFlags_HorizontalScrollbar;
             ImGui::BeginChild("components", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y), ImGuiChildFlags_None, components_flags);
-            scene.componentManager->renderImGuiForEntity(selectedEntity);
+            scene.componentManager.renderImGuiForEntity(selectedEntity);
             ImGui::EndChild();
         }
     }

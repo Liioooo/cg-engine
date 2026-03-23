@@ -20,11 +20,9 @@ namespace CgEngine {
     Application::~Application() {
         CG_LOGGING_INFO("Shutting Down!");
 
+        sceneManager.~SceneManager();
         delete sceneRenderer;
-
         Renderer::shutdown();
-        delete sceneManager;
-        delete window;
     }
 
     Application &Application::get() {
@@ -60,25 +58,24 @@ namespace CgEngine {
         windowSpecification.vSync = iniReader.GetBoolean("window", "v_sync", true);
         windowSpecification.graphicsApi = applicationOptions.graphicsApi;
 
-        window = new Window(windowSpecification, EVENT_BIND_FN(onEvent));
-        Renderer::init(*window);
+        window.init(windowSpecification, EVENT_BIND_FN(onEvent));
+        Renderer::init(window);
 
-        sceneRenderer = new SceneRenderer(window->getWidth(), window->getHeight());
+        sceneRenderer = new SceneRenderer(window.getWidth(), window.getHeight());
 
-        sceneManager = new SceneManager();
-        sceneManager->setViewportSize(window->getWidth(), window->getHeight());
-        sceneManager->setActiveScene(iniReader.Get("game", "startScene", "default_scene.xml"));
+        sceneManager.setViewportSize(window.getWidth(), window.getHeight());
+        sceneManager.setActiveScene(iniReader.Get("game", "startScene", "default_scene.xml"));
     }
 
     void Application::run() {
         lastFrameTime = getTime();
 
         while (isRunning) {
-            window->pollEvents();
-            Renderer::beginFrame(*window);
+            window.pollEvents();
+            Renderer::beginFrame(window);
             Renderer::beginImGuiFrame();
 
-            Scene* activeScene = sceneManager->getActiveScene();
+            Scene* activeScene = sceneManager.getActiveScene();
             activeScene->onUpdate(timeStep);
             activeScene->onRender(*sceneRenderer);
 
@@ -86,14 +83,14 @@ namespace CgEngine {
 
             renderImGuiWindow();
             Renderer::renderImGuiFrame();
-            Renderer::endFrame(*window);
+            Renderer::endFrame(window);
 
             float time = getTime();
             timeStep = time - lastFrameTime;
             lastFrameTime = time;
 
-            if (sceneManager->shouldSwapScenes()) {
-                sceneManager->swapScenes();
+            if (sceneManager.shouldSwapScenes()) {
+                sceneManager.swapScenes();
                 resourceManager.unloadUnusedResources();
                 timeStep = 0.0f;
             }
@@ -125,7 +122,7 @@ namespace CgEngine {
     }
 
     SceneManager& Application::getSceneManager() {
-        return *sceneManager;
+        return sceneManager;
     }
 
     SceneRenderer& Application::getSceneRenderer() {
@@ -133,7 +130,7 @@ namespace CgEngine {
     }
 
     Window &Application::getWindow() {
-        return *window;
+        return window;
     }
 
     void Application::onEvent(Event& event) {
@@ -152,7 +149,7 @@ namespace CgEngine {
         eventDispatcher.dispatch<KeyPressedEvent>(EVENT_BIND_FN(onKeyPressed));
 
         if (!event.wasHandled()) {
-            sceneManager->getActiveScene()->onEvent(event);
+            sceneManager.getActiveScene()->onEvent(event);
         }
     }
 
@@ -162,7 +159,7 @@ namespace CgEngine {
     }
 
     void Application::onWindowResize(WindowResizeEvent &event) {
-        sceneManager->setViewportSize(event.getWidth(), event.getHeight());
+        sceneManager.setViewportSize(event.getWidth(), event.getHeight());
         sceneRenderer->setViewportSize(event.getWidth(), event.getHeight());
         Renderer::setFramebufferResized();
     }
@@ -186,7 +183,7 @@ namespace CgEngine {
 
                 if (ImGui::BeginTabBar("#main-tabbar")) {
                     if (ImGui::BeginTabItem("Scene")) {
-                        ImGuiSceneView::renderSceneView(*sceneManager->getActiveScene());
+                        ImGuiSceneView::renderSceneView(*sceneManager.getActiveScene());
                         ImGui::EndTabItem();
                     }
                     if (ImGui::BeginTabItem("Application")) {
