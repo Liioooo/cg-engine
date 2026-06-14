@@ -929,8 +929,129 @@ namespace CgEngine {
     }
 
     SceneRenderer::~SceneRenderer() {
+        delete environmentMapDescriptorSetBlack;
+        delete environmentMapDescriptorSetLayout;
+
+        delete dirShadowMapDescriptorSet;
+        delete dirShadowMapDescriptorSetLayout;
+        delete dirShadowMapFramebuffer;
+        delete dirShadowMaps;
+        delete dirShadowMapTransformsBuffer;
+        delete dirShadowMapRenderPass;
+        delete dirShadowMapPipeline;
+
+        delete gBufferDescriptorSet;
+        delete gBufferDescriptorSetLayout;
+        delete gBufferRenderPass;
+        delete gBufferPipeline;
+        delete gBufferAlbedoRoughnessAttachment;
+        delete gBufferEmissionMetallicAttachment;
+        delete gBufferWorldNormalsAttachment;
+        delete gBufferViewNormalsAttachment;
+        delete gBufferDepthAttachment;
+        delete gBufferFramebuffer;
+        delete gBufferTransformsBuffer;
+
+        delete hbaoDeinterleavingDescriptorSet;
+        delete hbaoDeinterleavingDescriptorSetLayout;
+        delete hbaoDeinterleavingRenderPass;
+        delete hbaoDeinterleavingPipeline;
+        delete hbaoDeinterleavingAttachment;
         delete hbaoDeinterleavingFramebuffers[0];
         delete hbaoDeinterleavingFramebuffers[1];
+
+        delete hbaoComputeDescriptorSet;
+        delete hbaoComputeDescriptorSetLayout;
+        delete hbaoComputePipeline;
+        delete hbaoResult;
+
+        delete hbaoReinterleavingRenderPass;
+        delete hbaoReinterleavingPipeline;
+        delete hbaoReinterleavingAttachment;
+        delete hbaoReinterleavingFramebuffer;
+        delete hbaoReinterleavingDescriptorSet;
+        delete hbaoReinterleavingDescriptorSetLayout;
+
+        delete hbaoBlurRenderPass0;
+        delete hbaoBlurRenderPass1;
+        delete hbaoBlurPipeline0;
+        delete hbaoBlurPipeline1;
+        delete hbaoBlurAttachment0;
+        delete hbaoBlurAttachment1;
+        delete hbaoBlurFramebuffer0;
+        delete hbaoBlurFramebuffer1;
+        delete hbaoBlurDescriptorSet0;
+        delete hbaoBlurDescriptorSet1;
+        delete hbaoBlurDescriptorSetLayout;
+
+        delete pbrRenderPass;
+        delete pbrPipeline;
+        delete pbrColorAttachment;
+        delete pbrFramebuffer;
+        delete pbrDescriptorSet;
+        delete pbrDescriptorSetLayout;
+
+        delete afterPbrRenderPass;
+        delete afterPbrFramebuffer;
+
+        delete skyboxPipeline;
+
+        delete boundingBoxDescriptorSetLayout;
+        delete boundingBoxPipeline;
+        delete boundingBoxTransformsBuffer;
+        delete boundingBoxDescriptorSet;
+
+        delete physicsCollidersDescriptorSetLayout;
+        delete physicsCollidersPipeline;
+        delete physicsCollidersTransformsBuffer;
+        delete physicsCollidersDescriptorSet;
+
+        delete normalsDebugPipeline;
+
+        delete bloomDescriptorSetLayout;
+        delete bloomDownSamplePass;
+        delete bloomUpSamplePass;
+        delete bloomDownsamplePipeline;
+        delete bloomUpsamplePipeline;
+
+        for (auto& attachment : bloomAttachments) {
+            delete attachment;
+        }
+        for (auto& framebuffer : bloomDownsampleFramebuffers) {
+            delete framebuffer;
+        }
+        for (auto& framebuffer : bloomUpsampleFramebuffers) {
+            delete framebuffer;
+        }
+        for (auto& descriptorSet : bloomDescriptorSets) {
+            delete descriptorSet;
+        }
+
+        delete screenDescriptorSetLayout;
+        delete screenPipeline;
+        delete screenDescriptorSet;
+
+        delete uiCirclePipeline;
+        delete uiRectPipeline;
+        delete uiTextPipeline;
+
+        delete ui2DPipeline;
+        delete ui2DDescriptorSetLayoutCameraBuffer;
+        delete ui2DDescriptorSetCameraBuffer;
+        delete uiCanvasSampleDescriptorSetLayout;
+
+        delete debugLinesDescriptorSetLayout;
+        delete debugLinesPipeline;
+        delete debugLinesDescriptorSet;
+
+        delete customPipelineDescriptorSetLayout;
+        delete customPipelineDescriptorSet;
+
+        delete animatedMeshDescriptorSetLayout;
+        delete skinningDescriptorSetLayout;
+        delete boneTransformsBuffer;
+        delete skinningComputePipeline;
+        delete skinningDescriptorSet;
     }
 
     void SceneRenderer::setActiveScene(Scene* scene) {
@@ -1179,6 +1300,7 @@ namespace CgEngine {
         debugLinesDrawInfoQueue.clear();
 
         activeRendering = false;
+        activeScene = nullptr;
     }
 
     void SceneRenderer::submitMesh(Mesh* mesh, const std::vector<uint32_t>& meshNodes, PBRMaterial* overrideMaterial, bool castShadows, bool enableCulling, const glm::mat4& transform, const std::vector<float>& lodDistances) {
