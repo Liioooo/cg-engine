@@ -47,5 +47,75 @@ namespace CgEngine {
 
             backend->endAndSubmitSingleTimeCommandBuffer(commandBuffer);
         }
+
+        size_t alignUp(size_t value, size_t alignment) {
+            return (value + alignment - 1) & ~(alignment - 1);
+        }
+
+        vk::Format findSupportedDepthFormat(const std::vector<vk::Format>& candidates) {
+            auto physicalDevice = Renderer::getVulkanBackend()->getVkPhysicalDevice();
+
+            for (vk::Format format : candidates) {
+                vk::FormatProperties props = physicalDevice.getFormatProperties(format);
+
+                if ((props.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment) == vk::FormatFeatureFlagBits::eDepthStencilAttachment) {
+                    return format;
+                }
+            }
+            CG_LOGGING_ERROR("failed to find supported depth format!")
+            return vk::Format::eUndefined;
+        }
+
+        bool hasFormatStencilComponent(vk::Format format) {
+            return format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint || format == vk::Format::eD16UnormS8Uint;
+        }
+
+        vk::Format attachmentTypeToVulkanColorFormat(AttachmentType attachmentType) {
+            switch (attachmentType) {
+                case AttachmentType::RGBA8:
+                    return vk::Format::eR8G8B8A8Unorm;
+                case AttachmentType::RGBA16F:
+                    return vk::Format::eR16G16B16A16Sfloat;
+                case AttachmentType::RGBA32F:
+                    return vk::Format::eR32G32B32A32Sfloat;
+                case AttachmentType::RG8:
+                    return vk::Format::eR8G8Unorm;
+                case AttachmentType::RG16F:
+                    return vk::Format::eR16G16Sfloat;
+                case AttachmentType::RG32F:
+                    return vk::Format::eR32G32Sfloat;
+                case AttachmentType::R16F:
+                    return vk::Format::eR16Sfloat;
+            }
+
+            CG_LOGGING_ERROR("Given attachment type is not a color attachment!")
+            return vk::Format::eR8G8B8A8Unorm;;
+        }
+
+        vk::ImageAspectFlags attachmentTypeToAspectFlags(AttachmentType attachmentType) {
+            switch (attachmentType) {
+                case AttachmentType::Depth:
+                    return vk::ImageAspectFlagBits::eDepth;
+                case AttachmentType::DepthStencil:
+                    return vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+                default:
+                    return vk::ImageAspectFlagBits::eColor;
+            }
+        }
+
+        vk::ImageUsageFlags attachmentTypeToUsageFlags(bool usableAsTexture, AttachmentType attachmentType) {
+            vk::ImageUsageFlags flags = vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eInputAttachment | vk::ImageUsageFlagBits::eColorAttachment;
+
+            if (usableAsTexture) {
+                flags |= vk::ImageUsageFlagBits::eSampled;
+            }
+
+            if (attachmentType == AttachmentType::Depth || attachmentType == AttachmentType::DepthStencil) {
+                flags &= ~vk::ImageUsageFlagBits::eColorAttachment;
+                flags |= vk::ImageUsageFlagBits::eDepthStencilAttachment;
+            }
+
+            return flags;
+        }
     }
 }

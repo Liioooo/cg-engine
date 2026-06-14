@@ -93,32 +93,32 @@ namespace CgEngine {
             );
 
             buffer = rawBuffer;
-            mappedPtr = static_cast<uint8_t*>(vmaInfo.pMappedData);
 
             if (data) {
+                uint8_t* mappedPtr = static_cast<uint8_t*>(vmaInfo.pMappedData);
                 std::memcpy(mappedPtr, data, perFrameSize);
             }
         }
     }
 
     VulkanVertexBuffer::~VulkanVertexBuffer() {
-        VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
-        vmaDestroyBuffer(allocator, buffer, allocation);
-
-        mappedPtr = nullptr;
+        if (buffer != VK_NULL_HANDLE) {
+            VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
+            vmaDestroyBuffer(allocator, buffer, allocation);
+            buffer = VK_NULL_HANDLE;
+            allocation = VK_NULL_HANDLE;
+        }
     }
 
     VulkanVertexBuffer::VulkanVertexBuffer(VulkanVertexBuffer &&other) noexcept : VertexBuffer(std::move(other)) {
         buffer = other.buffer;
         allocation = other.allocation;
         perFrameSize = other.perFrameSize;
-        mappedPtr = other.mappedPtr;
         layout = other.layout;
         usage = other.usage;
 
         other.buffer = VK_NULL_HANDLE;
         other.allocation = VK_NULL_HANDLE;
-        other.mappedPtr = nullptr;
     }
 
     VulkanVertexBuffer & VulkanVertexBuffer::operator=(VulkanVertexBuffer &&other) noexcept {
@@ -133,35 +133,41 @@ namespace CgEngine {
             buffer = other.buffer;
             allocation = other.allocation;
             perFrameSize = other.perFrameSize;
-            mappedPtr = other.mappedPtr;
             layout = other.layout;
             usage = other.usage;
 
             other.buffer = VK_NULL_HANDLE;
             other.allocation = VK_NULL_HANDLE;
-            other.mappedPtr = nullptr;
         }
         return *this;
     }
 
     void VulkanVertexBuffer::setData(const void* data, size_t size) {
         CG_ASSERT(usage == VertexBufferUsage::Dynamic, "setData only valid for dynamic buffers");
-        CG_ASSERT(mappedPtr != nullptr, "Buffer not mapped");
         CG_ASSERT(size <= perFrameSize, "Data size exceeds the per-frame buffer size")
 
         uint32_t frameIndex = Renderer::getVulkanBackend()->getCurrentFrameIndex();
         size_t offset = frameIndex * perFrameSize;
+
+        VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
+        VmaAllocationInfo info;
+        vmaGetAllocationInfo(allocator, allocation, &info);
+        uint8_t* mappedPtr = static_cast<uint8_t*>(info.pMappedData);
 
         std::memcpy(mappedPtr + offset, data, size);
     }
 
     void VulkanVertexBuffer::setSubData(size_t offset, const void *data, size_t size) {
         CG_ASSERT(usage == VertexBufferUsage::Dynamic, "setData only valid for dynamic buffers");
-        CG_ASSERT(mappedPtr != nullptr, "Buffer not mapped");
         CG_ASSERT(offset + size <= perFrameSize, "Data size and offset exceed the per-frame buffer size")
 
         uint32_t frameIndex = Renderer::getVulkanBackend()->getCurrentFrameIndex();
         size_t bufferOffset = frameIndex * perFrameSize + offset;
+
+        VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
+        VmaAllocationInfo info;
+        vmaGetAllocationInfo(allocator, allocation, &info);
+        uint8_t* mappedPtr = static_cast<uint8_t*>(info.pMappedData);
 
         std::memcpy(mappedPtr + bufferOffset, data, size);
     }

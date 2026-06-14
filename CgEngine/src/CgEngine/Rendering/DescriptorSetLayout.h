@@ -27,6 +27,9 @@ namespace CgEngine {
         DescriptorSetLayout& operator=(DescriptorSetLayout& other) = delete;
 
         virtual bool isReady() const = 0;
+
+    protected:
+        static bool validateBindingPoints(std::vector<std::pair<std::vector<uint32_t>, const char*>> bindingPoints);
     };
 
 }

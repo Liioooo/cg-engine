@@ -1,0 +1,52 @@
+#pragma once
+
+#include "vk_mem_alloc.h"
+#include "Rendering/Attachment.h"
+#include <vulkan/vulkan.hpp>
+
+namespace CgEngine {
+    class VulkanAttachment : public Attachment {
+    public:
+        VulkanAttachment() = default;
+        explicit VulkanAttachment(const AttachmentSpecification& spec);
+
+        ~VulkanAttachment() override;
+
+        VulkanAttachment(VulkanAttachment&& other) noexcept;
+        VulkanAttachment& operator=(VulkanAttachment&& other) noexcept;
+
+        VulkanAttachment(VulkanAttachment& other) = delete;
+        VulkanAttachment& operator=(VulkanAttachment& other) = delete;
+
+        AttachmentType getType() const override;
+        DepthStencilAttachmentFormat getDepthStencilAttachmentFormat() const override;
+        bool isUsableAsTexture() const override;
+        uint32_t getLayerCount() const override;
+        uint32_t getWidth() const override;
+        uint32_t getHeight() const override;
+
+        void resize(uint32_t newWidth, uint32_t newHeight) override;
+
+        vk::ImageView getVulkanImageView() const;
+        vk::ImageView getVulkanLayerImageView(uint32_t layer) const;
+
+    private:
+        vk::Image image = VK_NULL_HANDLE;
+        VmaAllocation allocation = VK_NULL_HANDLE;
+        vk::ImageView imageView = VK_NULL_HANDLE;
+        std::vector<vk::ImageView> layerImageViews;
+        DepthStencilAttachmentFormat depthFormat;
+        AttachmentType type;
+        bool usableAsTexture = false;
+        TextureWrap textureWrap = TextureWrap::Clamp;
+        MipMapFiltering mipMapFiltering = MipMapFiltering::Bilinear;
+        TextureBorderColor textureBorderColor = TextureBorderColor::OpaqueBlack;
+        uint32_t layerCount;
+        uint32_t width = 0;
+        uint32_t height = 0;
+        vk::Format vulkanFormat;;
+
+        void createAttachmentImage();
+        void createImageViews();
+    };
+}

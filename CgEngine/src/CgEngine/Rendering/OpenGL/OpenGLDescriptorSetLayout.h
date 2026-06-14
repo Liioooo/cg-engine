@@ -7,7 +7,7 @@ namespace CgEngine {
     class OpenGLDescriptorSetLayout : public DescriptorSetLayout {
     public:
         OpenGLDescriptorSetLayout() = default;
-        explicit OpenGLDescriptorSetLayout(const DescriptorSetLayoutSpecification& spec) {}
+        explicit OpenGLDescriptorSetLayout(const DescriptorSetLayoutSpecification& spec);
 
         ~OpenGLDescriptorSetLayout() override = default;
 

@@ -34,7 +34,6 @@ namespace CgEngine {
         VmaAllocation allocation = VK_NULL_HANDLE;
 
         vk::DeviceSize perFrameSize = 0;
-        uint8_t* mappedPtr = nullptr;
 
         VertexBufferLayout layout;
         VertexBufferUsage usage;

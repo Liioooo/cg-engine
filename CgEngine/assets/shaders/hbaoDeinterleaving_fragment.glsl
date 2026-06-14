@@ -13,7 +13,7 @@ PUSH_CONSTANT(HbaoUvOffset) {
 } pc_uvOffset;
 
 
-layout(binding = 0) uniform sampler2D u_Depth;
+layout(binding = 1) uniform sampler2D u_Depth;
 
 layout(location = 0) out float out_Color[8];
 

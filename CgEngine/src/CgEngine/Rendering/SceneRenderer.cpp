@@ -212,7 +212,7 @@ namespace CgEngine {
 
             DescriptorSetLayoutSpecification hbaoDeinterleavingDescriptorSetLayoutSpec{};
             hbaoDeinterleavingDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
-            hbaoDeinterleavingDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {0};
+            hbaoDeinterleavingDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {1};
             hbaoDeinterleavingDescriptorSetLayoutSpec.uboBindingPoints = {0, 3};
             hbaoDeinterleavingDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(hbaoDeinterleavingDescriptorSetLayoutSpec);
 
@@ -264,7 +264,7 @@ namespace CgEngine {
             hbaoDeinterleavingDescriptorSetSpec.layout = hbaoDeinterleavingDescriptorSetLayout;
             hbaoDeinterleavingDescriptorSetSpec.attachmentTextureBindings.resize(1);
             hbaoDeinterleavingDescriptorSetSpec.attachmentTextureBindings[0].attachment = gBufferDepthAttachment;
-            hbaoDeinterleavingDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 0;
+            hbaoDeinterleavingDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 1;
             hbaoDeinterleavingDescriptorSetSpec.attachmentTextureBindings[0].allLayers = true;
             hbaoDeinterleavingDescriptorSetSpec.uboBindings = {
                     {0, ubCameraData},
@@ -277,7 +277,7 @@ namespace CgEngine {
             hbaoComputeDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Compute;
             hbaoComputeDescriptorSetLayoutSpec.uboBindingPoints = {3, 4};
             hbaoComputeDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {0, 1};
-            hbaoComputeDescriptorSetLayoutSpec.imageBindingPoints = {0};
+            hbaoComputeDescriptorSetLayoutSpec.imageBindingPoints = {2};
             hbaoComputeDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(hbaoComputeDescriptorSetLayoutSpec);
 
             ComputePipelineSpecification hbaoComputePipelineSpec{};
@@ -473,7 +473,7 @@ namespace CgEngine {
 
             DescriptorSetLayoutSpecification pbrDescriptorSetLayoutSpec{};
             pbrDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
-            pbrDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {0, 1, 2, 3, 7, 8, 9};
+            pbrDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {7, 8, 9, 10, 11, 12, 13};
             pbrDescriptorSetLayoutSpec.uboBindingPoints = {0, 1, 2};
             pbrDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(pbrDescriptorSetLayoutSpec);
 
@@ -512,16 +512,16 @@ namespace CgEngine {
             pbrDescriptorSetSpec.layout = pbrDescriptorSetLayout;
             pbrDescriptorSetSpec.attachmentTextureBindings.resize(6);
             pbrDescriptorSetSpec.attachmentTextureBindings[0].attachment = gBufferAlbedoRoughnessAttachment;
-            pbrDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 0;
+            pbrDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 10;
             pbrDescriptorSetSpec.attachmentTextureBindings[0].allLayers = true;
             pbrDescriptorSetSpec.attachmentTextureBindings[1].attachment = gBufferEmissionMetallicAttachment;
-            pbrDescriptorSetSpec.attachmentTextureBindings[1].bindingPoint = 1;
+            pbrDescriptorSetSpec.attachmentTextureBindings[1].bindingPoint = 11;
             pbrDescriptorSetSpec.attachmentTextureBindings[1].allLayers = true;
             pbrDescriptorSetSpec.attachmentTextureBindings[2].attachment = gBufferWorldNormalsAttachment;
-            pbrDescriptorSetSpec.attachmentTextureBindings[2].bindingPoint = 2;
+            pbrDescriptorSetSpec.attachmentTextureBindings[2].bindingPoint = 12;
             pbrDescriptorSetSpec.attachmentTextureBindings[2].allLayers = true;
             pbrDescriptorSetSpec.attachmentTextureBindings[3].attachment = gBufferDepthAttachment;
-            pbrDescriptorSetSpec.attachmentTextureBindings[3].bindingPoint = 3;
+            pbrDescriptorSetSpec.attachmentTextureBindings[3].bindingPoint = 13;
             pbrDescriptorSetSpec.attachmentTextureBindings[3].allLayers = true;
             pbrDescriptorSetSpec.attachmentTextureBindings[4].attachment = dirShadowMaps;
             pbrDescriptorSetSpec.attachmentTextureBindings[4].bindingPoint = 8;

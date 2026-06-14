@@ -35,6 +35,7 @@ namespace CgEngine {
     class GraphicsObjectsFactory {
     public:
         static void setGraphicsAPI(GraphicsAPI newApi);
+        static GraphicsAPI getGraphicsAPI();
 
         static RendererBackendBase* createRendererBackend();
         static IndexBuffer* createIndexBuffer();

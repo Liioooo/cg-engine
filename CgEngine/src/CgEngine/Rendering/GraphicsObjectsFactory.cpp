@@ -22,11 +22,18 @@
 #include "Rendering/Vulkan/VulkanVertexBuffer.h"
 #include "Rendering/Vulkan/VulkanIndexBuffer.h"
 #include "Rendering/Vulkan/VulkanVertexArrayObject.h"
+#include "Rendering/Vulkan/VulkanUniformBuffer.h"
+#include "Rendering/Vulkan/VulkanDescriptorSetLayout.h"
+#include "Rendering/Vulkan/VulkanAttachment.h"
 
 namespace CgEngine {
 
     void GraphicsObjectsFactory::setGraphicsAPI(GraphicsAPI newApi) {
         api = newApi;
+    }
+
+    GraphicsAPI GraphicsObjectsFactory::getGraphicsAPI() {
+        return api;
     }
 
     RendererBackendBase* GraphicsObjectsFactory::createRendererBackend() {
@@ -131,7 +138,7 @@ namespace CgEngine {
     Attachment* GraphicsObjectsFactory::createAttachment() {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanAttachment();
             case GraphicsAPI::OpenGL:
                 return new OpenGLAttachment();
         }
@@ -140,7 +147,7 @@ namespace CgEngine {
     Attachment* GraphicsObjectsFactory::createAttachment(const AttachmentSpecification& spec) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanAttachment(spec);
             case GraphicsAPI::OpenGL:
                 return new OpenGLAttachment(spec);
         }
@@ -167,7 +174,7 @@ namespace CgEngine {
     UniformBuffer* GraphicsObjectsFactory::createUniformBuffer() {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanUniformBuffer();
             case GraphicsAPI::OpenGL:
                 return new OpenGLUniformBuffer();
         }
@@ -176,7 +183,7 @@ namespace CgEngine {
     UniformBuffer* GraphicsObjectsFactory::createUniformBuffer(uint32_t size) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanUniformBuffer(size);
             case GraphicsAPI::OpenGL:
                 return new OpenGLUniformBuffer(size);
         }
@@ -230,7 +237,7 @@ namespace CgEngine {
     DescriptorSetLayout* GraphicsObjectsFactory::createDescriptorSetLayout() {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanDescriptorSetLayout();
             case GraphicsAPI::OpenGL:
                 return new OpenGLDescriptorSetLayout();
         }
@@ -239,7 +246,7 @@ namespace CgEngine {
     DescriptorSetLayout* GraphicsObjectsFactory::createDescriptorSetLayout(const DescriptorSetLayoutSpecification& spec) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanDescriptorSetLayout(spec);
             case GraphicsAPI::OpenGL:
                 return new OpenGLDescriptorSetLayout(spec);
         }
