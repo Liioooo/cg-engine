@@ -17,7 +17,6 @@
 #include "Rendering/OpenGL/OpenGLTextureCube.h"
 #include "Rendering/OpenGL/OpenGLComputePipeline.h"
 #include "Rendering/OpenGL/OpenGLGraphicsPipeline.h"
-#include "Rendering/OpenGL/OpenGLDynamicGraphicsPipeline.h"
 #include "Rendering/Vulkan/VulkanRenderer.h"
 #include "Rendering/Vulkan/VulkanVertexBuffer.h"
 #include "Rendering/Vulkan/VulkanIndexBuffer.h"
@@ -270,6 +269,15 @@ namespace CgEngine {
         }
     }
 
+    DescriptorSet* GraphicsObjectsFactory::createDescriptorSet(const DescriptorSetLayout* layout) {
+        switch (api) {
+            case GraphicsAPI::Vulkan:
+                return nullptr;
+            case GraphicsAPI::OpenGL:
+                return new OpenGLDescriptorSet(layout);
+        }
+    }
+
     TextureCube* GraphicsObjectsFactory::createTextureCube() {
         switch (api) {
             case GraphicsAPI::Vulkan:
@@ -330,24 +338,6 @@ namespace CgEngine {
                 return nullptr;
             case GraphicsAPI::OpenGL:
                 return new OpenGLGraphicsPipeline(spec);
-        }
-    }
-
-    DynamicGraphicsPipeline* GraphicsObjectsFactory::createDynamicGraphicsPipeline() {
-        switch (api) {
-            case GraphicsAPI::Vulkan:
-                return nullptr;
-            case GraphicsAPI::OpenGL:
-                return new OpenGLDynamicGraphicsPipeline();
-        }
-    }
-
-    DynamicGraphicsPipeline* GraphicsObjectsFactory::createDynamicGraphicsPipeline(const DynamicGraphicsPipelineSpecification& spec) {
-        switch (api) {
-            case GraphicsAPI::Vulkan:
-                return nullptr;
-            case GraphicsAPI::OpenGL:
-                return new OpenGLDynamicGraphicsPipeline(spec);
         }
     }
 

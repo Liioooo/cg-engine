@@ -11,13 +11,19 @@ namespace CgEngine {
 
         ~OpenGLDescriptorSetLayout() override = default;
 
-        OpenGLDescriptorSetLayout(OpenGLDescriptorSetLayout&& other) noexcept = default;
-        OpenGLDescriptorSetLayout& operator=(OpenGLDescriptorSetLayout&& other) noexcept = default;
+        OpenGLDescriptorSetLayout(OpenGLDescriptorSetLayout&& other) noexcept;
+        OpenGLDescriptorSetLayout& operator=(OpenGLDescriptorSetLayout&& other) noexcept;
 
         OpenGLDescriptorSetLayout(OpenGLDescriptorSetLayout& other) = delete;
         OpenGLDescriptorSetLayout& operator=(OpenGLDescriptorSetLayout& other) = delete;
 
         bool isReady() const override;
+
+        const DescriptorSetLayoutSpecification& getSpecification() const;
+
+    private:
+        bool ready = false;
+        DescriptorSetLayoutSpecification specification{};
     };
 
 }

@@ -31,7 +31,6 @@ namespace CgEngine {
 
         void bindGraphicsPipeline(const GraphicsPipeline* graphicsPipeline) override;
         void bindComputePipeline(const ComputePipeline* computePipeline) override;
-        void bindDynamicGraphicsPipeline(const DynamicGraphicsPipeline* graphicsPipeline) override;
         void dispatchCompute(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
         void clearPass(const RenderPass* renderPass, const Framebuffer* framebuffer) override;
@@ -56,7 +55,7 @@ namespace CgEngine {
 
         const std::vector<VertexBufferLayout> getUnitQuadVertexInputLayout() override;
         const std::vector<VertexBufferLayout> getUnitCubeVertexInputLayout() override;
-        const RenderPass* getSwapChainRenderPass() override;
+        PipelineAttachmentInfo getSwapChainAttachmentInfo() override;
 
         void beginImGuiFrame() override;
         void renderImGuiFrame() override;

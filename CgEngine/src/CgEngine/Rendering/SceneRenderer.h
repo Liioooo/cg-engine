@@ -10,10 +10,10 @@
 #include "CameraFrustum.h"
 #include "ComputePipeline.h"
 #include "GraphicsPipeline.h"
-#include "DynamicGraphicsPipeline.h"
 #include "Ui/UiCanvas.h"
 #include "Resources/Mesh.h"
 #include "CustomPipeline.h"
+#include "PipelineAttachmentInfo.h"
 
 namespace CgEngine {
 
@@ -55,10 +55,12 @@ namespace CgEngine {
         void submitUiCanvas2D(UiCanvas* uiCanvas, glm::mat4 finalTransform, uint32_t zIndex);
 
         const CameraFrustum& getCamaraFrustum() const;
-        const RenderPass* getGBufferRenderPass() const;
+        PipelineAttachmentInfo getGBufferAttachmentInfo() const;
         const DescriptorSetLayout* getCustomPipelineDescriptorSetLayout() const;
         const IndexBuffer* getUiIndexBuffer() const;
         const DescriptorSetLayout* getUiCanvasSampleDescriptorSetLayout() const;
+        const DescriptorSetLayout* getUiDescriptorSetLayout() const;
+        const DescriptorSetLayout* getUiTextDescriptorSetLayout() const;
 
         const DescriptorSetLayout* getEnvironmentMapDescriptorSetLayout() const;
         const DescriptorSetLayout* getPBRMaterialDescriptorSetLayout() const;
@@ -136,8 +138,7 @@ namespace CgEngine {
         DescriptorSetLayout* hbaoBlurDescriptorSetLayout;
         RenderPass* hbaoBlurRenderPass0;
         RenderPass* hbaoBlurRenderPass1;
-        GraphicsPipeline* hbaoBlurPipeline0;
-        GraphicsPipeline* hbaoBlurPipeline1;
+        GraphicsPipeline* hbaoBlurPipeline;
         Attachment* hbaoBlurAttachment0;
         Attachment* hbaoBlurAttachment1;
         Framebuffer* hbaoBlurFramebuffer0;
@@ -196,9 +197,11 @@ namespace CgEngine {
         struct UiPushConstants {
             glm::mat4 projection;
         };
-        DynamicGraphicsPipeline* uiCirclePipeline;
-        DynamicGraphicsPipeline* uiRectPipeline;
-        DynamicGraphicsPipeline* uiTextPipeline;
+        DescriptorSetLayout* uiDescriptorSetLayout;
+        DescriptorSetLayout* uiTextDescriptorSetLayout;
+        GraphicsPipeline* uiCirclePipeline;
+        GraphicsPipeline* uiRectPipeline;
+        GraphicsPipeline* uiTextPipeline;
 
         GraphicsPipeline* ui2DPipeline;
         DescriptorSetLayout* ui2DDescriptorSetLayoutCameraBuffer;

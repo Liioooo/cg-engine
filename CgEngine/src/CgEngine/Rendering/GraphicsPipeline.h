@@ -32,7 +32,9 @@ namespace CgEngine {
         BlendingFunction destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
         int tesselationPatchSize = ~0;
         DrawMode drawMode = DrawMode::Triangles;
-        const RenderPass* renderPass = nullptr;
+        std::vector<AttachmentType> colorAttachments;
+        bool hasDepthStencilAttachment = false;
+        DepthStencilAttachmentFormat depthAttachmentFormat;
     };
 
     class GraphicsPipeline {

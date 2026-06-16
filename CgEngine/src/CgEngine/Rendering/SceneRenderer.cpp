@@ -66,17 +66,18 @@ namespace CgEngine {
             dirShadowMapDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(dirShadowMapDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification dirShadowMapPipelineSpec{};
-            dirShadowMapPipelineSpec.renderPass = dirShadowMapRenderPass;
             dirShadowMapPipelineSpec.engineShaderName = "dirShadowMap";
             dirShadowMapPipelineSpec.frontfaceCulling = false;
             dirShadowMapPipelineSpec.backfaceCulling = true;
             dirShadowMapPipelineSpec.vertexInputLayout = MeshProps::DEFAULT_VERT_BUFF_LAYOUTS;
             dirShadowMapPipelineSpec.descriptorSetLayouts = {dirShadowMapDescriptorSetLayout};
+            dirShadowMapPipelineSpec.colorAttachments = {};
+            dirShadowMapPipelineSpec.hasDepthStencilAttachment = true;
+            dirShadowMapPipelineSpec.depthAttachmentFormat = dirShadowMaps->getDepthStencilAttachmentFormat();
 
             dirShadowMapPipeline = GraphicsObjectsFactory::createGraphicsPipeline(dirShadowMapPipelineSpec);
 
             FramebufferSpecification shadowMapFramebufferSpec{};
-            shadowMapFramebufferSpec.renderPass = dirShadowMapRenderPass;
             shadowMapFramebufferSpec.height = applicationOptions.shadowMapResolution;
             shadowMapFramebufferSpec.width = applicationOptions.shadowMapResolution;
             shadowMapFramebufferSpec.depthStencilAttachment.attachment = dirShadowMaps;
@@ -136,18 +137,24 @@ namespace CgEngine {
             gBufferDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(gBufferDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification gBufferPipelineSpec{};
-            gBufferPipelineSpec.renderPass = gBufferRenderPass;
             gBufferPipelineSpec.engineShaderName = "gBuffer";
             gBufferPipelineSpec.depthCompareOperator = DepthCompareOperator::Less;
             gBufferPipelineSpec.vertexInputLayout = MeshProps::DEFAULT_VERT_BUFF_LAYOUTS;
             gBufferPipelineSpec.descriptorSetLayouts = {gBufferDescriptorSetLayout, pbrMaterialDescriptorSetLayout};
+            gBufferPipelineSpec.colorAttachments = {
+                AttachmentType::RGBA16F,
+                AttachmentType::RGBA16F,
+                AttachmentType::RGBA16F,
+                AttachmentType::RGBA16F
+            };
+            gBufferPipelineSpec.hasDepthStencilAttachment = true;
+            gBufferPipelineSpec.depthAttachmentFormat = gBufferDepthAttachment->getDepthStencilAttachmentFormat();
 
             gBufferPipeline = GraphicsObjectsFactory::createGraphicsPipeline(gBufferPipelineSpec);
 
             FramebufferSpecification gBufferFramebufferSpec{};
             gBufferFramebufferSpec.height = viewportHeight;
             gBufferFramebufferSpec.width = viewportWidth;
-            gBufferFramebufferSpec.renderPass = gBufferRenderPass;
             gBufferFramebufferSpec.colorAttachments = {
                 {gBufferAlbedoRoughnessAttachment},
                 {gBufferEmissionMetallicAttachment},
@@ -217,19 +224,28 @@ namespace CgEngine {
             hbaoDeinterleavingDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(hbaoDeinterleavingDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification hbaoDeinterleavingPipelineSpec{};
-            hbaoDeinterleavingPipelineSpec.renderPass = hbaoDeinterleavingRenderPass;
             hbaoDeinterleavingPipelineSpec.descriptorSetLayouts = {hbaoDeinterleavingDescriptorSetLayout};
             hbaoDeinterleavingPipelineSpec.engineShaderName = "hbaoDeinterleaving";
             hbaoDeinterleavingPipelineSpec.depthWrite = false;
             hbaoDeinterleavingPipelineSpec.depthTest = false;
             hbaoDeinterleavingPipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
+            hbaoDeinterleavingPipelineSpec.colorAttachments = {
+                AttachmentType::R16F,
+                AttachmentType::R16F,
+                AttachmentType::R16F,
+                AttachmentType::R16F,
+                AttachmentType::R16F,
+                AttachmentType::R16F,
+                AttachmentType::R16F,
+                AttachmentType::R16F
+            };
+            hbaoDeinterleavingPipelineSpec.hasDepthStencilAttachment = false;
 
             hbaoDeinterleavingPipeline = GraphicsObjectsFactory::createGraphicsPipeline(hbaoDeinterleavingPipelineSpec);
 
             FramebufferSpecification hbaoDeinterleavingFramebufferSpec0{};
             hbaoDeinterleavingFramebufferSpec0.width = quarterSize.x;
             hbaoDeinterleavingFramebufferSpec0.height = quarterSize.y;
-            hbaoDeinterleavingFramebufferSpec0.renderPass = hbaoDeinterleavingRenderPass;
             hbaoDeinterleavingFramebufferSpec0.colorAttachments = {
                 {hbaoDeinterleavingAttachment, 0, false},
                 {hbaoDeinterleavingAttachment, 1, false},
@@ -246,7 +262,6 @@ namespace CgEngine {
             FramebufferSpecification hbaoDeinterleavingFramebufferSpec1{};
             hbaoDeinterleavingFramebufferSpec1.width = quarterSize.x;
             hbaoDeinterleavingFramebufferSpec1.height = quarterSize.y;
-            hbaoDeinterleavingFramebufferSpec1.renderPass = hbaoDeinterleavingRenderPass;
             hbaoDeinterleavingFramebufferSpec1.colorAttachments = {
                     {hbaoDeinterleavingAttachment, 8, false},
                     {hbaoDeinterleavingAttachment, 9, false},
@@ -347,7 +362,6 @@ namespace CgEngine {
             hbaoReinterleavingDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(hbaoReinterleavingDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification hbaoReinterleavingPipelineSpec{};
-            hbaoReinterleavingPipelineSpec.renderPass = hbaoReinterleavingRenderPass;
             hbaoReinterleavingPipelineSpec.engineShaderName = "hbaoReinterleaving";
             hbaoReinterleavingPipelineSpec.frontfaceCulling = false;
             hbaoReinterleavingPipelineSpec.backfaceCulling = false;
@@ -355,13 +369,14 @@ namespace CgEngine {
             hbaoReinterleavingPipelineSpec.depthTest = false;
             hbaoReinterleavingPipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
             hbaoReinterleavingPipelineSpec.descriptorSetLayouts = {hbaoReinterleavingDescriptorSetLayout};
+            hbaoReinterleavingPipelineSpec.colorAttachments = { AttachmentType::RG16F };
+            hbaoDeinterleavingPipelineSpec.hasDepthStencilAttachment = false;
 
             hbaoReinterleavingPipeline = GraphicsObjectsFactory::createGraphicsPipeline(hbaoReinterleavingPipelineSpec);
 
             FramebufferSpecification hbaoReinterleavingFramebufferSpec{};
             hbaoReinterleavingFramebufferSpec.width = viewportWidth;
             hbaoReinterleavingFramebufferSpec.height = viewportHeight;
-            hbaoReinterleavingFramebufferSpec.renderPass = hbaoReinterleavingRenderPass;
             hbaoReinterleavingFramebufferSpec.colorAttachments = {
                     {hbaoReinterleavingAttachment}
             };
@@ -400,33 +415,22 @@ namespace CgEngine {
             hbaoBlurDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {0};
             hbaoBlurDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(hbaoBlurDescriptorSetLayoutSpec);
 
-            GraphicsPipelineSpecification hbaoBlurPipelineSpec0{};
-            hbaoBlurPipelineSpec0.renderPass = hbaoBlurRenderPass0;
-            hbaoBlurPipelineSpec0.engineShaderName = "hbaoBlur";
-            hbaoBlurPipelineSpec0.frontfaceCulling = false;
-            hbaoBlurPipelineSpec0.backfaceCulling = false;
-            hbaoBlurPipelineSpec0.depthTest = false;
-            hbaoBlurPipelineSpec0.depthWrite = false;
-            hbaoBlurPipelineSpec0.descriptorSetLayouts = {hbaoBlurDescriptorSetLayout};
+            GraphicsPipelineSpecification hbaoBlurPipelineSpec{};
+            hbaoBlurPipelineSpec.engineShaderName = "hbaoBlur";
+            hbaoBlurPipelineSpec.frontfaceCulling = false;
+            hbaoBlurPipelineSpec.backfaceCulling = false;
+            hbaoBlurPipelineSpec.depthTest = false;
+            hbaoBlurPipelineSpec.depthWrite = false;
+            hbaoBlurPipelineSpec.descriptorSetLayouts = {hbaoBlurDescriptorSetLayout};
+            hbaoBlurPipelineSpec.colorAttachments = { AttachmentType::RG16F };
+            hbaoBlurPipelineSpec.hasDepthStencilAttachment = false;
 
 
-            hbaoBlurPipeline0 = GraphicsObjectsFactory::createGraphicsPipeline(hbaoBlurPipelineSpec0);
-
-            GraphicsPipelineSpecification hbaoBlurPipelineSpec1{};
-            hbaoBlurPipelineSpec1.renderPass = hbaoBlurRenderPass1;
-            hbaoBlurPipelineSpec1.engineShaderName = "hbaoBlur";
-            hbaoBlurPipelineSpec1.frontfaceCulling = false;
-            hbaoBlurPipelineSpec1.backfaceCulling = false;
-            hbaoBlurPipelineSpec1.depthTest = false;
-            hbaoBlurPipelineSpec1.depthWrite = false;
-            hbaoBlurPipelineSpec1.descriptorSetLayouts = {hbaoBlurDescriptorSetLayout};
-
-            hbaoBlurPipeline1 = GraphicsObjectsFactory::createGraphicsPipeline(hbaoBlurPipelineSpec1);
+            hbaoBlurPipeline = GraphicsObjectsFactory::createGraphicsPipeline(hbaoBlurPipelineSpec);
 
             FramebufferSpecification hbaoBlurFramebufferSpec0{};
             hbaoBlurFramebufferSpec0.width = viewportWidth;
             hbaoBlurFramebufferSpec0.height = viewportHeight;
-            hbaoBlurFramebufferSpec0.renderPass = hbaoBlurRenderPass0;
             hbaoBlurFramebufferSpec0.colorAttachments = {
                     {hbaoBlurAttachment0}
             };
@@ -436,7 +440,6 @@ namespace CgEngine {
             FramebufferSpecification hbaoBlurFramebufferSpec1{};
             hbaoBlurFramebufferSpec1.width = viewportWidth;
             hbaoBlurFramebufferSpec1.height = viewportHeight;
-            hbaoBlurFramebufferSpec1.renderPass = hbaoBlurRenderPass1;
             hbaoBlurFramebufferSpec1.colorAttachments = {
                     {hbaoBlurAttachment1}
             };
@@ -466,8 +469,6 @@ namespace CgEngine {
             pbrRenderPassSpec.clearColorAttachments = true;
             pbrRenderPassSpec.clearDepthStencilAttachment = false;
             pbrRenderPassSpec.clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
-            pbrRenderPassSpec.hasDepthStencilAttachment = false;
-            pbrRenderPassSpec.colorAttachments = {AttachmentType::RGBA16F};
 
             pbrRenderPass = GraphicsObjectsFactory::createRenderPass(pbrRenderPassSpec);
 
@@ -478,12 +479,13 @@ namespace CgEngine {
             pbrDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(pbrDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification pbrPipelineSpec{};
-            pbrPipelineSpec.renderPass = pbrRenderPass;
             pbrPipelineSpec.engineShaderName = "pbr";
             pbrPipelineSpec.depthWrite = false;
             pbrPipelineSpec.depthTest = false;
             pbrPipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
             pbrPipelineSpec.descriptorSetLayouts = {pbrDescriptorSetLayout, environmentMapDescriptorSetLayout};
+            pbrPipelineSpec.colorAttachments = { AttachmentType::RGBA16F };
+            pbrPipelineSpec.hasDepthStencilAttachment = false;
 
             pbrPipeline = GraphicsObjectsFactory::createGraphicsPipeline(pbrPipelineSpec);
 
@@ -501,7 +503,6 @@ namespace CgEngine {
             FramebufferSpecification pbrFramebufferSpec{};
             pbrFramebufferSpec.height = viewportHeight;
             pbrFramebufferSpec.width = viewportWidth;
-            pbrFramebufferSpec.renderPass = pbrRenderPass;
             pbrFramebufferSpec.colorAttachments = {
                 {pbrColorAttachment}
             };
@@ -544,16 +545,10 @@ namespace CgEngine {
             RenderPassSpecification afterPbrRenderPassSpec{};
             afterPbrRenderPassSpec.clearColorAttachments = false;
             afterPbrRenderPassSpec.clearDepthStencilAttachment = false;
-            afterPbrRenderPassSpec.hasDepthStencilAttachment = true;
-            afterPbrRenderPassSpec.depthStencilAttachmentFormat = gBufferDepthAttachment->getDepthStencilAttachmentFormat();
-            afterPbrRenderPassSpec.colorAttachments = {
-                    pbrColorAttachment->getType()
-            };
 
             afterPbrRenderPass = GraphicsObjectsFactory::createRenderPass(afterPbrRenderPassSpec);
 
             FramebufferSpecification afterPbrFramebufferSpec{};
-            afterPbrFramebufferSpec.renderPass = afterPbrRenderPass;
             afterPbrFramebufferSpec.width = viewportWidth;
             afterPbrFramebufferSpec.height = viewportHeight;
             afterPbrFramebufferSpec.colorAttachments = {
@@ -566,12 +561,16 @@ namespace CgEngine {
         }
         {
             GraphicsPipelineSpecification skyboxPipelineSpec{};
-            skyboxPipelineSpec.renderPass = afterPbrRenderPass;
             skyboxPipelineSpec.descriptorSetLayouts = {environmentMapDescriptorSetLayout};
             skyboxPipelineSpec.engineShaderName = "skybox";
             skyboxPipelineSpec.depthCompareOperator = DepthCompareOperator::LessOrEqual;
             skyboxPipelineSpec.depthTest = true;
             skyboxPipelineSpec.vertexInputLayout = Renderer::getUnitCubeVertexInputLayout();
+            skyboxPipelineSpec.hasDepthStencilAttachment = true;
+            skyboxPipelineSpec.depthAttachmentFormat = gBufferDepthAttachment->getDepthStencilAttachmentFormat();
+            skyboxPipelineSpec.colorAttachments = {
+                pbrColorAttachment->getType()
+            };
 
             skyboxPipeline = GraphicsObjectsFactory::createGraphicsPipeline(skyboxPipelineSpec);
         }
@@ -583,13 +582,17 @@ namespace CgEngine {
             physicsCollidersDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(physicsCollidersDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification physicsCollidersPipelineSpec;
-            physicsCollidersPipelineSpec.renderPass = afterPbrRenderPass;
             physicsCollidersPipelineSpec.engineShaderName = "colliders";
             physicsCollidersPipelineSpec.depthTest = false;
             physicsCollidersPipelineSpec.depthWrite = false;
             physicsCollidersPipelineSpec.wireframe = true;
             physicsCollidersPipelineSpec.vertexInputLayout = MeshProps::DEFAULT_VERT_BUFF_LAYOUTS;
             physicsCollidersPipelineSpec.descriptorSetLayouts = {physicsCollidersDescriptorSetLayout};
+            physicsCollidersPipelineSpec.hasDepthStencilAttachment = true;
+            physicsCollidersPipelineSpec.depthAttachmentFormat = gBufferDepthAttachment->getDepthStencilAttachmentFormat();
+            physicsCollidersPipelineSpec.colorAttachments = {
+                pbrColorAttachment->getType()
+            };
 
             physicsCollidersPipeline = GraphicsObjectsFactory::createGraphicsPipeline(physicsCollidersPipelineSpec);
 
@@ -614,7 +617,6 @@ namespace CgEngine {
             boundingBoxDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(boundingBoxDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification boundingBoxPipelineSpec;
-            boundingBoxPipelineSpec.renderPass = afterPbrRenderPass;
             boundingBoxPipelineSpec.engineShaderName = "colliders";
             boundingBoxPipelineSpec.depthTest = true;
             boundingBoxPipelineSpec.depthWrite = false;
@@ -623,6 +625,11 @@ namespace CgEngine {
             boundingBoxPipelineSpec.backfaceCulling = false;
             boundingBoxPipelineSpec.vertexInputLayout = MeshProps::DEFAULT_VERT_BUFF_LAYOUTS;
             boundingBoxPipelineSpec.descriptorSetLayouts = {boundingBoxDescriptorSetLayout};
+            boundingBoxPipelineSpec.hasDepthStencilAttachment = true;
+            boundingBoxPipelineSpec.depthAttachmentFormat = gBufferDepthAttachment->getDepthStencilAttachmentFormat();
+            boundingBoxPipelineSpec.colorAttachments = {
+                pbrColorAttachment->getType()
+            };
 
             boundingBoxPipeline = GraphicsObjectsFactory::createGraphicsPipeline(boundingBoxPipelineSpec);
 
@@ -641,12 +648,16 @@ namespace CgEngine {
         }
         {
             GraphicsPipelineSpecification mormalsDebugPipelineSpec{};
-            mormalsDebugPipelineSpec.renderPass = afterPbrRenderPass;
             mormalsDebugPipelineSpec.engineShaderName = "normalsVisualize";
             mormalsDebugPipelineSpec.depthTest = true;
             mormalsDebugPipelineSpec.depthWrite = false;
             mormalsDebugPipelineSpec.vertexInputLayout = MeshProps::DEFAULT_VERT_BUFF_LAYOUTS;
             mormalsDebugPipelineSpec.descriptorSetLayouts = {gBufferDescriptorSetLayout};
+            mormalsDebugPipelineSpec.hasDepthStencilAttachment = true;
+            mormalsDebugPipelineSpec.depthAttachmentFormat = gBufferDepthAttachment->getDepthStencilAttachmentFormat();
+            mormalsDebugPipelineSpec.colorAttachments = {
+                pbrColorAttachment->getType()
+            };
 
             normalsDebugPipeline = GraphicsObjectsFactory::createGraphicsPipeline(mormalsDebugPipelineSpec);
         }
@@ -667,6 +678,11 @@ namespace CgEngine {
             debugLinesPipelineSpec.depthWrite = false;
             debugLinesPipelineSpec.drawMode = DrawMode::Lines;
             debugLinesPipelineSpec.descriptorSetLayouts = {debugLinesDescriptorSetLayout};
+            debugLinesPipelineSpec.hasDepthStencilAttachment = true;
+            debugLinesPipelineSpec.depthAttachmentFormat = gBufferDepthAttachment->getDepthStencilAttachmentFormat();
+            debugLinesPipelineSpec.colorAttachments = {
+                pbrColorAttachment->getType()
+            };
 
             debugLinesPipeline = GraphicsObjectsFactory::createGraphicsPipeline(debugLinesPipelineSpec);
 
@@ -699,7 +715,6 @@ namespace CgEngine {
             RenderPassSpecification bloomDownSamplePassSpec;
             bloomDownSamplePassSpec.clearColorAttachments = true;
             bloomDownSamplePassSpec.clearDepthStencilAttachment = false;
-            bloomDownSamplePassSpec.colorAttachments = { AttachmentType::RGBA16F };
 
             bloomDownSamplePass = GraphicsObjectsFactory::createRenderPass(bloomDownSamplePassSpec);
 
@@ -709,11 +724,12 @@ namespace CgEngine {
             bloomDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(bloomDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification bloomDownsamplePipelineSpec{};
-            bloomDownsamplePipelineSpec.renderPass = bloomDownSamplePass;
             bloomDownsamplePipelineSpec.engineShaderName = "bloomDownSample";
             bloomDownsamplePipelineSpec.depthTest = false;
             bloomDownsamplePipelineSpec.depthWrite = false;
             bloomDownsamplePipelineSpec.descriptorSetLayouts = {bloomDescriptorSetLayout};
+            bloomDownsamplePipelineSpec.colorAttachments = { AttachmentType::RGBA16F };
+            bloomDownsamplePipelineSpec.hasDepthStencilAttachment = false;
 
             bloomDownsamplePipeline = GraphicsObjectsFactory::createGraphicsPipeline(bloomDownsamplePipelineSpec);
 
@@ -721,7 +737,6 @@ namespace CgEngine {
                 FramebufferSpecification bloomFramebufferSpec{};
                 bloomFramebufferSpec.width = bloomAttachments[i]->getWidth();
                 bloomFramebufferSpec.height = bloomAttachments[i]->getHeight();
-                bloomFramebufferSpec.renderPass = bloomDownSamplePass;
                 bloomFramebufferSpec.colorAttachments = {
                         {bloomAttachments[i]}
                 };
@@ -731,12 +746,10 @@ namespace CgEngine {
             RenderPassSpecification bloomUpSamplePassSpec;
             bloomUpSamplePassSpec.clearColorAttachments = false;
             bloomUpSamplePassSpec.clearDepthStencilAttachment = false;
-            bloomUpSamplePassSpec.colorAttachments = { AttachmentType::RGBA16F };
 
             bloomUpSamplePass = GraphicsObjectsFactory::createRenderPass(bloomUpSamplePassSpec);
 
             GraphicsPipelineSpecification bloomUpsamplePipelineSpec{};
-            bloomUpsamplePipelineSpec.renderPass = bloomUpSamplePass;
             bloomUpsamplePipelineSpec.engineShaderName = "bloomUpSample";
             bloomUpsamplePipelineSpec.depthTest = false;
             bloomUpsamplePipelineSpec.depthWrite = false;
@@ -745,6 +758,8 @@ namespace CgEngine {
             bloomUpsamplePipelineSpec.srcBlendingFunction = BlendingFunction::One;
             bloomUpsamplePipelineSpec.destBlendingFunction = BlendingFunction::One;
             bloomUpsamplePipelineSpec.descriptorSetLayouts = {bloomDescriptorSetLayout};
+            bloomUpsamplePipelineSpec.colorAttachments = { AttachmentType::RGBA16F };
+            bloomUpsamplePipelineSpec.hasDepthStencilAttachment = false;
 
             bloomUpsamplePipeline = GraphicsObjectsFactory::createGraphicsPipeline(bloomUpsamplePipelineSpec);
 
@@ -752,7 +767,6 @@ namespace CgEngine {
                 FramebufferSpecification bloomFramebufferSpec{};
                 bloomFramebufferSpec.width = bloomAttachments[i]->getWidth();
                 bloomFramebufferSpec.height = bloomAttachments[i]->getHeight();
-                bloomFramebufferSpec.renderPass = bloomUpSamplePass;
                 bloomFramebufferSpec.colorAttachments = {
                         {bloomAttachments[i]}
                 };
@@ -786,12 +800,17 @@ namespace CgEngine {
             screenDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(screenDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification screenPipelineSpec;
-            screenPipelineSpec.renderPass = Renderer::getSwapChainRenderPass();
             screenPipelineSpec.engineShaderName = "screen";
             screenPipelineSpec.depthTest = false;
             screenPipelineSpec.depthWrite = false;
             screenPipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
             screenPipelineSpec.descriptorSetLayouts = {screenDescriptorSetLayout};
+
+            PipelineAttachmentInfo swapChainAttachmentInfo = Renderer::getSwapChainAttachmentInfo();
+
+            screenPipelineSpec.colorAttachments = swapChainAttachmentInfo.colorAttachments;
+            screenPipelineSpec.hasDepthStencilAttachment = false;
+            screenPipelineSpec.depthAttachmentFormat = swapChainAttachmentInfo.depthAttachmentFormat;
 
             screenPipeline = GraphicsObjectsFactory::createGraphicsPipeline(screenPipelineSpec);
 
@@ -825,7 +844,17 @@ namespace CgEngine {
 
             uiIndexBuffer = GraphicsObjectsFactory::createIndexBuffer(uiIndices, MAX_UI_INDICES, IndexBufferDataType::UInt32);
 
-            DynamicGraphicsPipelineSpecification uiCirclePipelineSpec;
+            uiDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout({
+                .usage = DescriptorSetLayoutUsage::Graphics,
+                .texture2DAndAttachmentBindingPoints = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
+            });
+
+            uiTextDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout({
+                .usage = DescriptorSetLayoutUsage::Graphics,
+                .texture2DAndAttachmentBindingPoints = {0, 1, 2, 3},
+            });
+
+            GraphicsPipelineSpecification uiCirclePipelineSpec;
             uiCirclePipelineSpec.engineShaderName = "uiCircle";
             uiCirclePipelineSpec.depthTest = false;
             uiCirclePipelineSpec.depthWrite = false;
@@ -834,12 +863,13 @@ namespace CgEngine {
             uiCirclePipelineSpec.srcBlendingFunction = BlendingFunction::SrcAlpha;
             uiCirclePipelineSpec.destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
             uiCirclePipelineSpec.vertexInputLayout = UI_CIRCLE_VERTEX_BUFFER_LAYOUTS;
-            uiCirclePipelineSpec.renderingInfo.hasDepthStencilAttachment = false;
-            uiCirclePipelineSpec.renderingInfo.colorAttachments = { UI_CANVAS_ATTACHMENT_TYPE };
+            uiCirclePipelineSpec.hasDepthStencilAttachment = false;
+            uiCirclePipelineSpec.colorAttachments = { UI_CANVAS_ATTACHMENT_TYPE };
+            uiCirclePipelineSpec.descriptorSetLayouts = {uiDescriptorSetLayout};
 
-            uiCirclePipeline = GraphicsObjectsFactory::createDynamicGraphicsPipeline(uiCirclePipelineSpec);
+            uiCirclePipeline = GraphicsObjectsFactory::createGraphicsPipeline(uiCirclePipelineSpec);
 
-            DynamicGraphicsPipelineSpecification uiRectPipelineSpec;
+            GraphicsPipelineSpecification uiRectPipelineSpec;
             uiRectPipelineSpec.engineShaderName = "uiRect";
             uiRectPipelineSpec.depthTest = false;
             uiRectPipelineSpec.depthWrite = false;
@@ -848,12 +878,13 @@ namespace CgEngine {
             uiRectPipelineSpec.srcBlendingFunction = BlendingFunction::SrcAlpha;
             uiRectPipelineSpec.destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
             uiRectPipelineSpec.vertexInputLayout = UI_RECT_VERTEX_BUFFER_LAYOUTS;
-            uiRectPipelineSpec.renderingInfo.hasDepthStencilAttachment = false;
-            uiRectPipelineSpec.renderingInfo.colorAttachments = { UI_CANVAS_ATTACHMENT_TYPE };
+            uiRectPipelineSpec.hasDepthStencilAttachment = false;
+            uiRectPipelineSpec.colorAttachments = { UI_CANVAS_ATTACHMENT_TYPE };
+            uiCirclePipelineSpec.descriptorSetLayouts = {uiDescriptorSetLayout};
 
-            uiRectPipeline = GraphicsObjectsFactory::createDynamicGraphicsPipeline(uiRectPipelineSpec);
+            uiRectPipeline = GraphicsObjectsFactory::createGraphicsPipeline(uiRectPipelineSpec);
 
-            DynamicGraphicsPipelineSpecification uiTextPipelineSpec;
+            GraphicsPipelineSpecification uiTextPipelineSpec;
             uiTextPipelineSpec.engineShaderName = "uiText";
             uiTextPipelineSpec.depthTest = false;
             uiTextPipelineSpec.depthWrite = false;
@@ -862,10 +893,11 @@ namespace CgEngine {
             uiTextPipelineSpec.srcBlendingFunction = BlendingFunction::SrcAlpha;
             uiTextPipelineSpec.destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
             uiTextPipelineSpec.vertexInputLayout = UI_TEXT_VERTEX_BUFFER_LAYOUTS;
-            uiTextPipelineSpec.renderingInfo.hasDepthStencilAttachment = false;
-            uiTextPipelineSpec.renderingInfo.colorAttachments = { UI_CANVAS_ATTACHMENT_TYPE };
+            uiTextPipelineSpec.hasDepthStencilAttachment = false;
+            uiTextPipelineSpec.colorAttachments = { UI_CANVAS_ATTACHMENT_TYPE };
+            uiCirclePipelineSpec.descriptorSetLayouts = {uiTextDescriptorSetLayout};
 
-            uiTextPipeline = GraphicsObjectsFactory::createDynamicGraphicsPipeline(uiTextPipelineSpec);
+            uiTextPipeline = GraphicsObjectsFactory::createGraphicsPipeline(uiTextPipelineSpec);
         }
         {
             DescriptorSetLayoutSpecification ui2DCameraBufferDescriptorSetLayoutSpec{};
@@ -884,7 +916,6 @@ namespace CgEngine {
             uiCanvasSampleDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(uiCanvasSampleDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification ui2DPipelineSpec;
-            ui2DPipelineSpec.renderPass = Renderer::getSwapChainRenderPass();
             ui2DPipelineSpec.engineShaderName = "ui2D";
             ui2DPipelineSpec.depthTest = false;
             ui2DPipelineSpec.depthWrite = false;
@@ -894,6 +925,12 @@ namespace CgEngine {
             ui2DPipelineSpec.destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
             ui2DPipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
             ui2DPipelineSpec.descriptorSetLayouts = {ui2DDescriptorSetLayoutCameraBuffer, uiCanvasSampleDescriptorSetLayout};
+
+            PipelineAttachmentInfo swapChainAttachmentInfo = Renderer::getSwapChainAttachmentInfo();
+
+            ui2DPipelineSpec.colorAttachments = swapChainAttachmentInfo.colorAttachments;
+            ui2DPipelineSpec.hasDepthStencilAttachment = false;
+            ui2DPipelineSpec.depthAttachmentFormat = swapChainAttachmentInfo.depthAttachmentFormat;
 
             ui2DPipeline = GraphicsObjectsFactory::createGraphicsPipeline(ui2DPipelineSpec);
 
@@ -974,8 +1011,7 @@ namespace CgEngine {
 
         delete hbaoBlurRenderPass0;
         delete hbaoBlurRenderPass1;
-        delete hbaoBlurPipeline0;
-        delete hbaoBlurPipeline1;
+        delete hbaoBlurPipeline;
         delete hbaoBlurAttachment0;
         delete hbaoBlurAttachment1;
         delete hbaoBlurFramebuffer0;
@@ -1034,6 +1070,8 @@ namespace CgEngine {
         delete uiCirclePipeline;
         delete uiRectPipeline;
         delete uiTextPipeline;
+        delete uiDescriptorSetLayout;
+        delete uiTextDescriptorSetLayout;
 
         delete ui2DPipeline;
         delete ui2DDescriptorSetLayoutCameraBuffer;
@@ -1515,8 +1553,19 @@ namespace CgEngine {
         return cameraFrustum;
     }
 
-    const RenderPass* SceneRenderer::getGBufferRenderPass() const {
-        return gBufferRenderPass;
+    PipelineAttachmentInfo SceneRenderer::getGBufferAttachmentInfo() const {
+        PipelineAttachmentInfo info{};
+
+        info.colorAttachments = {
+            AttachmentType::RGBA16F,
+            AttachmentType::RGBA16F,
+            AttachmentType::RGBA16F,
+            AttachmentType::RGBA16F
+        };
+        info.hasDepthStencilAttachment = true;
+        info.depthAttachmentFormat = gBufferDepthAttachment->getDepthStencilAttachmentFormat();
+
+        return info;
     }
 
     const DescriptorSetLayout* SceneRenderer::getCustomPipelineDescriptorSetLayout() const {
@@ -1529,6 +1578,14 @@ namespace CgEngine {
 
     const DescriptorSetLayout* SceneRenderer::getUiCanvasSampleDescriptorSetLayout() const {
         return uiCanvasSampleDescriptorSetLayout;
+    }
+
+    const DescriptorSetLayout * SceneRenderer::getUiDescriptorSetLayout() const {
+        return uiDescriptorSetLayout;
+    }
+
+    const DescriptorSetLayout * SceneRenderer::getUiTextDescriptorSetLayout() const {
+        return uiTextDescriptorSetLayout;
     }
 
     const DescriptorSetLayout* SceneRenderer::getEnvironmentMapDescriptorSetLayout() const {
@@ -1653,14 +1710,14 @@ namespace CgEngine {
         pc.invResolutionDirection = glm::vec2(invViewportWidth, 0.0f);
 
         Renderer::beginRenderPass(hbaoBlurRenderPass0, hbaoBlurFramebuffer0);
-        Renderer::bindGraphicsPipeline(hbaoBlurPipeline0);
+        Renderer::bindGraphicsPipeline(hbaoBlurPipeline);
         Renderer::bindDescriptorSet(hbaoBlurDescriptorSet0, 0);
         Renderer::setPushConstants(&pc, sizeof(HbaoBlurPushConstants));
         Renderer::renderUnitQuad();
         Renderer::endRenderPass();
 
         Renderer::beginRenderPass(hbaoBlurRenderPass1, hbaoBlurFramebuffer1);
-        Renderer::bindGraphicsPipeline(hbaoBlurPipeline1);
+        Renderer::bindGraphicsPipeline(hbaoBlurPipeline);
         Renderer::bindDescriptorSet(hbaoBlurDescriptorSet1, 0);
         pc.invResolutionDirection = glm::vec2(0.0f, invViewportHeight);
         Renderer::setPushConstants(&pc, sizeof(HbaoBlurPushConstants));
@@ -1835,7 +1892,7 @@ namespace CgEngine {
 
             for (const auto& command: canvasCommand.drawCommands) {
                 if (command.circleIndexCount > 0) {
-                    Renderer::bindDynamicGraphicsPipeline(uiCirclePipeline);
+                    Renderer::bindGraphicsPipeline(uiCirclePipeline);
                     Renderer::setPushConstants(&uiPushConstantsData, sizeof(UiPushConstants));
                     Renderer::bindDescriptorSet(command.descriptorSet, 0);
                     Renderer::executeDrawCommand(command.circleVAO, command.circleIndexCount, 0, circleOffset);
@@ -1843,7 +1900,7 @@ namespace CgEngine {
                     circleOffset += command.circleVertexCount;
                 }
                 if (command.rectIndexCount > 0) {
-                    Renderer::bindDynamicGraphicsPipeline(uiRectPipeline);
+                    Renderer::bindGraphicsPipeline(uiRectPipeline);
                     Renderer::setPushConstants(&uiPushConstantsData, sizeof(UiPushConstants));
                     Renderer::bindDescriptorSet(command.descriptorSet, 0);
                     Renderer::executeDrawCommand(command.rectVAO, command.rectIndexCount, 0, rectOffset);
@@ -1851,7 +1908,7 @@ namespace CgEngine {
                     rectOffset += command.rectVertexCount;
                 }
                 if (command.textIndexCount > 0) {
-                    Renderer::bindDynamicGraphicsPipeline(uiTextPipeline);
+                    Renderer::bindGraphicsPipeline(uiTextPipeline);
                     Renderer::setPushConstants(&uiPushConstantsData, sizeof(UiPushConstants));
                     Renderer::bindDescriptorSet(command.textDescriptorSet, 0);
                     Renderer::executeDrawCommand(command.textVAO, command.textIndexCount, 0, textOffset);

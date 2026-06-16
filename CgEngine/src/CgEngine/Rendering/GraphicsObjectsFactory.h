@@ -21,7 +21,6 @@ namespace CgEngine {
     class TextureCube;
     class ComputePipeline;
     class GraphicsPipeline;
-    class DynamicGraphicsPipeline;
 
     struct RenderPassSpecification;
     struct AttachmentSpecification;
@@ -30,7 +29,6 @@ namespace CgEngine {
     struct DescriptorSetSpecification;
     struct ComputePipelineSpecification;
     struct GraphicsPipelineSpecification;
-    struct DynamicGraphicsPipelineSpecification;
 
     class GraphicsObjectsFactory {
     public:
@@ -63,6 +61,7 @@ namespace CgEngine {
         static DescriptorSetLayout* createDescriptorSetLayout(const DescriptorSetLayoutSpecification& spec);
         static DescriptorSet* createDescriptorSet();
         static DescriptorSet* createDescriptorSet(const DescriptorSetSpecification& spec);
+        static DescriptorSet* createDescriptorSet(const DescriptorSetLayout* layout);
         static TextureCube* createTextureCube();
         static TextureCube* createTextureCube(TextureFormat format, uint32_t width, uint32_t height, MipMapFiltering mipMapFiltering = MipMapFiltering::Bilinear);
         static TextureCube* createTextureCube(TextureFormat format, uint32_t width, uint32_t height, const void* data, MipMapFiltering mipMapFiltering = MipMapFiltering::Bilinear);       ;
@@ -70,8 +69,6 @@ namespace CgEngine {
         static ComputePipeline* createComputePipeline(const ComputePipelineSpecification& spec);
         static GraphicsPipeline* createGraphicsPipeline();
         static GraphicsPipeline* createGraphicsPipeline(const GraphicsPipelineSpecification& spec);
-        static DynamicGraphicsPipeline* createDynamicGraphicsPipeline();
-        static DynamicGraphicsPipeline* createDynamicGraphicsPipeline(const DynamicGraphicsPipelineSpecification& spec);
 
     private:
         static inline GraphicsAPI api = GraphicsAPI::OpenGL;

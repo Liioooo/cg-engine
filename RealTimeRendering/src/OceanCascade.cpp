@@ -53,7 +53,7 @@ namespace RTR {
         CgEngine::DescriptorSetSpecification initialSpectrumDescriptorSetSpec{};
         initialSpectrumDescriptorSetSpec.layout = initialSpectrumShader->getDescriptorSetLayout();
         initialSpectrumDescriptorSetSpec.uboBindings = {
-            {0, initialSpectrumUBO}
+            {3, initialSpectrumUBO}
         };
         initialSpectrumDescriptorSetSpec.texture2DBindings = {
             {0, gaussianNoise}

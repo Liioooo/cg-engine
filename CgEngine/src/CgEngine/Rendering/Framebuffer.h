@@ -17,7 +17,6 @@ namespace CgEngine {
     struct FramebufferSpecification {
         uint32_t width;
         uint32_t height;
-        const RenderPass* renderPass;
         std::vector<FramebufferAttachment> colorAttachments;
         FramebufferAttachment depthStencilAttachment;
     };

@@ -52,10 +52,6 @@ namespace CgEngine {
         backend->bindGraphicsPipeline(graphicsPipeline);
     }
 
-    void Renderer::bindDynamicGraphicsPipeline(const DynamicGraphicsPipeline* graphicsPipeline) {
-        backend->bindDynamicGraphicsPipeline(graphicsPipeline);
-    }
-
     void Renderer::bindComputePipeline(const ComputePipeline* computePipeline) {
         backend->bindComputePipeline(computePipeline);
     }
@@ -146,8 +142,8 @@ namespace CgEngine {
         return backend->getUnitCubeVertexInputLayout();
     }
 
-    const RenderPass* Renderer::getSwapChainRenderPass() {
-        return backend->getSwapChainRenderPass();
+    const PipelineAttachmentInfo Renderer::getSwapChainAttachmentInfo() {
+        return backend->getSwapChainAttachmentInfo();
     }
 
     void Renderer::beginImGuiFrame() {

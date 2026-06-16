@@ -2,8 +2,9 @@
     <ComputePipeline name="ocean/init-spectrum">
         <Shader>ocean/initSpectrum_comp</Shader>
         <DescriptorSetLayout>
-            <UboBindingPoints>0</UboBindingPoints>
-            <ImageBindingPoints>0,1,2</ImageBindingPoints>
+            <UboBindingPoints>3</UboBindingPoints>
+            <Texture2DAndAttachmentBindingPoints>0</Texture2DAndAttachmentBindingPoints>
+            <ImageBindingPoints>1,2</ImageBindingPoints>
         </DescriptorSetLayout>
     </ComputePipeline>
     <ComputePipeline name="ocean/conjugate">
@@ -92,6 +93,7 @@
             </VertexBufferLayout>
         </VertexBufferLayouts>
         <DescriptorSetLayout>
+            <Texture2DAndAttachmentBindingPoints>10</Texture2DAndAttachmentBindingPoints>
             <UboBindingPoints>2</UboBindingPoints>
             <SsboBindingPoints>6</SsboBindingPoints>
         </DescriptorSetLayout>

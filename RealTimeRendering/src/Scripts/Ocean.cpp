@@ -92,7 +92,6 @@ namespace RTR {
         matUniformBuffer->setData(&matData, sizeof(MaterialUniformBufferData));
 
         CgEngine::DescriptorSetSpecification matSpec{};
-        matSpec.layout = getOwingEntity().getComponent<CgEngine::CustomShaderRendererComponent>()->getPipeline()->getDescriptorSetLayout();
         matSpec.uboBindings = {
             {2, matUniformBuffer}
         };
@@ -148,10 +147,7 @@ namespace RTR {
 
         const auto* layout = getResource<CgEngine::CustomGraphicsPipeline>("ocean/render")->getDescriptorSetLayout();
 
-        CgEngine::DescriptorSetSpecification matSpec{};
-        matSpec.layout = layout;
-
-        mat = CgEngine::GraphicsObjectsFactory::createDescriptorSet(matSpec);
+        mat = CgEngine::GraphicsObjectsFactory::createDescriptorSet(layout);
         matUniformBuffer = CgEngine::GraphicsObjectsFactory::createUniformBuffer(sizeof(MaterialUniformBufferData));
 
         CgEngine::CustomShaderRendererComponentParams params;

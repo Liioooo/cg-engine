@@ -251,7 +251,12 @@ namespace CgEngine {
         pipelineSpec.engineShaderName = "";
         pipelineSpec.vertexInputLayout = spec.vertexBufferLayouts;
         pipelineSpec.descriptorSetLayouts = descriptorSetLayouts;
-        pipelineSpec.renderPass = sceneRenderer.getGBufferRenderPass();
+
+        PipelineAttachmentInfo pipelineAttachmentInfo = sceneRenderer.getGBufferAttachmentInfo();
+
+        pipelineSpec.colorAttachments = pipelineAttachmentInfo.colorAttachments;
+        pipelineSpec.hasDepthStencilAttachment = pipelineAttachmentInfo.hasDepthStencilAttachment;
+        pipelineSpec.depthAttachmentFormat = pipelineAttachmentInfo.depthAttachmentFormat;
 
         graphicsPipeline = GraphicsObjectsFactory::createGraphicsPipeline(pipelineSpec);
     }

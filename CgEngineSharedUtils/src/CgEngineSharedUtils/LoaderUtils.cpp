@@ -66,16 +66,20 @@ namespace CgEngine::LoaderUtils {
     }
 
     std::vector<uint32_t> getUint32ListFromString(std::string_view s) {
+        if (s.empty()) {
+            return {};
+        }
+
         std::vector<uint32_t> result;
         size_t start = 0;
 
         while (true) {
             size_t end = s.find(',', start);
             if (end == std::string_view::npos) {
-                result.emplace_back(CgEngine::StringUtils::toInt(s.substr(start)).value_or(0)); // last segment
+                result.emplace_back(StringUtils::toInt(s.substr(start)).value_or(0)); // last segment
                 break;
             }
-            result.emplace_back(CgEngine::StringUtils::toInt(s.substr(start, end - start)).value_or(0));
+            result.emplace_back(StringUtils::toInt(s.substr(start, end - start)).value_or(0));
             start = end + 1;
         }
 

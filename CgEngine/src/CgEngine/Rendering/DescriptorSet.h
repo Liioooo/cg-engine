@@ -13,41 +13,41 @@ namespace CgEngine {
 
     struct DescSetUBOBinding {
         uint32_t bindingPoint;
-        const UniformBuffer* ubo;
+        const UniformBuffer* ubo = nullptr;
     };
 
     struct DescSetSSBOBinding {
         uint32_t bindingPoint;
-        const ShaderStorageBuffer* ssbo;
+        const ShaderStorageBuffer* ssbo = nullptr;
     };
 
     struct DescSetImmutableSSBOBinding {
         uint32_t bindingPoint;
-        const ImmutableShaderStorageBuffer* ssbo;
+        const ImmutableShaderStorageBuffer* ssbo = nullptr;
     };
 
     struct DescSetTexture2DBinding {
         uint32_t bindingPoint;
-        const Texture2D* texture;
+        const Texture2D* texture = nullptr;
     };
 
     struct DescSetTextureCubeBinding {
         uint32_t bindingPoint;
-        const TextureCube* texture;
+        const TextureCube* texture = nullptr;
     };
 
     struct DescSetAttachmentTextureBinding {
         uint32_t bindingPoint;
         uint32_t layer = ~0;
         bool allLayers = true;
-        const Attachment* attachment;
+        const Attachment* attachment = nullptr;
     };
 
     struct DescSetImageCubeBinding {
         uint32_t bindingPoint;
         uint32_t mipLevel = 0;
         ShaderImageAccess access;
-        const TextureCube* texture;
+        const TextureCube* texture = nullptr;
     };
 
     struct DescSetAttachmentImageBinding {
@@ -55,16 +55,16 @@ namespace CgEngine {
         uint32_t layer = ~0;
         bool allLayers = true;
         ShaderImageAccess access;
-        const Attachment* attachment;
+        const Attachment* attachment = nullptr;
     };
 
     struct DescSetVertexBufferSSBOBinding {
         uint32_t bindingPoint;
-        const VertexBuffer* vertexBuffer;
+        const VertexBuffer* vertexBuffer = nullptr;
     };
 
     struct DescriptorSetSpecification {
-        const DescriptorSetLayout* layout;
+        const DescriptorSetLayout* layout = nullptr;
         std::vector<DescSetUBOBinding> uboBindings;
         std::vector<DescSetSSBOBinding> ssboBindings;
         std::vector<DescSetImmutableSSBOBinding> immutableSsboBindings;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "PipelineAttachmentInfo.h"
 #include "Window.h"
 #include "Rendering/RenderPass.h"
 #include "Rendering/Framebuffer.h"
@@ -9,7 +10,6 @@
 #include "Rendering/DescriptorSet.h"
 #include "Rendering/ComputePipeline.h"
 #include "Rendering/GraphicsPipeline.h"
-#include "Rendering/DynamicGraphicsPipeline.h"
 
 namespace CgEngine {
 
@@ -46,7 +46,6 @@ namespace CgEngine {
         virtual void endDynamicRendering() = 0;
 
         virtual void bindGraphicsPipeline(const GraphicsPipeline* graphicsPipeline) = 0;
-        virtual void bindDynamicGraphicsPipeline(const DynamicGraphicsPipeline* graphicsPipeline) = 0;
         virtual void bindComputePipeline(const ComputePipeline* computePipeline) = 0;
         virtual void dispatchCompute(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
 
@@ -72,7 +71,7 @@ namespace CgEngine {
 
         virtual const std::vector<VertexBufferLayout> getUnitQuadVertexInputLayout() = 0;
         virtual const std::vector<VertexBufferLayout> getUnitCubeVertexInputLayout() = 0;
-        virtual const RenderPass* getSwapChainRenderPass() = 0;
+        virtual PipelineAttachmentInfo getSwapChainAttachmentInfo() = 0;
 
         virtual void beginImGuiFrame() = 0;
         virtual void renderImGuiFrame() = 0;

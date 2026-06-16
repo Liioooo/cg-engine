@@ -10,7 +10,6 @@
 #include "OpenGLFramebuffer.h"
 #include "OpenGLHelpers.h"
 #include "OpenGLDescriptorSet.h"
-#include "OpenGLDynamicGraphicsPipeline.h"
 #include "OpenGLAttachment.h"
 
 namespace CgEngine {
@@ -99,7 +98,6 @@ namespace CgEngine {
         swapChainRenderPassSpec.clearDepthStencilAttachment = true;
         swapChainRenderPassSpec.clearColorAttachments = true;
         swapChainRenderPassSpec.clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
-        swapChainRenderPassSpec.hasDepthStencilAttachment = true;
 
         swapChainRenderPass = OpenGLRenderPass(swapChainRenderPassSpec);
 
@@ -234,89 +232,10 @@ namespace CgEngine {
     }
 
     void OpenGLRenderer::bindGraphicsPipeline(const GraphicsPipeline* graphicsPipeline) {
-        CG_ASSERT(currentRenderPass != nullptr, "There is no active RenderPass!")
-        CG_ASSERT(!currentlyDynamicRendering, "Cannot bind regular GraphicsPipeline while in dynamic rendering!")
+        CG_ASSERT(currentRenderPass != nullptr || currentlyDynamicRendering, "There is no active RenderPass or dynamic rendering has not been started!")
 
         auto* glGraphicsPipeline = static_cast<const OpenGLGraphicsPipeline*>(graphicsPipeline);
         const GraphicsPipelineSpecification& spec = glGraphicsPipeline->getSpecification();
-        currentPipelineHandle = glGraphicsPipeline->getOpenGLShaderHandle();
-        drawMode = glGraphicsPipeline->getDrawMode();
-
-        glUseProgram(glGraphicsPipeline->getOpenGLShaderHandle());
-
-        if (isWireframe != spec.wireframe) {
-            isWireframe = spec.wireframe;
-            if (isWireframe) {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            } else {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            }
-        }
-        if (isBackFaceCulling != spec.backfaceCulling || isFrontFaceCulling != spec.frontfaceCulling) {
-            isBackFaceCulling = spec.backfaceCulling;
-            isFrontFaceCulling = spec.frontfaceCulling;
-            if (isBackFaceCulling || isFrontFaceCulling) {
-                glEnable(GL_CULL_FACE);
-            } else {
-                glDisable(GL_CULL_FACE);
-            }
-            if (isBackFaceCulling) {
-                glCullFace(GL_BACK);
-            }
-            if (isFrontFaceCulling) {
-                glCullFace(GL_FRONT);
-            }
-        }
-        if (depthTest != spec.depthTest) {
-            depthTest = spec.depthTest;
-            if (depthTest) {
-                glEnable(GL_DEPTH_TEST);
-            } else {
-                glDisable(GL_DEPTH_TEST);
-            }
-        }
-        if (depthWrite != spec.depthWrite) {
-            depthWrite = spec.depthWrite;
-            if (depthWrite) {
-                glDepthMask(GL_TRUE);
-            } else {
-                glDepthMask(GL_FALSE);
-            }
-        }
-        if (depthCompareOperator != spec.depthCompareOperator) {
-            depthCompareOperator = spec.depthCompareOperator;
-            glDepthFunc(OpenGLHelpers::depthCompareOperatorToOpenGL(spec.depthCompareOperator));
-        }
-        if (useBlending != spec.useBlending) {
-            useBlending = spec.useBlending;
-            if (useBlending) {
-                glEnable(GL_BLEND);
-            } else {
-                glDisable(GL_BLEND);
-            }
-        }
-        if (blendingEquation != spec.blendingEquation) {
-            blendingEquation = spec.blendingEquation;
-            glBlendEquation(OpenGLHelpers::blendingEquationToOpenGL(blendingEquation));
-        }
-        if (srcBlendingFunction != spec.srcBlendingFunction || destBlendingFunction != spec.destBlendingFunction) {
-            srcBlendingFunction = spec.srcBlendingFunction;
-            destBlendingFunction = spec.destBlendingFunction;
-            glBlendFunc(OpenGLHelpers::blendingFunctionToOpenGL(srcBlendingFunction), OpenGLHelpers::blendingFunctionToOpenGL(destBlendingFunction));
-        }
-
-        if (spec.drawMode == DrawMode::Patches && spec.tesselationPatchSize != tessellationPatchSize) {
-            tessellationPatchSize = spec.tesselationPatchSize;
-            glPatchParameteri(GL_PATCH_VERTICES, tessellationPatchSize);
-        }
-    }
-
-    void OpenGLRenderer::bindDynamicGraphicsPipeline(const DynamicGraphicsPipeline* graphicsPipeline) {
-        CG_ASSERT(currentRenderPass == nullptr, "There is a active RenderPass!")
-        CG_ASSERT(currentlyDynamicRendering, "Not in dynamic rendering!")
-
-        auto* glGraphicsPipeline = static_cast<const OpenGLDynamicGraphicsPipeline*>(graphicsPipeline);
-        const DynamicGraphicsPipelineSpecification& spec = glGraphicsPipeline->getSpecification();
         currentPipelineHandle = glGraphicsPipeline->getOpenGLShaderHandle();
         drawMode = glGraphicsPipeline->getDrawMode();
 
@@ -563,8 +482,13 @@ namespace CgEngine {
         return unitCubeVAO.getLayout();
     }
 
-    const RenderPass* OpenGLRenderer::getSwapChainRenderPass() {
-        return &swapChainRenderPass;
+    PipelineAttachmentInfo OpenGLRenderer::getSwapChainAttachmentInfo() {
+        PipelineAttachmentInfo info{};
+        info.colorAttachments = { AttachmentType::RGBA8 };
+        info.hasDepthStencilAttachment = true;
+        info.depthAttachmentFormat = DepthStencilAttachmentFormat::Depth24Stencil8;
+
+        return info;
     }
 
     void OpenGLRenderer::beginImGuiFrame() {

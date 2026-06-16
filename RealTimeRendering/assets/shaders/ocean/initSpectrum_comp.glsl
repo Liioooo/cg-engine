@@ -9,7 +9,7 @@ layout(binding = 0) uniform sampler2D u_gaussianNoise;
 layout(rgba32f, binding = 1) uniform image2D u_h0Texture;
 layout(rgba32f, binding = 2) uniform image2D u_waveTexture;
 
-layout (binding = 0, std140) uniform OceanData {
+layout (binding = 3, std140) uniform OceanData {
     float T;
     float gamma;
     float alpha;

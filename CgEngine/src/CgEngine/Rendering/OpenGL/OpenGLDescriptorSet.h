@@ -8,6 +8,7 @@ namespace CgEngine {
     public:
         OpenGLDescriptorSet() = default;
         explicit OpenGLDescriptorSet(const DescriptorSetSpecification& spec);
+        explicit OpenGLDescriptorSet(const DescriptorSetLayout* layout);
 
         ~OpenGLDescriptorSet() override = default;
 
@@ -26,8 +27,10 @@ namespace CgEngine {
 
 
     private:
-        DescriptorSetSpecification specification;
+        DescriptorSetSpecification specification{};
         bool ready = false;
+
+        bool validateSpecification(const DescriptorSetSpecification& spec) const;
     };
 
 }

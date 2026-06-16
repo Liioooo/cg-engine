@@ -7,7 +7,7 @@
 #include "RendererBackendBase.h"
 #include "ComputePipeline.h"
 #include "GraphicsPipeline.h"
-#include "DynamicGraphicsPipeline.h"
+#include "PipelineAttachmentInfo.h"
 
 namespace CgEngine {
 
@@ -32,7 +32,6 @@ namespace CgEngine {
         static void endDynamicRendering();
 
         static void bindGraphicsPipeline(const GraphicsPipeline* graphicsPipeline);
-        static void bindDynamicGraphicsPipeline(const DynamicGraphicsPipeline* graphicsPipeline);
         static void bindComputePipeline(const ComputePipeline* computePipeline);
         static void dispatchCompute(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
 
@@ -58,7 +57,7 @@ namespace CgEngine {
 
         static const std::vector<VertexBufferLayout> getUnitQuadVertexInputLayout();
         static const std::vector<VertexBufferLayout> getUnitCubeVertexInputLayout();
-        static const RenderPass* getSwapChainRenderPass();
+        static const PipelineAttachmentInfo getSwapChainAttachmentInfo();
 
         static void beginImGuiFrame();
         static void renderImGuiFrame();

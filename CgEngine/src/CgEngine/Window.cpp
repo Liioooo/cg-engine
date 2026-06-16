@@ -10,7 +10,6 @@
 #include "Events/MouseScrolledEvent.h"
 #include "Events/WindowCloseEvent.h"
 #include "Events/WindowResizeEvent.h"
-#include "Rendering/Renderer.h"
 #include "FileSystem.h"
 
 namespace CgEngine {

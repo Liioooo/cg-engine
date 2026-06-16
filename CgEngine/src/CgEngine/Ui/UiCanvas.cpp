@@ -1,7 +1,6 @@
 #include <FileSystem.h>
 #include <CgEngineSharedUtils/LoaderUtils.h>
 #include <Application.h>
-#include <CgEngineSharedUtils/StringUtils.h>
 #include <Events/MouseButtonPressedEvent.h>
 #include "UiCanvas.h"
 #include "UiCircle.h"
@@ -11,8 +10,8 @@
 namespace CgEngine {
 
     UiCanvas::UiCanvas(const pugi::xml_node& canvasNode) {
-        width = CgEngine::LoaderUtils::stringToUIPosAndUnit(canvasNode.attribute("width").as_string("100vw"));
-        height = CgEngine::LoaderUtils::stringToUIPosAndUnit(canvasNode.attribute("height").as_string("100vh"));
+        width = LoaderUtils::stringToUIPosAndUnit(canvasNode.attribute("width").as_string("100vw"));
+        height = LoaderUtils::stringToUIPosAndUnit(canvasNode.attribute("height").as_string("100vh"));
 
         for (const auto& element: canvasNode.children()) {
             std::string name = element.name();
@@ -46,10 +45,10 @@ namespace CgEngine {
         uiTextVAO->useExistingIndexBuffer(sceneRenderer.getUiIndexBuffer());
 
         for (auto& item: uiDescriptorSets) {
-            item = GraphicsObjectsFactory::createDescriptorSet();
+            item = GraphicsObjectsFactory::createDescriptorSet(sceneRenderer.getUiDescriptorSetLayout());
         }
         for (auto& item: uiTextDescriptorSets) {
-            item = GraphicsObjectsFactory::createDescriptorSet();
+            item = GraphicsObjectsFactory::createDescriptorSet(sceneRenderer.getUiTextDescriptorSetLayout());
         }
 
         AttachmentSpecification attachmentSpec{};

@@ -5,12 +5,32 @@
 #include "Asserts.h"
 
 namespace CgEngine {
-    OpenGLDescriptorSetLayout::OpenGLDescriptorSetLayout(const DescriptorSetLayoutSpecification &spec) {
+    OpenGLDescriptorSetLayout::OpenGLDescriptorSetLayout(const DescriptorSetLayoutSpecification &spec) : specification(spec), ready(true) {
         CG_ASSERT(validateBindingPoints({{spec.uboBindingPoints, "UBO"}, {spec.ssboBindingPoints, "SSBO"}, {spec.texture2DAndAttachmentBindingPoints, "Texture2D/Attachment"}, {spec.imageBindingPoints, "Image"}}), "DescriptorSetLayout: Binding points are overlapping!")
     }
 
-    bool OpenGLDescriptorSetLayout::isReady() const {
-        return true;
+    OpenGLDescriptorSetLayout::OpenGLDescriptorSetLayout(OpenGLDescriptorSetLayout &&other) noexcept : DescriptorSetLayout(std::move(other)), ready(other.ready) {
+        specification = std::move(other.specification);
+        other.ready = false;
     }
 
+    OpenGLDescriptorSetLayout & OpenGLDescriptorSetLayout::operator=(OpenGLDescriptorSetLayout &&other) noexcept {
+        if (this != &other) {
+            DescriptorSetLayout::operator=(std::move(other));
+            specification = std::move(other.specification);
+            other.specification = DescriptorSetLayoutSpecification();
+            ready = other.ready;
+            other.ready = false;
+        }
+        return *this;
+    }
+
+    bool OpenGLDescriptorSetLayout::isReady() const {
+        return ready;
+    }
+
+    const DescriptorSetLayoutSpecification& OpenGLDescriptorSetLayout::getSpecification() const {
+        CG_ASSERT(ready, "DescriptorSetLayout is not ready!")
+        return specification;
+    }
 }

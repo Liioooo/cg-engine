@@ -129,10 +129,6 @@ namespace CgEngine {
 
     }
 
-    void VulkanRenderer::bindDynamicGraphicsPipeline(const DynamicGraphicsPipeline *graphicsPipeline) {
-
-    }
-
     void VulkanRenderer::dispatchCompute(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
 
     }
@@ -205,8 +201,8 @@ namespace CgEngine {
         return std::vector<VertexBufferLayout>();
     }
 
-    const RenderPass* VulkanRenderer::getSwapChainRenderPass() {
-        return nullptr;
+    PipelineAttachmentInfo VulkanRenderer::getSwapChainAttachmentInfo() {
+        return {};
     }
 
     void VulkanRenderer::beginImGuiFrame() {
