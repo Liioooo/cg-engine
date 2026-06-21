@@ -663,7 +663,7 @@ namespace CgEngine {
         }
         {
             debugLinesVAO = GraphicsObjectsFactory::createVertexArrayObject();
-            auto* linesVertexBuffer = GraphicsObjectsFactory::createVertexBuffer(MAX_DEBUG_LINES * 2 * sizeof(float) * 6, VertexBufferUsage::Dynamic);
+            auto* linesVertexBuffer = GraphicsObjectsFactory::createVertexBuffer(MAX_DEBUG_LINES * 2 * sizeof(float) * 6, VertexBufferUsage::CPUDynamic);
             linesVertexBuffer->setLayout({{ShaderDataType::Float3, false}, {ShaderDataType::Float3, false}});
             debugLinesVAO->addVertexBuffer(linesVertexBuffer);
 

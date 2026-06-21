@@ -8,7 +8,7 @@ namespace CgEngine {
 
     class VulkanVertexBuffer : public VertexBuffer {
     public:
-        explicit VulkanVertexBuffer(size_t size, VertexBufferUsage usage = VertexBufferUsage::Dynamic);
+        explicit VulkanVertexBuffer(size_t size, VertexBufferUsage usage);
         VulkanVertexBuffer(const void* data, size_t size, VertexBufferUsage usage = VertexBufferUsage::Static);
 
         ~VulkanVertexBuffer();
@@ -34,6 +34,7 @@ namespace CgEngine {
         VmaAllocation allocation = VK_NULL_HANDLE;
 
         vk::DeviceSize perFrameSize = 0;
+        uint32_t lastWrittenFrameIndex = 0;
 
         VertexBufferLayout layout;
         VertexBufferUsage usage;

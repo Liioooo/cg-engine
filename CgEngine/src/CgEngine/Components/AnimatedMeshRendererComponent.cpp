@@ -52,7 +52,7 @@ namespace CgEngine {
 
         skinnedVAO = GraphicsObjectsFactory::createVertexArrayObject();
 
-        auto* vertexBuffer = GraphicsObjectsFactory::createVertexBuffer(mesh->getVertices().size() * sizeof(MeshProps::Vertex), VertexBufferUsage::Dynamic);
+        auto* vertexBuffer = GraphicsObjectsFactory::createVertexBuffer(mesh->getVertices().size() * sizeof(MeshProps::Vertex), VertexBufferUsage::GPUDynamic);
         vertexBuffer->setLayout(mesh->getVAO()->getVertexBuffer(0)->getLayout());
         skinnedVAO->addVertexBuffer(vertexBuffer);
         skinnedVAO->useExistingIndexBuffer(mesh->getVAO()->getIndexBuffer());

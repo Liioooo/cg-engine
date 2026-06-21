@@ -27,19 +27,19 @@ namespace CgEngine {
         const auto& sceneRenderer = Application::get().getSceneRenderer();
 
         uiCircleVAO = GraphicsObjectsFactory::createVertexArrayObject();
-        auto* uiCircleVertexBuffer = GraphicsObjectsFactory::createVertexBuffer(sizeof(UiCircleVertex) * MAX_UI_VERTICES, VertexBufferUsage::Dynamic);
+        auto* uiCircleVertexBuffer = GraphicsObjectsFactory::createVertexBuffer(sizeof(UiCircleVertex) * MAX_UI_VERTICES, VertexBufferUsage::CPUDynamic);
         uiCircleVertexBuffer->setLayout(UI_CIRCLE_VERTEX_BUFFER_LAYOUT);
         uiCircleVAO->addVertexBuffer(uiCircleVertexBuffer);
         uiCircleVAO->useExistingIndexBuffer(sceneRenderer.getUiIndexBuffer());
 
         uiRectVAO = GraphicsObjectsFactory::createVertexArrayObject();
-        auto* uiRectVertexBuffer = GraphicsObjectsFactory::createVertexBuffer(sizeof(UiRectVertex) * MAX_UI_VERTICES, VertexBufferUsage::Dynamic);
+        auto* uiRectVertexBuffer = GraphicsObjectsFactory::createVertexBuffer(sizeof(UiRectVertex) * MAX_UI_VERTICES, VertexBufferUsage::CPUDynamic);
         uiRectVertexBuffer->setLayout(UI_RECT_VERTEX_BUFFER_LAYOUT);
         uiRectVAO->addVertexBuffer(uiRectVertexBuffer);
         uiRectVAO->useExistingIndexBuffer(sceneRenderer.getUiIndexBuffer());
 
         uiTextVAO = GraphicsObjectsFactory::createVertexArrayObject();
-        auto* uiTextVertexBuffer = GraphicsObjectsFactory::createVertexBuffer(sizeof(UiTextVertex) * MAX_UI_VERTICES, VertexBufferUsage::Dynamic);
+        auto* uiTextVertexBuffer = GraphicsObjectsFactory::createVertexBuffer(sizeof(UiTextVertex) * MAX_UI_VERTICES, VertexBufferUsage::CPUDynamic);
         uiTextVertexBuffer->setLayout(UI_TEXT_VERTEX_BUFFER_LAYOUT);
         uiTextVAO->addVertexBuffer(uiTextVertexBuffer);
         uiTextVAO->useExistingIndexBuffer(sceneRenderer.getUiIndexBuffer());

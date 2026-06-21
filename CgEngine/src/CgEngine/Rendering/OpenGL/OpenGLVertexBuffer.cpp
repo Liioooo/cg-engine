@@ -5,7 +5,7 @@
 namespace CgEngine {
 
     OpenGLVertexBuffer::OpenGLVertexBuffer(size_t size, VertexBufferUsage usage) : usage(usage) {
-        CG_ASSERT(usage == VertexBufferUsage::Dynamic, "Static VertexBuffer must be created with data")
+        CG_ASSERT(usage != VertexBufferUsage::Static, "Static VertexBuffer must be created with data")
 
         glCreateBuffers(1, &vbo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -45,7 +45,7 @@ namespace CgEngine {
     }
 
     void OpenGLVertexBuffer::setData(const void* data, size_t size) {
-        CG_ASSERT(vbo != ~0 || usage == VertexBufferUsage::Dynamic, "Static VertexBuffer cannot be updated")
+        CG_ASSERT(vbo != ~0 || usage == VertexBufferUsage::CPUDynamic, "Only CPUDynamic vertex buffers can be updated")
 
         if (vbo == ~0) {
             glCreateBuffers(1, &vbo);
@@ -55,7 +55,7 @@ namespace CgEngine {
     }
 
     void OpenGLVertexBuffer::setSubData(size_t offset, const void* data, size_t size) {
-        CG_ASSERT(vbo != ~0 || usage == VertexBufferUsage::Dynamic, "Static VertexBuffer cannot be updated")
+        CG_ASSERT(vbo != ~0 || usage == VertexBufferUsage::CPUDynamic, "Only CPUDynamic vertex buffers can be updated")
 
         if (vbo == ~0) {
             glCreateBuffers(1, &vbo);
@@ -80,15 +80,11 @@ namespace CgEngine {
         return vbo;
     }
 
-    int OpenGLVertexBuffer::getOpenGLUsage(CgEngine::VertexBufferUsage usage) {
-        switch (usage) {
-            case VertexBufferUsage::Static:
-                return GL_STATIC_DRAW;
-            case VertexBufferUsage::Dynamic:
-                return GL_DYNAMIC_DRAW;
-            default:
-                return GL_STATIC_DRAW;
+    int OpenGLVertexBuffer::getOpenGLUsage(VertexBufferUsage usage) {
+        if (usage == VertexBufferUsage::Static) {
+            return GL_STATIC_DRAW;
         }
+        return GL_DYNAMIC_DRAW;
     }
 
 }

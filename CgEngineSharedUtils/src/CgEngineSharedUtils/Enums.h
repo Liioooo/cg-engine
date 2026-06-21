@@ -86,7 +86,7 @@ namespace CgEngine {
     };
 
     enum class VertexBufferUsage {
-        Static, Dynamic
+        Static, CPUDynamic, GPUDynamic
     };
 
     enum class IndexBufferDataType {
