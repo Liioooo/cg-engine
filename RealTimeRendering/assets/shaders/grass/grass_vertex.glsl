@@ -6,6 +6,7 @@
 #include "Utilities.glsl"
 #include "PI.glsl"
 #include "GBuffersVertex.glsl"
+#include "Macros.glsl"
 
 layout(binding = 6, std430) buffer Positions {
     vec2 positions[];
@@ -37,7 +38,7 @@ layout(location = 10) out VS_OUT {
 } vs_out;
 
 void main() {
-    vec3 grassOffset = vec3(b_Positions.positions[gl_InstanceID].x, 0.0, b_Positions.positions[gl_InstanceID].y);
+    vec3 grassOffset = vec3(b_Positions.positions[GET_INSTANCE_INDEX()].x, 0.0, b_Positions.positions[GET_INSTANCE_INDEX()].y);
     vec3 grassBladeWorldPos = (u_CustomPipelineData.transform * vec4(grassOffset, 1.0)).xyz;
 
     vec2 islandCenterToGrassWorldPos = grassBladeWorldPos.xz - u_GrassData.islandCenter.xz;

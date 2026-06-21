@@ -1,7 +1,6 @@
 #version 450 core
 
 #include "CameraDataBuffer.glsl"
-
 #include "Macros.glsl"
 
 PUSH_CONSTANT(CollidersPC) {
@@ -20,6 +19,6 @@ layout (location = 3) in vec4 a_Bitangent;
 layout (location = 4) in vec4 a_TexCoord;
 
 void main() {
-    mat4 model = b_Transforms.transforms[pc_colliders.transformsOffset + gl_InstanceID];
+    mat4 model = b_Transforms.transforms[pc_colliders.transformsOffset + GET_INSTANCE_INDEX()];
     gl_Position = u_CameraData.viewProjection * model * a_Pos;
 }

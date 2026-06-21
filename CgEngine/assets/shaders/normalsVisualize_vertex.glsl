@@ -23,7 +23,7 @@ layout(location = 10) out VS_OUT {
 } vs_out;
 
 void main() {
-    mat4 model = b_Transforms.transforms[pc_colliders.transformsOffset + gl_InstanceID];
+    mat4 model = b_Transforms.transforms[pc_colliders.transformsOffset + GET_INSTANCE_INDEX()];
     vs_out.Normal = normalize(mat3(transpose(inverse(u_CameraData.view * model))) * a_Normal.xyz);
     gl_Position = u_CameraData.view * model * a_Pos;
 }

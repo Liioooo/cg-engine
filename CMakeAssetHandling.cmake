@@ -61,10 +61,10 @@ endfunction()
 
 
 function(handle_assets)
-#    compile_shaders(vulkan "${CMAKE_CURRENT_SOURCE_DIR}/../CgEngine/assets/shaders" engine INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../CgEngine/assets/shaders_include")
+    compile_shaders(vulkan "${CMAKE_CURRENT_SOURCE_DIR}/../CgEngine/assets/shaders" engine INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../CgEngine/assets/shaders_include")
     compile_shaders(opengl "${CMAKE_CURRENT_SOURCE_DIR}/../CgEngine/assets/shaders" engine INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../CgEngine/assets/shaders_include")
 
-#    compile_shaders(vulkan "${CMAKE_CURRENT_SOURCE_DIR}/assets/shaders" game INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../CgEngine/assets/shaders_include")
+    compile_shaders(vulkan "${CMAKE_CURRENT_SOURCE_DIR}/assets/shaders" game INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../CgEngine/assets/shaders_include")
     compile_shaders(opengl "${CMAKE_CURRENT_SOURCE_DIR}/assets/shaders" game INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../CgEngine/assets/shaders_include")
 
     file(GLOB_RECURSE ASSET_FILES_ENGINE RELATIVE ${CMAKE_CURRENT_LIST_DIR}/../CgEngine/assets ${CMAKE_CURRENT_LIST_DIR}/../CgEngine/assets/*)
@@ -92,7 +92,7 @@ function(handle_assets)
     endforeach()
 
     add_dependencies(${PROJECT_NAME} copy_assets_${PROJECT_NAME}_engine)
-#    add_dependencies(${PROJECT_NAME} compile_shaders_vulkan_${PROJECT_NAME}_engine)
+    add_dependencies(${PROJECT_NAME} compile_shaders_vulkan_${PROJECT_NAME}_engine)
     add_dependencies(${PROJECT_NAME} compile_shaders_opengl_${PROJECT_NAME}_engine)
 
     add_dependencies(${PROJECT_NAME} copy_assets_${PROJECT_NAME}_game)

@@ -3,6 +3,7 @@
 #include "CameraDataBuffer.glsl"
 #include "GBuffersVertex.glsl"
 #include "TransformsOffsetPC.glsl"
+#include "Macros.glsl"
 
 layout(binding = 1, std430) buffer Transforms {
     mat4 transforms[];
@@ -21,7 +22,7 @@ layout(location = 10) out VS_OUT {
 } vs_out;
 
 void main() {
-    mat4 model = b_Transforms.transforms[pc_transformsOffset.transformsOffset + gl_InstanceID];
+    mat4 model = b_Transforms.transforms[pc_transformsOffset.transformsOffset + GET_INSTANCE_INDEX()];
 
     vec4 worldPosition = model * a_Pos;
 
