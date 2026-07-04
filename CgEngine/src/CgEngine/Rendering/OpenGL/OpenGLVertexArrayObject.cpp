@@ -89,18 +89,15 @@ namespace CgEngine {
                 case ShaderDataType::Int2:
                 case ShaderDataType::Int3:
                 case ShaderDataType::Int4: {
-                    uint8_t count = element.getComponentCount();
-                    for (uint8_t i = 0; i < count; i++) {
-                        glEnableVertexAttribArray(vertexBufferIndex);
-                        glVertexAttribPointer(vertexBufferIndex,
-                                              count,
-                                              OpenGLHelpers::shaderDataTypeToOpenGLBaseType(element.dataType),
-                                              element.normalized ? GL_TRUE : GL_FALSE,
-                                              buffer->getLayout().stride,
-                                              (const void*)(element.offset + sizeof(float) * count * i));
-                        glVertexAttribDivisor(vertexBufferIndex, 1);
-                        vertexBufferIndex++;
-                    }
+                    glEnableVertexAttribArray(vertexBufferIndex);
+                    glVertexAttribIPointer(
+                            vertexBufferIndex,
+                            element.getComponentCount(),
+                            OpenGLHelpers::shaderDataTypeToOpenGLBaseType(element.dataType),
+                            buffer->getLayout().stride,
+                            (const void*)(element.offset));
+                    vertexBufferIndex++;
+                    break;
                 }
             }
         }
