@@ -35,6 +35,8 @@ namespace CgEngine {
         std::vector<AttachmentType> colorAttachments;
         bool hasDepthStencilAttachment = false;
         DepthStencilAttachmentFormat depthAttachmentFormat;
+        bool usesPushConstants = false;
+        uint32_t pushConstantsSize = 0;
     };
 
     class GraphicsPipeline {

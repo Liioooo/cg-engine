@@ -237,15 +237,17 @@ namespace CgEngine {
         auto endResult = commandBuffer.end();
         CG_ASSERT(endResult == vk::Result::eSuccess, "VulkanRenderer::endAndSubmitSingleTimeCommandBuffer: Failed to end command buffer for single time commands!")
 
-        vk::SubmitInfo submitInfo{};
-        submitInfo.setPCommandBuffers(&commandBuffer);
-        submitInfo.setCommandBufferCount(1);
+        vk::CommandBufferSubmitInfo commandBufferInfo{};
+        commandBufferInfo.setCommandBuffer(commandBuffer);
+
+        vk::SubmitInfo2 submitInfo{};
+        submitInfo.setCommandBufferInfos(commandBufferInfo);
 
         vk::FenceCreateInfo fenceInfo{};
         auto fenceResult = vkDevice.createFence(fenceInfo);
         CG_ASSERT(fenceResult.has_value(), "VulkanRenderer::endAndSubmitSingleTimeCommandBuffer: Failed to create fence for single time command buffer submission!")
 
-        auto submitResult = vkGraphicsComputeQueue.submit(1, &submitInfo, fenceResult.value);
+        auto submitResult = vkGraphicsComputeQueue.submit2(submitInfo, fenceResult.value);
         CG_ASSERT(submitResult == vk::Result::eSuccess, "VulkanRenderer::endAndSubmitSingleTimeCommandBuffer: Failed to submit command buffer for single time commands!")
 
         auto waitFenceResult = vkDevice.waitForFences(fenceResult.value, VK_TRUE, UINT64_MAX);
@@ -477,10 +479,13 @@ namespace CgEngine {
         deviceFeatures.fillModeNonSolid = VK_TRUE;
         deviceFeatures.samplerAnisotropy = VK_TRUE;
 
+        vk::PhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeatures{ VK_TRUE };
+
         vk::DeviceCreateInfo createInfo{};
         createInfo.setQueueCreateInfos(queueCreateInfos);
         createInfo.setPEnabledFeatures(&deviceFeatures);
         createInfo.setPEnabledExtensionNames(deviceExtensions);
+        createInfo.setPNext(&dynamicRenderingFeatures);
 
         auto device = vkPhysicalDevice.createDevice(createInfo);
         if (!device.has_value()) {

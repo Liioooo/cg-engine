@@ -102,9 +102,9 @@ namespace RTR {
             {13, ~0u, true, oceanCascade1->displacement},
             {14, ~0u, true, oceanCascade1->derivatives},
             {15, ~0u, true, oceanCascade1->turbulence},
-            {16, ~0u, true, oceanCascade2->displacement},
-            {17, ~0u, true, oceanCascade2->derivatives},
-            {18, ~0u, true, oceanCascade2->turbulence},
+            {17, ~0u, true, oceanCascade2->displacement},
+            {18, ~0u, true, oceanCascade2->derivatives},
+            {19, ~0u, true, oceanCascade2->turbulence},
         };
 
         mat->reconfigure(matSpec);

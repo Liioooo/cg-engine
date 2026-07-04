@@ -1,6 +1,8 @@
 #include <FileSystem.h>
 #include <Asserts.h>
 #include "Helpers.h"
+
+#include "GraphicsObjectsFactory.h"
 #include "stbi_image.h"
 
 namespace CgEngine {
@@ -21,11 +23,17 @@ namespace CgEngine {
         }
 
         std::vector<uint8_t> loadShaderBinaryWithType(const std::string& name, const std::string& type, ShaderEnv env) {
-            return Helpers::loadShaderBinary(name + "_" + type + ".spv", env);
+            return loadShaderBinary(name + "_" + type + ".spv", env);
         }
 
         std::vector<uint8_t> loadShaderBinary(const std::string& name, ShaderEnv env) {
-            const std::filesystem::path path = env == ShaderEnv::Engine ? FileSystem::getAsEnginePath(std::filesystem::path("compiled_shaders/opengl") / name) : FileSystem::getAsGamePath(std::filesystem::path("compiled_shaders/opengl") / name);
+            std::filesystem::path path;
+
+            if (GraphicsObjectsFactory::getGraphicsAPI() == GraphicsAPI::OpenGL) {
+                path = env == ShaderEnv::Engine ? FileSystem::getAsEnginePath(std::filesystem::path("compiled_shaders/opengl") / name) : FileSystem::getAsGamePath(std::filesystem::path("compiled_shaders/opengl") / name);
+            } else {
+                path = env == ShaderEnv::Engine ? FileSystem::getAsEnginePath(std::filesystem::path("compiled_shaders/vulkan") / name) : FileSystem::getAsGamePath(std::filesystem::path("compiled_shaders/vulkan") / name);
+            }
 
             if (!FileSystem::checkFileExists(path)) {
                 return {};

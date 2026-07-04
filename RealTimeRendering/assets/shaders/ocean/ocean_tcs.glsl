@@ -1,12 +1,9 @@
 #version 450 core
 
 #include "CameraDataBuffer.glsl"
+#include "CustomPipelineDataPC.glsl"
 
 layout (vertices=4) out;
-
-layout (binding = 5, std140) uniform CustomPipelineData {
-    mat4 transform;
-} u_CustomPipelineData;
 
 layout(location = 10) in VS_OUT_TO_TCS {
     vec4 aPos;
@@ -47,10 +44,10 @@ void main()
         const float MIN_DISTANCE = 10;
         const float MAX_DISTANCE = 50;
 
-        float distance00 = clamp((length(vec3(u_CameraData.position - u_CustomPipelineData.transform * ts_in[0].aPos) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)), 0.0, 1.0);
-        float distance01 = clamp((length(vec3(u_CameraData.position - u_CustomPipelineData.transform * ts_in[1].aPos) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)), 0.0, 1.0);
-        float distance10 = clamp((length(vec3(u_CameraData.position - u_CustomPipelineData.transform * ts_in[2].aPos) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)), 0.0, 1.0);
-        float distance11 = clamp((length(vec3(u_CameraData.position - u_CustomPipelineData.transform * ts_in[3].aPos) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)), 0.0, 1.0);
+        float distance00 = clamp((length(vec3(u_CameraData.position - pc_customPipelineData.transform * ts_in[0].aPos) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)), 0.0, 1.0);
+        float distance01 = clamp((length(vec3(u_CameraData.position - pc_customPipelineData.transform * ts_in[1].aPos) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)), 0.0, 1.0);
+        float distance10 = clamp((length(vec3(u_CameraData.position - pc_customPipelineData.transform * ts_in[2].aPos) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)), 0.0, 1.0);
+        float distance11 = clamp((length(vec3(u_CameraData.position - pc_customPipelineData.transform * ts_in[3].aPos) - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)), 0.0, 1.0);
 
         float tessLevel0 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance10, distance00));
         float tessLevel1 = mix(MAX_TESS_LEVEL, MIN_TESS_LEVEL, min(distance00, distance01));

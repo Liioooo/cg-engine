@@ -7,16 +7,13 @@
 #include "PI.glsl"
 #include "GBuffersVertex.glsl"
 #include "Macros.glsl"
+#include "CustomPipelineDataPC.glsl"
 
 layout(binding = 6, std430) buffer Positions {
     vec2 positions[];
 } b_Positions;
 
 uniform layout(binding=10) sampler2D u_HeightGrassMap;
-
-layout (binding = 5, std140) uniform CustomPipelineData {
-    mat4 transform;
-} u_CustomPipelineData;
 
 layout (binding = 2, std140) uniform GrassData {
     vec2 grassParams; // x: GRASS_SEGMENTS, y: GRASS_VERTICES
@@ -39,7 +36,7 @@ layout(location = 10) out VS_OUT {
 
 void main() {
     vec3 grassOffset = vec3(b_Positions.positions[GET_INSTANCE_INDEX()].x, 0.0, b_Positions.positions[GET_INSTANCE_INDEX()].y);
-    vec3 grassBladeWorldPos = (u_CustomPipelineData.transform * vec4(grassOffset, 1.0)).xyz;
+    vec3 grassBladeWorldPos = (pc_customPipelineData.transform * vec4(grassOffset, 1.0)).xyz;
 
     vec2 islandCenterToGrassWorldPos = grassBladeWorldPos.xz - u_GrassData.islandCenter.xz;
 
@@ -50,7 +47,7 @@ void main() {
     vec4 hashVal = hash42(vec2(grassBladeWorldPos.x, grassBladeWorldPos.z));
 
     float highLODOut = smoothstep(u_GrassData.grassLOD.x * 0.5f, u_GrassData.grassLOD.x, distance(u_CameraData.position.xyz, grassBladeWorldPos));
-    float highLODOutForTile = smoothstep(u_GrassData.grassLOD.x * 0.6f, u_GrassData.grassLOD.x, distance(u_CameraData.position.xyz, u_CustomPipelineData.transform[3].xyz));
+    float highLODOutForTile = smoothstep(u_GrassData.grassLOD.x * 0.6f, u_GrassData.grassLOD.x, distance(u_CameraData.position.xyz, pc_customPipelineData.transform[3].xyz));
     float lodFadeIn = smoothstep(u_GrassData.grassLOD.x, u_GrassData.grassLOD.y, distance(u_CameraData.position.xyz, grassBladeWorldPos));
 
     float randomAngle = hashVal.x * 2.0f * PI;

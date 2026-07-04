@@ -67,7 +67,7 @@
         </VertexBufferLayouts>
         <DescriptorSetLayout>
             <UboBindingPoints>2</UboBindingPoints>
-            <Texture2DAndAttachmentBindingPoints>10,11,12,13,14,15,16,17,18</Texture2DAndAttachmentBindingPoints>
+            <Texture2DAndAttachmentBindingPoints>10,11,12,13,14,15,17,18,19</Texture2DAndAttachmentBindingPoints>
         </DescriptorSetLayout>
         <DepthCompareOperator>Less</DepthCompareOperator>
         <DepthTest>true</DepthTest>

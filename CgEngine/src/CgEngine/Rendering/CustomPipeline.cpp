@@ -105,11 +105,7 @@ namespace CgEngine {
             return ShaderDataType::Float3;
         } else if (s == "Float4") {
             return ShaderDataType::Float4;
-        } else if (s == "Mat3") {
-            return ShaderDataType::Mat3;
-        } else if (s == "Mat4") {
-            return ShaderDataType::Mat4;
-        } else if (s == "Int") {
+        }  else if (s == "Int") {
             return ShaderDataType::Int;
         } else if (s == "Int2") {
             return ShaderDataType::Int2;
@@ -117,8 +113,6 @@ namespace CgEngine {
             return ShaderDataType::Int3;
         } else if (s == "Int4") {
             return ShaderDataType::Int4;
-        } else if (s == "Bool") {
-            return ShaderDataType::Bool;
         } else {
             CG_ASSERT(false, "CustomGraphicsPipeline::shaderDataTypeFromString: Unknown ShaderDataType string value.")
             return ShaderDataType::Float;
@@ -257,6 +251,9 @@ namespace CgEngine {
         pipelineSpec.colorAttachments = pipelineAttachmentInfo.colorAttachments;
         pipelineSpec.hasDepthStencilAttachment = pipelineAttachmentInfo.hasDepthStencilAttachment;
         pipelineSpec.depthAttachmentFormat = pipelineAttachmentInfo.depthAttachmentFormat;
+
+        pipelineSpec.usesPushConstants = true;
+        pipelineSpec.pushConstantsSize = sizeof(SceneRenderer::CustomPipelineData);
 
         graphicsPipeline = GraphicsObjectsFactory::createGraphicsPipeline(pipelineSpec);
     }

@@ -7,7 +7,7 @@ namespace CgEngine {
     class OpenGLGraphicsPipeline : public GraphicsPipeline {
     public:
         OpenGLGraphicsPipeline() = default;
-        OpenGLGraphicsPipeline(const GraphicsPipelineSpecification& spec);
+        explicit OpenGLGraphicsPipeline(const GraphicsPipelineSpecification& spec);
 
         ~OpenGLGraphicsPipeline() override;
 

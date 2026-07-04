@@ -24,6 +24,7 @@
 #include "Rendering/Vulkan/VulkanUniformBuffer.h"
 #include "Rendering/Vulkan/VulkanDescriptorSetLayout.h"
 #include "Rendering/Vulkan/VulkanAttachment.h"
+#include "Rendering/Vulkan/VulkanGraphicsPipeline.h"
 
 namespace CgEngine {
 
@@ -326,7 +327,7 @@ namespace CgEngine {
     GraphicsPipeline* GraphicsObjectsFactory::createGraphicsPipeline() {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanGraphicsPipeline();
             case GraphicsAPI::OpenGL:
                 return new OpenGLGraphicsPipeline();
         }
@@ -335,7 +336,7 @@ namespace CgEngine {
     GraphicsPipeline* GraphicsObjectsFactory::createGraphicsPipeline(const GraphicsPipelineSpecification& spec) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanGraphicsPipeline(spec);
             case GraphicsAPI::OpenGL:
                 return new OpenGLGraphicsPipeline(spec);
         }

@@ -7,13 +7,10 @@ namespace CgEngine {
         Float2  = 1,
         Float3  = 2,
         Float4  = 3,
-        Mat3    = 4,
-        Mat4    = 5,
-        Int     = 6,
-        Int2    = 7,
-        Int3    = 8,
-        Int4    = 9,
-        Bool    = 10
+        Int     = 4,
+        Int2    = 5,
+        Int3    = 6,
+        Int4    = 7
     };
 
     enum class DepthCompareOperator : uint8_t {

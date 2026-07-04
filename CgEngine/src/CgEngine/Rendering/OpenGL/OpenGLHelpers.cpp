@@ -14,9 +14,7 @@ namespace CgEngine {
                 case ShaderDataType::Float:
                 case ShaderDataType::Float2:
                 case ShaderDataType::Float3:
-                case ShaderDataType::Float4:
-                case ShaderDataType::Mat3:
-                case ShaderDataType::Mat4: {
+                case ShaderDataType::Float4: {
                     return GL_FLOAT;
                 }
                 case ShaderDataType::Int:
@@ -24,9 +22,6 @@ namespace CgEngine {
                 case ShaderDataType::Int3:
                 case ShaderDataType::Int4: {
                     return GL_INT;
-                }
-                case ShaderDataType::Bool: {
-                    return GL_BOOL;
                 }
             }
             return 0;
@@ -263,23 +258,23 @@ namespace CgEngine {
             bool error = false;
 
             if (!vertexSource.empty()) {
-                error |= OpenGLHelpers::createShaderType(GL_VERTEX_SHADER, "VERTEX", vertexSource, handle);
+                error |= createShaderType(GL_VERTEX_SHADER, "VERTEX", vertexSource, handle);
             }
             if (!fragmentSource.empty()) {
-                error |= OpenGLHelpers::createShaderType(GL_FRAGMENT_SHADER, "FRAGMENT", fragmentSource, handle);
+                error |= createShaderType(GL_FRAGMENT_SHADER, "FRAGMENT", fragmentSource, handle);
             }
             if (!geometrySource.empty()) {
-                error |= OpenGLHelpers::createShaderType(GL_GEOMETRY_SHADER, "GEOMETRY", geometrySource, handle);
+                error |= createShaderType(GL_GEOMETRY_SHADER, "GEOMETRY", geometrySource, handle);
             }
             if (!tcsSource.empty()) {
-                error |= OpenGLHelpers::createShaderType(GL_TESS_CONTROL_SHADER, "TCS", tcsSource, handle);
+                error |= createShaderType(GL_TESS_CONTROL_SHADER, "TCS", tcsSource, handle);
             }
             if (!tesSource.empty()) {
-                error |= OpenGLHelpers::createShaderType(GL_TESS_EVALUATION_SHADER, "TES", tesSource, handle);
+                error |= createShaderType(GL_TESS_EVALUATION_SHADER, "TES", tesSource, handle);
             }
 
             glLinkProgram(handle);
-            error |= OpenGLHelpers::checkShaderErrors(handle, "PROGRAM");
+            error |= checkShaderErrors(handle, "PROGRAM");
 
             if (error) {
                 glDeleteProgram(handle);
@@ -338,10 +333,10 @@ namespace CgEngine {
             std::vector<uint8_t > source = Helpers::loadShaderBinaryWithType(name, "comp", env);
 
             uint32_t handle = glCreateProgram();
-            bool error = OpenGLHelpers::createShaderType(GL_COMPUTE_SHADER, "COMPUTE", source, handle);
+            bool error = createShaderType(GL_COMPUTE_SHADER, "COMPUTE", source, handle);
 
             glLinkProgram(handle);
-            error |= OpenGLHelpers::checkShaderErrors(handle, "PROGRAM");
+            error |= checkShaderErrors(handle, "PROGRAM");
 
             if (error) {
                 glDeleteProgram(handle);
@@ -359,10 +354,10 @@ namespace CgEngine {
             std::vector<uint8_t> source = Helpers::loadShaderBinary(name + ".spv", ShaderEnv::Custom);
 
             uint32_t handle = glCreateProgram();
-            bool error = OpenGLHelpers::createShaderType(GL_COMPUTE_SHADER, "COMPUTE", source, handle);
+            bool error = createShaderType(GL_COMPUTE_SHADER, "COMPUTE", source, handle);
 
             glLinkProgram(handle);
-            error |= OpenGLHelpers::checkShaderErrors(handle, "PROGRAM");
+            error |= checkShaderErrors(handle, "PROGRAM");
 
             if (error) {
                 glDeleteProgram(handle);

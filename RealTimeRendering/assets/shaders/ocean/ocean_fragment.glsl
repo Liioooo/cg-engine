@@ -35,9 +35,9 @@ uniform layout(binding=13) sampler2D u_displacementC1;
 uniform layout(binding=14) sampler2D u_derivativesC1;
 uniform layout(binding=15) sampler2D u_turbulenceC1;
 
-uniform layout(binding=16) sampler2D u_displacementC2;
-uniform layout(binding=17) sampler2D u_derivativesC2;
-uniform layout(binding=18) sampler2D u_turbulenceC2;
+uniform layout(binding=17) sampler2D u_displacementC2;
+uniform layout(binding=18) sampler2D u_derivativesC2;
+uniform layout(binding=19) sampler2D u_turbulenceC2;
 
 void main() {
     vec4 derivatives = vec4(0.0);

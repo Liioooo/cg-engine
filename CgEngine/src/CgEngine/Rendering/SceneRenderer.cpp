@@ -13,7 +13,6 @@ namespace CgEngine {
         ubDirShadowData = GraphicsObjectsFactory::createUniformBuffer(sizeof(UBDirShadowData));
         ubScreenData = GraphicsObjectsFactory::createUniformBuffer(sizeof(UBScreenData));
         ubHBAOData = GraphicsObjectsFactory::createUniformBuffer(sizeof(UBHBAOData));
-        ubCustomPipelineData = GraphicsObjectsFactory::createUniformBuffer(sizeof(CustomPipelineData));
 
         {
             DescriptorSetLayoutSpecification pbrMaterialDescriptorSetLayoutSpec{};
@@ -74,6 +73,8 @@ namespace CgEngine {
             dirShadowMapPipelineSpec.colorAttachments = {};
             dirShadowMapPipelineSpec.hasDepthStencilAttachment = true;
             dirShadowMapPipelineSpec.depthAttachmentFormat = dirShadowMaps->getDepthStencilAttachmentFormat();
+            dirShadowMapPipelineSpec.usesPushConstants = true;
+            dirShadowMapPipelineSpec.pushConstantsSize = sizeof(int);
 
             dirShadowMapPipeline = GraphicsObjectsFactory::createGraphicsPipeline(dirShadowMapPipelineSpec);
 
@@ -149,6 +150,8 @@ namespace CgEngine {
             };
             gBufferPipelineSpec.hasDepthStencilAttachment = true;
             gBufferPipelineSpec.depthAttachmentFormat = gBufferDepthAttachment->getDepthStencilAttachmentFormat();
+            gBufferPipelineSpec.usesPushConstants = true;
+            gBufferPipelineSpec.pushConstantsSize = sizeof(int);
 
             gBufferPipeline = GraphicsObjectsFactory::createGraphicsPipeline(gBufferPipelineSpec);
 
@@ -182,7 +185,7 @@ namespace CgEngine {
         {
             DescriptorSetLayoutSpecification customPipelineDescriptorSetLayoutSpec{};
             customPipelineDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
-            customPipelineDescriptorSetLayoutSpec.uboBindingPoints = {0, 3, 5};
+            customPipelineDescriptorSetLayoutSpec.uboBindingPoints = {0, 3};
 
             customPipelineDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(customPipelineDescriptorSetLayoutSpec);
 
@@ -190,8 +193,7 @@ namespace CgEngine {
             customPipelineDescriptorSetSpec.layout = customPipelineDescriptorSetLayout;
             customPipelineDescriptorSetSpec.uboBindings = {
                 {0, ubCameraData},
-                {3, ubScreenData},
-                {5, ubCustomPipelineData}
+                {3, ubScreenData}
             };
 
             customPipelineDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(customPipelineDescriptorSetSpec);
@@ -240,6 +242,8 @@ namespace CgEngine {
                 AttachmentType::R16F
             };
             hbaoDeinterleavingPipelineSpec.hasDepthStencilAttachment = false;
+            hbaoDeinterleavingPipelineSpec.usesPushConstants = true;
+            hbaoDeinterleavingPipelineSpec.pushConstantsSize = sizeof(int);
 
             hbaoDeinterleavingPipeline = GraphicsObjectsFactory::createGraphicsPipeline(hbaoDeinterleavingPipelineSpec);
 
@@ -424,6 +428,8 @@ namespace CgEngine {
             hbaoBlurPipelineSpec.descriptorSetLayouts = {hbaoBlurDescriptorSetLayout};
             hbaoBlurPipelineSpec.colorAttachments = { AttachmentType::RG16F };
             hbaoBlurPipelineSpec.hasDepthStencilAttachment = false;
+            hbaoBlurPipelineSpec.usesPushConstants = true;
+            hbaoBlurPipelineSpec.pushConstantsSize = sizeof(HbaoBlurPushConstants);
 
 
             hbaoBlurPipeline = GraphicsObjectsFactory::createGraphicsPipeline(hbaoBlurPipelineSpec);
@@ -486,6 +492,8 @@ namespace CgEngine {
             pbrPipelineSpec.descriptorSetLayouts = {pbrDescriptorSetLayout, environmentMapDescriptorSetLayout};
             pbrPipelineSpec.colorAttachments = { AttachmentType::RGBA16F };
             pbrPipelineSpec.hasDepthStencilAttachment = false;
+            pbrPipelineSpec.usesPushConstants = true;
+            pbrPipelineSpec.pushConstantsSize = sizeof(float);
 
             pbrPipeline = GraphicsObjectsFactory::createGraphicsPipeline(pbrPipelineSpec);
 
@@ -571,6 +579,8 @@ namespace CgEngine {
             skyboxPipelineSpec.colorAttachments = {
                 pbrColorAttachment->getType()
             };
+            skyboxPipelineSpec.usesPushConstants = true;
+            skyboxPipelineSpec.pushConstantsSize = sizeof(SkyboxPushConstants);
 
             skyboxPipeline = GraphicsObjectsFactory::createGraphicsPipeline(skyboxPipelineSpec);
         }
@@ -593,6 +603,8 @@ namespace CgEngine {
             physicsCollidersPipelineSpec.colorAttachments = {
                 pbrColorAttachment->getType()
             };
+            physicsCollidersPipelineSpec.usesPushConstants = true;
+            physicsCollidersPipelineSpec.pushConstantsSize = sizeof(CollidersPushConstants);
 
             physicsCollidersPipeline = GraphicsObjectsFactory::createGraphicsPipeline(physicsCollidersPipelineSpec);
 
@@ -630,6 +642,8 @@ namespace CgEngine {
             boundingBoxPipelineSpec.colorAttachments = {
                 pbrColorAttachment->getType()
             };
+            boundingBoxPipelineSpec.usesPushConstants = true;
+            boundingBoxPipelineSpec.pushConstantsSize = sizeof(CollidersPushConstants);
 
             boundingBoxPipeline = GraphicsObjectsFactory::createGraphicsPipeline(boundingBoxPipelineSpec);
 
@@ -658,6 +672,8 @@ namespace CgEngine {
             mormalsDebugPipelineSpec.colorAttachments = {
                 pbrColorAttachment->getType()
             };
+            mormalsDebugPipelineSpec.usesPushConstants = true;
+            mormalsDebugPipelineSpec.pushConstantsSize = sizeof(CollidersPushConstants);
 
             normalsDebugPipeline = GraphicsObjectsFactory::createGraphicsPipeline(mormalsDebugPipelineSpec);
         }
@@ -730,6 +746,8 @@ namespace CgEngine {
             bloomDownsamplePipelineSpec.descriptorSetLayouts = {bloomDescriptorSetLayout};
             bloomDownsamplePipelineSpec.colorAttachments = { AttachmentType::RGBA16F };
             bloomDownsamplePipelineSpec.hasDepthStencilAttachment = false;
+            bloomDownsamplePipelineSpec.usesPushConstants = true;
+            bloomDownsamplePipelineSpec.pushConstantsSize = sizeof(uint32_t);
 
             bloomDownsamplePipeline = GraphicsObjectsFactory::createGraphicsPipeline(bloomDownsamplePipelineSpec);
 
@@ -866,6 +884,8 @@ namespace CgEngine {
             uiCirclePipelineSpec.hasDepthStencilAttachment = false;
             uiCirclePipelineSpec.colorAttachments = { UI_CANVAS_ATTACHMENT_TYPE };
             uiCirclePipelineSpec.descriptorSetLayouts = {uiDescriptorSetLayout};
+            uiCirclePipelineSpec.usesPushConstants = true;
+            uiCirclePipelineSpec.pushConstantsSize = sizeof(UiPushConstants);
 
             uiCirclePipeline = GraphicsObjectsFactory::createGraphicsPipeline(uiCirclePipelineSpec);
 
@@ -880,7 +900,9 @@ namespace CgEngine {
             uiRectPipelineSpec.vertexInputLayout = UI_RECT_VERTEX_BUFFER_LAYOUTS;
             uiRectPipelineSpec.hasDepthStencilAttachment = false;
             uiRectPipelineSpec.colorAttachments = { UI_CANVAS_ATTACHMENT_TYPE };
-            uiCirclePipelineSpec.descriptorSetLayouts = {uiDescriptorSetLayout};
+            uiRectPipelineSpec.descriptorSetLayouts = {uiDescriptorSetLayout};
+            uiRectPipelineSpec.usesPushConstants = true;
+            uiRectPipelineSpec.pushConstantsSize = sizeof(UiPushConstants);
 
             uiRectPipeline = GraphicsObjectsFactory::createGraphicsPipeline(uiRectPipelineSpec);
 
@@ -895,7 +917,9 @@ namespace CgEngine {
             uiTextPipelineSpec.vertexInputLayout = UI_TEXT_VERTEX_BUFFER_LAYOUTS;
             uiTextPipelineSpec.hasDepthStencilAttachment = false;
             uiTextPipelineSpec.colorAttachments = { UI_CANVAS_ATTACHMENT_TYPE };
-            uiCirclePipelineSpec.descriptorSetLayouts = {uiTextDescriptorSetLayout};
+            uiTextPipelineSpec.descriptorSetLayouts = {uiTextDescriptorSetLayout};
+            uiTextPipelineSpec.usesPushConstants = true;
+            uiTextPipelineSpec.pushConstantsSize = sizeof(UiPushConstants);
 
             uiTextPipeline = GraphicsObjectsFactory::createGraphicsPipeline(uiTextPipelineSpec);
         }
@@ -925,6 +949,8 @@ namespace CgEngine {
             ui2DPipelineSpec.destBlendingFunction = BlendingFunction::OneMinusSrcAlpha;
             ui2DPipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
             ui2DPipelineSpec.descriptorSetLayouts = {ui2DDescriptorSetLayoutCameraBuffer, uiCanvasSampleDescriptorSetLayout};
+            ui2DPipelineSpec.usesPushConstants = true;
+            ui2DPipelineSpec.pushConstantsSize = sizeof(glm::mat4);
 
             PipelineAttachmentInfo swapChainAttachmentInfo = Renderer::getSwapChainAttachmentInfo();
 
@@ -1072,6 +1098,7 @@ namespace CgEngine {
         delete uiTextPipeline;
         delete uiDescriptorSetLayout;
         delete uiTextDescriptorSetLayout;
+        delete uiIndexBuffer;
 
         delete ui2DPipeline;
         delete ui2DDescriptorSetLayoutCameraBuffer;
@@ -1081,6 +1108,7 @@ namespace CgEngine {
         delete debugLinesDescriptorSetLayout;
         delete debugLinesPipeline;
         delete debugLinesDescriptorSet;
+        delete debugLinesVAO;
 
         delete customPipelineDescriptorSetLayout;
         delete customPipelineDescriptorSet;
@@ -1090,6 +1118,12 @@ namespace CgEngine {
         delete boneTransformsBuffer;
         delete skinningComputePipeline;
         delete skinningDescriptorSet;
+
+        delete ubCameraData;
+        delete ubLightData;
+        delete ubDirShadowData;
+        delete ubScreenData;
+        delete ubHBAOData;
     }
 
     void SceneRenderer::setActiveScene(Scene* scene) {
@@ -1754,8 +1788,7 @@ namespace CgEngine {
                 }
 
                 customPipelineData.transform = command.transform;
-                ubCustomPipelineData->setData(&customPipelineData, sizeof(CustomPipelineData));
-
+                Renderer::setPushConstants(&customPipelineData, sizeof(CustomPipelineData));
                 Renderer::executeDrawCommand(command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount);
             }
         }

@@ -68,6 +68,10 @@ namespace CgEngine {
 
         const RenderingStats& getRenderingStats();
 
+        struct CustomPipelineData {
+            glm::mat4 transform;
+        };
+
     private:
         static const uint32_t MAX_OBJECTS = 20000;
         static const uint32_t MAX_DEBUG_LINES = 1000;
@@ -329,11 +333,6 @@ namespace CgEngine {
         UniformBuffer* ubHBAOData;
 
         float hbaoSharpness = 1.0f;
-
-        struct CustomPipelineData {
-            glm::mat4 transform;
-        };
-        UniformBuffer* ubCustomPipelineData;
 
         struct MeshKey {
             const VertexArrayObject* vao;
