@@ -88,6 +88,17 @@ namespace CgEngine {
         alcDevice = alcOpenDevice(nullptr);
 
         if (!alcDevice) {
+            if (alcIsExtensionPresent(nullptr, "ALC_ENUMERATE_ALL_EXT")) {
+                const ALCchar* devices = alcGetString(nullptr, ALC_ALL_DEVICES_SPECIFIER);
+
+                CG_LOGGING_ERROR("Available OpenAL devices:");
+
+                while (*devices) {
+                    CG_LOGGING_ERROR("  {}", devices);
+                    devices += std::strlen(devices) + 1;
+                }
+            }
+
             CG_LOGGING_ERROR("AudioSystem: Device creation failed!")
         }
 
@@ -109,7 +120,8 @@ namespace CgEngine {
 
         alcContext = alcCreateContext(alcDevice, attribs.data());
         if (!alcContext) {
-            CG_LOGGING_ERROR("AudioSystem: Context creation failed!")
+            ALCenum err = alcGetError(alcDevice);
+            CG_LOGGING_ERROR("Failed to create OpenAL context: {}", alcGetString(alcDevice, err));
         }
 
         if (!alcMakeContextCurrent(alcContext)) {
