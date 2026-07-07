@@ -8,7 +8,7 @@ PUSH_CONSTANT(CollidersPC) {
     int transformsOffset;
 } pc_colliders;
 
-layout(binding = 1, std430) buffer Transforms {
+UNIFORM_LAYOUT_STD430(1, 0) readonly buffer Transforms {
     mat4 transforms[];
 } b_Transforms;
 

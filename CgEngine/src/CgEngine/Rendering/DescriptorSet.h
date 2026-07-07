@@ -29,11 +29,13 @@ namespace CgEngine {
     struct DescSetTexture2DBinding {
         uint32_t bindingPoint;
         const Texture2D* texture = nullptr;
+        std::vector<const Texture2D*> textureArray{};
     };
 
     struct DescSetTextureCubeBinding {
         uint32_t bindingPoint;
         const TextureCube* texture = nullptr;
+        std::vector<const TextureCube*> textureArray{};
     };
 
     struct DescSetAttachmentTextureBinding {

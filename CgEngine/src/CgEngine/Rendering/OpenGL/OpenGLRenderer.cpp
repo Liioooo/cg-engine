@@ -11,6 +11,7 @@
 #include "OpenGLHelpers.h"
 #include "OpenGLDescriptorSet.h"
 #include "OpenGLAttachment.h"
+#include "OpenGLDebugGroup.h"
 
 namespace CgEngine {
 
@@ -501,6 +502,8 @@ namespace CgEngine {
 
     void OpenGLRenderer::renderImGuiFrame() {
         #ifdef CG_ENABLE_DEBUG_FEATURES
+            CG_GPU_DEBUG_GROUP("ImGui")
+
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

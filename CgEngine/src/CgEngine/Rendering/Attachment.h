@@ -9,6 +9,7 @@ namespace CgEngine {
         uint32_t width;
         uint32_t height;
         bool usableAsTexture = false;
+        bool usableAsStorageImage = false;
         TextureWrap textureWrap = TextureWrap::Clamp;
         MipMapFiltering mipMapFiltering = MipMapFiltering::Bilinear;
         TextureBorderColor textureBorderColor = TextureBorderColor::OpaqueBlack;
@@ -30,6 +31,7 @@ namespace CgEngine {
         virtual AttachmentType getType() const = 0;
         virtual DepthStencilAttachmentFormat getDepthStencilAttachmentFormat() const = 0;
         virtual bool isUsableAsTexture() const = 0;
+        virtual bool isUsableAsStorageImage() const = 0;
         virtual uint32_t getLayerCount() const = 0;
         virtual uint32_t getWidth() const = 0;
         virtual uint32_t getHeight() const = 0;

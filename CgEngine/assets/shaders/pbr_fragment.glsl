@@ -8,13 +8,13 @@
 #include "SpotLightsCalculationsFragment.glsl"
 #include "IBLCalculationsFragment.glsl"
 #include "LightCalculationsHelperFragment.glsl"
-#include "HBAOSampling.glsl"
 #include "Macros.glsl"
 
-layout(binding = 10) uniform sampler2D u_gBuffer_AlbedoRoughness;
-layout(binding = 11) uniform sampler2D u_gBuffer_EmissionMetallic;
-layout(binding = 12) uniform sampler2D u_gBuffer_WorldNormal;
-layout(binding = 13) uniform sampler2D u_Depth;
+UNIFORM_LAYOUT(9, 0)  uniform sampler2D u_HBAO_Tex;
+UNIFORM_LAYOUT(10, 0) uniform sampler2D u_gBuffer_AlbedoRoughness;
+UNIFORM_LAYOUT(11, 0) uniform sampler2D u_gBuffer_EmissionMetallic;
+UNIFORM_LAYOUT(12, 0) uniform sampler2D u_gBuffer_WorldNormal;
+UNIFORM_LAYOUT(13, 0) uniform sampler2D u_Depth;
 
 PUSH_CONSTANT(PbrPC) {
     float environmentIntensity;

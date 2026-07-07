@@ -1,7 +1,9 @@
 #ifndef PBR_MATERIAL_UNIFORMS_GLSL
 #define PBR_MATERIAL_UNIFORMS_GLSL
 
-layout (binding = 5, std140) uniform PBRMaterialData {
+#include "Macros.glsl"
+
+UNIFORM_LAYOUT_STD140(5, 1) uniform PBRMaterialData {
     vec3 albedoColor;
     float metalness;
     float roughness;
@@ -9,10 +11,10 @@ layout (binding = 5, std140) uniform PBRMaterialData {
     bool useNormals;
 } u_PBRMaterialData;
 
-layout(binding = 0) uniform sampler2D u_Mat_AlbedoTexture;
-layout(binding = 1) uniform sampler2D u_Mat_NormalTexture;
-layout(binding = 2) uniform sampler2D u_Mat_MetalnessTexture;
-layout(binding = 3) uniform sampler2D u_Mat_RoughnessTexture;
-layout(binding = 4) uniform sampler2D u_Mat_EmissionTexture;
+UNIFORM_LAYOUT(0, 1) uniform sampler2D u_Mat_AlbedoTexture;
+UNIFORM_LAYOUT(1, 1) uniform sampler2D u_Mat_NormalTexture;
+UNIFORM_LAYOUT(2, 1) uniform sampler2D u_Mat_MetalnessTexture;
+UNIFORM_LAYOUT(3, 1) uniform sampler2D u_Mat_RoughnessTexture;
+UNIFORM_LAYOUT(4, 1) uniform sampler2D u_Mat_EmissionTexture;
 
 #endif // PBR_MATERIAL_UNIFORMS_GLSL

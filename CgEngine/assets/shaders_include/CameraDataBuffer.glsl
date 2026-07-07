@@ -1,7 +1,9 @@
 #ifndef CAMERA_DATA_BUFFER_GLSL
 #define CAMERA_DATA_BUFFER_GLSL
 
-layout (binding = 0, std140) uniform CameraData {
+#include "Macros.glsl"
+
+UNIFORM_LAYOUT_STD140(0, 0) uniform CameraData {
     mat4 viewProjection;
     mat4 invViewProjection;
     mat4 projection;

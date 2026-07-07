@@ -6,7 +6,7 @@
 
 
 namespace CgEngine {
-    VulkanAttachment::VulkanAttachment(const AttachmentSpecification &spec) : usableAsTexture(spec.usableAsTexture), mipMapFiltering(spec.mipMapFiltering), textureWrap(spec.textureWrap), textureBorderColor(spec.textureBorderColor), layerCount(spec.layerCount), width(spec.width), height(spec.height) {
+    VulkanAttachment::VulkanAttachment(const AttachmentSpecification &spec) : usableAsTexture(spec.usableAsTexture), usableAsStorageImage(spec.usableAsStorageImage), mipMapFiltering(spec.mipMapFiltering), textureWrap(spec.textureWrap), textureBorderColor(spec.textureBorderColor), layerCount(spec.layerCount), width(spec.width), height(spec.height) {
         if (spec.type == AttachmentType::Depth || spec.type == AttachmentType::DepthStencil) {
             if (spec.type == AttachmentType::Depth) {
                 vulkanFormat = VulkanHelpers::findSupportedDepthFormat({vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint});
@@ -60,6 +60,7 @@ namespace CgEngine {
         depthFormat = other.depthFormat;
         type = other.type;
         usableAsTexture = other.usableAsTexture;
+        usableAsStorageImage = other.usableAsStorageImage;
         textureWrap = other.textureWrap;
         mipMapFiltering = other.mipMapFiltering;
         textureBorderColor = other.textureBorderColor;
@@ -97,6 +98,7 @@ namespace CgEngine {
             depthFormat = other.depthFormat;
             type = other.type;
             usableAsTexture = other.usableAsTexture;
+            usableAsStorageImage = other.usableAsStorageImage;
             textureWrap = other.textureWrap;
             mipMapFiltering = other.mipMapFiltering;
             textureBorderColor = other.textureBorderColor;
@@ -122,6 +124,10 @@ namespace CgEngine {
 
     bool VulkanAttachment::isUsableAsTexture() const {
         return usableAsTexture;
+    }
+
+    bool VulkanAttachment::isUsableAsStorageImage() const {
+        return usableAsStorageImage;
     }
 
     uint32_t VulkanAttachment::getLayerCount() const {
@@ -164,6 +170,12 @@ namespace CgEngine {
 
     vk::ImageView VulkanAttachment::getVulkanLayerImageView(uint32_t layer) const {
         CG_ASSERT(layer < layerCount, "Attachment::getVulkanLayerImageView: Layer index out of bounds.")
+
+        if (layer == 0 && layerCount == 1) {
+            CG_ASSERT(imageView != VK_NULL_HANDLE, "Attachment::getVulkanLayerImageView: Attachment has not been created properly.")
+            return imageView;
+        }
+
         CG_ASSERT(!layerImageViews.empty(), "Attachment::getVulkanLayerImageView: Attachment has not been created properly.")
         CG_ASSERT(layerImageViews[layer] != VK_NULL_HANDLE, "Attachment::getVulkanLayerImageView: Attachment has not been created properly.")
         return layerImageViews[layer];
@@ -172,12 +184,7 @@ namespace CgEngine {
     void VulkanAttachment::createAttachmentImage() {
         VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
 
-        vk::ImageUsageFlags usageFlags = VulkanHelpers::attachmentTypeToUsageFlags(usableAsTexture, type);
-
-        vk::ImageCreateFlags createFlags = {};
-        if (layerCount > 1) {
-            createFlags |= vk::ImageCreateFlagBits::e2DArrayCompatible;
-        }
+        vk::ImageUsageFlags usageFlags = VulkanHelpers::attachmentTypeToUsageFlags(usableAsTexture, usableAsStorageImage, type);
 
         vk::ImageCreateInfo imageCreateInfo = {};
         imageCreateInfo.format = vulkanFormat;
@@ -191,7 +198,7 @@ namespace CgEngine {
         imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
         imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
         imageCreateInfo.usage = usageFlags;
-        imageCreateInfo.flags = createFlags;
+        imageCreateInfo.flags = {};
 
         VmaAllocationCreateInfo allocInfo{};
         allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
@@ -241,29 +248,32 @@ namespace CgEngine {
             CG_LOGGING_ERROR("Failed to create Vulkan image view for attachment!")
         }
 
-        layerImageViews.resize(layerCount);
-        for (uint32_t layer = 0; layer < layerCount; ++layer) {
-            vk::ImageViewCreateInfo layerViewCreateInfo{};
-            layerViewCreateInfo.flags = {};
-            layerViewCreateInfo.image = image;
-            layerViewCreateInfo.viewType = vk::ImageViewType::e2D;
-            layerViewCreateInfo.format = vulkanFormat;
-            layerViewCreateInfo.components.r = vk::ComponentSwizzle::eIdentity;
-            layerViewCreateInfo.components.g = vk::ComponentSwizzle::eIdentity;
-            layerViewCreateInfo.components.b = vk::ComponentSwizzle::eIdentity;
-            layerViewCreateInfo.components.a = vk::ComponentSwizzle::eIdentity;
-            layerViewCreateInfo.subresourceRange.aspectMask = aspectFlags;
-            layerViewCreateInfo.subresourceRange.layerCount = 1;
-            layerViewCreateInfo.subresourceRange.baseMipLevel = 0;
-            layerViewCreateInfo.subresourceRange.levelCount = 1;
-            layerViewCreateInfo.subresourceRange.baseArrayLayer = layer;
+        if (layerCount > 1) {
+            layerImageViews.resize(layerCount);
+            for (uint32_t layer = 0; layer < layerCount; ++layer) {
+                vk::ImageViewCreateInfo layerViewCreateInfo{};
+                layerViewCreateInfo.flags = {};
+                layerViewCreateInfo.image = image;
+                layerViewCreateInfo.viewType = vk::ImageViewType::e2D;
+                layerViewCreateInfo.format = vulkanFormat;
+                layerViewCreateInfo.components.r = vk::ComponentSwizzle::eIdentity;
+                layerViewCreateInfo.components.g = vk::ComponentSwizzle::eIdentity;
+                layerViewCreateInfo.components.b = vk::ComponentSwizzle::eIdentity;
+                layerViewCreateInfo.components.a = vk::ComponentSwizzle::eIdentity;
+                layerViewCreateInfo.subresourceRange.aspectMask = aspectFlags;
+                layerViewCreateInfo.subresourceRange.layerCount = 1;
+                layerViewCreateInfo.subresourceRange.baseMipLevel = 0;
+                layerViewCreateInfo.subresourceRange.levelCount = 1;
+                layerViewCreateInfo.subresourceRange.baseArrayLayer = layer;
 
-            auto layerImageViewResult = device.createImageView(layerViewCreateInfo);
-            if (layerImageViewResult.has_value()) {
-                layerImageViews[layer] = layerImageViewResult.value;
-            } else {
-                CG_LOGGING_ERROR("Failed to create Vulkan image view for attachment!")
+                auto layerImageViewResult = device.createImageView(layerViewCreateInfo);
+                if (layerImageViewResult.has_value()) {
+                    layerImageViews[layer] = layerImageViewResult.value;
+                } else {
+                    CG_LOGGING_ERROR("Failed to create Vulkan image view for attachment!")
+                }
             }
         }
+
     }
 }

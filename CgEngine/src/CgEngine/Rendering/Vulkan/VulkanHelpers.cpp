@@ -31,22 +31,20 @@ namespace CgEngine {
         void copyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size) {
             auto backend = Renderer::getVulkanBackend();
 
-            vk::CommandBuffer commandBuffer = backend->beginSingleTimeCommandBuffer();
+            backend->executeImmediateCommand([&](const vk::CommandBuffer commandBuffer) {
+                vk::BufferCopy2 copyRegion{};
+                copyRegion.setSize(size);
+                copyRegion.setSrcOffset(0);
+                copyRegion.setDstOffset(0);
 
-            vk::BufferCopy2 copyRegion{};
-            copyRegion.setSize(size);
-            copyRegion.setSrcOffset(0);
-            copyRegion.setDstOffset(0);
+                vk::CopyBufferInfo2 copyRegionInfo{};
+                copyRegionInfo.setSrcBuffer(srcBuffer);
+                copyRegionInfo.setDstBuffer(dstBuffer);
+                copyRegionInfo.setPRegions(&copyRegion);
+                copyRegionInfo.setRegionCount(1);
 
-            vk::CopyBufferInfo2 copyRegionInfo{};
-            copyRegionInfo.setSrcBuffer(srcBuffer);
-            copyRegionInfo.setDstBuffer(dstBuffer);
-            copyRegionInfo.setPRegions(&copyRegion);
-            copyRegionInfo.setRegionCount(1);
-
-            commandBuffer.copyBuffer2(&copyRegionInfo);
-
-            backend->endAndSubmitSingleTimeCommandBuffer(commandBuffer);
+                commandBuffer.copyBuffer2(&copyRegionInfo);
+            });
         }
 
         size_t alignUp(size_t value, size_t alignment) {
@@ -104,16 +102,21 @@ namespace CgEngine {
             }
         }
 
-        vk::ImageUsageFlags attachmentTypeToUsageFlags(bool usableAsTexture, AttachmentType attachmentType) {
-            vk::ImageUsageFlags flags = vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eInputAttachment | vk::ImageUsageFlagBits::eColorAttachment;
+        vk::ImageUsageFlags attachmentTypeToUsageFlags(bool usableAsTexture, bool usableAsStorageImage, AttachmentType attachmentType) {
+            vk::ImageUsageFlags flags{};
 
             if (usableAsTexture) {
                 flags |= vk::ImageUsageFlagBits::eSampled;
             }
 
+            if (usableAsStorageImage) {
+                flags |= vk::ImageUsageFlagBits::eStorage;
+            }
+
             if (attachmentType == AttachmentType::Depth || attachmentType == AttachmentType::DepthStencil) {
-                flags &= ~vk::ImageUsageFlagBits::eColorAttachment;
                 flags |= vk::ImageUsageFlagBits::eDepthStencilAttachment;
+            } else {
+                flags |= vk::ImageUsageFlagBits::eColorAttachment;
             }
 
             return flags;

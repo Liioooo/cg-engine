@@ -1,8 +1,6 @@
 #version 450 core
 
-#include "CameraDataBuffer.glsl"
 #include "LightDataBuffer.glsl"
-#include "IBLCalculationsFragment.glsl"
 #include "GBuffersFragment.glsl"
 
 layout(location = 12) in VS_OUT {

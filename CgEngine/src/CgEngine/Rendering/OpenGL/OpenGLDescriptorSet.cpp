@@ -69,36 +69,53 @@ namespace CgEngine {
         for (const auto& ubo: specification.uboBindings) {
             glBindBufferBase(GL_UNIFORM_BUFFER, ubo.bindingPoint, static_cast<const OpenGLUniformBuffer*>(ubo.ubo)->getOpenGLHandle());
         }
-        for (auto ssbo : specification.ssboBindings) {
+        for (const auto ssbo : specification.ssboBindings) {
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssbo.bindingPoint, static_cast<const OpenGLShaderStorageBuffer*>(ssbo.ssbo)->getOpenGLHandle());
         }
-        for (auto ssbo : specification.immutableSsboBindings) {
+        for (const auto ssbo : specification.immutableSsboBindings) {
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssbo.bindingPoint, static_cast<const OpenGLImmutableShaderStorageBuffer*>(ssbo.ssbo)->getOpenGLHandle());
         }
         for (auto tex2D : specification.texture2DBindings) {
-            glBindTextureUnit(tex2D.bindingPoint, static_cast<const OpenGLTexture2D*>(tex2D.texture)->getOpenGLHandle());
+            if (tex2D.texture != nullptr) {
+                glBindTextureUnit(tex2D.bindingPoint, static_cast<const OpenGLTexture2D*>(tex2D.texture)->getOpenGLHandle());
+            } else {
+                uint32_t bindingPoint = tex2D.bindingPoint;
+                for (const auto tex : tex2D.textureArray) {
+                    glBindTextureUnit(bindingPoint, static_cast<const OpenGLTexture2D*>(tex)->getOpenGLHandle());
+                    bindingPoint++;
+                }
+            }
         }
-        for (auto texCube : specification.textureCubeBindings) {
-            glBindTextureUnit(texCube.bindingPoint, static_cast<const OpenGLTextureCube*>(texCube.texture)->getOpenGLHandle());
+        for (const auto texCube : specification.textureCubeBindings) {
+            if (texCube.texture != nullptr) {
+                glBindTextureUnit(texCube.bindingPoint, static_cast<const OpenGLTextureCube*>(texCube.texture)->getOpenGLHandle());
+            } else {
+                uint32_t bindingPoint = texCube.bindingPoint;
+                for (const auto tex : texCube.textureArray) {
+                    glBindTextureUnit(bindingPoint, static_cast<const OpenGLTextureCube*>(tex)->getOpenGLHandle());
+                    bindingPoint++;
+                }
+            }
+
         }
-        for (auto attachment : specification.attachmentTextureBindings) {
+        for (const auto attachment : specification.attachmentTextureBindings) {
             if (attachment.allLayers) {
                 glBindTextureUnit(attachment.bindingPoint, static_cast<const OpenGLAttachment*>(attachment.attachment)->getOpenGLHandle());
             } else {
                 glBindTextureUnit(attachment.bindingPoint, static_cast<const OpenGLAttachment*>(attachment.attachment)->getOpenGLLayerViewHandle(attachment.layer));
             }
         }
-        for (auto imageCubeBinding : specification.imageCubeBindings) {
+        for (const auto imageCubeBinding : specification.imageCubeBindings) {
             glBindImageTexture(imageCubeBinding.bindingPoint, static_cast<const OpenGLTextureCube*>(imageCubeBinding.texture)->getOpenGLHandle(), imageCubeBinding.mipLevel, GL_TRUE, 0, OpenGLHelpers::shaderImageAccessToOpenGL(imageCubeBinding.access), OpenGLHelpers::getOpenGLTextureFormatForImageBind(imageCubeBinding.texture->getFormat()));
         }
-        for (auto attachmentImageBinding : specification.attachmentImageBindings) {
+        for (const auto attachmentImageBinding : specification.attachmentImageBindings) {
             if (attachmentImageBinding.allLayers) {
                 glBindImageTexture(attachmentImageBinding.bindingPoint, static_cast<const OpenGLAttachment*>(attachmentImageBinding.attachment)->getOpenGLHandle(), 0, GL_TRUE, 0, OpenGLHelpers::shaderImageAccessToOpenGL(attachmentImageBinding.access), OpenGLHelpers::attachmentTypeToOpenGLInternalFormat(attachmentImageBinding.attachment->getType()));
             } else {
                 glBindImageTexture(attachmentImageBinding.bindingPoint, static_cast<const OpenGLAttachment*>(attachmentImageBinding.attachment)->getOpenGLHandle(), 0, GL_FALSE, attachmentImageBinding.layer, OpenGLHelpers::shaderImageAccessToOpenGL(attachmentImageBinding.access), OpenGLHelpers::attachmentTypeToOpenGLInternalFormat(attachmentImageBinding.attachment->getType()));
             }
         }
-        for (auto vb : specification.vertexBufferSSBOBindings) {
+        for (const auto vb : specification.vertexBufferSSBOBindings) {
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, vb.bindingPoint, static_cast<const OpenGLVertexBuffer*>(vb.vertexBuffer)->getOpenGLHandle());
         }
     }
@@ -107,7 +124,8 @@ namespace CgEngine {
         const DescriptorSetLayoutSpecification& layoutSpec = static_cast<const OpenGLDescriptorSetLayout*>(spec.layout)->getSpecification();
 
         auto validateBindings = [](const auto& layoutBindings, const auto& providedBindings, auto getBindingPoint) {
-            std::unordered_set<uint32_t> expected(layoutBindings.begin(),layoutBindings.end());
+            auto layoutBindingsView = layoutBindings | std::views::transform([](const auto& binding) { return binding.bindingPoint; });
+            std::unordered_set<uint32_t> expected(layoutBindingsView.begin(), layoutBindingsView.end());
 
             std::unordered_set<uint32_t> provided;
 
@@ -186,6 +204,26 @@ namespace CgEngine {
                 CG_LOGGING_ERROR("DescriptorSet: Image bindings do not match layout!")
                 return false;
             }
+        }
+
+        for (const auto& b : spec.attachmentTextureBindings) {
+            if (b.attachment != nullptr) {
+                if (!b.attachment->isUsableAsTexture()) {
+                    CG_LOGGING_ERROR("DescriptorSet: Attachment binding at point {0} is not usable as texture!", b.bindingPoint)
+                    return false;
+                }
+            }
+
+        }
+
+        for (const auto& b : spec.attachmentImageBindings) {
+            if (b.attachment != nullptr) {
+                if (!b.attachment->isUsableAsStorageImage()) {
+                    CG_LOGGING_ERROR("DescriptorSet: Attachment binding at point {0} is not usable as storage image!", b.bindingPoint)
+                    return false;
+                }
+            }
+
         }
 
         return true;

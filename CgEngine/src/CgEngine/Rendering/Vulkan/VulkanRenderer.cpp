@@ -194,11 +194,11 @@ namespace CgEngine {
     }
 
     const std::vector<VertexBufferLayout> VulkanRenderer::getUnitQuadVertexInputLayout() {
-        return std::vector<VertexBufferLayout>();
+        return quadVAO.getLayout();
     }
 
     const std::vector<VertexBufferLayout> VulkanRenderer::getUnitCubeVertexInputLayout() {
-        return std::vector<VertexBufferLayout>();
+        return unitCubeVAO.getLayout();
     }
 
     PipelineAttachmentInfo VulkanRenderer::getSwapChainAttachmentInfo() {
@@ -213,14 +213,14 @@ namespace CgEngine {
 
     }
 
-    vk::CommandBuffer VulkanRenderer::beginSingleTimeCommandBuffer() {
+    void VulkanRenderer::executeImmediateCommand(const std::function<void(const vk::CommandBuffer&)> &lambda) const {
         vk::CommandBufferAllocateInfo allocInfo{};
         allocInfo.setLevel(vk::CommandBufferLevel::ePrimary);
         allocInfo.setCommandPool(vkTransientCommandPool);
         allocInfo.setCommandBufferCount(1);
 
         auto commandBufferResult = vkDevice.allocateCommandBuffers(allocInfo);
-        CG_ASSERT(commandBufferResult.has_value(), "VulkanRenderer::beginSingleTimeCommandBuffer: Failed to allocate command buffer for single time commands!")
+        CG_ASSERT(commandBufferResult.has_value(), "VulkanRenderer::executeImmediateCommand: Failed to allocate command buffer for immediate commands!")
 
         vk::CommandBuffer commandBuffer = commandBufferResult.value[0];
 
@@ -228,14 +228,12 @@ namespace CgEngine {
         beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
         auto beginResult = commandBuffer.begin(beginInfo);
-        CG_ASSERT(beginResult == vk::Result::eSuccess, "VulkanRenderer::beginSingleTimeCommandBuffer: Failed to begin command buffer for single time commands!")
+        CG_ASSERT(beginResult == vk::Result::eSuccess, "VulkanRenderer::executeImmediateCommand: Failed to begin command buffer for immediate commands!")
 
-        return commandBuffer;
-    }
+        lambda(commandBuffer);
 
-    void VulkanRenderer::endAndSubmitSingleTimeCommandBuffer(vk::CommandBuffer commandBuffer) {
         auto endResult = commandBuffer.end();
-        CG_ASSERT(endResult == vk::Result::eSuccess, "VulkanRenderer::endAndSubmitSingleTimeCommandBuffer: Failed to end command buffer for single time commands!")
+        CG_ASSERT(endResult == vk::Result::eSuccess, "VulkanRenderer::executeImmediateCommand: Failed to end command buffer for single time commands!")
 
         vk::CommandBufferSubmitInfo commandBufferInfo{};
         commandBufferInfo.setCommandBuffer(commandBuffer);
@@ -245,13 +243,13 @@ namespace CgEngine {
 
         vk::FenceCreateInfo fenceInfo{};
         auto fenceResult = vkDevice.createFence(fenceInfo);
-        CG_ASSERT(fenceResult.has_value(), "VulkanRenderer::endAndSubmitSingleTimeCommandBuffer: Failed to create fence for single time command buffer submission!")
+        CG_ASSERT(fenceResult.has_value(), "VulkanRenderer::executeImmediateCommand: Failed to create fence for immediate command buffer submission!")
 
         auto submitResult = vkGraphicsComputeQueue.submit2(submitInfo, fenceResult.value);
-        CG_ASSERT(submitResult == vk::Result::eSuccess, "VulkanRenderer::endAndSubmitSingleTimeCommandBuffer: Failed to submit command buffer for single time commands!")
+        CG_ASSERT(submitResult == vk::Result::eSuccess, "VulkanRenderer::executeImmediateCommand: Failed to submit command buffer for immediate commands!")
 
         auto waitFenceResult = vkDevice.waitForFences(fenceResult.value, VK_TRUE, UINT64_MAX);
-        CG_ASSERT(waitFenceResult == vk::Result::eSuccess, "VulkanRenderer::endAndSubmitSingleTimeCommandBuffer: Failed to wait for fence after submitting single time command buffer!")
+        CG_ASSERT(waitFenceResult == vk::Result::eSuccess, "VulkanRenderer::executeImmediateCommand: Failed to wait for fence after submitting immediate command buffer!")
 
         vkDevice.destroyFence(fenceResult.value);
         vkDevice.freeCommandBuffers(vkTransientCommandPool, commandBuffer);
@@ -478,14 +476,19 @@ namespace CgEngine {
         vk::PhysicalDeviceFeatures deviceFeatures{};
         deviceFeatures.fillModeNonSolid = VK_TRUE;
         deviceFeatures.samplerAnisotropy = VK_TRUE;
+        deviceFeatures.geometryShader = VK_TRUE;
+        deviceFeatures.tessellationShader = VK_TRUE;
+        deviceFeatures.shaderInt64 = VK_TRUE;
 
-        vk::PhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeatures{ VK_TRUE };
+        vk::PhysicalDeviceVulkan13Features vk13PhysicalDeviceFeatures{};
+        vk13PhysicalDeviceFeatures.setDynamicRendering(VK_TRUE);
+        vk13PhysicalDeviceFeatures.setSynchronization2(VK_TRUE);
 
         vk::DeviceCreateInfo createInfo{};
         createInfo.setQueueCreateInfos(queueCreateInfos);
         createInfo.setPEnabledFeatures(&deviceFeatures);
         createInfo.setPEnabledExtensionNames(deviceExtensions);
-        createInfo.setPNext(&dynamicRenderingFeatures);
+        createInfo.setPNext(&vk13PhysicalDeviceFeatures);
 
         auto device = vkPhysicalDevice.createDevice(createInfo);
         if (!device.has_value()) {

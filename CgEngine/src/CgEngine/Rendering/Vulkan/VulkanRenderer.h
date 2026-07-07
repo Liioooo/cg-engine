@@ -71,8 +71,7 @@ namespace CgEngine {
         void beginImGuiFrame() override;
         void renderImGuiFrame() override;
 
-        vk::CommandBuffer beginSingleTimeCommandBuffer();
-        void endAndSubmitSingleTimeCommandBuffer(vk::CommandBuffer commandBuffer);
+        void executeImmediateCommand(const std::function<void (const vk::CommandBuffer&)>& lambda) const;
 
         GraphicsAPI getGraphicsAPI() const override { return GraphicsAPI::Vulkan; }
 

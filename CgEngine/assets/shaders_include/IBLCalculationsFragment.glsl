@@ -3,9 +3,9 @@
 
 #include "LightCalculationsHelperFragment.glsl"
 
-layout(binding = 5) uniform samplerCube u_IrradianceMap;
-layout(binding = 6) uniform samplerCube u_PrefilterMap;
-layout(binding = 7) uniform sampler2D u_BrdfLUT;
+UNIFORM_LAYOUT(5, 1) uniform samplerCube u_IrradianceMap;
+UNIFORM_LAYOUT(6, 1) uniform samplerCube u_PrefilterMap;
+UNIFORM_LAYOUT(7, 0) uniform sampler2D u_BrdfLUT;
 
 vec3 calcIBL(vec3 F0, vec3 matAlbedo, float matMetalness, float matRoughness, vec3 N, vec3 V, float NdotV) {
     vec3 irradiance = texture(u_IrradianceMap, N).rgb;

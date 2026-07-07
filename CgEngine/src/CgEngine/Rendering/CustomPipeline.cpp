@@ -199,10 +199,10 @@ namespace CgEngine {
 
         const auto& descriptorSetLayoutNode = pipelineNode.child("DescriptorSetLayout");
         spec.descriptorSetLayoutSpecification.usage = DescriptorSetLayoutUsage::Graphics;
-        spec.descriptorSetLayoutSpecification.uboBindingPoints = LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("UboBindingPoints"));
-        spec.descriptorSetLayoutSpecification.ssboBindingPoints = LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("SsboBindingPoints"));
-        spec.descriptorSetLayoutSpecification.texture2DAndAttachmentBindingPoints = LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("Texture2DAndAttachmentBindingPoints"));
-        spec.descriptorSetLayoutSpecification.imageBindingPoints = LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("ImageBindingPoints"));
+        spec.descriptorSetLayoutSpecification.setUboBindingPoints(LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("UboBindingPoints")));
+        spec.descriptorSetLayoutSpecification.setSsboBindingPoints(LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("SsboBindingPoints")));
+        spec.descriptorSetLayoutSpecification.setTexture2DAndAttachmentBindingPoints(LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("Texture2DAndAttachmentBindingPoints")));
+        spec.descriptorSetLayoutSpecification.setImageBindingPoints(LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("ImageBindingPoints")));
 
         const auto& shaderNode = pipelineNode.child("Shader");
         std::string vertexPath = shaderNode.child("Vertex").child_value();
@@ -297,10 +297,10 @@ namespace CgEngine {
 
         const auto& descriptorSetLayoutNode = pipelineNode.child("DescriptorSetLayout");
         spec.descriptorSetLayoutSpecification.usage = DescriptorSetLayoutUsage::Compute;
-        spec.descriptorSetLayoutSpecification.uboBindingPoints = LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("UboBindingPoints"));
-        spec.descriptorSetLayoutSpecification.ssboBindingPoints = LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("SsboBindingPoints"));
-        spec.descriptorSetLayoutSpecification.texture2DAndAttachmentBindingPoints = LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("Texture2DAndAttachmentBindingPoints"));
-        spec.descriptorSetLayoutSpecification.imageBindingPoints = LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("ImageBindingPoints"));
+        spec.descriptorSetLayoutSpecification.setUboBindingPoints(LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("UboBindingPoints")));
+        spec.descriptorSetLayoutSpecification.setSsboBindingPoints(LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("SsboBindingPoints")));
+        spec.descriptorSetLayoutSpecification.setTexture2DAndAttachmentBindingPoints(LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("Texture2DAndAttachmentBindingPoints")));
+        spec.descriptorSetLayoutSpecification.setImageBindingPoints(LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("ImageBindingPoints")));
 
         return new CustomComputePipeline(spec);
     }

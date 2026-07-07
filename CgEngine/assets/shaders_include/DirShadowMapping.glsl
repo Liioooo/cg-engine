@@ -1,12 +1,14 @@
 #ifndef DIR_SHADOW_MAPPING_GLSL
 #define DIR_SHADOW_MAPPING_GLSL
 
-layout (binding = 2, std140) uniform DirShadowData {
+#include "Macros.glsl"
+
+UNIFORM_LAYOUT_STD140(2, 0) uniform DirShadowData {
     mat4 lightSpaceMat[4];
     vec4 cascadeSplits;
 } u_DirShadowData;
 
-layout(binding = 8) uniform sampler2DArray u_DirShadowMap;
+UNIFORM_LAYOUT(8, 0) uniform sampler2DArray u_DirShadowMap;
 
 vec4[4] calcDirShadowMapPostion(vec3 worldPosition) {
     vec4[4] dirShadowMapPosition;

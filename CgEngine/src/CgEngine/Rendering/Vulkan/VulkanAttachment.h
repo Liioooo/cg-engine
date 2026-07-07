@@ -21,6 +21,7 @@ namespace CgEngine {
         AttachmentType getType() const override;
         DepthStencilAttachmentFormat getDepthStencilAttachmentFormat() const override;
         bool isUsableAsTexture() const override;
+        bool isUsableAsStorageImage() const override;
         uint32_t getLayerCount() const override;
         uint32_t getWidth() const override;
         uint32_t getHeight() const override;
@@ -38,6 +39,7 @@ namespace CgEngine {
         DepthStencilAttachmentFormat depthFormat;
         AttachmentType type;
         bool usableAsTexture = false;
+        bool usableAsStorageImage = false;
         TextureWrap textureWrap = TextureWrap::Clamp;
         MipMapFiltering mipMapFiltering = MipMapFiltering::Bilinear;
         TextureBorderColor textureBorderColor = TextureBorderColor::OpaqueBlack;

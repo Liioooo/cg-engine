@@ -3,7 +3,7 @@
 
 #include "CameraDataBuffer.glsl"
 
-layout(location = 30) out GBuffers_OUT {
+layout(location = 20) out GBuffers_OUT {
     mat3 CameraView;
 } vs_out_gBuffers;
 

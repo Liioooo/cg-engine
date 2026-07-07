@@ -6,7 +6,7 @@ layout (location = 1) out vec4 o_EmissionMetalic;
 layout (location = 2) out vec3 o_WorldNormal;
 layout (location = 3) out vec3 o_ViewNormal;
 
-layout(location = 30) in GBuffers_OUT {
+layout(location = 20) in GBuffers_OUT {
     mat3 CameraView;
 } fs_in_gBuffers;
 

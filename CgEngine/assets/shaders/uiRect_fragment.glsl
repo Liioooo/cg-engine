@@ -1,5 +1,7 @@
 #version 450 core
 
+#include "Macros.glsl"
+
 layout(location = 10) in VS_OUT {
     vec2 TexCoord;
     vec4 LineColor;
@@ -12,7 +14,7 @@ layout(location = 20) in flat float TextureIndex;
 
 layout(location = 0) out vec4 o_FragColor;
 
-layout(binding = 0) uniform sampler2D u_Textures[16];
+UNIFORM_LAYOUT(0, 0)uniform sampler2D u_Textures[16];
 
 vec4 toLinearRGB(vec4 color) {
     return vec4(pow(color.rgb, vec3(2.2)), color.a);

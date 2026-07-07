@@ -5,16 +5,6 @@ UniformBuffers:
 3: ScreenData
 4: HBAOData
 5: PBRMaterialData
-Normal uniforms: >10
-
-SSBO:
-0: Transforms
-1: BoneInfluences
-2: BoneTransforms
-3: OriginalVertexBuffer
-4: SkinnedVertexBuffer
-5: CustomShaderRenderer (InstanceBuffer1)
-6: CustomShaderRenderer (InstanceBuffer2)
 
 1 - 4: Used for Vertex Skinning pass
 

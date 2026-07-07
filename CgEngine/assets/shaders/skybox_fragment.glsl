@@ -6,7 +6,7 @@ layout(location = 10) in VS_OUT {
     vec3 TexCoord;
 } fs_in;
 
-layout (binding = 6) uniform samplerCube u_Texture;
+UNIFORM_LAYOUT(6, 1) uniform samplerCube u_Texture;
 
 PUSH_CONSTANT(SkyboxPC) {
     float intensity;

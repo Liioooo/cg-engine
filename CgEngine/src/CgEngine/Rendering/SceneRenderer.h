@@ -165,6 +165,8 @@ namespace CgEngine {
         RenderPass* afterPbrRenderPass;
         Framebuffer* afterPbrFramebuffer;
 
+        DescriptorSetLayout* skyboxDescriptorSetLayout;
+        DescriptorSet* skyboxDescriptorSet;
         GraphicsPipeline* skyboxPipeline;
 
         struct CollidersPushConstants {

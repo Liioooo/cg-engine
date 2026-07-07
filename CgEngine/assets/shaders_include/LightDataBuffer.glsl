@@ -1,6 +1,8 @@
 #ifndef LIGHT_DATA_BUFFER_GLSL
 #define LIGHT_DATA_BUFFER_GLSL
 
+#include "Macros.glsl"
+
 struct PointLight {
     vec4 position;
     vec4 color;
@@ -20,7 +22,7 @@ struct SpotLight {
     float outerAngle;
 };
 
-layout (binding = 1, std140) uniform LightData {
+UNIFORM_LAYOUT_STD140(1, 0) uniform LightData {
     vec4 dirLightDirection;
     vec4 dirLightColor;
     float dirLightIntensity;

@@ -316,6 +316,7 @@ namespace CgEngine {
             hbaoResultSpec.type = AttachmentType::RG16F;
             hbaoResultSpec.layerCount = 16;
             hbaoResultSpec.usableAsTexture = true;
+            hbaoResultSpec.usableAsStorageImage = true;
             hbaoResultSpec.textureWrap = TextureWrap::Clamp;
             hbaoResultSpec.mipMapFiltering = MipMapFiltering::Nearest;
 
@@ -400,6 +401,7 @@ namespace CgEngine {
             hbaoBlurAttachmentSpec.width = viewportWidth;
             hbaoBlurAttachmentSpec.height = viewportHeight;
             hbaoBlurAttachmentSpec.type = AttachmentType::RG16F;
+            hbaoBlurAttachmentSpec.usableAsTexture = true;
 
             hbaoBlurAttachment0 = GraphicsObjectsFactory::createAttachment(hbaoBlurAttachmentSpec);
             hbaoBlurAttachment1 = GraphicsObjectsFactory::createAttachment(hbaoBlurAttachmentSpec);
@@ -426,6 +428,7 @@ namespace CgEngine {
             hbaoBlurPipelineSpec.depthTest = false;
             hbaoBlurPipelineSpec.depthWrite = false;
             hbaoBlurPipelineSpec.descriptorSetLayouts = {hbaoBlurDescriptorSetLayout};
+            hbaoBlurPipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
             hbaoBlurPipelineSpec.colorAttachments = { AttachmentType::RG16F };
             hbaoBlurPipelineSpec.hasDepthStencilAttachment = false;
             hbaoBlurPipelineSpec.usesPushConstants = true;
@@ -568,8 +571,14 @@ namespace CgEngine {
             afterPbrFramebuffer = GraphicsObjectsFactory::createFramebuffer(afterPbrFramebufferSpec);
         }
         {
+            DescriptorSetLayoutSpecification skyboxDescriptorSetLayoutSpec{
+                .usage = DescriptorSetLayoutUsage::Graphics,
+                .uboBindingPoints = {0},
+            };
+            skyboxDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(skyboxDescriptorSetLayoutSpec);
+
             GraphicsPipelineSpecification skyboxPipelineSpec{};
-            skyboxPipelineSpec.descriptorSetLayouts = {environmentMapDescriptorSetLayout};
+            skyboxPipelineSpec.descriptorSetLayouts = {skyboxDescriptorSetLayout, environmentMapDescriptorSetLayout};
             skyboxPipelineSpec.engineShaderName = "skybox";
             skyboxPipelineSpec.depthCompareOperator = DepthCompareOperator::LessOrEqual;
             skyboxPipelineSpec.depthTest = true;
@@ -583,6 +592,13 @@ namespace CgEngine {
             skyboxPipelineSpec.pushConstantsSize = sizeof(SkyboxPushConstants);
 
             skyboxPipeline = GraphicsObjectsFactory::createGraphicsPipeline(skyboxPipelineSpec);
+
+            DescriptorSetSpecification skyboxDescriptorSetSpec{
+                .layout = skyboxDescriptorSetLayout,
+                .uboBindings = {
+                    {0, ubCameraData}}
+            };
+            skyboxDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(skyboxDescriptorSetSpec);
         }
         {
             DescriptorSetLayoutSpecification physicsCollidersDescriptorSetLayoutSpec{};
@@ -694,6 +710,7 @@ namespace CgEngine {
             debugLinesPipelineSpec.depthWrite = false;
             debugLinesPipelineSpec.drawMode = DrawMode::Lines;
             debugLinesPipelineSpec.descriptorSetLayouts = {debugLinesDescriptorSetLayout};
+            debugLinesPipelineSpec.vertexInputLayout = debugLinesVAO->getLayout();
             debugLinesPipelineSpec.hasDepthStencilAttachment = true;
             debugLinesPipelineSpec.depthAttachmentFormat = gBufferDepthAttachment->getDepthStencilAttachmentFormat();
             debugLinesPipelineSpec.colorAttachments = {
@@ -736,7 +753,8 @@ namespace CgEngine {
 
             DescriptorSetLayoutSpecification bloomDescriptorSetLayoutSpec{};
             bloomDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
-            bloomDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {0};
+            bloomDescriptorSetLayoutSpec.uboBindingPoints = {0};
+            bloomDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {1};
             bloomDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(bloomDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification bloomDownsamplePipelineSpec{};
@@ -744,6 +762,7 @@ namespace CgEngine {
             bloomDownsamplePipelineSpec.depthTest = false;
             bloomDownsamplePipelineSpec.depthWrite = false;
             bloomDownsamplePipelineSpec.descriptorSetLayouts = {bloomDescriptorSetLayout};
+            bloomDownsamplePipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
             bloomDownsamplePipelineSpec.colorAttachments = { AttachmentType::RGBA16F };
             bloomDownsamplePipelineSpec.hasDepthStencilAttachment = false;
             bloomDownsamplePipelineSpec.usesPushConstants = true;
@@ -776,6 +795,7 @@ namespace CgEngine {
             bloomUpsamplePipelineSpec.srcBlendingFunction = BlendingFunction::One;
             bloomUpsamplePipelineSpec.destBlendingFunction = BlendingFunction::One;
             bloomUpsamplePipelineSpec.descriptorSetLayouts = {bloomDescriptorSetLayout};
+            bloomUpsamplePipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
             bloomUpsamplePipelineSpec.colorAttachments = { AttachmentType::RGBA16F };
             bloomUpsamplePipelineSpec.hasDepthStencilAttachment = false;
 
@@ -793,9 +813,12 @@ namespace CgEngine {
 
             DescriptorSetSpecification bloomDescriptorSetSpec0{};
             bloomDescriptorSetSpec0.layout = bloomDescriptorSetLayout;
+            bloomDescriptorSetSpec0.uboBindings = {
+                {0, ubCameraData}
+            };
             bloomDescriptorSetSpec0.attachmentTextureBindings.resize(1);
             bloomDescriptorSetSpec0.attachmentTextureBindings[0].attachment = pbrColorAttachment;
-            bloomDescriptorSetSpec0.attachmentTextureBindings[0].bindingPoint = 0;
+            bloomDescriptorSetSpec0.attachmentTextureBindings[0].bindingPoint = 1;
             bloomDescriptorSetSpec0.attachmentTextureBindings[0].allLayers = true;
 
             bloomDescriptorSets[0] = GraphicsObjectsFactory::createDescriptorSet(bloomDescriptorSetSpec0);
@@ -803,9 +826,12 @@ namespace CgEngine {
             for (size_t i = 1; i < bloomDescriptorSets.size(); i++) {
                 DescriptorSetSpecification bloomDescriptorSetSpec{};
                 bloomDescriptorSetSpec.layout = bloomDescriptorSetLayout;
+                bloomDescriptorSetSpec.uboBindings = {
+                    {0, ubScreenData}
+                };
                 bloomDescriptorSetSpec.attachmentTextureBindings.resize(1);
                 bloomDescriptorSetSpec.attachmentTextureBindings[0].attachment = bloomAttachments[i - 1];
-                bloomDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 0;
+                bloomDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 1;
                 bloomDescriptorSetSpec.attachmentTextureBindings[0].allLayers = true;
 
                 bloomDescriptorSets[i] = GraphicsObjectsFactory::createDescriptorSet(bloomDescriptorSetSpec);
@@ -814,7 +840,8 @@ namespace CgEngine {
         {
             DescriptorSetLayoutSpecification screenDescriptorSetLayoutSpec{};
             screenDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
-            screenDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {0, 1};
+            screenDescriptorSetLayoutSpec.uboBindingPoints = {0};
+            screenDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {1, 2};
             screenDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(screenDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification screenPipelineSpec;
@@ -834,12 +861,15 @@ namespace CgEngine {
 
             DescriptorSetSpecification screenDescriptorSetSpec{};
             screenDescriptorSetSpec.layout = screenDescriptorSetLayout;
+            screenDescriptorSetSpec.uboBindings = {
+                {0, ubCameraData}
+            };
             screenDescriptorSetSpec.attachmentTextureBindings.resize(2);
             screenDescriptorSetSpec.attachmentTextureBindings[0].attachment = pbrColorAttachment;
-            screenDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 0;
+            screenDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 1;
             screenDescriptorSetSpec.attachmentTextureBindings[0].allLayers = true;
             screenDescriptorSetSpec.attachmentTextureBindings[1].attachment = bloomAttachments[0];
-            screenDescriptorSetSpec.attachmentTextureBindings[1].bindingPoint = 1;
+            screenDescriptorSetSpec.attachmentTextureBindings[1].bindingPoint = 2;
             screenDescriptorSetSpec.attachmentTextureBindings[1].allLayers = true;
 
             screenDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(screenDescriptorSetSpec);
@@ -862,15 +892,21 @@ namespace CgEngine {
 
             uiIndexBuffer = GraphicsObjectsFactory::createIndexBuffer(uiIndices, MAX_UI_INDICES, IndexBufferDataType::UInt32);
 
-            uiDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout({
-                .usage = DescriptorSetLayoutUsage::Graphics,
-                .texture2DAndAttachmentBindingPoints = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
-            });
+            DescriptorSetLayoutSpecification uiDescriptorSetLayoutSpec{};
+            uiDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
+            uiDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints.resize(1);
+            uiDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints[0].bindingPoint = 0;
+            uiDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints[0].descriptorCount = 16;
 
-            uiTextDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout({
-                .usage = DescriptorSetLayoutUsage::Graphics,
-                .texture2DAndAttachmentBindingPoints = {0, 1, 2, 3},
-            });
+            uiDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(uiDescriptorSetLayoutSpec);
+
+            DescriptorSetLayoutSpecification uiTextDescriptorSetLayoutSpec{};
+            uiTextDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
+            uiTextDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints.resize(1);
+            uiTextDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints[0].bindingPoint = 0;
+            uiTextDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints[0].descriptorCount = 4;
+
+            uiTextDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(uiTextDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification uiCirclePipelineSpec;
             uiCirclePipelineSpec.engineShaderName = "uiCircle";
@@ -936,7 +972,7 @@ namespace CgEngine {
             ui2DDescriptorSetCameraBuffer = GraphicsObjectsFactory::createDescriptorSet(ui2DCameraBufferDescriptorSetSpec);
 
             DescriptorSetLayoutSpecification uiCanvasSampleDescriptorSetLayoutSpec{};
-            uiCanvasSampleDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = { 0 };
+            uiCanvasSampleDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = { 1 };
             uiCanvasSampleDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(uiCanvasSampleDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification ui2DPipelineSpec;
@@ -1057,6 +1093,8 @@ namespace CgEngine {
         delete afterPbrFramebuffer;
 
         delete skyboxPipeline;
+        delete skyboxDescriptorSet;
+        delete skyboxDescriptorSetLayout;
 
         delete boundingBoxDescriptorSetLayout;
         delete boundingBoxPipeline;
@@ -1799,7 +1837,8 @@ namespace CgEngine {
         CG_GPU_TIME_FN(&renderingStats.skyboxTimer)
 
         Renderer::bindGraphicsPipeline(skyboxPipeline);
-        Renderer::bindDescriptorSet(currentSceneEnvironment.environmentMapDescriptorSet, 0);
+        Renderer::bindDescriptorSet(skyboxDescriptorSet, 0);
+        Renderer::bindDescriptorSet(currentSceneEnvironment.environmentMapDescriptorSet, 1);
         Renderer::setPushConstants(&skyboxPushConstants, sizeof(SkyboxPushConstants));
         Renderer::renderUnitCube();
     }
@@ -1853,6 +1892,8 @@ namespace CgEngine {
     }
 
     void SceneRenderer::debugLinesPass() {
+        CG_GPU_DEBUG_GROUP("DebugLinesPass")
+
         Renderer::bindGraphicsPipeline(debugLinesPipeline);
         Renderer::bindDescriptorSet(debugLinesDescriptorSet, 0);
         Renderer::drawArrays(debugLinesVAO, debugLinesDrawInfoQueue.size() * 2);

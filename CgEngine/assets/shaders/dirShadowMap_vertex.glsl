@@ -3,7 +3,7 @@
 #include "TransformsOffsetPC.glsl"
 #include "Macros.glsl"
 
-layout(binding = 0, std430) buffer Transforms {
+layout(binding = 0, std430) readonly buffer Transforms {
     mat4 transforms[];
 } b_Transforms;
 

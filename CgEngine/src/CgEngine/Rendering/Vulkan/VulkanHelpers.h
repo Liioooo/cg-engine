@@ -29,7 +29,7 @@ namespace CgEngine {
         bool hasFormatStencilComponent(vk::Format format);
         vk::Format attachmentTypeToVulkanColorFormat(AttachmentType attachmentType);
         vk::ImageAspectFlags attachmentTypeToAspectFlags(AttachmentType attachmentType);
-        vk::ImageUsageFlags attachmentTypeToUsageFlags(bool usableAsTexture, AttachmentType attachmentType);
+        vk::ImageUsageFlags attachmentTypeToUsageFlags(bool usableAsTexture, bool usableAsStorageImage, AttachmentType attachmentType);
         VulkanGraphicsShaderInfo loadVulkanGraphicsShader(const std::string& name, ShaderEnv env);
         VulkanGraphicsShaderInfo loadVulkanGraphicsShader(const std::string& vertex, const std::string& fragment, const std::string& geometry, const std::string& tcs, const std::string& tes, ShaderEnv env);
         VulkanGraphicsShaderInfo createVulkanGraphicsShaderInfoFromSources(const std::vector<uint8_t>& vertexSource, const std::vector<uint8_t>& fragmentSource, const std::vector<uint8_t>& geometrySource, const std::vector<uint8_t>& tcsSource, const std::vector<uint8_t>& tesSource);

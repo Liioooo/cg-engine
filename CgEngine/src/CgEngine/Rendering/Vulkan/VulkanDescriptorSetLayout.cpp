@@ -26,9 +26,9 @@ namespace CgEngine {
 
         for (const auto& uboBindingPoint : spec.uboBindingPoints) {
             vk::DescriptorSetLayoutBinding layoutBinding{};
-            layoutBinding.binding = uboBindingPoint;
+            layoutBinding.binding = uboBindingPoint.bindingPoint;
             layoutBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
-            layoutBinding.descriptorCount = 1;
+            layoutBinding.descriptorCount = uboBindingPoint.descriptorCount;
             layoutBinding.stageFlags = stageFlags;
             layoutBinding.pImmutableSamplers = nullptr;
             vulkanBindings.push_back(layoutBinding);
@@ -36,9 +36,9 @@ namespace CgEngine {
 
         for (const auto& ssboBindingPoint : spec.ssboBindingPoints) {
             vk::DescriptorSetLayoutBinding layoutBinding{};
-            layoutBinding.binding = ssboBindingPoint;
+            layoutBinding.binding = ssboBindingPoint.bindingPoint;
             layoutBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
-            layoutBinding.descriptorCount = 1;
+            layoutBinding.descriptorCount = ssboBindingPoint.descriptorCount;
             layoutBinding.stageFlags = stageFlags;
             layoutBinding.pImmutableSamplers = nullptr;
             vulkanBindings.push_back(layoutBinding);
@@ -46,19 +46,19 @@ namespace CgEngine {
 
         for (const auto& tex2DBindingPoint : spec.texture2DAndAttachmentBindingPoints) {
             vk::DescriptorSetLayoutBinding layoutBinding{};
-            layoutBinding.binding = tex2DBindingPoint;
+            layoutBinding.binding = tex2DBindingPoint.bindingPoint;
             layoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-            layoutBinding.descriptorCount = 1;
+            layoutBinding.descriptorCount = tex2DBindingPoint.descriptorCount;
             layoutBinding.stageFlags = stageFlags;
             layoutBinding.pImmutableSamplers = nullptr;
             vulkanBindings.push_back(layoutBinding);
         }
 
-        for (const auto& tex2DBindingPoint : spec.imageBindingPoints) {
+        for (const auto& imageBindingPoint : spec.imageBindingPoints) {
             vk::DescriptorSetLayoutBinding layoutBinding{};
-            layoutBinding.binding = tex2DBindingPoint;
+            layoutBinding.binding = imageBindingPoint.bindingPoint;
             layoutBinding.descriptorType = vk::DescriptorType::eStorageImage;
-            layoutBinding.descriptorCount = 1;
+            layoutBinding.descriptorCount = imageBindingPoint.descriptorCount;
             layoutBinding.stageFlags = stageFlags;
             layoutBinding.pImmutableSamplers = nullptr;
             vulkanBindings.push_back(layoutBinding);

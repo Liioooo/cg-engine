@@ -66,7 +66,7 @@ namespace CgEngine {
         attachmentSamplerDescriptorSetSpec.layout = sceneRenderer.getUiCanvasSampleDescriptorSetLayout();
         attachmentSamplerDescriptorSetSpec.attachmentTextureBindings.resize(1);
         attachmentSamplerDescriptorSetSpec.attachmentTextureBindings[0].attachment = uiAttachment;
-        attachmentSamplerDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 0;
+        attachmentSamplerDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 1;
         attachmentSamplerDescriptorSetSpec.attachmentTextureBindings[0].allLayers = true;
         attachmentSamplerDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(attachmentSamplerDescriptorSetSpec);
     }
@@ -476,27 +476,34 @@ namespace CgEngine {
             }
 
             DescriptorSetSpecification uiDescriptorSetSpec{};
-            uiDescriptorSetSpec.texture2DBindings.resize(16);
+            uiDescriptorSetSpec.texture2DBindings.resize(1);
+            uiDescriptorSetSpec.texture2DBindings[0].bindingPoint = 0;
+
+            std::vector<const Texture2D*> uiTextureArray{};
+
             for (uint32_t i = 0; i < drawInfo.filledTextureSlots; i++) {
-                uiDescriptorSetSpec.texture2DBindings[i].texture = drawInfo.textureSlots[i];
-                uiDescriptorSetSpec.texture2DBindings[i].bindingPoint = i;
+                uiTextureArray.push_back(drawInfo.textureSlots[i]);
             }
             for (uint32_t i = drawInfo.filledTextureSlots; i < uiDescriptorSetSpec.texture2DBindings.size(); i++) {
-                uiDescriptorSetSpec.texture2DBindings[i].texture = Renderer::getWhiteTexture();
-                uiDescriptorSetSpec.texture2DBindings[i].bindingPoint = i;
+                uiTextureArray.push_back(Renderer::getWhiteTexture());
             }
+
+            uiDescriptorSetSpec.texture2DBindings[0].textureArray = std::move(uiTextureArray);
             uiDescriptorSets[zIndex]->reconfigure(uiDescriptorSetSpec);
 
             DescriptorSetSpecification uiTextDescriptorSetSpec{};
-            uiTextDescriptorSetSpec.texture2DBindings.resize(4);
+            uiTextDescriptorSetSpec.texture2DBindings.resize(1);
+            uiTextDescriptorSetSpec.texture2DBindings[0].bindingPoint = 0;
+
+            std::vector<const Texture2D*> uiTextTextureArray{};
+
             for (uint32_t i = 0; i < drawInfo.filledFontAtlases; i++) {
-                uiTextDescriptorSetSpec.texture2DBindings[i].texture = drawInfo.fontAtlases[i];
-                uiTextDescriptorSetSpec.texture2DBindings[i].bindingPoint = i;
+                uiTextTextureArray.push_back(drawInfo.fontAtlases[i]);
             }
             for (uint32_t i = drawInfo.filledFontAtlases; i < uiTextDescriptorSetSpec.texture2DBindings.size(); i++) {
-                uiTextDescriptorSetSpec.texture2DBindings[i].texture = Renderer::getWhiteTexture();
-                uiTextDescriptorSetSpec.texture2DBindings[i].bindingPoint = i;
+                uiTextTextureArray.push_back(Renderer::getWhiteTexture());
             }
+            uiTextDescriptorSetSpec.texture2DBindings[0].textureArray = std::move(uiTextTextureArray);
             uiTextDescriptorSets[zIndex]->reconfigure(uiTextDescriptorSetSpec);
 
             zIndex++;

@@ -5,7 +5,7 @@
 
 namespace CgEngine {
 
-    OpenGLAttachment::OpenGLAttachment(const AttachmentSpecification& spec) : usableAsTexture(spec.usableAsTexture), type(spec.type), mipMapFiltering(spec.mipMapFiltering), textureWrap(spec.textureWrap), textureBorderColor(spec.textureBorderColor), layerCount(spec.layerCount), width(spec.width), height(spec.height) {
+    OpenGLAttachment::OpenGLAttachment(const AttachmentSpecification& spec) : usableAsTexture(spec.usableAsTexture), usableAsStorageImage(spec.usableAsStorageImage), type(spec.type), mipMapFiltering(spec.mipMapFiltering), textureWrap(spec.textureWrap), textureBorderColor(spec.textureBorderColor), layerCount(spec.layerCount), width(spec.width), height(spec.height) {
         GLenum target = (spec.layerCount > 1) ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
 
         glCreateTextures(target, 1, &attachmentHandle);
@@ -92,6 +92,7 @@ namespace CgEngine {
         type = other.type;
         depthFormat = other.depthFormat;
         usableAsTexture = other.usableAsTexture;
+        usableAsStorageImage = other.usableAsStorageImage;
         mipMapFiltering = other.mipMapFiltering;
         textureWrap = other.textureWrap;
         layerCount = other.layerCount;
@@ -114,6 +115,7 @@ namespace CgEngine {
             type = other.type;
             depthFormat = other.depthFormat;
             usableAsTexture = other.usableAsTexture;
+            usableAsStorageImage = other.usableAsStorageImage;
             mipMapFiltering = other.mipMapFiltering;
             textureWrap = other.textureWrap;
             layerCount = other.layerCount;
@@ -132,6 +134,10 @@ namespace CgEngine {
 
     bool OpenGLAttachment::isUsableAsTexture() const {
         return usableAsTexture;
+    }
+
+    bool OpenGLAttachment::isUsableAsStorageImage() const {
+        return usableAsStorageImage;
     }
 
     uint32_t OpenGLAttachment::getLayerCount() const {

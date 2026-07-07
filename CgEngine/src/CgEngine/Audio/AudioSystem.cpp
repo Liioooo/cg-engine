@@ -191,7 +191,10 @@ namespace CgEngine {
             alListenerf(AL_GAIN, glm::clamp(listener.getVolume(), 0.0f, 1.0f));
             alListenerfv(AL_POSITION, glm::value_ptr(transform.position));
             alListenerfv(AL_ORIENTATION, orientation);
-            alListenerfv(AL_VELOCITY, glm::value_ptr(listener.getVelocity()));
+
+            if (!glm::any(glm::isinf(listener.getVelocity()))) {
+                alListenerfv(AL_VELOCITY, glm::value_ptr(listener.getVelocity()));
+            }
         }
     }
 
