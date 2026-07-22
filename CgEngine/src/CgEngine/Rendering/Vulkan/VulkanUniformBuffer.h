@@ -23,7 +23,7 @@ namespace CgEngine {
         void setData(const void* data, size_t size) override;
 
         vk::Buffer getVulkanBufferHandle() const;
-        size_t getOffsetForFrameIndex(size_t index) const;
+        size_t getOffsetForCurrentFrame() const;
 
     private:
         vk::Buffer buffer = VK_NULL_HANDLE;
@@ -31,6 +31,7 @@ namespace CgEngine {
 
         size_t perFrameSize = 0;
         size_t alignedFrameSize = 0;
+        uint32_t lastWrittenFrameIndex = 0;
 
     };
 }

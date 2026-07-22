@@ -133,6 +133,7 @@ namespace CgEngine {
         perFrameSize = other.perFrameSize;
         layout = other.layout;
         usage = other.usage;
+        lastWrittenFrameIndex = other.lastWrittenFrameIndex;
 
         other.buffer = VK_NULL_HANDLE;
         other.allocation = VK_NULL_HANDLE;
@@ -152,6 +153,7 @@ namespace CgEngine {
             perFrameSize = other.perFrameSize;
             layout = other.layout;
             usage = other.usage;
+            lastWrittenFrameIndex = other.lastWrittenFrameIndex;
 
             other.buffer = VK_NULL_HANDLE;
             other.allocation = VK_NULL_HANDLE;

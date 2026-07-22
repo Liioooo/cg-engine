@@ -1,30 +1,35 @@
-#include "VulkanUniformBuffer.h"
+#include "VulkanShaderStorageBuffer.h"
 
+#include "Asserts.h"
 #include "VulkanHelpers.h"
 #include "VulkanRenderer.h"
 #include "Rendering/Renderer.h"
 
 namespace CgEngine {
-    VulkanUniformBuffer::VulkanUniformBuffer(size_t size) : perFrameSize(size) {
-        CG_ASSERT(size != 0, "UniformBuffer size must be greater than 0")
+    VulkanShaderStorageBuffer::VulkanShaderStorageBuffer(size_t size) : VulkanShaderStorageBuffer(size, nullptr) {}
+
+    VulkanShaderStorageBuffer::VulkanShaderStorageBuffer(size_t size, const void* data) : perFrameSize(size) {
+        CG_ASSERT(size != 0, "ShaderStorageBuffer size must be greater than 0")
 
         VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
-        int32_t maxFramesInFlight = Renderer::getVulkanBackend()->getMaxFramesInFlight();
+        uint32_t maxFramesInFlight = Renderer::getVulkanBackend()->getMaxFramesInFlight();
 
         vk::PhysicalDeviceProperties props = Renderer::getVulkanBackend()->getVkPhysicalDevice().getProperties();
 
-        size_t alignment = props.limits.minUniformBufferOffsetAlignment;
+        size_t alignment = props.limits.minStorageBufferOffsetAlignment;
         alignedFrameSize = VulkanHelpers::alignUp(size, alignment);
 
         vk::DeviceSize totalSize = alignedFrameSize * maxFramesInFlight;
 
         vk::BufferCreateInfo bufferInfo{};
         bufferInfo.size = totalSize;
-        bufferInfo.usage = vk::BufferUsageFlagBits::eUniformBuffer;
+        bufferInfo.usage = vk::BufferUsageFlagBits::eStorageBuffer;
 
         VmaAllocationCreateInfo allocInfo{};
         allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
         allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+        VmaAllocationInfo allocDetails{};
 
         VkBuffer rawBuffer{};
         vmaCreateBuffer(
@@ -33,13 +38,20 @@ namespace CgEngine {
             &allocInfo,
             &rawBuffer,
             &allocation,
-            nullptr
+            &allocDetails
         );
 
         buffer = rawBuffer;
+
+        if (data != nullptr) {
+            uint8_t* mappedPtr = static_cast<uint8_t*>(allocDetails.pMappedData);
+            for (uint32_t i = 0; i < maxFramesInFlight; i++) {
+                std::memcpy(mappedPtr + alignedFrameSize * i, data, size);
+            }
+        }
     }
 
-    VulkanUniformBuffer::~VulkanUniformBuffer() {
+    VulkanShaderStorageBuffer::~VulkanShaderStorageBuffer() {
         if (buffer != VK_NULL_HANDLE) {
             VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
             vmaDestroyBuffer(allocator, buffer, allocation);
@@ -48,7 +60,7 @@ namespace CgEngine {
         }
     }
 
-    VulkanUniformBuffer::VulkanUniformBuffer(VulkanUniformBuffer &&other) noexcept : UniformBuffer(std::move(other)) {
+    VulkanShaderStorageBuffer::VulkanShaderStorageBuffer(VulkanShaderStorageBuffer &&other) noexcept : ShaderStorageBuffer(std::move(other)) {
         buffer = other.buffer;
         allocation = other.allocation;
         perFrameSize = other.perFrameSize;
@@ -59,9 +71,9 @@ namespace CgEngine {
         other.allocation = VK_NULL_HANDLE;
     }
 
-    VulkanUniformBuffer & VulkanUniformBuffer::operator=(VulkanUniformBuffer &&other) noexcept {
+    VulkanShaderStorageBuffer& VulkanShaderStorageBuffer::operator=(VulkanShaderStorageBuffer &&other) noexcept {
         if (this != &other) {
-            UniformBuffer::operator=(std::move(other));
+            ShaderStorageBuffer::operator=(std::move(other));
 
             if (buffer != VK_NULL_HANDLE) {
                 VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
@@ -80,18 +92,18 @@ namespace CgEngine {
         return *this;
     }
 
-    bool VulkanUniformBuffer::isReady() const {
+    bool VulkanShaderStorageBuffer::isReady() const {
         return buffer != VK_NULL_HANDLE;
     }
 
-    size_t VulkanUniformBuffer::getSize() const {
-        CG_ASSERT(isReady(), "VulkanUniformBuffer is not ready")
+    size_t VulkanShaderStorageBuffer::getSize() const {
+        CG_ASSERT(isReady(), "VulkanShaderStorageBuffer is not ready")
         return perFrameSize;
     }
 
-    void VulkanUniformBuffer::setData(const void *data, size_t size) {
-        CG_ASSERT(isReady(), "VulkanUniformBuffer is not ready")
-        CG_ASSERT(size == this->perFrameSize, "VulkanUniformBuffer::setData: Data size does not match the UniformBuffer size.")
+    void VulkanShaderStorageBuffer::setData(const void* data, size_t size) {
+        CG_ASSERT(isReady(), "VulkanShaderStorageBuffer is not ready")
+        CG_ASSERT(size == this->perFrameSize, "VulkanShaderStorageBuffer::setData: Data size does not match the ShaderStorageBuffer size.")
 
         uint32_t frameIndex = Renderer::getVulkanBackend()->getCurrentFrameIndex();
         size_t offset = frameIndex * alignedFrameSize;
@@ -106,11 +118,29 @@ namespace CgEngine {
         lastWrittenFrameIndex = frameIndex;
     }
 
-    vk::Buffer VulkanUniformBuffer::getVulkanBufferHandle() const {
+    void VulkanShaderStorageBuffer::setSubData(size_t offset, const void* data, size_t size) {
+        CG_ASSERT(isReady(), "VulkanShaderStorageBuffer is not ready")
+        CG_ASSERT(offset + size <= this->perFrameSize, "VulkanShaderStorageBuffer::setSubData: Data size and offset exceed the buffer size.")
+
+        uint32_t frameIndex = Renderer::getVulkanBackend()->getCurrentFrameIndex();
+        size_t bufferOffset = frameIndex * alignedFrameSize + offset;
+
+        VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
+        VmaAllocationInfo info;
+        vmaGetAllocationInfo(allocator, allocation, &info);
+        uint8_t* mappedPtr = static_cast<uint8_t*>(info.pMappedData);
+
+        std::memcpy(mappedPtr + bufferOffset, data, size);
+
+        lastWrittenFrameIndex = frameIndex;
+    }
+
+    vk::Buffer VulkanShaderStorageBuffer::getVulkanBufferHandle() const {
         return buffer;
     }
 
-    size_t VulkanUniformBuffer::getOffsetForCurrentFrame() const {
+    size_t VulkanShaderStorageBuffer::getOffsetForCurrentFrame() const {
         return alignedFrameSize * lastWrittenFrameIndex;
     }
+
 }

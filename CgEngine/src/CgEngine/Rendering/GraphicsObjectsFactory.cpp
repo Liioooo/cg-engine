@@ -22,6 +22,7 @@
 #include "Rendering/Vulkan/VulkanIndexBuffer.h"
 #include "Rendering/Vulkan/VulkanVertexArrayObject.h"
 #include "Rendering/Vulkan/VulkanUniformBuffer.h"
+#include "Rendering/Vulkan/VulkanShaderStorageBuffer.h"
 #include "Rendering/Vulkan/VulkanDescriptorSetLayout.h"
 #include "Rendering/Vulkan/VulkanAttachment.h"
 #include "Rendering/Vulkan/VulkanGraphicsPipeline.h"
@@ -193,7 +194,7 @@ namespace CgEngine {
     ShaderStorageBuffer* GraphicsObjectsFactory::createShaderStorageBuffer() {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanShaderStorageBuffer();
             case GraphicsAPI::OpenGL:
                 return new OpenGLShaderStorageBuffer();
         }
@@ -202,7 +203,7 @@ namespace CgEngine {
     ShaderStorageBuffer* GraphicsObjectsFactory::createShaderStorageBuffer(uint32_t size) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanShaderStorageBuffer(size);
             case GraphicsAPI::OpenGL:
                 return new OpenGLShaderStorageBuffer(size);
         }
@@ -211,7 +212,7 @@ namespace CgEngine {
     ShaderStorageBuffer* GraphicsObjectsFactory::createShaderStorageBuffer(uint32_t size, const void* data) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanShaderStorageBuffer(size, data);
             case GraphicsAPI::OpenGL:
                 return new OpenGLShaderStorageBuffer(size, data);
         }
