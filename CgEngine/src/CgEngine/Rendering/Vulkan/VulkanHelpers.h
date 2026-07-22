@@ -23,7 +23,7 @@ namespace CgEngine {
             std::vector<vk::VertexInputAttributeDescription> attributes;
         };
 
-        vk::ImageView createImageView2D(vk::Image image, vk::Format format, uint32_t mipLevels, uint32_t layerCount, vk::ImageAspectFlags aspectFlags);
+        vk::ImageView createImageView2D(vk::Image image, vk::Format format, uint32_t levelCount, uint32_t layerCount, vk::ImageAspectFlags aspectFlags, uint32_t baseArrayLayer = 0);
         void copyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
         size_t alignUp(size_t value, size_t alignment);
         vk::Format findSupportedDepthFormat(const std::vector<vk::Format>& candidates);
@@ -44,5 +44,6 @@ namespace CgEngine {
         vk::BlendFactor blendingFunctionToVulkan(BlendingFunction fn);
         vk::Format depthStencilAttachmentFormatToVulkanFormat(DepthStencilAttachmentFormat format);
         vk::ShaderStageFlags descriptorSetLayoutBindingUsageToVulkanShaderStageFlags(DescriptorSetLayoutBindingUsage usage);
+        vk::Format textureFormatToVulkanFormat(TextureFormat format);
     }
 }

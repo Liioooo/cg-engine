@@ -5,6 +5,7 @@
 #include "vk_mem_alloc.h"
 #include "VulkanDescriptorAllocator.h"
 #include "VulkanSamplerManager.h"
+#include "VulkanTexture2D.h"
 #include "VulkanVertexArrayObject.h"
 
 namespace CgEngine {
@@ -127,6 +128,9 @@ namespace CgEngine {
 
         VulkanVertexArrayObject quadVAO;
         VulkanVertexArrayObject unitCubeVAO;
+
+        VulkanTexture2D whiteTexture{};
+        VulkanTexture2D brdfLUT{};
 
         bool checkValidationLayerSupport();
         void populateDebugMessengerCreateInfo(vk::DebugUtilsMessengerCreateInfoEXT& createInfo);

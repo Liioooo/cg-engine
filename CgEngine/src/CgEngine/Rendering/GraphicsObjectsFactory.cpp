@@ -27,6 +27,7 @@
 #include "Rendering/Vulkan/VulkanAttachment.h"
 #include "Rendering/Vulkan/VulkanGraphicsPipeline.h"
 #include "Rendering/Vulkan/VulkanImmutableShaderStorageBuffer.h"
+#include "Rendering/Vulkan/VulkanTexture2D.h"
 
 namespace CgEngine {
 
@@ -95,7 +96,7 @@ namespace CgEngine {
     Texture2D* GraphicsObjectsFactory::createTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, const void* data, MipMapFiltering mipMapFiltering, TextureBorderColor borderColor) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanTexture2D(format, width, height, wrap, data, mipMapFiltering, borderColor);;
             case GraphicsAPI::OpenGL:
                 return new OpenGLTexture2D(format, width, height, wrap, data, mipMapFiltering, borderColor);
         }
@@ -104,7 +105,7 @@ namespace CgEngine {
     Texture2D* GraphicsObjectsFactory::createTexture2D(const std::filesystem::path& path, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering, TextureBorderColor borderColor) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanTexture2D(path, srgb, wrap, mipMapFiltering, borderColor);;
             case GraphicsAPI::OpenGL:
                 return new OpenGLTexture2D(path, srgb, wrap, mipMapFiltering, borderColor);
         }
@@ -113,7 +114,7 @@ namespace CgEngine {
     Texture2D* GraphicsObjectsFactory::createTexture2D(const unsigned char* buffer, int bufferLen, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering, TextureBorderColor borderColor) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanTexture2D(buffer, bufferLen, srgb, wrap, mipMapFiltering, borderColor);;
             case GraphicsAPI::OpenGL:
                 return new OpenGLTexture2D(buffer, bufferLen, srgb, wrap, mipMapFiltering, borderColor);
         }

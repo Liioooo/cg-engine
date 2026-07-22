@@ -29,6 +29,17 @@ namespace CgEngine {
         virtual uint32_t getWidth() const = 0;
         virtual uint32_t getHeight() const = 0;
         virtual TextureFormat getFormat() const = 0;
+
+    protected:
+        struct Texture2DLoadData {
+            unsigned char* data = nullptr;
+            TextureFormat format;
+            int width;
+            int height;
+        };
+
+        static Texture2DLoadData loadTextureDataFromFile(const std::filesystem::path& path, bool srgb);
+        static Texture2DLoadData loadTextureDataFromMemory(const unsigned char* buffer, int bufferLen, bool srgb);
     };
 
     class Texture2DBuilder {
@@ -47,8 +58,6 @@ namespace CgEngine {
         uint32_t height;
 
         std::vector<unsigned char> pixels;
-
-        uint32_t getBytesPerPixel(TextureFormat format) const;
     };
 
 }

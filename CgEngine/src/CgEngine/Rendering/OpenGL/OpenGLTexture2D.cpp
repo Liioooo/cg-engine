@@ -1,9 +1,8 @@
-#include <FileSystem.h>
 #include <Asserts.h>
 #include "OpenGLTexture2D.h"
 #include "glad/glad.h"
 #include "OpenGLHelpers.h"
-#include "stbi_image.h"
+#include "Rendering/Helpers.h"
 
 namespace CgEngine {
 
@@ -28,46 +27,15 @@ namespace CgEngine {
     }
 
     OpenGLTexture2D::OpenGLTexture2D(const std::filesystem::path& path, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering, TextureBorderColor borderColor) {
-        CG_ASSERT(FileSystem::checkFileExists(path), "Texture2D: " + path.string() + " does not exist!")
+       auto loadData = loadTextureDataFromFile(path, srgb);
 
-        int loadWidth, loadHeight, fileChannels;
-        unsigned char* data;
-
-        std::string pathString = path.string();
-
-        if (stbi_is_hdr(pathString.c_str())) {
-            stbi_info(pathString.c_str(), &loadWidth, &loadHeight, &fileChannels);
-            if (fileChannels == 3 || fileChannels == 4) {
-                data = (unsigned char*)(stbi_loadf(pathString.c_str(), &loadWidth, &loadHeight, &fileChannels, STBI_rgb_alpha));
-                format = TextureFormat::Float32A;
-            } else if (fileChannels == 2) {
-                data = (unsigned char*)(stbi_loadf(pathString.c_str(), &loadWidth, &loadHeight, &fileChannels, STBI_grey_alpha));
-                format = TextureFormat::RedGreenFloat32;
-            } else if (fileChannels == 1) {
-                data = (unsigned char*)(stbi_loadf(pathString.c_str(), &loadWidth, &loadHeight, &fileChannels, STBI_grey));
-                format = TextureFormat::RedFloat32;
-            }
-        } else {
-            stbi_info(pathString.c_str(), &loadWidth, &loadHeight, &fileChannels);
-            if (fileChannels == 3 || fileChannels == 4) {
-                data = stbi_load(pathString.c_str(), &loadWidth, &loadHeight, &fileChannels, STBI_rgb_alpha);
-                format = srgb ? TextureFormat::RGBA_SRGB : TextureFormat::RGBA;
-            } else if (fileChannels == 2) {
-                data = stbi_load(pathString.c_str(), &loadWidth, &loadHeight, &fileChannels, STBI_grey_alpha);
-                format = TextureFormat::RG;
-            } else if (fileChannels == 1) {
-                data = stbi_load(pathString.c_str(), &loadWidth, &loadHeight, &fileChannels, STBI_grey);
-                format = TextureFormat::R;
-            }
-        }
-
-        if (!data) {
-            CG_LOGGING_ERROR("Failed to load texture: {0}", pathString)
+        if (!loadData.data) {
             return;
         }
 
-        width = loadWidth;
-        height = loadHeight;
+        format = loadData.format;
+        width = loadData.width;
+        height = loadData.height;
 
         glCreateTextures(GL_TEXTURE_2D, 1, &id);
         glBindTexture(GL_TEXTURE_2D, id);
@@ -81,52 +49,25 @@ namespace CgEngine {
         GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format);
         GLint glFormat = OpenGLHelpers::getOpenGLTextureFormat(format);
         GLenum type = OpenGLHelpers::getOpenGLTextureType(format);
-        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, glFormat, type, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, glFormat, type, loadData.data);
 
         if (mipMapFiltering == MipMapFiltering::Trilinear || mipMapFiltering == MipMapFiltering::Anisotropic) {
             glGenerateMipmap(GL_TEXTURE_2D);
         }
 
-        stbi_image_free(data);
+        Helpers::freeImageData(loadData.data);
     }
 
     OpenGLTexture2D::OpenGLTexture2D(const unsigned char* buffer, int bufferLen, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering, TextureBorderColor borderColor) {
-        int loadWidth, loadHeight, fileChannels;
-        unsigned char* data;
+        auto loadData = loadTextureDataFromMemory(buffer, bufferLen, srgb);
 
-        if (stbi_is_hdr_from_memory(buffer, bufferLen)) {
-            stbi_info_from_memory(buffer, bufferLen, &loadWidth, &loadHeight, &fileChannels);
-            if (fileChannels == 3 || fileChannels == 4) {
-                data = (unsigned char*)(stbi_loadf_from_memory(buffer, bufferLen, &loadWidth, &loadHeight, &fileChannels, STBI_rgb_alpha));
-                format = TextureFormat::Float32A;
-            } else if (fileChannels == 2) {
-                data = (unsigned char*)(stbi_loadf_from_memory(buffer, bufferLen, &loadWidth, &loadHeight, &fileChannels, STBI_grey_alpha));
-                format = TextureFormat::RedGreenFloat32;
-            } else if (fileChannels == 1) {
-                data = (unsigned char*)(stbi_loadf_from_memory(buffer, bufferLen, &loadWidth, &loadHeight, &fileChannels, STBI_grey));
-                format = TextureFormat::RedFloat32;
-            }
-        } else {
-            stbi_info_from_memory(buffer, bufferLen, &loadWidth, &loadHeight, &fileChannels);
-            if (fileChannels == 3 || fileChannels == 4) {
-                data = stbi_load_from_memory(buffer, bufferLen, &loadWidth, &loadHeight, &fileChannels, STBI_rgb_alpha);
-                format = srgb ? TextureFormat::RGBA_SRGB : TextureFormat::RGBA;
-            } else if (fileChannels == 2) {
-                data = stbi_load_from_memory(buffer, bufferLen, &loadWidth, &loadHeight, &fileChannels, STBI_grey_alpha);
-                format = TextureFormat::RG;
-            } else if (fileChannels == 1) {
-                data = stbi_load_from_memory(buffer, bufferLen, &loadWidth, &loadHeight, &fileChannels, STBI_grey);
-                format = TextureFormat::R;
-            }
-        }
-
-        if (!data) {
-            CG_LOGGING_ERROR("Failed to load texture: from buffer")
+        if (!loadData.data) {
             return;
         }
 
-        width = loadWidth;
-        height = loadHeight;
+        format = loadData.format;
+        width = loadData.width;
+        height = loadData.height;
 
         glCreateTextures(GL_TEXTURE_2D, 1, &id);
         glBindTexture(GL_TEXTURE_2D, id);
@@ -140,13 +81,13 @@ namespace CgEngine {
         GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format);
         GLint glFormat = OpenGLHelpers::getOpenGLTextureFormat(format);
         GLenum type = OpenGLHelpers::getOpenGLTextureType(format);
-        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, glFormat, type, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, glFormat, type, loadData.data);
 
         if (mipMapFiltering == MipMapFiltering::Trilinear || mipMapFiltering == MipMapFiltering::Anisotropic) {
             glGenerateMipmap(GL_TEXTURE_2D);
         }
 
-        stbi_image_free(data);
+        Helpers::freeImageData(loadData.data);
     }
 
     OpenGLTexture2D::~OpenGLTexture2D() {

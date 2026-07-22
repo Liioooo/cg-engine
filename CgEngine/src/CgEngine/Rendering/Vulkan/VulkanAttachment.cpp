@@ -227,62 +227,15 @@ namespace CgEngine {
     }
 
     void VulkanAttachment::createImageViews() {
-        auto device = Renderer::getVulkanBackend()->getVkDevice();
-
         vk::ImageAspectFlags aspectFlags = VulkanHelpers::attachmentTypeToAspectFlags(type);
-        vk::ImageViewType viewType = (layerCount > 1) ? vk::ImageViewType::e2DArray : vk::ImageViewType::e2D;
 
-        vk::ImageSubresourceRange range{};
-        range.aspectMask = aspectFlags;
-        range.layerCount = layerCount;
-        range.baseMipLevel = 0;
-        range.levelCount = 1;
-        range.baseArrayLayer = 0;
-
-        vk::ImageViewCreateInfo viewCreateInfo{};
-        viewCreateInfo.flags = {};
-        viewCreateInfo.image = image;
-        viewCreateInfo.viewType = viewType;
-        viewCreateInfo.format = vulkanFormat;
-        viewCreateInfo.subresourceRange = range;
-        viewCreateInfo.components.r = vk::ComponentSwizzle::eIdentity;
-        viewCreateInfo.components.g = vk::ComponentSwizzle::eIdentity;
-        viewCreateInfo.components.b = vk::ComponentSwizzle::eIdentity;
-        viewCreateInfo.components.a = vk::ComponentSwizzle::eIdentity;
-
-        auto imageViewResult = device.createImageView(viewCreateInfo);
-        if (imageViewResult.has_value()) {
-            imageView = imageViewResult.value;
-        } else {
-            CG_LOGGING_ERROR("Failed to create Vulkan image view for attachment!")
-        }
+        imageView = VulkanHelpers::createImageView2D(image, vulkanFormat, 1, layerCount, aspectFlags);
 
         if (layerCount > 1) {
             layerImageViews.resize(layerCount);
             for (uint32_t layer = 0; layer < layerCount; ++layer) {
-                vk::ImageViewCreateInfo layerViewCreateInfo{};
-                layerViewCreateInfo.flags = {};
-                layerViewCreateInfo.image = image;
-                layerViewCreateInfo.viewType = vk::ImageViewType::e2D;
-                layerViewCreateInfo.format = vulkanFormat;
-                layerViewCreateInfo.components.r = vk::ComponentSwizzle::eIdentity;
-                layerViewCreateInfo.components.g = vk::ComponentSwizzle::eIdentity;
-                layerViewCreateInfo.components.b = vk::ComponentSwizzle::eIdentity;
-                layerViewCreateInfo.components.a = vk::ComponentSwizzle::eIdentity;
-                layerViewCreateInfo.subresourceRange.aspectMask = aspectFlags;
-                layerViewCreateInfo.subresourceRange.layerCount = 1;
-                layerViewCreateInfo.subresourceRange.baseMipLevel = 0;
-                layerViewCreateInfo.subresourceRange.levelCount = 1;
-                layerViewCreateInfo.subresourceRange.baseArrayLayer = layer;
-
-                auto layerImageViewResult = device.createImageView(layerViewCreateInfo);
-                if (layerImageViewResult.has_value()) {
-                    layerImageViews[layer] = layerImageViewResult.value;
-                } else {
-                    CG_LOGGING_ERROR("Failed to create Vulkan image view for attachment!")
-                }
+                layerImageViews[layer] = VulkanHelpers::createImageView2D(image, vulkanFormat, 1, 1, aspectFlags, layer);
             }
         }
-
     }
 }

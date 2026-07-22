@@ -5,7 +5,7 @@
 namespace CgEngine {
 
     namespace Helpers {
-        inline int getSizeForShaderDataType(ShaderDataType type) {
+        inline int getSizeForShaderDataType(const ShaderDataType type) {
             switch (type) {
                 case ShaderDataType::Float:
                     return 4;
@@ -24,6 +24,26 @@ namespace CgEngine {
                 case ShaderDataType::Int4:
                     return 4 * 4;
             }
+            return 0;
+        }
+
+        inline uint32_t getBytesPerPixelForTextureFormat(const TextureFormat format) {
+            switch (format) {
+                case TextureFormat::R:                  return 1;
+                case TextureFormat::RG:                 return 2;
+                case TextureFormat::RGBA:               return 4;
+                case TextureFormat::RGBA_SRGB:          return 4;
+
+                case TextureFormat::RedFloat16:         return 2;
+                case TextureFormat::RedFloat32:         return 4;
+
+                case TextureFormat::RedGreenFloat16:    return 4; // 2 * 16-bit
+                case TextureFormat::RedGreenFloat32:    return 8; // 2 * 32-bit
+
+                case TextureFormat::Float16A:           return 8;  // RGBA16F
+                case TextureFormat::Float32A:           return 16; // RGBA32F
+            }
+
             return 0;
         }
 

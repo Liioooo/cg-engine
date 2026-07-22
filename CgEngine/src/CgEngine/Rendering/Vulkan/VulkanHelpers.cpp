@@ -6,10 +6,10 @@
 namespace CgEngine {
 
     namespace VulkanHelpers {
-        vk::ImageView createImageView2D(vk::Image image, vk::Format format, uint32_t mipLevels, uint32_t layerCount, vk::ImageAspectFlags aspectFlags) {
+        vk::ImageView createImageView2D(vk::Image image, vk::Format format, uint32_t levelCount, uint32_t layerCount, vk::ImageAspectFlags aspectFlags, uint32_t baseArrayLayer) {
             vk::ImageViewCreateInfo createInfo{};
             createInfo.image = image;
-            createInfo.viewType = vk::ImageViewType::e2D;
+            createInfo.viewType = layerCount > 1 ? vk::ImageViewType::e2DArray : vk::ImageViewType::e2D;
             createInfo.format = format;
             createInfo.components.r = vk::ComponentSwizzle::eIdentity;
             createInfo.components.g = vk::ComponentSwizzle::eIdentity;
@@ -17,8 +17,8 @@ namespace CgEngine {
             createInfo.components.a = vk::ComponentSwizzle::eIdentity;
             createInfo.subresourceRange.aspectMask = aspectFlags;
             createInfo.subresourceRange.baseMipLevel = 0;
-            createInfo.subresourceRange.levelCount = mipLevels;
-            createInfo.subresourceRange.baseArrayLayer = 0;
+            createInfo.subresourceRange.levelCount = levelCount;
+            createInfo.subresourceRange.baseArrayLayer = baseArrayLayer;
             createInfo.subresourceRange.layerCount = layerCount;
 
             auto device = Renderer::getVulkanBackend()->getVkDevice();
@@ -396,6 +396,34 @@ namespace CgEngine {
             }
 
             return flags;
+        }
+
+        vk::Format textureFormatToVulkanFormat(TextureFormat format) {
+            switch (format) {
+                case TextureFormat::R:
+                    return vk::Format::eR8Unorm;
+                case TextureFormat::RG:
+                    return vk::Format::eR8G8Unorm;
+                case TextureFormat::RGBA:
+                    return vk::Format::eR8G8B8A8Unorm;
+                case TextureFormat::RGBA_SRGB:
+                    return vk::Format::eR8G8B8A8Srgb;
+                case TextureFormat::RedFloat16:
+                    return vk::Format::eR16Sfloat;
+                case TextureFormat::RedFloat32:
+                    return vk::Format::eR32Sfloat;
+                case TextureFormat::RedGreenFloat16:
+                    return vk::Format::eR16G16Sfloat;
+                case TextureFormat::RedGreenFloat32:
+                    return vk::Format::eR32G32Sfloat;
+                case TextureFormat::Float16A:
+                    return vk::Format::eR16G16B16A16Sfloat;
+                case TextureFormat::Float32A:
+                    return vk::Format::eR32G32B32A32Sfloat;
+            }
+
+            CG_LOGGING_ERROR("VulkanHelpers::textureFormatToVulkanFormat: Unknown TextureFormat value.")
+            return vk::Format::eR8G8B8A8Unorm;
         }
     }
 }

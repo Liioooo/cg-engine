@@ -2,6 +2,7 @@
 #include "VulkanHelpers.h"
 
 #define VMA_IMPLEMENTATION
+#include "FileSystem.h"
 #include "vk_mem_alloc.h"
 
 namespace CgEngine {
@@ -84,6 +85,11 @@ namespace CgEngine {
         unitCubeVertexBuffer->setLayout(std::get<2>(unitCubeVertexData));
         unitCubeVAO.addVertexBuffer(unitCubeVertexBuffer);
         unitCubeVAO.setIndexBuffer(new VulkanIndexBuffer(std::get<1>(unitCubeVertexData).data(), std::get<1>(unitCubeVertexData).size()));
+
+        constexpr uint32_t whiteTextureData = 0xffffffff;
+        whiteTexture = VulkanTexture2D(TextureFormat::RGBA, 1, 1, TextureWrap::Clamp, &whiteTextureData, MipMapFiltering::Nearest);
+
+        brdfLUT = VulkanTexture2D(FileSystem::getAsEnginePath("ibl_brdf_lut.png"), false, TextureWrap::Clamp, MipMapFiltering::Bilinear);
     }
 
     void VulkanRenderer::shutdown() {
@@ -180,11 +186,11 @@ namespace CgEngine {
     }
 
     Texture2D* VulkanRenderer::getWhiteTexture() {
-        return nullptr;
+        return &whiteTexture;
     }
 
     Texture2D* VulkanRenderer::getBrdfLUTTexture() {
-        return nullptr;
+        return &brdfLUT;
     }
 
     TextureCube* VulkanRenderer::getBlackCubeTexture() {
