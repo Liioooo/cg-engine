@@ -1,5 +1,4 @@
 #include "VulkanDescriptorAllocator.h"
-
 #include "Logging.h"
 
 namespace CgEngine {

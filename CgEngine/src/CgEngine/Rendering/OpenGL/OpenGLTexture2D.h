@@ -6,9 +6,9 @@ namespace CgEngine {
     class OpenGLTexture2D : public Texture2D {
     public:
         OpenGLTexture2D() = default;
-        OpenGLTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, const void* data, MipMapFiltering mipMapFiltering = MipMapFiltering::Anisotropic);
-        OpenGLTexture2D(const std::filesystem::path& path, bool srgb, TextureWrap wrap = TextureWrap::Repeat, MipMapFiltering mipMapFiltering = MipMapFiltering::Anisotropic);
-        OpenGLTexture2D(const unsigned char* buffer, int bufferLen, bool srgb, TextureWrap wrap = TextureWrap::Repeat, MipMapFiltering mipMapFiltering= MipMapFiltering::Anisotropic);
+        OpenGLTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, const void* data, MipMapFiltering mipMapFiltering = MipMapFiltering::Anisotropic, TextureBorderColor borderColor = TextureBorderColor::OpaqueWhite);
+        OpenGLTexture2D(const std::filesystem::path& path, bool srgb, TextureWrap wrap = TextureWrap::Repeat, MipMapFiltering mipMapFiltering = MipMapFiltering::Anisotropic, TextureBorderColor borderColor = TextureBorderColor::OpaqueWhite);
+        OpenGLTexture2D(const unsigned char* buffer, int bufferLen, bool srgb, TextureWrap wrap = TextureWrap::Repeat, MipMapFiltering mipMapFiltering= MipMapFiltering::Anisotropic, TextureBorderColor borderColor = TextureBorderColor::OpaqueWhite);
 
         ~OpenGLTexture2D() override;
 

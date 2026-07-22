@@ -6,7 +6,7 @@
 
 
 namespace CgEngine {
-    VulkanAttachment::VulkanAttachment(const AttachmentSpecification &spec) : usableAsTexture(spec.usableAsTexture), usableAsStorageImage(spec.usableAsStorageImage), mipMapFiltering(spec.mipMapFiltering), textureWrap(spec.textureWrap), textureBorderColor(spec.textureBorderColor), layerCount(spec.layerCount), width(spec.width), height(spec.height) {
+    VulkanAttachment::VulkanAttachment(const AttachmentSpecification &spec) : usableAsTexture(spec.usableAsTexture), usableAsStorageImage(spec.usableAsStorageImage), layerCount(spec.layerCount), width(spec.width), height(spec.height) {
         if (spec.type == AttachmentType::Depth || spec.type == AttachmentType::DepthStencil) {
             if (spec.type == AttachmentType::Depth) {
                 vulkanFormat = VulkanHelpers::findSupportedDepthFormat({vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint});
@@ -34,6 +34,12 @@ namespace CgEngine {
 
         createAttachmentImage();
         createImageViews();
+
+        if (usableAsTexture) {
+            CG_ASSERT(spec.mipMapFiltering != MipMapFiltering::Trilinear, "Trilinear filtering is not supported for Attachments!")
+            CG_ASSERT(spec.mipMapFiltering != MipMapFiltering::Anisotropic, "Anisotropic filtering is not supported for Attachments!")
+            sampler = Renderer::getVulkanBackend()->getSamplerManager().getSampler(spec.textureWrap, spec.mipMapFiltering, spec.textureBorderColor);
+        }
     }
 
     VulkanAttachment::~VulkanAttachment() {
@@ -61,17 +67,16 @@ namespace CgEngine {
         type = other.type;
         usableAsTexture = other.usableAsTexture;
         usableAsStorageImage = other.usableAsStorageImage;
-        textureWrap = other.textureWrap;
-        mipMapFiltering = other.mipMapFiltering;
-        textureBorderColor = other.textureBorderColor;
         layerCount = other.layerCount;
         width = other.width;
         height = other.height;
         vulkanFormat = other.vulkanFormat;
+        sampler = other.sampler;
 
         other.image = VK_NULL_HANDLE;
         other.imageView = VK_NULL_HANDLE;
         other.allocation = VK_NULL_HANDLE;
+        other.sampler = VK_NULL_HANDLE;
     }
 
     VulkanAttachment & VulkanAttachment::operator=(VulkanAttachment &&other) noexcept {
@@ -99,17 +104,16 @@ namespace CgEngine {
             type = other.type;
             usableAsTexture = other.usableAsTexture;
             usableAsStorageImage = other.usableAsStorageImage;
-            textureWrap = other.textureWrap;
-            mipMapFiltering = other.mipMapFiltering;
-            textureBorderColor = other.textureBorderColor;
             layerCount = other.layerCount;
             width = other.width;
             height = other.height;
             vulkanFormat = other.vulkanFormat;
+            sampler = other.sampler;
 
             other.image = VK_NULL_HANDLE;
             other.imageView = VK_NULL_HANDLE;
             other.allocation = VK_NULL_HANDLE;
+            other.sampler = VK_NULL_HANDLE;
         }
         return *this;
     }
@@ -179,6 +183,11 @@ namespace CgEngine {
         CG_ASSERT(!layerImageViews.empty(), "Attachment::getVulkanLayerImageView: Attachment has not been created properly.")
         CG_ASSERT(layerImageViews[layer] != VK_NULL_HANDLE, "Attachment::getVulkanLayerImageView: Attachment has not been created properly.")
         return layerImageViews[layer];
+    }
+
+    vk::Sampler VulkanAttachment::getVulkanSampler() const {
+        CG_ASSERT(sampler != VK_NULL_HANDLE, "Attachment::getVulkanSampler: Attachment has not been created properly.")
+        return sampler;
     }
 
     void VulkanAttachment::createAttachmentImage() {

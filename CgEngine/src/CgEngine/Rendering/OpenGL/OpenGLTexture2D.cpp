@@ -7,7 +7,7 @@
 
 namespace CgEngine {
 
-    OpenGLTexture2D::OpenGLTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, const void* data, MipMapFiltering mipMapFiltering) : format(format), width(width), height(height) {
+    OpenGLTexture2D::OpenGLTexture2D(TextureFormat format, uint32_t width, uint32_t height, TextureWrap wrap, const void* data, MipMapFiltering mipMapFiltering, TextureBorderColor borderColor) : format(format), width(width), height(height) {
         glCreateTextures(GL_TEXTURE_2D, 1, &id);
         glBindTexture(GL_TEXTURE_2D, id);
 
@@ -15,6 +15,7 @@ namespace CgEngine {
         GLint textureWrap = OpenGLHelpers::getOpenGLWrapMode(wrap);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, textureWrap);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, textureWrap);
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, glm::value_ptr(OpenGLHelpers::textureBorderColorToGLMVec3(borderColor)));
 
         GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format);
         GLenum glFormat = OpenGLHelpers::getOpenGLTextureFormat(format);
@@ -26,7 +27,7 @@ namespace CgEngine {
         }
     }
 
-    OpenGLTexture2D::OpenGLTexture2D(const std::filesystem::path& path, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering) {
+    OpenGLTexture2D::OpenGLTexture2D(const std::filesystem::path& path, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering, TextureBorderColor borderColor) {
         CG_ASSERT(FileSystem::checkFileExists(path), "Texture2D: " + path.string() + " does not exist!")
 
         int loadWidth, loadHeight, fileChannels;
@@ -75,6 +76,7 @@ namespace CgEngine {
         GLint textureWrap = OpenGLHelpers::getOpenGLWrapMode(wrap);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, textureWrap);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, textureWrap);
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, glm::value_ptr(OpenGLHelpers::textureBorderColorToGLMVec3(borderColor)));
 
         GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format);
         GLint glFormat = OpenGLHelpers::getOpenGLTextureFormat(format);
@@ -88,7 +90,7 @@ namespace CgEngine {
         stbi_image_free(data);
     }
 
-    OpenGLTexture2D::OpenGLTexture2D(const unsigned char* buffer, int bufferLen, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering) {
+    OpenGLTexture2D::OpenGLTexture2D(const unsigned char* buffer, int bufferLen, bool srgb, TextureWrap wrap, MipMapFiltering mipMapFiltering, TextureBorderColor borderColor) {
         int loadWidth, loadHeight, fileChannels;
         unsigned char* data;
 
@@ -133,6 +135,7 @@ namespace CgEngine {
         GLint textureWrap = OpenGLHelpers::getOpenGLWrapMode(wrap);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, textureWrap);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, textureWrap);
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, glm::value_ptr(OpenGLHelpers::textureBorderColorToGLMVec3(borderColor)));
 
         GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format);
         GLint glFormat = OpenGLHelpers::getOpenGLTextureFormat(format);

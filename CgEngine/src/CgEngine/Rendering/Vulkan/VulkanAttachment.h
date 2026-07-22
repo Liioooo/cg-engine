@@ -30,6 +30,7 @@ namespace CgEngine {
 
         vk::ImageView getVulkanImageView() const;
         vk::ImageView getVulkanLayerImageView(uint32_t layer) const;
+        vk::Sampler getVulkanSampler() const;
 
     private:
         vk::Image image = VK_NULL_HANDLE;
@@ -40,13 +41,13 @@ namespace CgEngine {
         AttachmentType type;
         bool usableAsTexture = false;
         bool usableAsStorageImage = false;
-        TextureWrap textureWrap = TextureWrap::Clamp;
-        MipMapFiltering mipMapFiltering = MipMapFiltering::Bilinear;
-        TextureBorderColor textureBorderColor = TextureBorderColor::OpaqueBlack;
         uint32_t layerCount;
         uint32_t width = 0;
         uint32_t height = 0;
-        vk::Format vulkanFormat;;
+        vk::Format vulkanFormat;
+
+        // Owned by VulkanSamplerManager
+        vk::Sampler sampler = VK_NULL_HANDLE;
 
         void createAttachmentImage();
         void createImageViews();

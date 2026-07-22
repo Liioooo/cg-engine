@@ -58,8 +58,9 @@ namespace CgEngine {
         Anisotropic = 3
     };
 
-    enum class TextureBorderColor {
-        OpaqueBlack, OpaqueWhite
+    enum class TextureBorderColor : uint8_t {
+        OpaqueBlack = 0,
+        OpaqueWhite = 1
     };
 
     enum class TextureFormat {

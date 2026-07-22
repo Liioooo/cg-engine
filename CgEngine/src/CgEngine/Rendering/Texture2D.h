@@ -8,6 +8,7 @@ namespace CgEngine {
         bool srgb = false;
         TextureWrap wrap = TextureWrap::Repeat;
         MipMapFiltering mipMapFiltering = MipMapFiltering::Anisotropic;
+        TextureBorderColor borderColor = TextureBorderColor::OpaqueWhite;
     };
 
     class Texture2D {

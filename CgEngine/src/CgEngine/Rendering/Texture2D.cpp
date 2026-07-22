@@ -9,7 +9,7 @@ namespace CgEngine {
     }
 
     Texture2D* Texture2D::createResource(const std::string& name, const Texture2DResourceSpecification& spec) {
-        return GraphicsObjectsFactory::createTexture2D(name, spec.srgb, spec.wrap, spec.mipMapFiltering);
+        return GraphicsObjectsFactory::createTexture2D(name, spec.srgb, spec.wrap, spec.mipMapFiltering, spec.borderColor);
     }
 
     Texture2DBuilder::Texture2DBuilder(TextureFormat format, uint32_t width, uint32_t height) : format(format), width(width), height(height) {

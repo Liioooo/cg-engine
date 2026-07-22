@@ -67,6 +67,7 @@ namespace CgEngine {
         createSyncObjects();
         createVmaAllocator();
         descriptorAllocator.init(vkDevice);
+        samplerManager.init(vkDevice);
 
         auto unitQuadVertexData = getUnitQuadVerticesAndIndices();
 
@@ -87,6 +88,7 @@ namespace CgEngine {
 
     void VulkanRenderer::shutdown() {
         descriptorAllocator.shutdown();
+        samplerManager.shutdown();
     }
 
     void VulkanRenderer::setFramebufferResized() {
@@ -273,6 +275,14 @@ namespace CgEngine {
 
     VmaAllocator VulkanRenderer::getVmaAllocator() const {
         return vmaAllocator;
+    }
+
+    VulkanDescriptorAllocator& VulkanRenderer::getDescriptorAllocator() {
+        return descriptorAllocator;
+    }
+
+    VulkanSamplerManager& VulkanRenderer::getSamplerManager() {
+        return samplerManager;
     }
 
     bool VulkanRenderer::checkValidationLayerSupport() {

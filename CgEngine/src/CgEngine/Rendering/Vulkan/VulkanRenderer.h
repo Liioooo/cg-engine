@@ -4,6 +4,7 @@
 #include <vulkan/vulkan.hpp>
 #include "vk_mem_alloc.h"
 #include "VulkanDescriptorAllocator.h"
+#include "VulkanSamplerManager.h"
 #include "VulkanVertexArrayObject.h"
 
 namespace CgEngine {
@@ -80,6 +81,8 @@ namespace CgEngine {
         vk::PhysicalDevice getVkPhysicalDevice() const;
         vk::Device getVkDevice() const;
         VmaAllocator getVmaAllocator() const;
+        VulkanDescriptorAllocator& getDescriptorAllocator();
+        VulkanSamplerManager& getSamplerManager();
 
     private:
         bool ENABLE_VALIDATION_LAYERS = false;
@@ -117,7 +120,8 @@ namespace CgEngine {
         std::vector<vk::Semaphore> vkRenderFinishedSemaphores;
         std::vector<vk::Fence> vkInFlightFences;
 
-        VulkanDescriptorAllocator descriptorAllocator;
+        VulkanDescriptorAllocator descriptorAllocator{};
+        VulkanSamplerManager samplerManager{};
 
         VmaAllocator vmaAllocator;
 
