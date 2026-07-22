@@ -25,6 +25,7 @@
 #include "Rendering/Vulkan/VulkanDescriptorSetLayout.h"
 #include "Rendering/Vulkan/VulkanAttachment.h"
 #include "Rendering/Vulkan/VulkanGraphicsPipeline.h"
+#include "Rendering/Vulkan/VulkanImmutableShaderStorageBuffer.h"
 
 namespace CgEngine {
 
@@ -219,7 +220,7 @@ namespace CgEngine {
     ImmutableShaderStorageBuffer* GraphicsObjectsFactory::createImmutableShaderStorageBuffer() {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanImmutableShaderStorageBuffer();
             case GraphicsAPI::OpenGL:
                 return new OpenGLImmutableShaderStorageBuffer();
         }
@@ -228,7 +229,7 @@ namespace CgEngine {
     ImmutableShaderStorageBuffer* GraphicsObjectsFactory::createImmutableShaderStorageBuffer(uint32_t size, const void* data) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanImmutableShaderStorageBuffer(size, data);
             case GraphicsAPI::OpenGL:
                 return new OpenGLImmutableShaderStorageBuffer(size, data);
         }

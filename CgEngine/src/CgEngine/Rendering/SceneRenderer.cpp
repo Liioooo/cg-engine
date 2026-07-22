@@ -138,7 +138,7 @@ namespace CgEngine {
             gBufferRenderPass = GraphicsObjectsFactory::createRenderPass(gBufferRenderPassSpec);
 
             DescriptorSetLayoutSpecification gBufferDescriptorSetLayoutSpec{};
-            gBufferDescriptorSetLayoutSpec.uboBindingPoints = {{0, DescriptorSetLayoutBindingUsage::Vertex}};
+            gBufferDescriptorSetLayoutSpec.uboBindingPoints = {{0, DescriptorSetLayoutBindingUsage::Vertex | DescriptorSetLayoutBindingUsage::Geometry}};
             gBufferDescriptorSetLayoutSpec.ssboBindingPoints = {{1, DescriptorSetLayoutBindingUsage::Vertex}};
             gBufferDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(gBufferDescriptorSetLayoutSpec);
 
