@@ -4,12 +4,12 @@
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-layout(rgba32f, binding = 0) uniform restrict readonly image2D u_h0Texture;
-layout(rgba32f, binding = 1) uniform restrict readonly image2D u_waveTexture;
-layout(rg32f, binding = 2) uniform restrict writeonly image2D u_DxDz;
-layout(rg32f, binding = 3) uniform restrict writeonly image2D u_DyDxz;
-layout(rg32f, binding = 4) uniform restrict writeonly image2D u_DyxDyz;
-layout(rg32f, binding = 5) uniform restrict writeonly image2D u_DxxDzz;
+UNIFORM_LAYOUT_FORMAT(0, 0, rgba32f) uniform restrict readonly image2D u_h0Texture;
+UNIFORM_LAYOUT_FORMAT(1, 0, rgba32f) uniform restrict readonly image2D u_waveTexture;
+UNIFORM_LAYOUT_FORMAT(2, 0, rg32f)  uniform restrict writeonly image2D u_DxDz;
+UNIFORM_LAYOUT_FORMAT(3, 0, rg32f)  uniform restrict writeonly image2D u_DyDxz;
+UNIFORM_LAYOUT_FORMAT(4, 0, rg32f)  uniform restrict writeonly image2D u_DyxDyz;
+UNIFORM_LAYOUT_FORMAT(5, 0, rg32f)  uniform restrict writeonly image2D u_DxxDzz;
 
 PUSH_CONSTANT(PCSimulateOcean) {
     float time;

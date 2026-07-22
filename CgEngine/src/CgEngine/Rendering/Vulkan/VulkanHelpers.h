@@ -2,6 +2,7 @@
 
 #include <vulkan/vulkan.hpp>
 #include "CgEngineSharedUtils/Enums.h"
+#include "Rendering/DescriptorSetLayout.h"
 #include "Rendering/VertexBuffer.h"
 
 namespace CgEngine {
@@ -42,5 +43,6 @@ namespace CgEngine {
         vk::BlendOp blendingEquationToVulkan(BlendingEquation eq);
         vk::BlendFactor blendingFunctionToVulkan(BlendingFunction fn);
         vk::Format depthStencilAttachmentFormatToVulkanFormat(DepthStencilAttachmentFormat format);
+        vk::ShaderStageFlags descriptorSetLayoutBindingUsageToVulkanShaderStageFlags(DescriptorSetLayoutBindingUsage usage);
     }
 }

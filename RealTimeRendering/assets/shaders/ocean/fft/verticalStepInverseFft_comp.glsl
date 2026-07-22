@@ -6,9 +6,9 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 const float PI = 3.141592653589793;
 
-layout(rgba32f, binding = 0) uniform restrict readonly image2D u_precomputedData;
-layout(rg32f, binding = 1) uniform restrict image2D u_buffer0;
-layout(rg32f, binding = 2) uniform restrict image2D u_buffer1;
+UNIFORM_LAYOUT_FORMAT(0, 0, rgba32f) uniform restrict readonly image2D u_precomputedData;
+UNIFORM_LAYOUT_FORMAT(1, 0, rg32f) uniform restrict image2D u_buffer0;
+UNIFORM_LAYOUT_FORMAT(2, 0, rg32f) uniform restrict image2D u_buffer1;
 
 PUSH_CONSTANT(PCFFT) {
     int step;

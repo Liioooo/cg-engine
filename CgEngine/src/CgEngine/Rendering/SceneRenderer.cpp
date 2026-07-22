@@ -16,15 +16,22 @@ namespace CgEngine {
 
         {
             DescriptorSetLayoutSpecification pbrMaterialDescriptorSetLayoutSpec{};
-            pbrMaterialDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
-            pbrMaterialDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {0, 1, 2, 3, 4};
-            pbrMaterialDescriptorSetLayoutSpec.uboBindingPoints = {5};
+            pbrMaterialDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {
+                {0, DescriptorSetLayoutBindingUsage::Fragment},
+                {1, DescriptorSetLayoutBindingUsage::Fragment},
+                {2, DescriptorSetLayoutBindingUsage::Fragment},
+                {3, DescriptorSetLayoutBindingUsage::Fragment},
+                {4, DescriptorSetLayoutBindingUsage::Fragment}
+            };
+            pbrMaterialDescriptorSetLayoutSpec.uboBindingPoints = {{5, DescriptorSetLayoutBindingUsage::Fragment}};
             pbrMaterialDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(pbrMaterialDescriptorSetLayoutSpec);
         }
         {
             DescriptorSetLayoutSpecification environmentMapDescriptorSetLayoutSpec{};
-            environmentMapDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
-            environmentMapDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {5, 6};
+            environmentMapDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {
+                {5, DescriptorSetLayoutBindingUsage::Fragment},
+                {6, DescriptorSetLayoutBindingUsage::Fragment}
+            };
 
             environmentMapDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(environmentMapDescriptorSetLayoutSpec);
 
@@ -59,9 +66,8 @@ namespace CgEngine {
             dirShadowMapRenderPass = GraphicsObjectsFactory::createRenderPass(shadowMapRenderPassSpec);
 
             DescriptorSetLayoutSpecification dirShadowMapDescriptorSetLayoutSpec{};
-            dirShadowMapDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
-            dirShadowMapDescriptorSetLayoutSpec.uboBindingPoints = {2};
-            dirShadowMapDescriptorSetLayoutSpec.ssboBindingPoints = {0};
+            dirShadowMapDescriptorSetLayoutSpec.uboBindingPoints = {{2, DescriptorSetLayoutBindingUsage::Geometry}};
+            dirShadowMapDescriptorSetLayoutSpec.ssboBindingPoints = {{0, DescriptorSetLayoutBindingUsage::Vertex}};
             dirShadowMapDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(dirShadowMapDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification dirShadowMapPipelineSpec{};
@@ -132,9 +138,8 @@ namespace CgEngine {
             gBufferRenderPass = GraphicsObjectsFactory::createRenderPass(gBufferRenderPassSpec);
 
             DescriptorSetLayoutSpecification gBufferDescriptorSetLayoutSpec{};
-            gBufferDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
-            gBufferDescriptorSetLayoutSpec.uboBindingPoints = {0};
-            gBufferDescriptorSetLayoutSpec.ssboBindingPoints = {1};
+            gBufferDescriptorSetLayoutSpec.uboBindingPoints = {{0, DescriptorSetLayoutBindingUsage::Vertex}};
+            gBufferDescriptorSetLayoutSpec.ssboBindingPoints = {{1, DescriptorSetLayoutBindingUsage::Vertex}};
             gBufferDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(gBufferDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification gBufferPipelineSpec{};
@@ -184,8 +189,10 @@ namespace CgEngine {
         }
         {
             DescriptorSetLayoutSpecification customPipelineDescriptorSetLayoutSpec{};
-            customPipelineDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
-            customPipelineDescriptorSetLayoutSpec.uboBindingPoints = {0, 3};
+            customPipelineDescriptorSetLayoutSpec.uboBindingPoints = {
+                {0, DescriptorSetLayoutBindingUsage::AllGraphics},
+                {3, DescriptorSetLayoutBindingUsage::AllGraphics}
+            };
 
             customPipelineDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(customPipelineDescriptorSetLayoutSpec);
 
@@ -220,9 +227,11 @@ namespace CgEngine {
             hbaoDeinterleavingRenderPass = GraphicsObjectsFactory::createRenderPass(hbaoDeinterleavingRenderPassSpec);
 
             DescriptorSetLayoutSpecification hbaoDeinterleavingDescriptorSetLayoutSpec{};
-            hbaoDeinterleavingDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
-            hbaoDeinterleavingDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {1};
-            hbaoDeinterleavingDescriptorSetLayoutSpec.uboBindingPoints = {0, 3};
+            hbaoDeinterleavingDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {{1, DescriptorSetLayoutBindingUsage::Fragment}};
+            hbaoDeinterleavingDescriptorSetLayoutSpec.uboBindingPoints = {
+                {0, DescriptorSetLayoutBindingUsage::Fragment},
+                {3, DescriptorSetLayoutBindingUsage::Fragment}
+            };
             hbaoDeinterleavingDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(hbaoDeinterleavingDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification hbaoDeinterleavingPipelineSpec{};
@@ -293,10 +302,15 @@ namespace CgEngine {
             hbaoDeinterleavingDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(hbaoDeinterleavingDescriptorSetSpec);
 
             DescriptorSetLayoutSpecification hbaoComputeDescriptorSetLayoutSpec{};
-            hbaoComputeDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Compute;
-            hbaoComputeDescriptorSetLayoutSpec.uboBindingPoints = {3, 4};
-            hbaoComputeDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {0, 1};
-            hbaoComputeDescriptorSetLayoutSpec.imageBindingPoints = {2};
+            hbaoComputeDescriptorSetLayoutSpec.uboBindingPoints = {
+                {3, DescriptorSetLayoutBindingUsage::Compute},
+                {4, DescriptorSetLayoutBindingUsage::Compute}
+            };
+            hbaoComputeDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {
+                {0, DescriptorSetLayoutBindingUsage::Compute},
+                {1, DescriptorSetLayoutBindingUsage::Compute}
+            };
+            hbaoComputeDescriptorSetLayoutSpec.imageBindingPoints = {{2, DescriptorSetLayoutBindingUsage::Compute}};
             hbaoComputeDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(hbaoComputeDescriptorSetLayoutSpec);
 
             ComputePipelineSpecification hbaoComputePipelineSpec{};
@@ -362,8 +376,7 @@ namespace CgEngine {
             hbaoReinterleavingRenderPass = GraphicsObjectsFactory::createRenderPass(hbaoReinterleavingRenderPassSpec);
 
             DescriptorSetLayoutSpecification hbaoReinterleavingDescriptorSetLayoutSpec{};
-            hbaoReinterleavingDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
-            hbaoReinterleavingDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {0};
+            hbaoReinterleavingDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {{0, DescriptorSetLayoutBindingUsage::Fragment}};
             hbaoReinterleavingDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(hbaoReinterleavingDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification hbaoReinterleavingPipelineSpec{};
@@ -418,7 +431,7 @@ namespace CgEngine {
             hbaoBlurRenderPass1 = GraphicsObjectsFactory::createRenderPass(hbaoBlurRenderPassSpec1);
 
             DescriptorSetLayoutSpecification hbaoBlurDescriptorSetLayoutSpec{};
-            hbaoBlurDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {0};
+            hbaoBlurDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {{0, DescriptorSetLayoutBindingUsage::Fragment}};
             hbaoBlurDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(hbaoBlurDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification hbaoBlurPipelineSpec{};
@@ -482,9 +495,20 @@ namespace CgEngine {
             pbrRenderPass = GraphicsObjectsFactory::createRenderPass(pbrRenderPassSpec);
 
             DescriptorSetLayoutSpecification pbrDescriptorSetLayoutSpec{};
-            pbrDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
-            pbrDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {7, 8, 9, 10, 11, 12, 13};
-            pbrDescriptorSetLayoutSpec.uboBindingPoints = {0, 1, 2};
+            pbrDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {
+                {7, DescriptorSetLayoutBindingUsage::Fragment},
+                {8, DescriptorSetLayoutBindingUsage::Fragment},
+                {9, DescriptorSetLayoutBindingUsage::Fragment},
+                {10, DescriptorSetLayoutBindingUsage::Fragment},
+                {11, DescriptorSetLayoutBindingUsage::Fragment},
+                {12, DescriptorSetLayoutBindingUsage::Fragment},
+                {13, DescriptorSetLayoutBindingUsage::Fragment}
+            };
+            pbrDescriptorSetLayoutSpec.uboBindingPoints = {
+                {0, DescriptorSetLayoutBindingUsage::Fragment},
+                {1, DescriptorSetLayoutBindingUsage::Fragment},
+                {2, DescriptorSetLayoutBindingUsage::Fragment}
+            };
             pbrDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(pbrDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification pbrPipelineSpec{};
@@ -572,8 +596,7 @@ namespace CgEngine {
         }
         {
             DescriptorSetLayoutSpecification skyboxDescriptorSetLayoutSpec{
-                .usage = DescriptorSetLayoutUsage::Graphics,
-                .uboBindingPoints = {0},
+                .uboBindingPoints = {{0, DescriptorSetLayoutBindingUsage::Vertex}},
             };
             skyboxDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(skyboxDescriptorSetLayoutSpec);
 
@@ -602,9 +625,8 @@ namespace CgEngine {
         }
         {
             DescriptorSetLayoutSpecification physicsCollidersDescriptorSetLayoutSpec{};
-            physicsCollidersDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
-            physicsCollidersDescriptorSetLayoutSpec.uboBindingPoints = {0};
-            physicsCollidersDescriptorSetLayoutSpec.ssboBindingPoints = {1};
+            physicsCollidersDescriptorSetLayoutSpec.uboBindingPoints = {{0, DescriptorSetLayoutBindingUsage::Vertex}};
+            physicsCollidersDescriptorSetLayoutSpec.ssboBindingPoints = {{1, DescriptorSetLayoutBindingUsage::Vertex}};
             physicsCollidersDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(physicsCollidersDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification physicsCollidersPipelineSpec;
@@ -639,9 +661,8 @@ namespace CgEngine {
         }
         {
             DescriptorSetLayoutSpecification boundingBoxDescriptorSetLayoutSpec{};
-            boundingBoxDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
-            boundingBoxDescriptorSetLayoutSpec.uboBindingPoints = {0};
-            boundingBoxDescriptorSetLayoutSpec.ssboBindingPoints = {1};
+            boundingBoxDescriptorSetLayoutSpec.uboBindingPoints = {{0, DescriptorSetLayoutBindingUsage::Vertex}};
+            boundingBoxDescriptorSetLayoutSpec.ssboBindingPoints = {{1, DescriptorSetLayoutBindingUsage::Vertex}};
             boundingBoxDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(boundingBoxDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification boundingBoxPipelineSpec;
@@ -700,8 +721,7 @@ namespace CgEngine {
             debugLinesVAO->addVertexBuffer(linesVertexBuffer);
 
             DescriptorSetLayoutSpecification debugLinesDescriptorSetLayoutSpec{};
-            debugLinesDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
-            debugLinesDescriptorSetLayoutSpec.uboBindingPoints = {0};
+            debugLinesDescriptorSetLayoutSpec.uboBindingPoints = {{0, DescriptorSetLayoutBindingUsage::Vertex}};
             debugLinesDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(debugLinesDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification debugLinesPipelineSpec{};
@@ -752,9 +772,8 @@ namespace CgEngine {
             bloomDownSamplePass = GraphicsObjectsFactory::createRenderPass(bloomDownSamplePassSpec);
 
             DescriptorSetLayoutSpecification bloomDescriptorSetLayoutSpec{};
-            bloomDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
-            bloomDescriptorSetLayoutSpec.uboBindingPoints = {0};
-            bloomDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {1};
+            bloomDescriptorSetLayoutSpec.uboBindingPoints = {{0, DescriptorSetLayoutBindingUsage::Fragment}};
+            bloomDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {{1, DescriptorSetLayoutBindingUsage::Fragment}};
             bloomDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(bloomDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification bloomDownsamplePipelineSpec{};
@@ -839,9 +858,11 @@ namespace CgEngine {
         }
         {
             DescriptorSetLayoutSpecification screenDescriptorSetLayoutSpec{};
-            screenDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
-            screenDescriptorSetLayoutSpec.uboBindingPoints = {0};
-            screenDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {1, 2};
+            screenDescriptorSetLayoutSpec.uboBindingPoints = {{0, DescriptorSetLayoutBindingUsage::Fragment}};
+            screenDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {
+                {1, DescriptorSetLayoutBindingUsage::Fragment},
+                {2, DescriptorSetLayoutBindingUsage::Fragment}
+            };
             screenDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(screenDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification screenPipelineSpec;
@@ -893,17 +914,17 @@ namespace CgEngine {
             uiIndexBuffer = GraphicsObjectsFactory::createIndexBuffer(uiIndices, MAX_UI_INDICES, IndexBufferDataType::UInt32);
 
             DescriptorSetLayoutSpecification uiDescriptorSetLayoutSpec{};
-            uiDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
             uiDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints.resize(1);
             uiDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints[0].bindingPoint = 0;
+            uiDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints[0].usage = DescriptorSetLayoutBindingUsage::Fragment;
             uiDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints[0].descriptorCount = 16;
 
             uiDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(uiDescriptorSetLayoutSpec);
 
             DescriptorSetLayoutSpecification uiTextDescriptorSetLayoutSpec{};
-            uiTextDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Graphics;
             uiTextDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints.resize(1);
             uiTextDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints[0].bindingPoint = 0;
+            uiTextDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints[0].usage = DescriptorSetLayoutBindingUsage::Fragment;
             uiTextDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints[0].descriptorCount = 4;
 
             uiTextDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(uiTextDescriptorSetLayoutSpec);
@@ -961,7 +982,7 @@ namespace CgEngine {
         }
         {
             DescriptorSetLayoutSpecification ui2DCameraBufferDescriptorSetLayoutSpec{};
-            ui2DCameraBufferDescriptorSetLayoutSpec.uboBindingPoints = { 0 };
+            ui2DCameraBufferDescriptorSetLayoutSpec.uboBindingPoints = {{0, DescriptorSetLayoutBindingUsage::Vertex}};
             ui2DDescriptorSetLayoutCameraBuffer = GraphicsObjectsFactory::createDescriptorSetLayout(ui2DCameraBufferDescriptorSetLayoutSpec);
 
             DescriptorSetSpecification ui2DCameraBufferDescriptorSetSpec{};
@@ -972,7 +993,7 @@ namespace CgEngine {
             ui2DDescriptorSetCameraBuffer = GraphicsObjectsFactory::createDescriptorSet(ui2DCameraBufferDescriptorSetSpec);
 
             DescriptorSetLayoutSpecification uiCanvasSampleDescriptorSetLayoutSpec{};
-            uiCanvasSampleDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = { 1 };
+            uiCanvasSampleDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {{1, DescriptorSetLayoutBindingUsage::Fragment}};
             uiCanvasSampleDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(uiCanvasSampleDescriptorSetLayoutSpec);
 
             GraphicsPipelineSpecification ui2DPipelineSpec;
@@ -1002,13 +1023,15 @@ namespace CgEngine {
             boneTransformsBuffer = GraphicsObjectsFactory::createShaderStorageBuffer(MAX_BONES * MAX_ANIMATED_COMPONENTS * sizeof(glm::mat4));
 
             DescriptorSetLayoutSpecification animatedMeshDescriptorSetLayoutSpec{};
-            animatedMeshDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Compute;
-            animatedMeshDescriptorSetLayoutSpec.ssboBindingPoints = {1, 3, 4};
+            animatedMeshDescriptorSetLayoutSpec.ssboBindingPoints = {
+                {1, DescriptorSetLayoutBindingUsage::Compute},
+                {3, DescriptorSetLayoutBindingUsage::Compute},
+                {4, DescriptorSetLayoutBindingUsage::Compute}
+            };
             animatedMeshDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(animatedMeshDescriptorSetLayoutSpec);
 
             DescriptorSetLayoutSpecification skinningDescriptorSetLayoutSpec{};
-            skinningDescriptorSetLayoutSpec.usage = DescriptorSetLayoutUsage::Compute;
-            skinningDescriptorSetLayoutSpec.ssboBindingPoints = {2};
+            skinningDescriptorSetLayoutSpec.ssboBindingPoints = {{2, DescriptorSetLayoutBindingUsage::Compute}};
             skinningDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(skinningDescriptorSetLayoutSpec);
 
             ComputePipelineSpecification skinningPipelineSpec{};

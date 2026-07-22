@@ -4,7 +4,9 @@ From https://github.com/nvpro-samples/gl_ssao/blob/master/hbao_reinterleave.frag
 
 #version 450 core
 
-layout(binding = 0) uniform sampler2DArray u_TexResultsArray;
+#include "Macros.glsl"
+
+UNIFORM_LAYOUT(0, 0) uniform sampler2DArray u_TexResultsArray;
 layout(location = 0) out vec4 out_Color;
 
 void main() {

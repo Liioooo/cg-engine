@@ -1,7 +1,9 @@
 #version 450 core
 
-layout(binding = 0) uniform sampler2D u_SphereMap;
-layout(binding = 1, rgba32f) restrict writeonly uniform imageCube o_CubeMap;
+#include "Macros.glsl"
+
+UNIFORM_LAYOUT(0, 0) uniform sampler2D u_SphereMap;
+UNIFORM_LAYOUT_FORMAT(1, 0, rgba32f) restrict writeonly uniform imageCube o_CubeMap;
 
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 

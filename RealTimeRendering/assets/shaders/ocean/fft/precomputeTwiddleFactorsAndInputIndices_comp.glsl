@@ -6,7 +6,7 @@ layout(local_size_x = 1, local_size_y = 8, local_size_z = 1) in;
 
 const float PI = 3.141592653589793;
 
-layout(rgba32f, binding = 0) uniform restrict writeonly image2D u_precomputeBuffer;
+UNIFORM_LAYOUT_FORMAT(0, 0, rgba32f) uniform restrict writeonly image2D u_precomputeBuffer;
 
 PUSH_CONSTANT(PCPrecompute) {
     int size;

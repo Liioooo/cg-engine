@@ -7,12 +7,14 @@
     #define UNIFORM_LAYOUT(BINDING, SET) layout(binding = BINDING, set = SET)
     #define UNIFORM_LAYOUT_STD140(BINDING, SET) layout(binding = BINDING, set = SET, std140)
     #define UNIFORM_LAYOUT_STD430(BINDING, SET) layout(binding = BINDING, set = SET, std430)
+    #define UNIFORM_LAYOUT_FORMAT(BINDING, SET, FORMAT) layout(binding = BINDING, set = SET, FORMAT)
 #else
     #define PUSH_CONSTANT(STRUCT_NAME) layout(binding = 16, std430) readonly buffer STRUCT_NAME
     #define GET_INSTANCE_INDEX() gl_InstanceID
     #define UNIFORM_LAYOUT(BINDING, SET) layout(binding = BINDING)
     #define UNIFORM_LAYOUT_STD140(BINDING, SET) layout(binding = BINDING, std140)
     #define UNIFORM_LAYOUT_STD430(BINDING, SET) layout(binding = BINDING, std430)
+    #define UNIFORM_LAYOUT_FORMAT(BINDING, SET, FORMAT) layout(binding = BINDING, FORMAT)
 #endif
 
 #endif // MACROS_GLSL

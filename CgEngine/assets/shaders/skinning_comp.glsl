@@ -10,11 +10,11 @@ struct BoneInfluence {
     vec4 weights;
 };
 
-layout(binding = 1, std430) readonly buffer BoneInfluences {
+UNIFORM_LAYOUT_STD430(1, 1) readonly buffer BoneInfluences {
     BoneInfluence boneInfluences[];
 } b_BoneInfluences;
 
-layout(binding = 2, std430) readonly buffer BoneTransforms {
+UNIFORM_LAYOUT_STD430(2, 0) readonly buffer BoneTransforms {
     mat4 boneTransforms[MAX_BONES * MAX_ANIMATED_COMPONENTS];
 } b_BoneTransforms;
 
@@ -26,16 +26,15 @@ struct Vertex {
     vec4 texCoord;
 };
 
-layout(binding = 3, std430) readonly buffer VertexBufferIn {
+UNIFORM_LAYOUT_STD430(3, 1) readonly buffer VertexBufferIn {
     Vertex vertices[];
 } b_VertexBufferIn;
 
-layout(binding = 4, std430) writeonly buffer VertexBufferOut {
+UNIFORM_LAYOUT_STD430(4, 1) writeonly buffer VertexBufferOut {
     Vertex vertices[];
 } b_VertexBufferOut;
 
 layout(local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
-
 
 PUSH_CONSTANT(SkinningPC) {
     int componentIndex;

@@ -194,6 +194,7 @@ namespace RTR {
         rgbaAttachmentSpec.width = oceanParams.size;
         rgbaAttachmentSpec.height = oceanParams.size;
         rgbaAttachmentSpec.usableAsTexture = true;
+        rgbaAttachmentSpec.usableAsStorageImage = true;
         rgbaAttachmentSpec.textureWrap = CgEngine::TextureWrap::Repeat;
         rgbaAttachmentSpec.mipMapFiltering = CgEngine::MipMapFiltering::Nearest;
 
@@ -205,6 +206,7 @@ namespace RTR {
         rgAttachmentSpec.width = oceanParams.size;
         rgAttachmentSpec.height = oceanParams.size;
         rgAttachmentSpec.usableAsTexture = true;
+        rgAttachmentSpec.usableAsStorageImage = true;
         rgAttachmentSpec.textureWrap = CgEngine::TextureWrap::Repeat;
         rgAttachmentSpec.mipMapFiltering = CgEngine::MipMapFiltering::Nearest;
 
@@ -218,6 +220,7 @@ namespace RTR {
         rgbaBilinearAttachmentSpec.width = oceanParams.size;
         rgbaBilinearAttachmentSpec.height = oceanParams.size;
         rgbaBilinearAttachmentSpec.usableAsTexture = true;
+        rgbaBilinearAttachmentSpec.usableAsStorageImage = true;
         rgbaBilinearAttachmentSpec.textureWrap = CgEngine::TextureWrap::Repeat;
         rgbaBilinearAttachmentSpec.mipMapFiltering = CgEngine::MipMapFiltering::Bilinear;
 

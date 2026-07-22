@@ -2,6 +2,7 @@
 
 #include "LightDataBuffer.glsl"
 #include "GBuffersFragment.glsl"
+#include "Macros.glsl"
 
 layout(location = 12) in VS_OUT {
     vec3 WorldPosition;
@@ -11,7 +12,7 @@ layout(location = 12) in VS_OUT {
     vec3 ViewVector;
 } fs_in;
 
-layout (binding = 2, std140) uniform OceanData {
+UNIFORM_LAYOUT_STD140(2, 1) uniform OceanData {
     vec3 foamColor;
     float roughness;
     vec3 sssColor;
@@ -25,17 +26,17 @@ layout (binding = 2, std140) uniform OceanData {
     float length2;
 } u_OceanData;
 
-uniform layout(binding=10) sampler2D u_displacementC0;
-uniform layout(binding=11) sampler2D u_derivativesC0;
-uniform layout(binding=12) sampler2D u_turbulenceC0;
+UNIFORM_LAYOUT(10, 1) uniform sampler2D u_displacementC0;
+UNIFORM_LAYOUT(11, 1) uniform sampler2D u_derivativesC0;
+UNIFORM_LAYOUT(12, 1) uniform sampler2D u_turbulenceC0;
 
-uniform layout(binding=13) sampler2D u_displacementC1;
-uniform layout(binding=14) sampler2D u_derivativesC1;
-uniform layout(binding=15) sampler2D u_turbulenceC1;
+UNIFORM_LAYOUT(13, 1) uniform sampler2D u_displacementC1;
+UNIFORM_LAYOUT(14, 1) uniform sampler2D u_derivativesC1;
+UNIFORM_LAYOUT(15, 1) uniform sampler2D u_turbulenceC1;
 
-uniform layout(binding=17) sampler2D u_displacementC2;
-uniform layout(binding=18) sampler2D u_derivativesC2;
-uniform layout(binding=19) sampler2D u_turbulenceC2;
+UNIFORM_LAYOUT(17, 1) uniform sampler2D u_displacementC2;
+UNIFORM_LAYOUT(18, 1) uniform sampler2D u_derivativesC2;
+UNIFORM_LAYOUT(19, 1) uniform sampler2D u_turbulenceC2;
 
 void main() {
     vec4 derivatives = vec4(0.0);

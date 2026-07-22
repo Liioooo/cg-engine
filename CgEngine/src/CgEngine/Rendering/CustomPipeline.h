@@ -17,6 +17,8 @@ namespace CgEngine {
         BlendingFunction blendingFunctionFromString(std::string_view s);
         DrawMode drawModeFromString(std::string_view s);
         ShaderDataType shaderDataTypeFromString(std::string_view s);
+        DescriptorSetLayoutBindingUsage descriptorSetLayoutBindingUsageFromString(std::string_view s);
+        std::vector<DescriptorSetLayoutBinding> descriptorSetLayoutBindingsFromNode(const pugi::xml_node& bindingPointsNode);
     }
 
     struct CustomGraphicsPipelineSpecification {

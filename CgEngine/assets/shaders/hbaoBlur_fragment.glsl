@@ -19,7 +19,7 @@ PUSH_CONSTANT(HbaoBlurPC) {
     vec2 invResolutionDirection;
 } pc_hbaoBlur;
 
-layout(binding = 0) uniform sampler2D u_InputTex;
+UNIFORM_LAYOUT(0, 0) uniform sampler2D u_InputTex;
 
 layout(location = 0) out vec4 out_Color;
 

@@ -5,7 +5,6 @@
 #include "CustomPipeline.h"
 #include "GraphicsObjectsFactory.h"
 #include "CgEngineSharedUtils/StringUtils.h"
-#include "CgEngineSharedUtils/LoaderUtils.h"
 
 namespace CgEngine {
     const pugi::xml_document& CustomPipelinesData::getPipelinesXMLFile() {
@@ -119,6 +118,43 @@ namespace CgEngine {
         }
     }
 
+    DescriptorSetLayoutBindingUsage CustomPipelinesLoaderUtils::descriptorSetLayoutBindingUsageFromString(std::string_view s) {
+        if (s == "Compute") {
+            return DescriptorSetLayoutBindingUsage::Compute;
+        } else if (s == "TCS") {
+            return DescriptorSetLayoutBindingUsage::TCS;
+        } else if (s == "TES") {
+            return DescriptorSetLayoutBindingUsage::TES;
+        } else if (s == "Geometry") {
+            return DescriptorSetLayoutBindingUsage::Geometry;
+        } else if (s == "Fragment") {
+            return DescriptorSetLayoutBindingUsage::Fragment;
+        } else if (s == "Vertex") {
+            return DescriptorSetLayoutBindingUsage::Vertex;
+        } else {
+            CG_ASSERT(false, "CustomGraphicsPipeline::descriptorSetLayoutBindingUsageFromString: Unknown DescriptorSetLayoutBindingUsage string value.")
+            return DescriptorSetLayoutBindingUsage::None;
+        }
+    }
+
+    std::vector<DescriptorSetLayoutBinding> CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(const pugi::xml_node& bindingPointsNode) {
+        std::vector<DescriptorSetLayoutBinding> bindings;
+
+        for (const auto& bindingNode : bindingPointsNode.children("Binding")) {
+            DescriptorSetLayoutBinding binding;
+            binding.bindingPoint = bindingNode.attribute("bindingPoint").as_uint();
+            binding.descriptorCount = bindingNode.attribute("descriptorCount").as_uint(1);
+
+            for (const auto& usageToken : StringUtils::splitString(bindingNode.attribute("usage").as_string(), ',')) {
+                binding.usage |= descriptorSetLayoutBindingUsageFromString(usageToken);
+            }
+
+            bindings.push_back(binding);
+        }
+
+        return bindings;
+    }
+
     CustomGraphicsPipeline* CustomGraphicsPipeline::createResource(const std::string& name) {
         const pugi::xml_document& xml = CustomPipelinesData::getPipelinesXMLFile();
         const auto& pipelineNode =  xml.child("Pipelines").find_child_by_attribute("GraphicsPipeline", "name", name.c_str());
@@ -198,11 +234,10 @@ namespace CgEngine {
         }
 
         const auto& descriptorSetLayoutNode = pipelineNode.child("DescriptorSetLayout");
-        spec.descriptorSetLayoutSpecification.usage = DescriptorSetLayoutUsage::Graphics;
-        spec.descriptorSetLayoutSpecification.setUboBindingPoints(LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("UboBindingPoints")));
-        spec.descriptorSetLayoutSpecification.setSsboBindingPoints(LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("SsboBindingPoints")));
-        spec.descriptorSetLayoutSpecification.setTexture2DAndAttachmentBindingPoints(LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("Texture2DAndAttachmentBindingPoints")));
-        spec.descriptorSetLayoutSpecification.setImageBindingPoints(LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("ImageBindingPoints")));
+        spec.descriptorSetLayoutSpecification.uboBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("UboBindingPoints"));
+        spec.descriptorSetLayoutSpecification.ssboBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("SsboBindingPoints"));
+        spec.descriptorSetLayoutSpecification.texture2DAndAttachmentBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("Texture2DAndAttachmentBindingPoints"));
+        spec.descriptorSetLayoutSpecification.imageBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("ImageBindingPoints"));
 
         const auto& shaderNode = pipelineNode.child("Shader");
         std::string vertexPath = shaderNode.child("Vertex").child_value();
@@ -290,17 +325,16 @@ namespace CgEngine {
 
     CustomComputePipeline* CustomComputePipeline::createResource(const std::string& name) {
         const pugi::xml_document& xml = CustomPipelinesData::getPipelinesXMLFile();
-        const auto& pipelineNode =  xml.child("Pipelines").find_child_by_attribute("ComputePipeline", "name", name.c_str());
+        const auto& pipelineNode = xml.child("Pipelines").find_child_by_attribute("ComputePipeline", "name", name.c_str());
 
         CustomComputePipelineSpecification spec{};
         spec.shader = pipelineNode.child_value("Shader");
 
         const auto& descriptorSetLayoutNode = pipelineNode.child("DescriptorSetLayout");
-        spec.descriptorSetLayoutSpecification.usage = DescriptorSetLayoutUsage::Compute;
-        spec.descriptorSetLayoutSpecification.setUboBindingPoints(LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("UboBindingPoints")));
-        spec.descriptorSetLayoutSpecification.setSsboBindingPoints(LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("SsboBindingPoints")));
-        spec.descriptorSetLayoutSpecification.setTexture2DAndAttachmentBindingPoints(LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("Texture2DAndAttachmentBindingPoints")));
-        spec.descriptorSetLayoutSpecification.setImageBindingPoints(LoaderUtils::getUint32ListFromString(descriptorSetLayoutNode.child_value("ImageBindingPoints")));
+        spec.descriptorSetLayoutSpecification.uboBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("UboBindingPoints"));
+        spec.descriptorSetLayoutSpecification.ssboBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("SsboBindingPoints"));
+        spec.descriptorSetLayoutSpecification.texture2DAndAttachmentBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("Texture2DAndAttachmentBindingPoints"));
+        spec.descriptorSetLayoutSpecification.imageBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("ImageBindingPoints"));
 
         return new CustomComputePipeline(spec);
     }

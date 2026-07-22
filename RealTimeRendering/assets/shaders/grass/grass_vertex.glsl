@@ -9,13 +9,13 @@
 #include "Macros.glsl"
 #include "CustomPipelineDataPC.glsl"
 
-layout(binding = 6, std430) buffer Positions {
+UNIFORM_LAYOUT_STD430(6, 1) buffer Positions {
     vec2 positions[];
 } b_Positions;
 
-uniform layout(binding=10) sampler2D u_HeightGrassMap;
+UNIFORM_LAYOUT(10, 1) uniform sampler2D u_HeightGrassMap;
 
-layout (binding = 2, std140) uniform GrassData {
+UNIFORM_LAYOUT_STD140(2, 1) uniform GrassData {
     vec2 grassParams; // x: GRASS_SEGMENTS, y: GRASS_VERTICES
     vec2 grassSize; // x: GRASS_WIDTH, y: GRASS_HEIGHT
     vec3 grassLOD; // x: GRASS_LOD_DIST, y: GRASS_MAX_DIST, z: terrainNormalRatio

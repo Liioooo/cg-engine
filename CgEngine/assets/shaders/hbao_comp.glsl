@@ -6,12 +6,13 @@ From: https://github.com/nvpro-samples/gl_ssao/blob/master/hbao.frag.glsl and Th
 
 #include "HBAODataBuffer.glsl"
 #include "PI.glsl"
+#include "Macros.glsl"
 
 #pragma optionNV(unroll all)
 
-layout(binding = 0) uniform sampler2DArray u_LinearDepth;
-layout(binding = 1) uniform sampler2D u_ViewNormals;
-layout(binding = 2, rg16f) restrict writeonly uniform image2DArray o_Output;
+UNIFORM_LAYOUT(0, 0) uniform sampler2DArray u_LinearDepth;
+UNIFORM_LAYOUT(1, 0) uniform sampler2D u_ViewNormals;
+UNIFORM_LAYOUT_FORMAT(2, 0, rg16f)  restrict writeonly uniform image2DArray o_Output;
 
 // tweakables
 const float NUM_STEPS = 4;

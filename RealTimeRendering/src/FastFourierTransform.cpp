@@ -28,6 +28,7 @@ namespace RTR {
             spec.width = logSize;
             spec.height = input->getHeight();
             spec.usableAsTexture = true;
+            spec.usableAsStorageImage = true;
             spec.textureWrap = CgEngine::TextureWrap::Repeat;
             spec.mipMapFiltering = CgEngine::MipMapFiltering::Nearest;
             twiddleFactors = CgEngine::GraphicsObjectsFactory::createAttachment(spec);
@@ -61,6 +62,7 @@ namespace RTR {
             spec.width = input->getWidth();
             spec.height = input->getHeight();
             spec.usableAsTexture = true;
+            spec.usableAsStorageImage = true;
             spec.textureWrap = CgEngine::TextureWrap::Repeat;
             spec.mipMapFiltering = CgEngine::MipMapFiltering::Nearest;
 

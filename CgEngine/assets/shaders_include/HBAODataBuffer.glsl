@@ -1,7 +1,9 @@
 #ifndef HBAO_DATA_BUFFER_GLSL
 #define HBAO_DATA_BUFFER_GLSL
 
-layout(std140, binding = 4) uniform HBAOData {
+#include "Macros.glsl"
+
+UNIFORM_LAYOUT_STD140(4, 0) uniform HBAOData {
     vec4 perspectiveInfo;
     vec2 invQuarterResolution;
     float radiusToScreen;

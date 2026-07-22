@@ -372,5 +372,30 @@ namespace CgEngine {
             CG_LOGGING_ERROR("VulkanHelpers::depthStencilAttachmentFormatToVulkanFormat: Unknown DepthStencilAttachmentFormat value.")
             return vk::Format::eD32Sfloat;
         }
+
+        vk::ShaderStageFlags descriptorSetLayoutBindingUsageToVulkanShaderStageFlags(DescriptorSetLayoutBindingUsage usage) {
+            vk::ShaderStageFlags flags{};
+
+            if (hasFlag(usage, DescriptorSetLayoutBindingUsage::Compute)) {
+                flags |= vk::ShaderStageFlagBits::eCompute;
+            }
+            if (hasFlag(usage, DescriptorSetLayoutBindingUsage::TCS)) {
+                flags |= vk::ShaderStageFlagBits::eTessellationControl;
+            }
+            if (hasFlag(usage, DescriptorSetLayoutBindingUsage::TES)) {
+                flags |= vk::ShaderStageFlagBits::eTessellationEvaluation;
+            }
+            if (hasFlag(usage, DescriptorSetLayoutBindingUsage::Geometry)) {
+                flags |= vk::ShaderStageFlagBits::eGeometry;
+            }
+            if (hasFlag(usage, DescriptorSetLayoutBindingUsage::Fragment)) {
+                flags |= vk::ShaderStageFlagBits::eFragment;
+            }
+            if (hasFlag(usage, DescriptorSetLayoutBindingUsage::Vertex)) {
+                flags |= vk::ShaderStageFlagBits::eVertex;
+            }
+
+            return flags;
+        }
     }
 }

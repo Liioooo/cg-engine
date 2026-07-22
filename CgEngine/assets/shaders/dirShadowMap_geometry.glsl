@@ -1,9 +1,11 @@
 #version 450 core
 
+#include "Macros.glsl"
+
 layout(triangles, invocations = 4) in;
 layout(triangle_strip, max_vertices = 3) out;
 
-layout (binding = 2, std140) uniform DirShadowData {
+UNIFORM_LAYOUT_STD140(2, 0) uniform DirShadowData {
     mat4 lightSpaceMat[4];
     vec4 cascadeSplits;
 } u_DirShadowData;

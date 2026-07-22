@@ -1,5 +1,6 @@
 #include "VulkanDescriptorSetLayout.h"
 #include "Asserts.h"
+#include "VulkanHelpers.h"
 #include "VulkanRenderer.h"
 #include "Rendering/Renderer.h"
 
@@ -10,26 +11,12 @@ namespace CgEngine {
         std::vector<vk::DescriptorSetLayoutBinding> vulkanBindings;
         vulkanBindings.reserve(spec.uboBindingPoints.size() + spec.ssboBindingPoints.size() + spec.texture2DAndAttachmentBindingPoints.size() + spec.imageBindingPoints.size());
 
-        vk::ShaderStageFlags stageFlags;
-
-        switch (spec.usage) {
-            case DescriptorSetLayoutUsage::Graphics:
-                stageFlags = vk::ShaderStageFlagBits::eAllGraphics;
-                break;
-            case DescriptorSetLayoutUsage::Compute:
-                stageFlags = vk::ShaderStageFlagBits::eCompute;
-                break;
-            case DescriptorSetLayoutUsage::GraphicsAndCompute:
-                stageFlags = vk::ShaderStageFlagBits::eAllGraphics | vk::ShaderStageFlagBits::eCompute;
-                break;
-        }
-
         for (const auto& uboBindingPoint : spec.uboBindingPoints) {
             vk::DescriptorSetLayoutBinding layoutBinding{};
             layoutBinding.binding = uboBindingPoint.bindingPoint;
             layoutBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
             layoutBinding.descriptorCount = uboBindingPoint.descriptorCount;
-            layoutBinding.stageFlags = stageFlags;
+            layoutBinding.stageFlags = VulkanHelpers::descriptorSetLayoutBindingUsageToVulkanShaderStageFlags(uboBindingPoint.usage);
             layoutBinding.pImmutableSamplers = nullptr;
             vulkanBindings.push_back(layoutBinding);
         }
@@ -39,7 +26,7 @@ namespace CgEngine {
             layoutBinding.binding = ssboBindingPoint.bindingPoint;
             layoutBinding.descriptorType = vk::DescriptorType::eStorageBuffer;
             layoutBinding.descriptorCount = ssboBindingPoint.descriptorCount;
-            layoutBinding.stageFlags = stageFlags;
+            layoutBinding.stageFlags = VulkanHelpers::descriptorSetLayoutBindingUsageToVulkanShaderStageFlags(ssboBindingPoint.usage);
             layoutBinding.pImmutableSamplers = nullptr;
             vulkanBindings.push_back(layoutBinding);
         }
@@ -49,7 +36,7 @@ namespace CgEngine {
             layoutBinding.binding = tex2DBindingPoint.bindingPoint;
             layoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
             layoutBinding.descriptorCount = tex2DBindingPoint.descriptorCount;
-            layoutBinding.stageFlags = stageFlags;
+            layoutBinding.stageFlags = VulkanHelpers::descriptorSetLayoutBindingUsageToVulkanShaderStageFlags(tex2DBindingPoint.usage);
             layoutBinding.pImmutableSamplers = nullptr;
             vulkanBindings.push_back(layoutBinding);
         }
@@ -59,7 +46,7 @@ namespace CgEngine {
             layoutBinding.binding = imageBindingPoint.bindingPoint;
             layoutBinding.descriptorType = vk::DescriptorType::eStorageImage;
             layoutBinding.descriptorCount = imageBindingPoint.descriptorCount;
-            layoutBinding.stageFlags = stageFlags;
+            layoutBinding.stageFlags = VulkanHelpers::descriptorSetLayoutBindingUsageToVulkanShaderStageFlags(imageBindingPoint.usage);
             layoutBinding.pImmutableSamplers = nullptr;
             vulkanBindings.push_back(layoutBinding);
         }

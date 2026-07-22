@@ -1,13 +1,15 @@
 #version 450 core
 
+#include "Macros.glsl"
+
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 const float TWO_PI = 6.283185307179586;
 const float PI = 3.141592653589793;
 
-layout(binding = 0) uniform sampler2D u_gaussianNoise;
-layout(rgba32f, binding = 1) uniform image2D u_h0Texture;
-layout(rgba32f, binding = 2) uniform image2D u_waveTexture;
+UNIFORM_LAYOUT(0, 0) uniform sampler2D u_gaussianNoise;
+UNIFORM_LAYOUT_FORMAT(1, 0, rgba32f) uniform image2D u_h0Texture;
+UNIFORM_LAYOUT_FORMAT(2, 0, rgba32f) uniform image2D u_waveTexture;
 
 layout (binding = 3, std140) uniform OceanData {
     float T;

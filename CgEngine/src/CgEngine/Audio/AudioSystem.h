@@ -126,6 +126,8 @@ namespace CgEngine {
 
         void markForDestroy(Uuid uuid);
 
+        glm::vec3 clampAudioVelocity(const glm::vec3& velocity);
+
         static void debugCallback(ALenum source, ALenum type, ALuint id, ALenum severity, ALsizei length, const ALchar *message, void *userParam);
 
         static inline AudioSystem* instance;

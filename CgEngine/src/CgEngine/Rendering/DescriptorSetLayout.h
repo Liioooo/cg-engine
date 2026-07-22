@@ -1,31 +1,37 @@
 #pragma once
 
+#include "EnumFlags.h"
+
 namespace CgEngine {
 
-    enum class DescriptorSetLayoutUsage {
-        Graphics, Compute, GraphicsAndCompute
+    enum class DescriptorSetLayoutBindingUsage : uint32_t {
+        None = 0,
+        Compute = 1 << 0,
+        TCS = 1 << 1,
+        TES = 1 << 2,
+        Geometry = 1 << 3,
+        Fragment = 1 << 4,
+        Vertex = 1 << 5,
+        AllGraphics = TCS | TES | Geometry | Fragment | Vertex,
+        All = Compute | TCS | TES | Geometry | Fragment | Vertex
     };
 
+    CG_ENUM_FLAGS(DescriptorSetLayoutBindingUsage)
+
     struct DescriptorSetLayoutBinding {
-        uint32_t bindingPoint = 0;;
+        uint32_t bindingPoint = 0;
+        DescriptorSetLayoutBindingUsage usage = DescriptorSetLayoutBindingUsage::None;
         uint32_t descriptorCount = 1;
 
         DescriptorSetLayoutBinding() = default;
-        DescriptorSetLayoutBinding(const uint32_t bindingPoint) : bindingPoint(bindingPoint) {};
+        DescriptorSetLayoutBinding(const uint32_t bindingPoint, DescriptorSetLayoutBindingUsage usage) : bindingPoint(bindingPoint), usage(usage) {};
     };
 
     struct DescriptorSetLayoutSpecification {
-        DescriptorSetLayoutUsage usage;
         std::vector<DescriptorSetLayoutBinding> uboBindingPoints;
         std::vector<DescriptorSetLayoutBinding> ssboBindingPoints;
         std::vector<DescriptorSetLayoutBinding> texture2DAndAttachmentBindingPoints;
         std::vector<DescriptorSetLayoutBinding> imageBindingPoints;
-
-        // These functions set only bindingPoint, descriptorCount is always assumed to be 1
-        void setUboBindingPoints(const std::vector<uint32_t>& bindingPoints);
-        void setSsboBindingPoints(const std::vector<uint32_t>& bindingPoints);
-        void setTexture2DAndAttachmentBindingPoints(const std::vector<uint32_t>& bindingPoints);
-        void setImageBindingPoints(const std::vector<uint32_t>& bindingPoints);
     };
 
     class DescriptorSetLayout {

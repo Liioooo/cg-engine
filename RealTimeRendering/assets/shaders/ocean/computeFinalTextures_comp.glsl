@@ -4,13 +4,13 @@
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-layout(rg32f, binding = 0) uniform restrict readonly image2D u_DxDz;
-layout(rg32f, binding = 1) uniform restrict readonly image2D u_DyDxz;
-layout(rg32f, binding = 2) uniform restrict readonly image2D u_DyxDyz;
-layout(rg32f, binding = 3) uniform restrict readonly image2D u_DxxDzz;
-layout(rgba32f, binding = 4) uniform restrict writeonly image2D u_displacement;
-layout(rgba32f, binding = 5) uniform restrict writeonly image2D u_derivatives;
-layout(rgba32f, binding = 6) uniform restrict image2D u_turbulence;
+UNIFORM_LAYOUT_FORMAT(0, 0, rg32f) uniform restrict readonly image2D u_DxDz;
+UNIFORM_LAYOUT_FORMAT(1, 0, rg32f) uniform restrict readonly image2D u_DyDxz;
+UNIFORM_LAYOUT_FORMAT(2, 0, rg32f) uniform restrict readonly image2D u_DyxDyz;
+UNIFORM_LAYOUT_FORMAT(3, 0, rg32f) uniform restrict readonly image2D u_DxxDzz;
+UNIFORM_LAYOUT_FORMAT(4, 0, rgba32f) uniform restrict writeonly image2D u_displacement;
+UNIFORM_LAYOUT_FORMAT(5, 0, rgba32f) uniform restrict writeonly image2D u_derivatives;
+UNIFORM_LAYOUT_FORMAT(6, 0, rgba32f) uniform restrict image2D u_turbulence;
 
 PUSH_CONSTANT(PCFinalTextures) {
     float deltaTime;

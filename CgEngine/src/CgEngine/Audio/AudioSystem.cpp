@@ -192,9 +192,7 @@ namespace CgEngine {
             alListenerfv(AL_POSITION, glm::value_ptr(transform.position));
             alListenerfv(AL_ORIENTATION, orientation);
 
-            if (!glm::any(glm::isinf(listener.getVelocity()))) {
-                alListenerfv(AL_VELOCITY, glm::value_ptr(listener.getVelocity()));
-            }
+            alListenerfv(AL_VELOCITY, glm::value_ptr(clampAudioVelocity(listener.getVelocity())));
         }
     }
 
@@ -230,7 +228,7 @@ namespace CgEngine {
                 alSourcef(audioComponent->source.value(), AL_PITCH, audioComponent->pitch);
                 alSourcefv(audioComponent->source.value(), AL_POSITION, glm::value_ptr(audioComponent->transform.position));
                 alSourcefv(audioComponent->source.value(), AL_DIRECTION, glm::value_ptr(audioComponent->transform.orientation));
-                alSourcefv(audioComponent->source.value(), AL_VELOCITY, glm::value_ptr(audioComponent->velocity));
+                alSourcefv(audioComponent->source.value(), AL_VELOCITY, glm::value_ptr(clampAudioVelocity(audioComponent->velocity)));
             }
         }
     }
@@ -331,6 +329,13 @@ namespace CgEngine {
     void AudioSystem::markForDestroy(Uuid uuid) {
         std::scoped_lock lock{markedForDestroyMutex};
         markedForDestroy.insert(uuid);
+    }
+
+    glm::vec3 AudioSystem::clampAudioVelocity(const glm::vec3& velocity) {
+        if (glm::any(glm::isnan(velocity)) || glm::any(glm::isinf(velocity))) {
+            return glm::vec3(0.0f);
+        }
+        return glm::clamp(velocity, -1000.0f, 1000.0f);
     }
 
     void AudioSystem::debugCallback(ALenum source, ALenum type, ALuint id, ALenum severity, ALsizei length, const ALchar *message, void *userParam) {
