@@ -22,8 +22,8 @@ namespace CgEngine {
             perFrameSize = size;
             vk::DeviceSize deviceSize = perFrameSize;
 
-            VkBuffer stagingBuffer;
-            VmaAllocation stagingAllocation;
+            VkBuffer stagingBuffer = VK_NULL_HANDLE;
+            VmaAllocation stagingAllocation = nullptr;
 
             if (data != nullptr) {
                 vk::BufferCreateInfo stagingInfo{};

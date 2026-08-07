@@ -33,7 +33,7 @@ namespace CgEngine {
         int getFramebufferHeight() const;
         GLFWwindow& getWindowHandle() const;
         glm::vec2 getContentScale() const;
-        std::vector<const char*> Window::getRequiredVulkanExtensions() const;
+        std::vector<const char*> getRequiredVulkanExtensions() const;
 
         void setClipboardText(const char* string);
 

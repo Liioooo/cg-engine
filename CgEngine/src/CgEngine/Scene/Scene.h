@@ -85,7 +85,7 @@ namespace CgEngine {
         }
 
         template<typename C>
-        ComponentHandle<C> getComponent(Entity entity) const {
+        ComponentHandle<C> getComponent(Entity entity) {
             CG_ASSERT(hasEntity(entity), "Scene::getComponent: Entity does not exist in the scene.")
             CG_ASSERT(componentManager.hasComponent<C>(entity), "Scene::getComponent: Entity does not have the requested component.")
             return ComponentHandle<C>(&componentManager, entity);

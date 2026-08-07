@@ -767,7 +767,7 @@ namespace CgEngine {
         CG_LOGGING_INFO("RENDERER: API: Vulkan");
         CG_LOGGING_INFO("RENDERER: Vendor ID: {0}", props.vendorID);
         CG_LOGGING_INFO("RENDERER: Vendor: {0}", vendorName);
-        CG_LOGGING_INFO("RENDERER: Name: {0}", std::string(props.deviceName));
+        CG_LOGGING_INFO("RENDERER: Name: {0}", std::string(props.deviceName.data()));
         CG_LOGGING_INFO("RENDERER: Device ID: {0}", props.deviceID);
 
         uint32_t major = VK_VERSION_MAJOR(props.apiVersion);

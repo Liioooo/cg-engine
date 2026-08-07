@@ -97,9 +97,10 @@ file(GLOB IMGUI_GLOB
         ${IMGUI_PATH}/backends/imgui_impl_vulkan.h
         ${IMGUI_PATH}/backends/imgui_impl_vulkan.cpp
 )
+find_package(Vulkan REQUIRED)
 add_library(imgui STATIC ${IMGUI_GLOB})
 target_include_directories(imgui PUBLIC ${IMGUI_PATH})
-target_link_libraries(imgui PRIVATE glfw)
+target_link_libraries(imgui PRIVATE glfw Vulkan::Vulkan)
 set_target_properties(imgui PROPERTIES MSVC_RUNTIME_LIBRARY ${MSVC_RUNTIME_LIBRARY_STR})
 if (UNIX)
     find_package(X11 REQUIRED)

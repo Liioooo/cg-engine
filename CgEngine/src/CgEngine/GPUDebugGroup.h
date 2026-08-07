@@ -11,9 +11,6 @@ namespace CgEngine {
         bool pushedGroup = false;
 
         OpenGLDebugGroup() = default;
-        explicit OpenGLDebugGroup(const std::string& label) : pushedGroup(true) {
-            glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, eventId, -1, label.c_str());
-        };
 
         OpenGLDebugGroup(const OpenGLDebugGroup&) = delete;
         OpenGLDebugGroup& operator=(const OpenGLDebugGroup&) = delete;
@@ -26,14 +23,22 @@ namespace CgEngine {
             }
         }
 
+        void push(const std::string& label) {
+            pushedGroup = true;
+            glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, eventId, -1, label.c_str());
+        }
+
         static inline unsigned int eventId = 0;
     };
 
     struct GPUDebugGroup {
         OpenGLDebugGroup glDebugGroup;
 
-        explicit GPUDebugGroup(const std::string& label)
-            : glDebugGroup(GraphicsObjectsFactory::getGraphicsAPI() == GraphicsAPI::OpenGL ? OpenGLDebugGroup(label) : OpenGLDebugGroup()) {}
+        explicit GPUDebugGroup(const std::string& label) {
+            if (GraphicsObjectsFactory::getGraphicsAPI() == GraphicsAPI::OpenGL) {
+                glDebugGroup.push(label);
+            }
+        }
     };
 }
 
