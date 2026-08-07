@@ -71,18 +71,22 @@ namespace CgEngine {
 
         while (isRunning) {
             window.pollEvents();
-            Renderer::beginFrame(window);
-            Renderer::beginImGuiFrame();
+            bool shouldRender = Renderer::beginFrame(window);
 
             Scene* activeScene = sceneManager.getActiveScene();
             activeScene->onUpdate(timeStep);
-            activeScene->onRender(*sceneRenderer);
 
-            CG_GPU_TIME_WRITE_RESULTS()
+            if (shouldRender) {
+                Renderer::beginImGuiFrame();
 
-            renderImGuiWindow();
-            Renderer::renderImGuiFrame();
-            Renderer::endFrame(window);
+                activeScene->onRender(*sceneRenderer);
+
+                CG_GPU_TIME_WRITE_RESULTS()
+
+                renderImGuiWindow();
+                Renderer::renderImGuiFrame();
+                Renderer::endFrame(window);
+            }
 
             float time = getTime();
             timeStep = time - lastFrameTime;

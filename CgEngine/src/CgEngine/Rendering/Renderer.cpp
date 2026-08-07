@@ -20,8 +20,8 @@ namespace CgEngine {
         backend->setFramebufferResized();
     }
 
-    void Renderer::beginFrame(const Window& window) {
-        backend->beginFrame(window);
+    bool Renderer::beginFrame(const Window& window) {
+        return backend->beginFrame(window);
     }
 
     void Renderer::endFrame(const Window& window) {

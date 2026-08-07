@@ -124,12 +124,18 @@ namespace CgEngine {
         framebufferResized = true;
     }
 
-    void OpenGLRenderer::beginFrame(const Window& window) {
-        if (framebufferResized && window.getFramebufferWidth() > 0 && window.getFramebufferHeight() > 0) {
+    bool OpenGLRenderer::beginFrame(const Window& window) {
+        if (window.getFramebufferWidth() <= 0 || window.getFramebufferHeight() <= 0) {
+            return false;
+        }
+
+        if (framebufferResized) {
            swapChainFramebuffer.recreate(window.getFramebufferWidth(), window.getFramebufferHeight());
         }
 
         framebufferResized = false;
+
+        return true;
     }
 
     void OpenGLRenderer::endFrame(const Window& window) {

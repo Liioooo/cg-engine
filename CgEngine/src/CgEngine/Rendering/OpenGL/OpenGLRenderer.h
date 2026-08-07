@@ -19,7 +19,7 @@ namespace CgEngine {
 
         void setFramebufferResized() override;
 
-        void beginFrame(const Window& window) override;
+        bool beginFrame(const Window& window) override;
         void endFrame(const Window& window) override;
 
         void beginRenderPass(const RenderPass* renderPass, const Framebuffer* framebuffer) override;

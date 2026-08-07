@@ -40,7 +40,7 @@ namespace CgEngine {
 
         virtual void setFramebufferResized() = 0;
 
-        virtual void beginFrame(const Window& window) = 0;
+        virtual bool beginFrame(const Window& window) = 0;
         virtual void endFrame(const Window& window) = 0;
 
         virtual void beginRenderPass(const RenderPass* renderPass, const Framebuffer* framebuffer) = 0;

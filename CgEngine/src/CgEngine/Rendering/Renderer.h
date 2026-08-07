@@ -21,7 +21,7 @@ namespace CgEngine {
 
         static void setFramebufferResized();
 
-        static void beginFrame(const Window& window);
+        static bool beginFrame(const Window& window);
         static void endFrame(const Window& window);
 
         static void beginRenderPass(const RenderPass* renderPass, const Framebuffer* framebuffer);

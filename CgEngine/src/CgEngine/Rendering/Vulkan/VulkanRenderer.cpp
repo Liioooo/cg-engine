@@ -119,7 +119,11 @@ namespace CgEngine {
         framebufferResized = true;
     }
 
-    void VulkanRenderer::beginFrame(const Window& window) {
+    bool VulkanRenderer::beginFrame(const Window& window) {
+        if (window.getFramebufferWidth() <= 0 || window.getFramebufferHeight() <= 0) {
+            return false;
+        }
+
         vkDevice.waitForFences(1, &vkInFlightFences[currentFrameIndex], VK_TRUE, UINT64_MAX);
 
         vk::Result result;
@@ -130,7 +134,7 @@ namespace CgEngine {
                 framebufferResized = false;
             } else if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR) {
                 CG_LOGGING_ERROR("VulkanRenderer: Failed to acquire swap chain image!")
-                return;
+                return false;
             }
         } while (result == vk::Result::eErrorOutOfDateKHR);
 
@@ -163,6 +167,8 @@ namespace CgEngine {
         vk::DependencyInfo depInfo{};
         depInfo.setImageMemoryBarriers(imageBarrier);
         vkGraphicsComputeCommandBuffers[currentFrameIndex].pipelineBarrier2(depInfo);
+
+        return true;
     }
 
     void VulkanRenderer::endFrame(const Window& window) {
@@ -214,7 +220,7 @@ namespace CgEngine {
         presentInfo.setSwapchainCount(1);
         presentInfo.setPImageIndices(&currentSwapChainImageIndex);
 
-        auto presentResult = vkPresentQueue.presentKHR(presentInfo);
+        auto presentResult = vkPresentQueue.presentKHR(&presentInfo);
 
         if (presentResult == vk::Result::eErrorOutOfDateKHR || presentResult == vk::Result::eSuboptimalKHR || framebufferResized) {
             recreateSwapChain(window);
@@ -1006,14 +1012,17 @@ namespace CgEngine {
     }
 
     void VulkanRenderer::recreateSwapChain(const Window &window) {
-        vkDevice.waitIdle();
+        auto idleResult = vkDevice.waitIdle();
+        if (idleResult != vk::Result::eSuccess) {
+            CG_LOGGING_ERROR("SwapChain recreation failed on waitIdle()")
+        }
 
         for (auto imageView : vkSwapChainImageViews) {
             vkDevice.destroyImageView(imageView);
         }
         vkSwapChainImageViews.clear();
 
-        vk::SwapchainKHR oldSwapChain = vkSwapChain;
+        const vk::SwapchainKHR oldSwapChain = vkSwapChain;
         createSwapChain(window, oldSwapChain);
 
         if (oldSwapChain != VK_NULL_HANDLE) {
