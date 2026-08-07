@@ -32,7 +32,7 @@ int getShadowCascade(float depth) {
 
 float sampleShadowMap(int layer, float NdotL, vec4 dirShadowMapPosition[4]) {
     vec3 projCoords = dirShadowMapPosition[layer].xyz / dirShadowMapPosition[layer].w;
-    projCoords = projCoords * 0.5 + 0.5;
+    projCoords.xy = projCoords.xy * 0.5 + 0.5;
     float currentDepth = projCoords.z;
 
     if (currentDepth > 1.0f) {

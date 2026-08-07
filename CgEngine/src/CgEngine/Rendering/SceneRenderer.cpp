@@ -2087,14 +2087,14 @@ namespace CgEngine {
 
         for (int i = 0; i < 4; i++) {
             glm::vec3 frustumCorners[8] = {
-                    glm::vec3(-1.0f,  1.0f, -1.0f),
-                    glm::vec3( 1.0f,  1.0f, -1.0f),
-                    glm::vec3( 1.0f, -1.0f, -1.0f),
-                    glm::vec3(-1.0f, -1.0f, -1.0f),
-                    glm::vec3(-1.0f,  1.0f,  1.0f),
-                    glm::vec3( 1.0f,  1.0f,  1.0f),
-                    glm::vec3( 1.0f, -1.0f,  1.0f),
-                    glm::vec3(-1.0f, -1.0f,  1.0f)
+                    glm::vec3(-1.0f,  1.0f, 0.0f),
+                    glm::vec3( 1.0f,  1.0f, 0.0f),
+                    glm::vec3( 1.0f, -1.0f, 0.0f),
+                    glm::vec3(-1.0f, -1.0f, 0.0f),
+                    glm::vec3(-1.0f,  1.0f, 1.0f),
+                    glm::vec3( 1.0f,  1.0f, 1.0f),
+                    glm::vec3( 1.0f, -1.0f, 1.0f),
+                    glm::vec3(-1.0f, -1.0f, 1.0f)
             };
 
             for (auto& frustumCorner: frustumCorners) {
@@ -2131,6 +2131,9 @@ namespace CgEngine {
             glm::vec3 minOrtho = -maxOrtho;
 
             glm::mat4 lightProjection = glm::ortho(minOrtho.x, maxOrtho.x, minOrtho.y, maxOrtho.y, -50.0f, maxOrtho.z - minOrtho.z + 50.0f);
+            if (GraphicsObjectsFactory::getGraphicsAPI() == GraphicsAPI::Vulkan) {
+                lightProjection[1][1] *= -1.0f; // Invert the Y axis
+            }
 
             glm::mat4 shadowMatrix = lightProjection * lightView;
             float shadowMapResolution = static_cast<float>(dirShadowMapFramebuffer->getWidth());

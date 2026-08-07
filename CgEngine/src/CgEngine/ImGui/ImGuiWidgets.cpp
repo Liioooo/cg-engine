@@ -1,7 +1,6 @@
 #include "ImGuiWidgets.h"
 #include "imgui.h"
 #include "Application.h"
-#include "pugixml.hpp"
 
 namespace CgEngine::ImGuiWidgets {
     void applicationOptions(ApplicationOptions& applicationOptions) {
@@ -15,7 +14,7 @@ namespace CgEngine::ImGuiWidgets {
 
     void performanceStats(float ts, const RenderingStats& renderingStats) {
         ImGui::SeparatorText("Performance");
-        ImGui::Text("Frametime/FPS: %.2fms/%i", ts * 1000.0f, static_cast<int>(1.0f / ts));
+        ImGui::Text("Frametime/FPS: %7.2fms/%3i", ts * 1000.0f, static_cast<int>(1.0f / ts));
         ImGui::SeparatorText("GPU Timers");
         ImGui::Text("Skin Meshes: %.6fms", renderingStats.skinMeshesTimer);
         ImGui::Text("Shadow Maps: %.6fms", renderingStats.shadowMapTimer);

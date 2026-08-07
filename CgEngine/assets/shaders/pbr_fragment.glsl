@@ -38,7 +38,7 @@ void main() {
 
     vec2 ndc = fs_in.TexCoord * 2.0f - 1.0f;
     float screenDepth = texture(u_Depth, fs_in.TexCoord).r;
-    vec4 clipSpacePos = vec4(ndc, screenDepth * 2.0f - 1.0f, 1.0f);
+    vec4 clipSpacePos = vec4(ndc, screenDepth, 1.0f);
     vec4 worldSpacePos = u_CameraData.invViewProjection * clipSpacePos;
     vec3 worldPosition = worldSpacePos.xyz / worldSpacePos.w;
 
