@@ -16,12 +16,15 @@ namespace CgEngine {
         VulkanDescriptorSetLayout(VulkanDescriptorSetLayout& other) = delete;
         VulkanDescriptorSetLayout& operator=(VulkanDescriptorSetLayout& other) = delete;
 
+        DescriptorSetLayoutBindingUsage getDescriptorSetLayoutBindingUsageForBindingPoint(uint32_t bindingPoint) const override;
+
         bool isReady() const override;
 
         vk::DescriptorSetLayout getDescriptorSetLayout() const;
 
     private:
         vk::DescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
+        std::unordered_map<uint32_t, DescriptorSetLayoutBindingUsage> bindingPointUsageMap{};
     };
 
 }

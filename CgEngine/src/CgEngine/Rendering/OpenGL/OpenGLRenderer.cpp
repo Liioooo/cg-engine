@@ -11,7 +11,7 @@
 #include "OpenGLHelpers.h"
 #include "OpenGLDescriptorSet.h"
 #include "OpenGLAttachment.h"
-#include "OpenGLDebugGroup.h"
+#include "GPUDebugGroup.h"
 
 namespace CgEngine {
 
@@ -32,7 +32,7 @@ namespace CgEngine {
 
         initImGui(window);
 
-        auto unitQuadVertexData = getUnitQuadVerticesAndIndices();
+        auto unitQuadVertexData = getUnitQuadVerticesAndIndices(false);
 
         quadVAO = OpenGLVertexArrayObject();
         auto* quadVertexBuffer = new OpenGLVertexBuffer(std::get<0>(unitQuadVertexData).data(), std::get<0>(unitQuadVertexData).size() * sizeof(QuadVertex), VertexBufferUsage::Static);
@@ -72,8 +72,10 @@ namespace CgEngine {
         tessellationPatchSize = 4;
         glPatchParameteri(GL_PATCH_VERTICES, tessellationPatchSize);
 
+        glFrontFace(GL_CCW);
         glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
         glEnable(GL_FRAMEBUFFER_SRGB);
+        glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
 
         uint32_t whiteTextureData = 0xffffffff;
         whiteTexture = OpenGLTexture2D(TextureFormat::RGBA, 1, 1, TextureWrap::Clamp, &whiteTextureData, MipMapFiltering::Nearest);
@@ -96,7 +98,7 @@ namespace CgEngine {
         computeEnvironmentMapIrradianceMap = OpenGLComputePipeline(environmentMapIrradianceMapSpec);
 
         RenderPassSpecification swapChainRenderPassSpec{};
-        swapChainRenderPassSpec.clearDepthStencilAttachment = true;
+        swapChainRenderPassSpec.clearDepthStencilAttachment = false;
         swapChainRenderPassSpec.clearColorAttachments = true;
         swapChainRenderPassSpec.clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
@@ -184,8 +186,14 @@ namespace CgEngine {
 
         for (size_t i = 0; i < renderingInfo.colorAttachments.size(); i++) {
             const auto* attachment = static_cast<const OpenGLAttachment*>(renderingInfo.colorAttachments[i].attachment);
-            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, attachment->getOpenGLHandle(), 0);
-            drawBuffers.push_back(GL_COLOR_ATTACHMENT0 + i);
+
+            if (renderingInfo.colorAttachments[i].allLayers) {
+                glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, attachment->getOpenGLHandle(), 0);
+                drawBuffers.push_back(GL_COLOR_ATTACHMENT0 + i);
+            } else {
+                glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, attachment->getOpenGLHandle(), 0, renderingInfo.colorAttachments[i].layer);
+                drawBuffers.push_back(GL_COLOR_ATTACHMENT0 + i);
+            }
         }
 
         if (!drawBuffers.empty()) {
@@ -201,10 +209,18 @@ namespace CgEngine {
             const auto* depthAttachment = static_cast<const OpenGLAttachment*>(renderingInfo.depthStencilAttachment.attachment);
             CG_ASSERT(depthAttachment->getType() == AttachmentType::Depth || depthAttachment->getType() == AttachmentType::DepthStencil, "DepthStencil attachment must be of type Depth or DepthStencil")
             if (depthAttachment->getType() == AttachmentType::DepthStencil) {
-                glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depthAttachment->getOpenGLHandle(), 0);
+                if (renderingInfo.depthStencilAttachment.allLayers) {
+                    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depthAttachment->getOpenGLHandle(), 0);
+                } else {
+                    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depthAttachment->getOpenGLHandle(), 0, renderingInfo.depthStencilAttachment.layer);
+                }
                 hasStencil = true;
             } else {
-                glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthAttachment->getOpenGLHandle(), 0);
+                if (renderingInfo.depthStencilAttachment.allLayers) {
+                    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthAttachment->getOpenGLHandle(), 0);
+                } else {
+                    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthAttachment->getOpenGLHandle(), 0, renderingInfo.depthStencilAttachment.layer);
+                }
             }
         }
 
@@ -239,6 +255,8 @@ namespace CgEngine {
         const GraphicsPipelineSpecification& spec = glGraphicsPipeline->getSpecification();
         currentPipelineHandle = glGraphicsPipeline->getOpenGLShaderHandle();
         drawMode = glGraphicsPipeline->getDrawMode();
+
+        CG_ASSERT(currentRenderPass != &swapChainRenderPass || (spec.depthTest == false && spec.depthWrite == false), "SwapChain RenderPass must have depth testing and writing disabled!")
 
         glUseProgram(glGraphicsPipeline->getOpenGLShaderHandle());
 
@@ -352,6 +370,10 @@ namespace CgEngine {
     void OpenGLRenderer::setPushConstants(const void* data, size_t size) {
         CG_ASSERT(size <= 128 * sizeof(std::byte), "Push constant data size exceeds the maximum allowed size of 128 bytes.")
         glNamedBufferSubData(pushConstantsBuffer, 0, size, data);
+    }
+
+    void OpenGLRenderer::injectBarriersForDescriptorSet(const DescriptorSet *descriptorSet) {
+
     }
 
     void OpenGLRenderer::transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition) {

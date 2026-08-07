@@ -1,5 +1,8 @@
 #include "Camera.h"
 
+#include "GraphicsObjectsFactory.h"
+#include "Helpers.h"
+
 namespace CgEngine {
     CameraProjectionType Camera::getProjectionType() const {
         return projectionType;
@@ -138,6 +141,9 @@ namespace CgEngine {
     void Camera::calculateProjection() {
         if (projectionType == CameraProjectionType::Perspective) {
             projectionMatrix = glm::perspective(perspectiveFov, aspectRatio, perspectiveNear, perspectiveFar);
+            if (GraphicsObjectsFactory::getGraphicsAPI() == GraphicsAPI::Vulkan) {
+                projectionMatrix[1][1] *= -1.0f; // Invert the Y axis
+            }
         } else {
             float orthoLeft = -orthographicSize * aspectRatio * 0.5f;
             float orthoRight = orthographicSize * aspectRatio * 0.5f;

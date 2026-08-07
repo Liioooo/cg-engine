@@ -22,6 +22,7 @@ namespace CgEngine {
 
         void setData(const void* data, size_t size) override;
 
+        size_t getAlignedFrameSize() const;
         vk::Buffer getVulkanBufferHandle() const;
         size_t getOffsetForCurrentFrame() const;
 

@@ -1,9 +1,10 @@
 #include "SceneRenderer.h"
 #include "Asserts.h"
 #include "Application.h"
-#include "OpenGLTimer.h"
-#include "OpenGLDebugGroup.h"
+#include "GPUTimer.h"
+#include "GPUDebugGroup.h"
 #include "GraphicsObjectsFactory.h"
+#include "Helpers.h"
 #include "Ui/UIVertexBufferLayouts.h"
 
 namespace CgEngine {
@@ -875,7 +876,7 @@ namespace CgEngine {
             PipelineAttachmentInfo swapChainAttachmentInfo = Renderer::getSwapChainAttachmentInfo();
 
             screenPipelineSpec.colorAttachments = swapChainAttachmentInfo.colorAttachments;
-            screenPipelineSpec.hasDepthStencilAttachment = false;
+            screenPipelineSpec.hasDepthStencilAttachment = swapChainAttachmentInfo.hasDepthStencilAttachment;
             screenPipelineSpec.depthAttachmentFormat = swapChainAttachmentInfo.depthAttachmentFormat;
 
             screenPipeline = GraphicsObjectsFactory::createGraphicsPipeline(screenPipelineSpec);
@@ -1012,7 +1013,7 @@ namespace CgEngine {
             PipelineAttachmentInfo swapChainAttachmentInfo = Renderer::getSwapChainAttachmentInfo();
 
             ui2DPipelineSpec.colorAttachments = swapChainAttachmentInfo.colorAttachments;
-            ui2DPipelineSpec.hasDepthStencilAttachment = false;
+            ui2DPipelineSpec.hasDepthStencilAttachment = swapChainAttachmentInfo.hasDepthStencilAttachment;
             ui2DPipelineSpec.depthAttachmentFormat = swapChainAttachmentInfo.depthAttachmentFormat;
 
             ui2DPipeline = GraphicsObjectsFactory::createGraphicsPipeline(ui2DPipelineSpec);
@@ -1023,8 +1024,8 @@ namespace CgEngine {
             boneTransformsBuffer = GraphicsObjectsFactory::createShaderStorageBuffer(MAX_BONES * MAX_ANIMATED_COMPONENTS * sizeof(glm::mat4));
 
             DescriptorSetLayoutSpecification animatedMeshDescriptorSetLayoutSpec{};
-            animatedMeshDescriptorSetLayoutSpec.ssboBindingPoints = {
-                {1, DescriptorSetLayoutBindingUsage::Compute},
+            animatedMeshDescriptorSetLayoutSpec.immutableSsboBindingPoints = {{1, DescriptorSetLayoutBindingUsage::Compute}};
+            animatedMeshDescriptorSetLayoutSpec.vertexBufferSsboBindingPoints = {
                 {3, DescriptorSetLayoutBindingUsage::Compute},
                 {4, DescriptorSetLayoutBindingUsage::Compute}
             };
@@ -1037,6 +1038,8 @@ namespace CgEngine {
             ComputePipelineSpecification skinningPipelineSpec{};
             skinningPipelineSpec.engineShaderName = "skinning";
             skinningPipelineSpec.descriptorSetLayouts = {skinningDescriptorSetLayout, animatedMeshDescriptorSetLayout};
+            skinningPipelineSpec.usesPushConstants = true;
+            skinningPipelineSpec.pushConstantsSize = sizeof(SkinningPushConstants);
 
             skinningComputePipeline = GraphicsObjectsFactory::createComputePipeline(skinningPipelineSpec);
 
@@ -1274,6 +1277,13 @@ namespace CgEngine {
                 item->recreate();
             }
 
+            hbaoDeinterleavingDescriptorSet->recreate();
+            hbaoComputeDescriptorSet->recreate();
+            hbaoReinterleavingDescriptorSet->recreate();
+            hbaoReinterleavingDescriptorSet->recreate();
+            hbaoBlurDescriptorSet0->recreate();
+            hbaoBlurDescriptorSet1->recreate();
+            pbrDescriptorSet->recreate();
             screenDescriptorSet->recreate();
 
             uiProjectionMatrix = glm::ortho(0.0f, static_cast<float>(viewportWidth), 0.0f, static_cast<float>(viewportHeight));
@@ -1359,13 +1369,9 @@ namespace CgEngine {
 
         skinMeshes();
         shadowMapPass();
-
         uiCanvasPass();
-
-        Renderer::beginRenderPass(gBufferRenderPass, gBufferFramebuffer);
         gBufferPass();
         customShaderPass();
-        Renderer::endRenderPass();
 
         if (applicationOptions.enableHBAO) {
             hbaoDeinterleavingPass();
@@ -1402,6 +1408,11 @@ namespace CgEngine {
 
         if (applicationOptions.enableBloom) {
             bloomPass();
+        }
+
+        Renderer::injectBarriersForDescriptorSet(screenDescriptorSet);
+        for (const auto& command: ui2DDrawCommandQueue) {
+            Renderer::injectBarriersForDescriptorSet(command.sampleCanvasDescriptorSet);
         }
 
         Renderer::beginSwapChainRenderPass();
@@ -1726,6 +1737,7 @@ namespace CgEngine {
             return;
         }
 
+        Renderer::injectBarriersForDescriptorSet(dirShadowMapDescriptorSet);
         Renderer::beginRenderPass(dirShadowMapRenderPass, dirShadowMapFramebuffer);
         Renderer::bindGraphicsPipeline(dirShadowMapPipeline);
         Renderer::bindDescriptorSet(dirShadowMapDescriptorSet, 0);
@@ -1742,6 +1754,7 @@ namespace CgEngine {
         CG_GPU_DEBUG_GROUP("GBufferPass")
         CG_GPU_TIME_FN(&renderingStats.gBufferTimer)
 
+        Renderer::beginRenderPass(gBufferRenderPass, gBufferFramebuffer);
         Renderer::bindGraphicsPipeline(gBufferPipeline);
         Renderer::bindDescriptorSet(gBufferDescriptorSet, 0);
 
@@ -1750,6 +1763,8 @@ namespace CgEngine {
             Renderer::bindDescriptorSet(command.material->getDescriptorSet(), 1);
             Renderer::executeDrawCommand(command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount);
         }
+
+        Renderer::endRenderPass();
     }
 
     void SceneRenderer::hbaoDeinterleavingPass() {
@@ -1758,6 +1773,7 @@ namespace CgEngine {
 
         int uvOffset = 0;
 
+        Renderer::injectBarriersForDescriptorSet(hbaoDeinterleavingDescriptorSet);
         Renderer::beginRenderPass(hbaoDeinterleavingRenderPass, hbaoDeinterleavingFramebuffers[0]);
         Renderer::bindGraphicsPipeline(hbaoDeinterleavingPipeline);
         Renderer::bindDescriptorSet(hbaoDeinterleavingDescriptorSet, 0);
@@ -1767,6 +1783,7 @@ namespace CgEngine {
 
         uvOffset = 1;
 
+        Renderer::injectBarriersForDescriptorSet(hbaoDeinterleavingDescriptorSet);
         Renderer::beginRenderPass(hbaoDeinterleavingRenderPass, hbaoDeinterleavingFramebuffers[1]);
         Renderer::bindGraphicsPipeline(hbaoDeinterleavingPipeline);
         Renderer::bindDescriptorSet(hbaoDeinterleavingDescriptorSet, 0);
@@ -1779,6 +1796,7 @@ namespace CgEngine {
         CG_GPU_DEBUG_GROUP("HBAOComputePass")
         CG_GPU_TIME_FN(&renderingStats.hbaoComputeTimer)
 
+        Renderer::injectBarriersForDescriptorSet(hbaoComputeDescriptorSet);
         Renderer::bindComputePipeline(hbaoComputePipeline);
         Renderer::bindDescriptorSet(hbaoComputeDescriptorSet, 0);
         Renderer::dispatchCompute(hbaoWorkGroupSize.x, hbaoWorkGroupSize.y, hbaoWorkGroupSize.z);
@@ -1789,6 +1807,7 @@ namespace CgEngine {
         CG_GPU_DEBUG_GROUP("HBAOReinterleavingPass")
         CG_GPU_TIME_FN(&renderingStats.hbaoReinterleavingTimer)
 
+        Renderer::injectBarriersForDescriptorSet(hbaoReinterleavingDescriptorSet);
         Renderer::beginRenderPass(hbaoReinterleavingRenderPass, hbaoReinterleavingFramebuffer);
         Renderer::bindGraphicsPipeline(hbaoReinterleavingPipeline);
         Renderer::bindDescriptorSet(hbaoReinterleavingDescriptorSet, 0);
@@ -1804,6 +1823,7 @@ namespace CgEngine {
         pc.sharpness = hbaoSharpness;
         pc.invResolutionDirection = glm::vec2(invViewportWidth, 0.0f);
 
+        Renderer::injectBarriersForDescriptorSet(hbaoBlurDescriptorSet0);
         Renderer::beginRenderPass(hbaoBlurRenderPass0, hbaoBlurFramebuffer0);
         Renderer::bindGraphicsPipeline(hbaoBlurPipeline);
         Renderer::bindDescriptorSet(hbaoBlurDescriptorSet0, 0);
@@ -1811,6 +1831,7 @@ namespace CgEngine {
         Renderer::renderUnitQuad();
         Renderer::endRenderPass();
 
+        Renderer::injectBarriersForDescriptorSet(hbaoBlurDescriptorSet1);
         Renderer::beginRenderPass(hbaoBlurRenderPass1, hbaoBlurFramebuffer1);
         Renderer::bindGraphicsPipeline(hbaoBlurPipeline);
         Renderer::bindDescriptorSet(hbaoBlurDescriptorSet1, 0);
@@ -1824,6 +1845,8 @@ namespace CgEngine {
         CG_GPU_DEBUG_GROUP("PBRPass")
         CG_GPU_TIME_FN(&renderingStats.pbrTimer)
 
+        Renderer::injectBarriersForDescriptorSet(pbrDescriptorSet);
+        Renderer::injectBarriersForDescriptorSet(currentSceneEnvironment.environmentMapDescriptorSet);
         Renderer::beginRenderPass(pbrRenderPass, pbrFramebuffer);
         Renderer::bindGraphicsPipeline(pbrPipeline);
         Renderer::bindDescriptorSet(pbrDescriptorSet, 0);
@@ -1837,13 +1860,18 @@ namespace CgEngine {
         CG_GPU_DEBUG_GROUP("CustomShaderPass")
         CG_GPU_TIME_FN(&renderingStats.customShaderTimer)
 
+        // TODO fix, barriers and clearing
+
         CustomPipelineData customPipelineData{};
 
         for (const auto& [pipeline, commands]: customShaderDrawCommandQueue) {
-            Renderer::bindGraphicsPipeline(pipeline->getGraphicsPipeline());
-            Renderer::bindDescriptorSet(customPipelineDescriptorSet, 0);
-
             for (const auto& command: commands) {
+                Renderer::injectBarriersForDescriptorSet(command.descriptorSet);
+                Renderer::beginRenderPass(gBufferRenderPass, gBufferFramebuffer);
+
+                Renderer::bindGraphicsPipeline(pipeline->getGraphicsPipeline());
+                Renderer::bindDescriptorSet(customPipelineDescriptorSet, 0);
+
                 if (command.descriptorSet != nullptr) {
                     Renderer::bindDescriptorSet(command.descriptorSet, 1);
                 }
@@ -1851,6 +1879,8 @@ namespace CgEngine {
                 customPipelineData.transform = command.transform;
                 Renderer::setPushConstants(&customPipelineData, sizeof(CustomPipelineData));
                 Renderer::executeDrawCommand(command.vao, command.indexCount, command.baseIndex, command.baseVertex, command.instanceCount);
+
+                Renderer::endRenderPass();
             }
         }
     }
@@ -1928,6 +1958,7 @@ namespace CgEngine {
 
         uint32_t useThreshold = 1;
 
+        Renderer::injectBarriersForDescriptorSet(bloomDescriptorSets[0]);
         Renderer::beginRenderPass(bloomDownSamplePass, bloomDownsampleFramebuffers[0]);
         Renderer::bindGraphicsPipeline(bloomDownsamplePipeline);
         Renderer::setPushConstants(&useThreshold, sizeof(uint32_t));
@@ -1938,6 +1969,7 @@ namespace CgEngine {
         useThreshold = 0;
 
         for (uint32_t i = 0; i < bloomDownsampleFramebuffers.size() - 1; ++i) {
+            Renderer::injectBarriersForDescriptorSet(bloomDescriptorSets[i + 1]);
             Renderer::beginRenderPass(bloomDownSamplePass, bloomDownsampleFramebuffers[i + 1]);
             Renderer::bindGraphicsPipeline(bloomDownsamplePipeline);
             Renderer::setPushConstants(&useThreshold, sizeof(uint32_t));
@@ -1947,6 +1979,7 @@ namespace CgEngine {
         }
 
         for (int32_t i = bloomUpsampleFramebuffers.size() - 1; i >= 0; i--) {
+            Renderer::injectBarriersForDescriptorSet(bloomDescriptorSets[i + 2]);
             Renderer::beginRenderPass(bloomUpSamplePass, bloomUpsampleFramebuffers[i]);
             Renderer::bindGraphicsPipeline(bloomUpsamplePipeline);
             Renderer::bindDescriptorSet(bloomDescriptorSets[i + 2], 0);
@@ -1978,6 +2011,11 @@ namespace CgEngine {
             renderingInfo.renderArea = canvasCommand.pixelSize;
             renderingInfo.colorAttachments.resize(1);
             renderingInfo.colorAttachments[0].attachment = canvasCommand.attachment;
+
+            for (const auto& command: canvasCommand.drawCommands) {
+                Renderer::injectBarriersForDescriptorSet(command.descriptorSet);
+                Renderer::injectBarriersForDescriptorSet(command.textDescriptorSet);
+            }
 
             Renderer::beginDynamicRendering(renderingInfo);
 

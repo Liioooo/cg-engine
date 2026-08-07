@@ -72,6 +72,10 @@ namespace CgEngine {
         backend->setPushConstants(data, size);
     }
 
+    void Renderer::injectBarriersForDescriptorSet(const DescriptorSet *descriptorSet) {
+        backend->injectBarriersForDescriptorSet(descriptorSet);
+    }
+
     void Renderer::transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition) {
         backend->transitionImageLayoutFromComputeToShaderReadOnly(attachment, stageUsingAttachmentAfterTransition);
     }

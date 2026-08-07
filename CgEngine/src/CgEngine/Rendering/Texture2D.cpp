@@ -107,56 +107,34 @@ namespace CgEngine {
         return loadData;
     }
 
-    Texture2DBuilder::Texture2DBuilder(TextureFormat format, uint32_t width, uint32_t height) : format(format), width(width), height(height) {
-        uint32_t bpp = Helpers::getBytesPerPixelForTextureFormat(format);
-        uint32_t stride = (width * bpp + 3) & ~3;
-        pixels.resize(stride * height, 0);
+    Texture2DBuilder::Texture2DBuilder(TextureFormat format, uint32_t width, uint32_t height) : format(format), width(width), height(height), bytesPerPixel(Helpers::getBytesPerPixelForTextureFormat(format)), pitch(width * bytesPerPixel) {
+        pixels.resize(pitch * height, 0);
     }
 
     void Texture2DBuilder::setPixel(int x, int y, const void *data) {
         CG_ASSERT(x >= 0 && x < width, "Pixel x coordinate out of bounds");
         CG_ASSERT(y >= 0 && y < height, "Pixel y coordinate out of bounds");
 
-        const uint32_t bpp = Helpers::getBytesPerPixelForTextureFormat(format);
-        uint32_t stride = (width * bpp + 3) & ~3;
-
-        uint8_t* dst = pixels.data() + (y * stride) + (x * bpp);
-        memcpy(dst, data, bpp);
+        uint8_t* dst = pixels.data() + (y * pitch) + (x * bytesPerPixel);
+        memcpy(dst, data, bytesPerPixel);
     }
 
     void Texture2DBuilder::setSubRegion(int x, int y, int w, int h, const void* data) {
-        CG_ASSERT(x >= 0 && x + w <= width, "Sub-region x coordinates out of bounds");
-        CG_ASSERT(y >= 0 && y + h <= height, "Sub-region y coordinates out of bounds");
-
-        const uint32_t bpp = Helpers::getBytesPerPixelForTextureFormat(format);
-        const uint32_t stride = (width * bpp + 3) & ~3;
-
-        const uint8_t* src = static_cast<const uint8_t*>(data);
-        uint8_t* dstBase = pixels.data();
-
-        for (int row = 0; row < h; ++row) {
-            uint8_t* dst = dstBase + ((y + row) * stride) + (x * bpp);
-            const uint8_t* srcRow = src + row * w * bpp;
-
-            memcpy(dst, srcRow, w * bpp);
-        }
+        setSubRegionWithPitch(x, y, w, h, data, static_cast<int>(w * bytesPerPixel));
     }
 
     void Texture2DBuilder::setSubRegionWithPitch(int x, int y, int w, int h, const void* data, int srcPitchBytes) {
         CG_ASSERT(x >= 0 && x + w <= width, "Sub-region x coordinates out of bounds");
         CG_ASSERT(y >= 0 && y + h <= height, "Sub-region y coordinates out of bounds");
 
-        const uint32_t bpp = Helpers::getBytesPerPixelForTextureFormat(format);
-        const uint32_t stride = (width * bpp + 3) & ~3;
-
         const uint8_t* src = static_cast<const uint8_t*>(data);
         uint8_t* dstBase = pixels.data();
 
         for (int row = 0; row < h; ++row) {
-            uint8_t* dst = dstBase + ((y + row) * stride) + (x * bpp);
+            uint8_t* dst = dstBase + ((y + row) * pitch) + (x * bytesPerPixel);
             const uint8_t* srcRow = src + row * srcPitchBytes;
 
-            memcpy(dst, srcRow, w * bpp);
+            memcpy(dst, srcRow, w * bytesPerPixel);
         }
     }
 

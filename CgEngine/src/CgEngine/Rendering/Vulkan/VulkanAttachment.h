@@ -5,6 +5,13 @@
 #include <vulkan/vulkan.hpp>
 
 namespace CgEngine {
+
+    struct VulkanAttachmentState {
+        vk::ImageLayout imageLayout = vk::ImageLayout::eUndefined;
+        vk::AccessFlags2 access = {};
+        vk::PipelineStageFlags2 stage = {};
+    };
+
     class VulkanAttachment : public Attachment {
     public:
         VulkanAttachment() = default;
@@ -28,9 +35,12 @@ namespace CgEngine {
 
         void resize(uint32_t newWidth, uint32_t newHeight) override;
 
+        vk::Image getVulkanImage() const;
         vk::ImageView getVulkanImageView() const;
         vk::ImageView getVulkanLayerImageView(uint32_t layer) const;
         vk::Sampler getVulkanSampler() const;
+        vk::ImageAspectFlags getVulkanAspectFlags() const;
+        std::vector<VulkanAttachmentState>& getSubresourceStates();
 
     private:
         vk::Image image = VK_NULL_HANDLE;
@@ -45,6 +55,7 @@ namespace CgEngine {
         uint32_t width = 0;
         uint32_t height = 0;
         vk::Format vulkanFormat;
+        std::vector<VulkanAttachmentState> subresourceStates{};
 
         // Owned by VulkanSamplerManager
         vk::Sampler sampler = VK_NULL_HANDLE;

@@ -56,6 +56,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC glad)
 ################################################################################
 
 # GLM ##########################################################################
+target_compile_definitions(${PROJECT_NAME} PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE)
 target_link_libraries(${PROJECT_NAME} PUBLIC glm::glm)
 ################################################################################
 

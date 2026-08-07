@@ -1,4 +1,5 @@
 #include "VulkanGraphicsPipeline.h"
+#include "Logging.h"
 #include "VulkanDescriptorSetLayout.h"
 #include "VulkanHelpers.h"
 #include "VulkanRenderer.h"
@@ -121,22 +122,20 @@ namespace CgEngine {
             pipelineLayoutInfo.setSetLayouts(nullptr);
         }
 
-        vk::ShaderStageFlags pushConstantShaderStageFlags{};
-
         if (shaderInfo.fragmentModule != VK_NULL_HANDLE) {
-            pushConstantShaderStageFlags |= vk::ShaderStageFlagBits::eFragment;
+            shaderStageFlags |= vk::ShaderStageFlagBits::eFragment;
         }
         if (shaderInfo.vertexModule != VK_NULL_HANDLE) {
-            pushConstantShaderStageFlags |= vk::ShaderStageFlagBits::eVertex;
+            shaderStageFlags |= vk::ShaderStageFlagBits::eVertex;
         }
         if (shaderInfo.geometryModule != VK_NULL_HANDLE) {
-            pushConstantShaderStageFlags |= vk::ShaderStageFlagBits::eGeometry;
+            shaderStageFlags |= vk::ShaderStageFlagBits::eGeometry;
         }
         if (shaderInfo.tcsModule != VK_NULL_HANDLE) {
-            pushConstantShaderStageFlags |= vk::ShaderStageFlagBits::eTessellationControl;
+            shaderStageFlags |= vk::ShaderStageFlagBits::eTessellationControl;
         }
         if (shaderInfo.tesModule != VK_NULL_HANDLE) {
-            pushConstantShaderStageFlags |= vk::ShaderStageFlagBits::eTessellationEvaluation;
+            shaderStageFlags |= vk::ShaderStageFlagBits::eTessellationEvaluation;
         }
 
         vk::PushConstantRange pushConstantRange{};
@@ -144,7 +143,7 @@ namespace CgEngine {
         if (spec.usesPushConstants) {
             pushConstantRange.setOffset(0);
             pushConstantRange.setSize(spec.pushConstantsSize);
-            pushConstantRange.setStageFlags(pushConstantShaderStageFlags);
+            pushConstantRange.setStageFlags(shaderStageFlags);
 
             pipelineLayoutInfo.setPPushConstantRanges(&pushConstantRange);
             pipelineLayoutInfo.setPushConstantRangeCount(1);
@@ -190,15 +189,64 @@ namespace CgEngine {
     }
 
     VulkanGraphicsPipeline::~VulkanGraphicsPipeline() {
+        auto device = Renderer::getVulkanBackend()->getVkDevice();
+
+        if (pipeline != VK_NULL_HANDLE) {
+            device.destroyPipeline(pipeline);
+            pipeline = VK_NULL_HANDLE;
+        }
+
+        if (pipelineLayout != VK_NULL_HANDLE) {
+            device.destroyPipelineLayout(pipelineLayout);
+            pipelineLayout = VK_NULL_HANDLE;
+        }
     }
 
-    VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanGraphicsPipeline &&other) noexcept {
+    VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanGraphicsPipeline &&other) noexcept : GraphicsPipeline(std::move(other)) {
+        pipelineLayout = other.pipelineLayout;
+        pipeline = other.pipeline;
+        shaderStageFlags = other.shaderStageFlags;
+
+        other.pipelineLayout = VK_NULL_HANDLE;
+        other.pipeline = VK_NULL_HANDLE;
     }
 
     VulkanGraphicsPipeline & VulkanGraphicsPipeline::operator=(VulkanGraphicsPipeline &&other) noexcept {
+        if (this != &other) {
+            GraphicsPipeline::operator=(std::move(other));
+
+            auto device = Renderer::getVulkanBackend()->getVkDevice();
+
+            if (pipeline != VK_NULL_HANDLE) {
+                device.destroyPipeline(pipeline);
+            }
+            if (pipelineLayout != VK_NULL_HANDLE) {
+                device.destroyPipelineLayout(pipelineLayout);
+            }
+
+            pipelineLayout = other.pipelineLayout;
+            pipeline = other.pipeline;
+            shaderStageFlags = other.shaderStageFlags;
+
+            other.pipelineLayout = VK_NULL_HANDLE;
+            other.pipeline = VK_NULL_HANDLE;
+        }
+        return *this;
     }
 
     bool VulkanGraphicsPipeline::isReady() const {
         return pipeline != VK_NULL_HANDLE;
+    }
+
+    vk::Pipeline VulkanGraphicsPipeline::getVulkanPipeline() const {
+        return pipeline;
+    }
+
+    vk::PipelineLayout VulkanGraphicsPipeline::getVulkanPipelineLayout() const {
+        return pipelineLayout;
+    }
+
+    vk::ShaderStageFlags VulkanGraphicsPipeline::getShaderStageFlags() const {
+        return shaderStageFlags;
     }
 }

@@ -17,6 +17,8 @@ namespace CgEngine {
         OpenGLDescriptorSetLayout(OpenGLDescriptorSetLayout& other) = delete;
         OpenGLDescriptorSetLayout& operator=(OpenGLDescriptorSetLayout& other) = delete;
 
+        DescriptorSetLayoutBindingUsage getDescriptorSetLayoutBindingUsageForBindingPoint(uint32_t bindingPoint) const override;
+
         bool isReady() const override;
 
         const DescriptorSetLayoutSpecification& getSpecification() const;
@@ -24,6 +26,7 @@ namespace CgEngine {
     private:
         bool ready = false;
         DescriptorSetLayoutSpecification specification{};
+        std::unordered_map<uint32_t, DescriptorSetLayoutBindingUsage> bindingPointUsageMap{};
     };
 
 }

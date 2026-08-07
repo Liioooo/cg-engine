@@ -1,12 +1,11 @@
 #pragma once
 
 #include "Attachment.h"
-#include "RenderPass.h"
 
 namespace CgEngine {
 
     struct FramebufferAttachment {
-        const Attachment* attachment = nullptr;
+        Attachment* attachment = nullptr;
         uint32_t layer = ~0;
         bool allLayers = true;
 
@@ -37,6 +36,11 @@ namespace CgEngine {
 
         virtual uint32_t getWidth() const = 0;
         virtual uint32_t getHeight() const = 0;
+
+        virtual const std::vector<FramebufferAttachment>& getColorFramebufferAttachments() const = 0;
+        virtual const FramebufferAttachment& getDepthStencilFramebufferAttachment() const = 0;
+
+        virtual bool isReady() const = 0;
     };
 
 }

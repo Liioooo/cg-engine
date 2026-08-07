@@ -18,8 +18,13 @@ namespace CgEngine {
 
         bool isReady() const override;
 
+        vk::Pipeline getVulkanPipeline() const;
+        vk::PipelineLayout getVulkanPipelineLayout() const;
+        vk::ShaderStageFlags getShaderStageFlags() const;
+
     private:
         vk::PipelineLayout pipelineLayout = VK_NULL_HANDLE;
         vk::Pipeline pipeline = VK_NULL_HANDLE;
+        vk::ShaderStageFlags shaderStageFlags{};
     };
 }

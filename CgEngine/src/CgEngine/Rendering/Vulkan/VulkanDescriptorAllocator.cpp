@@ -40,10 +40,6 @@ namespace CgEngine {
             return setsResults.value;
         }
 
-        if (setsResults.result != vk::Result::eErrorOutOfPoolMemory && setsResults.result != vk::Result::eErrorFragmentedPool) {
-            CG_LOGGING_ERROR("Descriptor allocation failed with unexpected error!")
-        }
-
         uint32_t newSize = BASE_POOL_SIZE * (1u << descriptorPools.size());
         descriptorPools.emplace_back(createDescriptorPool(newSize));
         currentDescriptorPool = &descriptorPools.back();
@@ -65,9 +61,9 @@ namespace CgEngine {
     }
 
     VulkanDescriptorAllocator::DescriptorPool VulkanDescriptorAllocator::createDescriptorPool(uint32_t setCount) {
-        std::array<vk::DescriptorPoolSize, 3> sizes = {
+        std::array<vk::DescriptorPoolSize, 5> sizes = {
             vk::DescriptorPoolSize{
-                vk::DescriptorType::eUniformBuffer,
+                vk::DescriptorType::eUniformBufferDynamic,
                 setCount * 8
             },
             vk::DescriptorPoolSize{
@@ -75,7 +71,15 @@ namespace CgEngine {
                 setCount * 8
             },
             vk::DescriptorPoolSize{
+                vk::DescriptorType::eStorageBufferDynamic,
+                setCount * 8
+            },
+            vk::DescriptorPoolSize{
                 vk::DescriptorType::eCombinedImageSampler,
+                setCount * 8
+            },
+            vk::DescriptorPoolSize{
+                vk::DescriptorType::eStorageImage,
                 setCount * 8
             }
         };

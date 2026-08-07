@@ -397,7 +397,7 @@ namespace CgEngine {
         glm::mat4 uiProjectionMatrix;
 
         struct UiCanvasDrawCommand {
-            const Attachment* attachment;
+            Attachment* attachment;
             glm::mat4 projectionMatrix;
             glm::ivec2 pixelSize;
             std::vector<UiDrawCommand> drawCommands;

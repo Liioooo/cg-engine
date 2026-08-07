@@ -1,5 +1,5 @@
 #include "VulkanAttachment.h"
-
+#include "Asserts.h"
 #include "VulkanHelpers.h"
 #include "Rendering/Renderer.h"
 #include "VulkanRenderer.h"
@@ -34,6 +34,8 @@ namespace CgEngine {
 
         createAttachmentImage();
         createImageViews();
+
+        subresourceStates.resize(layerCount);
 
         if (usableAsTexture) {
             CG_ASSERT(spec.mipMapFiltering != MipMapFiltering::Trilinear, "Trilinear filtering is not supported for Attachments!")
@@ -71,6 +73,7 @@ namespace CgEngine {
         width = other.width;
         height = other.height;
         vulkanFormat = other.vulkanFormat;
+        subresourceStates = other.subresourceStates;
         sampler = other.sampler;
 
         other.image = VK_NULL_HANDLE;
@@ -108,6 +111,7 @@ namespace CgEngine {
             width = other.width;
             height = other.height;
             vulkanFormat = other.vulkanFormat;
+            subresourceStates = other.subresourceStates;
             sampler = other.sampler;
 
             other.image = VK_NULL_HANDLE;
@@ -165,13 +169,19 @@ namespace CgEngine {
 
         createAttachmentImage();
         createImageViews();
+
+        subresourceStates.clear();
+        subresourceStates.resize(layerCount);
+    }
+
+    vk::Image VulkanAttachment::getVulkanImage() const {
+        return image;
     }
 
     vk::ImageView VulkanAttachment::getVulkanImageView() const {
         CG_ASSERT(imageView != VK_NULL_HANDLE, "Attachment::getVulkanImageView: Attachment has not been created properly.")
         return imageView;
     }
-
     vk::ImageView VulkanAttachment::getVulkanLayerImageView(uint32_t layer) const {
         CG_ASSERT(layer < layerCount, "Attachment::getVulkanLayerImageView: Layer index out of bounds.")
 
@@ -188,6 +198,15 @@ namespace CgEngine {
     vk::Sampler VulkanAttachment::getVulkanSampler() const {
         CG_ASSERT(sampler != VK_NULL_HANDLE, "Attachment::getVulkanSampler: Attachment has not been created properly.")
         return sampler;
+    }
+
+    vk::ImageAspectFlags VulkanAttachment::getVulkanAspectFlags() const {
+        return VulkanHelpers::attachmentTypeToAspectFlags(type);
+    }
+
+
+    std::vector<VulkanAttachmentState>& VulkanAttachment::getSubresourceStates() {
+        return subresourceStates;
     }
 
     void VulkanAttachment::createAttachmentImage() {

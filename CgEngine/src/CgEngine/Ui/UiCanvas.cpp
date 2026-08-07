@@ -6,6 +6,7 @@
 #include "UiCircle.h"
 #include "Rendering/GraphicsObjectsFactory.h"
 #include "CgEngineSharedUtils/UIPosUtils.h"
+#include "Rendering/Helpers.h"
 
 namespace CgEngine {
 
@@ -97,8 +98,13 @@ namespace CgEngine {
         bool canvasSizeDirty = newPixelWidth != pixelWidth || newPixelHeight != pixelHeight;
 
         if (canvasSizeDirty) {
-            uiProjectionMatrix = glm::ortho(0.0f, static_cast<float>(newPixelWidth), 0.0f, static_cast<float>(newPixelHeight));
+            if (GraphicsObjectsFactory::getGraphicsAPI() == GraphicsAPI::Vulkan) {
+                uiProjectionMatrix = glm::ortho(0.0f, static_cast<float>(newPixelWidth), static_cast<float>(newPixelHeight), 0.0f);
+            } else {
+                uiProjectionMatrix = glm::ortho(0.0f, static_cast<float>(newPixelWidth), 0.0f, static_cast<float>(newPixelHeight));
+            }
             uiAttachment->resize(newPixelWidth, newPixelHeight);
+            attachmentSamplerDescriptorSet->recreate();
         }
 
         pixelWidth = newPixelWidth;
@@ -165,7 +171,7 @@ namespace CgEngine {
         return uiProjectionMatrix;
     }
 
-    const Attachment* UiCanvas::getUiAttachment() const {
+    Attachment* UiCanvas::getUiAttachment() const {
         return uiAttachment;
     }
 
@@ -484,7 +490,7 @@ namespace CgEngine {
             for (uint32_t i = 0; i < drawInfo.filledTextureSlots; i++) {
                 uiTextureArray.push_back(drawInfo.textureSlots[i]);
             }
-            for (uint32_t i = drawInfo.filledTextureSlots; i < uiDescriptorSetSpec.texture2DBindings.size(); i++) {
+            for (uint32_t i = drawInfo.filledTextureSlots; i < 16; i++) {
                 uiTextureArray.push_back(Renderer::getWhiteTexture());
             }
 
@@ -500,7 +506,7 @@ namespace CgEngine {
             for (uint32_t i = 0; i < drawInfo.filledFontAtlases; i++) {
                 uiTextTextureArray.push_back(drawInfo.fontAtlases[i]);
             }
-            for (uint32_t i = drawInfo.filledFontAtlases; i < uiTextDescriptorSetSpec.texture2DBindings.size(); i++) {
+            for (uint32_t i = drawInfo.filledFontAtlases; i < 4; i++) {
                 uiTextTextureArray.push_back(Renderer::getWhiteTexture());
             }
             uiTextDescriptorSetSpec.texture2DBindings[0].textureArray = std::move(uiTextTextureArray);

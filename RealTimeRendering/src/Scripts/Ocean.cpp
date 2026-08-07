@@ -1,7 +1,7 @@
 #include "Ocean.h"
 
 #include "imgui.h"
-#include "OpenGLDebugGroup.h"
+#include "GPUDebugGroup.h"
 #include "CgEngine/Rendering/GraphicsObjectsFactory.h"
 #include "Components/CustomShaderRendererComponent.h"
 

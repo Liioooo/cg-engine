@@ -1,4 +1,5 @@
 #include "VulkanHelpers.h"
+#include "Asserts.h"
 #include "VulkanRenderer.h"
 #include "Rendering/Helpers.h"
 #include "Rendering/Renderer.h"
@@ -25,6 +26,28 @@ namespace CgEngine {
 
             auto result = device.createImageView(createInfo);
             CG_ASSERT(result.has_value(), "VulkanHelpers::createImageView2D: Failed to create image view.")
+            return result.value;
+        }
+
+        vk::ImageView createImageViewCube(vk::Image image, vk::Format format, uint32_t levelCount, vk::ImageAspectFlags aspectFlags) {
+            vk::ImageViewCreateInfo createInfo{};
+            createInfo.image = image;
+            createInfo.viewType = vk::ImageViewType::eCube;
+            createInfo.format = format;
+            createInfo.components.r = vk::ComponentSwizzle::eIdentity;
+            createInfo.components.g = vk::ComponentSwizzle::eIdentity;
+            createInfo.components.b = vk::ComponentSwizzle::eIdentity;
+            createInfo.components.a = vk::ComponentSwizzle::eIdentity;
+            createInfo.subresourceRange.aspectMask = aspectFlags;
+            createInfo.subresourceRange.baseMipLevel = 0;
+            createInfo.subresourceRange.levelCount = levelCount;
+            createInfo.subresourceRange.baseArrayLayer = 0;
+            createInfo.subresourceRange.layerCount = 6;
+
+            auto device = Renderer::getVulkanBackend()->getVkDevice();
+
+            auto result = device.createImageView(createInfo);
+            CG_ASSERT(result.has_value(), "VulkanHelpers::createImageViewCube: Failed to create image view.")
             return result.value;
         }
 
@@ -73,6 +96,10 @@ namespace CgEngine {
             switch (attachmentType) {
                 case AttachmentType::RGBA8:
                     return vk::Format::eR8G8B8A8Unorm;
+                case AttachmentType::RGBA8_SRGB:
+                    return vk::Format::eR8G8B8A8Srgb;
+                case AttachmentType::BGRA8_SRGB:
+                    return vk::Format::eB8G8R8A8Srgb;
                 case AttachmentType::RGBA16F:
                     return vk::Format::eR16G16B16A16Sfloat;
                 case AttachmentType::RGBA32F:
@@ -89,6 +116,32 @@ namespace CgEngine {
 
             CG_LOGGING_ERROR("Given attachment type is not a color attachment!")
             return vk::Format::eR8G8B8A8Unorm;;
+        }
+
+        AttachmentType vkColorFormatToAttachmentType(vk::Format format) {
+            switch (format) {
+                case vk::Format::eR8G8B8A8Unorm:
+                    return AttachmentType::RGBA8;
+                case vk::Format::eR8G8B8A8Srgb:
+                    return AttachmentType::RGBA8_SRGB;
+                case vk::Format::eB8G8R8A8Srgb:
+                    return AttachmentType::BGRA8_SRGB;
+                case vk::Format::eR16G16B16A16Sfloat:
+                    return AttachmentType::RGBA16F;
+                case vk::Format::eR32G32B32A32Sfloat:
+                    return AttachmentType::RGBA32F;
+                case vk::Format::eR8G8Unorm:
+                    return AttachmentType::RG8;
+                case vk::Format::eR16G16Sfloat:
+                    return AttachmentType::RG16F;
+                case vk::Format::eR32G32Sfloat:
+                    return AttachmentType::RG32F;
+                case vk::Format::eR16Sfloat:
+                    return AttachmentType::R16F;
+            }
+
+            CG_LOGGING_ERROR("Given Vulkan format is not a color attachment format!")
+            return AttachmentType::RGBA8;
         }
 
         vk::ImageAspectFlags attachmentTypeToAspectFlags(AttachmentType attachmentType) {
@@ -398,6 +451,31 @@ namespace CgEngine {
             return flags;
         }
 
+        vk::PipelineStageFlags2 descriptorSetLayoutBindingUsageToVulkanPipelineStageFlags(DescriptorSetLayoutBindingUsage usage) {
+            vk::PipelineStageFlags2 flags{};
+
+            if (hasFlag(usage, DescriptorSetLayoutBindingUsage::Compute)) {
+                flags |= vk::PipelineStageFlagBits2::eComputeShader;
+            }
+            if (hasFlag(usage, DescriptorSetLayoutBindingUsage::TCS)) {
+                flags |= vk::PipelineStageFlagBits2::eTessellationControlShader;
+            }
+            if (hasFlag(usage, DescriptorSetLayoutBindingUsage::TES)) {
+                flags |= vk::PipelineStageFlagBits2::eTessellationEvaluationShader;
+            }
+            if (hasFlag(usage, DescriptorSetLayoutBindingUsage::Geometry)) {
+                flags |= vk::PipelineStageFlagBits2::eGeometryShader;
+            }
+            if (hasFlag(usage, DescriptorSetLayoutBindingUsage::Fragment)) {
+                flags |= vk::PipelineStageFlagBits2::eFragmentShader;
+            }
+            if (hasFlag(usage, DescriptorSetLayoutBindingUsage::Vertex)) {
+                flags |= vk::PipelineStageFlagBits2::eVertexShader;
+            }
+
+            return flags;
+        }
+
         vk::Format textureFormatToVulkanFormat(TextureFormat format) {
             switch (format) {
                 case TextureFormat::R:
@@ -424,6 +502,37 @@ namespace CgEngine {
 
             CG_LOGGING_ERROR("VulkanHelpers::textureFormatToVulkanFormat: Unknown TextureFormat value.")
             return vk::Format::eR8G8B8A8Unorm;
+        }
+
+        VulkanComputeShaderInfo loadVulkanComputeShader(const std::string &name, ShaderEnv env) {
+            std::vector<uint8_t> source = Helpers::loadShaderBinaryWithType(name, "comp", env);
+            return createVulkanComputeShaderInfoFromSource(source);
+        }
+
+        VulkanComputeShaderInfo loadVulkanCustomComputeShader(const std::string &name) {
+            std::vector<uint8_t> source = Helpers::loadShaderBinary(name + ".spv", ShaderEnv::Custom);
+            return createVulkanComputeShaderInfoFromSource(source);
+        }
+
+        VulkanComputeShaderInfo createVulkanComputeShaderInfoFromSource(const std::vector<uint8_t>& source) {
+            VulkanComputeShaderInfo info{};
+
+            info.computeModule = createVulkanShaderModule(source);
+
+            vk::PipelineShaderStageCreateInfo stageInfo{};
+            stageInfo.stage = vk::ShaderStageFlagBits::eCompute;
+            stageInfo.module = info.computeModule;
+            stageInfo.pName = "main";
+
+            info.shaderStage = stageInfo;
+
+            return info;
+        }
+
+        void destroyVulkanComputeShaderModule(VulkanComputeShaderInfo &shaderInfo) {
+            auto device = Renderer::getVulkanBackend()->getVkDevice();
+            device.destroyShaderModule(shaderInfo.computeModule);
+            shaderInfo.computeModule = VK_NULL_HANDLE;
         }
     }
 }

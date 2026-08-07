@@ -52,14 +52,10 @@ namespace CgEngine {
 
             vk::BufferCreateInfo bufferInfo{};
             bufferInfo.size = deviceSize;
-            bufferInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer;
+            bufferInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eStorageBuffer;
 
             if (data != nullptr) {
                 bufferInfo.usage |= vk::BufferUsageFlagBits::eTransferDst;
-            }
-
-            if (usage == VertexBufferUsage::GPUDynamic) {
-                bufferInfo.usage |= vk::BufferUsageFlagBits::eStorageBuffer;
             }
 
             VmaAllocationCreateInfo bufferAllocInfo{};

@@ -18,4 +18,23 @@ namespace CgEngine {
         }
         return true;
     }
+
+    std::unordered_map<uint32_t, DescriptorSetLayoutBindingUsage> DescriptorSetLayout::createBindingPointUsageMap(const DescriptorSetLayoutSpecification& spec) {
+        std::unordered_map<uint32_t, DescriptorSetLayoutBindingUsage> out{};
+
+        for (const auto& binding : spec.uboBindingPoints) {
+           out[binding.bindingPoint] = binding.usage;
+        }
+        for (const auto& binding : spec.ssboBindingPoints) {
+            out[binding.bindingPoint] = binding.usage;
+        }
+        for (const auto& binding : spec.texture2DAndAttachmentBindingPoints) {
+            out[binding.bindingPoint] = binding.usage;
+        }
+        for (const auto& binding : spec.imageBindingPoints) {
+            out[binding.bindingPoint] = binding.usage;
+        }
+
+        return out;
+    }
 }

@@ -1,8 +1,5 @@
 #pragma once
 
-#include "glad/glad.h"
-#include "Asserts.h"
-
 namespace CgEngine {
 
     class UniformBuffer {

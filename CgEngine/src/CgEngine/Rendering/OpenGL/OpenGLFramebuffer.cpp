@@ -64,13 +64,25 @@ namespace CgEngine {
         return height;
     }
 
+    const std::vector<FramebufferAttachment> & OpenGLFramebuffer::getColorFramebufferAttachments() const {
+        return colorAttachments;
+    }
+
+    const FramebufferAttachment & OpenGLFramebuffer::getDepthStencilFramebufferAttachment() const {
+        return depthStencilAttachment;
+    }
+
+    bool OpenGLFramebuffer::isReady() const {
+        return framebufferHandle != ~0;
+    }
+
     uint32_t OpenGLFramebuffer::getOpenGLHandle() const {
-        CG_ASSERT(framebufferHandle != ~0, "Framebuffer is not initialized!")
+        CG_ASSERT(isReady(), "Framebuffer is not initialized!")
         return framebufferHandle;
     }
 
     bool OpenGLFramebuffer::hasStencilAttachment() const  {
-        CG_ASSERT(framebufferHandle != ~0, "Framebuffer is not initialized!")
+        CG_ASSERT(isReady(), "Framebuffer is not initialized!")
         if (depthStencilAttachment.attachment) {
             auto* depthAttachmentGL = static_cast<const OpenGLAttachment*>(depthStencilAttachment.attachment);
             return depthAttachmentGL->getType() == AttachmentType::DepthStencil;
@@ -80,7 +92,7 @@ namespace CgEngine {
 
     void OpenGLFramebuffer::init() {
         CG_ASSERT(width > 0 && height > 0, "Framebuffer width and height must be greater than 0!")
-        CG_ASSERT(colorAttachments.size() > 0 || depthStencilAttachment.attachment != nullptr, "At least one attachment (color or depth) must be provided!")
+        CG_ASSERT(!colorAttachments.empty() || depthStencilAttachment.attachment != nullptr, "At least one attachment (color or depth) must be provided!")
 
         glGenFramebuffers(1, &framebufferHandle);
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferHandle);

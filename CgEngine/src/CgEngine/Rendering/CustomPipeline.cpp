@@ -235,7 +235,9 @@ namespace CgEngine {
 
         const auto& descriptorSetLayoutNode = pipelineNode.child("DescriptorSetLayout");
         spec.descriptorSetLayoutSpecification.uboBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("UboBindingPoints"));
+        spec.descriptorSetLayoutSpecification.immutableSsboBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("ImmutableSsboBindingPoints"));
         spec.descriptorSetLayoutSpecification.ssboBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("SsboBindingPoints"));
+        spec.descriptorSetLayoutSpecification.vertexBufferSsboBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("VertexBufferSsboBindingPoints"));
         spec.descriptorSetLayoutSpecification.texture2DAndAttachmentBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("Texture2DAndAttachmentBindingPoints"));
         spec.descriptorSetLayoutSpecification.imageBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("ImageBindingPoints"));
 

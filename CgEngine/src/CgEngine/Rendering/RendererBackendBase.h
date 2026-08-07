@@ -14,7 +14,12 @@
 namespace CgEngine {
 
     struct DynamicRenderingAttachment {
-        const Attachment* attachment = nullptr;
+        Attachment* attachment = nullptr;
+        uint32_t layer = ~0;
+        bool allLayers = true;
+
+        DynamicRenderingAttachment() = default;
+        explicit DynamicRenderingAttachment(Attachment* attachment, uint32_t layer = ~0, bool allLayers = true) : attachment(attachment), layer(layer), allLayers(allLayers) {}
     };
 
     struct DynamicRenderingInfo {
@@ -54,6 +59,8 @@ namespace CgEngine {
         virtual void bindDescriptorSet(const DescriptorSet* descriptorSet, uint32_t setIndex) = 0;
         virtual void setPushConstants(const void* data, size_t size) = 0;
 
+        virtual void injectBarriersForDescriptorSet(const DescriptorSet* descriptorSet) = 0;
+
         virtual void transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition) = 0;
         virtual void memoryBarrierForVertexBufferAfterCompute(const VertexBuffer* vertexBuffer) = 0;
         virtual void memoryBarrierForAttachmentAfterComputeToCompute(Attachment* attachment) = 0;
@@ -84,7 +91,7 @@ namespace CgEngine {
             glm::vec2 uv;
         };
 
-        std::tuple<std::vector<QuadVertex>, std::vector<uint32_t>, std::vector<VertexBufferElement>> getUnitQuadVerticesAndIndices() const;
+        std::tuple<std::vector<QuadVertex>, std::vector<uint32_t>, std::vector<VertexBufferElement>> getUnitQuadVerticesAndIndices(bool invertWindingOrder) const;
         std::tuple<std::vector<float>, std::vector<uint32_t>, std::vector<VertexBufferElement>> getUnitCubeVerticesAndIndices() const;
     };
 

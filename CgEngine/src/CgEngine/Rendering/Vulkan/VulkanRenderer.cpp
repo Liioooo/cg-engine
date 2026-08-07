@@ -1,9 +1,19 @@
 #include "VulkanRenderer.h"
 #include "VulkanHelpers.h"
-
 #define VMA_IMPLEMENTATION
+#include "Asserts.h"
 #include "FileSystem.h"
+#include "Logging.h"
 #include "vk_mem_alloc.h"
+#include "VulkanFramebuffer.h"
+#include "VulkanRenderPass.h"
+#include "imgui.h"
+#include "VulkanAttachment.h"
+#include "VulkanComputePipeline.h"
+#include "VulkanDescriptorSet.h"
+#include "VulkanGraphicsPipeline.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_vulkan.h"
 
 namespace CgEngine {
     void VulkanRenderer::init(Window& window) {
@@ -66,11 +76,12 @@ namespace CgEngine {
         createCommandPools();
         createGraphicsComputeCommandBuffers();
         createSyncObjects();
+        createRenderFinishedSemaphores();
         createVmaAllocator();
         descriptorAllocator.init(vkDevice);
         samplerManager.init(vkDevice);
 
-        auto unitQuadVertexData = getUnitQuadVerticesAndIndices();
+        auto unitQuadVertexData = getUnitQuadVerticesAndIndices(true);
 
         quadVAO = VulkanVertexArrayObject();
         auto* quadVertexBuffer = new VulkanVertexBuffer(std::get<0>(unitQuadVertexData).data(), std::get<0>(unitQuadVertexData).size() * sizeof(QuadVertex), VertexBufferUsage::Static);
@@ -89,68 +100,410 @@ namespace CgEngine {
         constexpr uint32_t whiteTextureData = 0xffffffff;
         whiteTexture = VulkanTexture2D(TextureFormat::RGBA, 1, 1, TextureWrap::Clamp, &whiteTextureData, MipMapFiltering::Nearest);
 
+        constexpr uint32_t blackCubeMapTextureData = 0xff000000;
+        blackCubeTexture = VulkanTextureCube(TextureFormat::RGBA, 1, 1, &blackCubeMapTextureData, MipMapFiltering::Nearest);
+
         brdfLUT = VulkanTexture2D(FileSystem::getAsEnginePath("ibl_brdf_lut.png"), false, TextureWrap::Clamp, MipMapFiltering::Bilinear);
+
+        initImGui(window);
     }
 
     void VulkanRenderer::shutdown() {
+        shutdownImGui();
+
         descriptorAllocator.shutdown();
         samplerManager.shutdown();
     }
 
     void VulkanRenderer::setFramebufferResized() {
-
+        framebufferResized = true;
     }
 
     void VulkanRenderer::beginFrame(const Window& window) {
+        vkDevice.waitForFences(1, &vkInFlightFences[currentFrameIndex], VK_TRUE, UINT64_MAX);
 
+        vk::Result result;
+        do {
+            result = vkDevice.acquireNextImageKHR(vkSwapChain, UINT64_MAX, vkImageAvailableSemaphores[currentFrameIndex], nullptr, &currentSwapChainImageIndex);
+            if (result == vk::Result::eErrorOutOfDateKHR) {
+                recreateSwapChain(window);
+                framebufferResized = false;
+            } else if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR) {
+                CG_LOGGING_ERROR("VulkanRenderer: Failed to acquire swap chain image!")
+                return;
+            }
+        } while (result == vk::Result::eErrorOutOfDateKHR);
+
+        if (vkImagesInFlight[currentSwapChainImageIndex]) {
+            vkDevice.waitForFences(1, &vkImagesInFlight[currentSwapChainImageIndex], VK_TRUE, UINT64_MAX);
+        }
+        vkImagesInFlight[currentSwapChainImageIndex] = vkInFlightFences[currentFrameIndex];
+
+        vkDevice.resetFences(1, &vkInFlightFences[currentFrameIndex]);
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].reset();
+
+        vk::CommandBufferBeginInfo beginInfo{};
+        auto beginResult = vkGraphicsComputeCommandBuffers[currentFrameIndex].begin(beginInfo);
+        CG_ASSERT(beginResult == vk::Result::eSuccess, "VulkanRenderer::beginFrame: Failed to begin command buffer!")
+
+        vk::ImageMemoryBarrier2 imageBarrier{};
+        imageBarrier.setSrcStageMask(vk::PipelineStageFlagBits2::eTopOfPipe);
+        imageBarrier.setDstStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);
+        imageBarrier.setOldLayout(vk::ImageLayout::eUndefined);
+        imageBarrier.setNewLayout(vk::ImageLayout::eColorAttachmentOptimal);
+        imageBarrier.setImage(vkSwapChainImages[currentSwapChainImageIndex]);
+        imageBarrier.subresourceRange.setAspectMask(vk::ImageAspectFlagBits::eColor);
+        imageBarrier.subresourceRange.setBaseMipLevel(0);
+        imageBarrier.subresourceRange.setLevelCount(1);
+        imageBarrier.subresourceRange.setBaseArrayLayer(0);
+        imageBarrier.subresourceRange.setLayerCount(1);
+        imageBarrier.setSrcAccessMask({});
+        imageBarrier.setDstAccessMask(vk::AccessFlagBits2::eColorAttachmentWrite);
+
+        vk::DependencyInfo depInfo{};
+        depInfo.setImageMemoryBarriers(imageBarrier);
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].pipelineBarrier2(depInfo);
     }
 
     void VulkanRenderer::endFrame(const Window& window) {
+        vk::ImageMemoryBarrier2 imageBarrier{};
+        imageBarrier.setSrcStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);
+        imageBarrier.setDstStageMask({});
+        imageBarrier.setOldLayout(vk::ImageLayout::eColorAttachmentOptimal);
+        imageBarrier.setNewLayout(vk::ImageLayout::ePresentSrcKHR);
+        imageBarrier.setImage(vkSwapChainImages[currentSwapChainImageIndex]);
+        imageBarrier.subresourceRange.setAspectMask(vk::ImageAspectFlagBits::eColor);
+        imageBarrier.subresourceRange.setBaseMipLevel(0);
+        imageBarrier.subresourceRange.setLevelCount(1);
+        imageBarrier.subresourceRange.setBaseArrayLayer(0);
+        imageBarrier.subresourceRange.setLayerCount(1);
+        imageBarrier.setSrcAccessMask(vk::AccessFlagBits2::eColorAttachmentWrite | vk::AccessFlagBits2::eColorAttachmentRead);
+        imageBarrier.setDstAccessMask({});
 
+        vk::DependencyInfo depInfo{};
+        depInfo.setImageMemoryBarriers(imageBarrier);
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].pipelineBarrier2(depInfo);
+
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].end();
+
+        vk::CommandBufferSubmitInfo commandBufferInfo{};
+        commandBufferInfo.setCommandBuffer(vkGraphicsComputeCommandBuffers[currentFrameIndex]);
+
+        vk::SemaphoreSubmitInfo waitSemaphoresSubmitInfo{};
+        waitSemaphoresSubmitInfo.setSemaphore(vkImageAvailableSemaphores[currentFrameIndex]);
+        waitSemaphoresSubmitInfo.setStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);
+
+        vk::SemaphoreSubmitInfo signalSemaphoresSubmitInfo{};
+        signalSemaphoresSubmitInfo.setSemaphore(vkRenderFinishedSemaphores[currentSwapChainImageIndex]);
+        signalSemaphoresSubmitInfo.setStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);
+
+        vk::SubmitInfo2 submitInfo{};
+        submitInfo.setCommandBufferInfos(commandBufferInfo);
+        submitInfo.setPWaitSemaphoreInfos(&waitSemaphoresSubmitInfo);
+        submitInfo.setWaitSemaphoreInfoCount(1);
+        submitInfo.setPSignalSemaphoreInfos(&signalSemaphoresSubmitInfo);
+        submitInfo.setSignalSemaphoreInfoCount(1);
+
+        auto submitResult = vkGraphicsComputeQueue.submit2(submitInfo, vkInFlightFences[currentFrameIndex]);
+        CG_ASSERT(submitResult == vk::Result::eSuccess, "VulkanRenderer::endFrame: Failed to submit command buffer!")
+
+        vk::PresentInfoKHR presentInfo{};
+        presentInfo.setPWaitSemaphores(&vkRenderFinishedSemaphores[currentSwapChainImageIndex]);
+        presentInfo.setWaitSemaphoreCount(1);
+        presentInfo.setPSwapchains(&vkSwapChain);
+        presentInfo.setSwapchainCount(1);
+        presentInfo.setPImageIndices(&currentSwapChainImageIndex);
+
+        auto presentResult = vkPresentQueue.presentKHR(presentInfo);
+
+        if (presentResult == vk::Result::eErrorOutOfDateKHR || presentResult == vk::Result::eSuboptimalKHR || framebufferResized) {
+            recreateSwapChain(window);
+        } else if (presentResult != vk::Result::eSuccess) {
+            CG_LOGGING_ERROR("Failed to present swap chain image!")
+        }
+
+        currentFrameIndex = (currentFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
     }
 
     void VulkanRenderer::beginRenderPass(const RenderPass* renderPass, const Framebuffer* framebuffer) {
+        auto* rp = static_cast<const VulkanRenderPass*>(renderPass);
+        auto* fb = static_cast<const VulkanFramebuffer*>(framebuffer);
 
+        const auto& colorImageViews = fb->getVulkanColorAttachmentImageViews();
+        const auto& colorFramebufferAttachments = fb->getColorFramebufferAttachments();
+
+        std::vector<vk::RenderingAttachmentInfo> colorAttachmentInfos;
+        colorAttachmentInfos.reserve(colorImageViews.size());
+
+        constexpr VulkanAttachmentState neededColorAttachmentState = {
+            .imageLayout = vk::ImageLayout::eColorAttachmentOptimal,
+            .access = vk::AccessFlagBits2::eColorAttachmentWrite | vk::AccessFlagBits2::eColorAttachmentRead,
+            .stage = vk::PipelineStageFlagBits2::eColorAttachmentOutput
+        };
+
+        for (size_t i = 0; i < colorImageViews.size(); i++) {
+            auto& attachmentInfo = colorAttachmentInfos.emplace_back();
+            attachmentInfo.setImageLayout(vk::ImageLayout::eColorAttachmentOptimal);
+            attachmentInfo.setStoreOp(vk::AttachmentStoreOp::eStore);
+            attachmentInfo.setLoadOp(rp->getColorAttachmentLoadOp());
+            attachmentInfo.setClearValue(rp->getColorAttachmentClearValue());
+            attachmentInfo.setImageView(colorImageViews[i]);
+
+            barrierManager.requestAttachmentState(static_cast<VulkanAttachment*>(colorFramebufferAttachments[i].attachment), neededColorAttachmentState, colorFramebufferAttachments[i].allLayers, colorFramebufferAttachments[i].layer);
+        }
+
+        vk::RenderingInfo vkRenderingInfo{};
+
+        vk::RenderingAttachmentInfo depthAttachmentInfo{};
+        vk::RenderingAttachmentInfo stencilAttachmentInfo{};
+        vk::ImageLayout depthStencilAttachmentLayout = vk::ImageLayout::eUndefined;
+
+        if (fb->getVulkanDepthAttachmentImageView() != VK_NULL_HANDLE) {
+            depthAttachmentInfo.setImageView(fb->getVulkanDepthAttachmentImageView());
+            depthAttachmentInfo.setLoadOp(rp->getDepthStencilAttachmentLoadOp());
+            depthAttachmentInfo.setStoreOp(vk::AttachmentStoreOp::eStore);
+            depthAttachmentInfo.setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(1.0f, 0)));
+            depthStencilAttachmentLayout = vk::ImageLayout::eDepthAttachmentOptimal;
+
+            vkRenderingInfo.setPDepthAttachment(&depthAttachmentInfo);
+        }
+
+        if (fb->getVulkanStencilAttachmentImageView() != VK_NULL_HANDLE) {
+            stencilAttachmentInfo.setImageView(fb->getVulkanStencilAttachmentImageView());
+            stencilAttachmentInfo.setLoadOp(rp->getDepthStencilAttachmentLoadOp());
+            stencilAttachmentInfo.setStoreOp(vk::AttachmentStoreOp::eStore);
+            depthAttachmentInfo.setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(1.0f, 0)));
+            depthStencilAttachmentLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+
+            vkRenderingInfo.setPStencilAttachment(&stencilAttachmentInfo);
+        }
+
+        if (depthStencilAttachmentLayout != vk::ImageLayout::eUndefined) {
+            VulkanAttachmentState neededDepthStencilAttachmentState = {
+                .imageLayout = depthStencilAttachmentLayout,
+                .access = vk::AccessFlagBits2::eDepthStencilAttachmentWrite | vk::AccessFlagBits2::eDepthStencilAttachmentRead,
+                .stage = vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests
+            };
+            FramebufferAttachment depthStencilFramebufferAttachment = fb->getDepthStencilFramebufferAttachment();
+            barrierManager.requestAttachmentState(static_cast<VulkanAttachment*>(depthStencilFramebufferAttachment.attachment), neededDepthStencilAttachmentState, depthStencilFramebufferAttachment.allLayers, depthStencilFramebufferAttachment.layer);
+        }
+
+        depthAttachmentInfo.setImageLayout(depthStencilAttachmentLayout);
+        stencilAttachmentInfo.setImageLayout(depthStencilAttachmentLayout);
+
+        vkRenderingInfo.setColorAttachments(colorAttachmentInfos);
+        vkRenderingInfo.setLayerCount(fb->getLayerCount());
+        vkRenderingInfo.setRenderArea(vk::Rect2D(vk::Offset2D(0, 0), vk::Extent2D(fb->getWidth(), fb->getHeight())));
+
+        barrierManager.flushBarriers(vkGraphicsComputeCommandBuffers[currentFrameIndex]);
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].beginRendering(vkRenderingInfo);
+
+        vk::Viewport viewport{};
+        viewport.setX(0.0f);
+        viewport.setY(0.0f);
+        viewport.setWidth(static_cast<float>(fb->getWidth()));
+        viewport.setHeight(static_cast<float>(fb->getHeight()));
+        viewport.setMinDepth(0.0f);
+        viewport.setMaxDepth(1.0f);
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].setViewport(0, 1, &viewport);
+
+        vk::Rect2D scissor{};
+        scissor.setOffset(vk::Offset2D(0, 0));
+        scissor.setExtent(vk::Extent2D(fb->getWidth(), fb->getHeight()));
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].setScissor(0, 1, &scissor);
     }
 
     void VulkanRenderer::beginSwapChainRenderPass() {
-
+        barrierManager.flushBarriers(vkGraphicsComputeCommandBuffers[currentFrameIndex]);
+        beginSwapChainRenderPassInternal(true);
     }
 
     void VulkanRenderer::endRenderPass() {
-
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].endRendering();
     }
 
     void VulkanRenderer::beginDynamicRendering(const DynamicRenderingInfo &renderingInfo) {
+        std::vector<vk::RenderingAttachmentInfo> colorAttachmentInfos;
+        colorAttachmentInfos.reserve(renderingInfo.colorAttachments.size());
 
+        uint32_t layers = 1;
+
+        vk::RenderingInfo vkRenderingInfo{};
+
+        for (auto attachment : renderingInfo.colorAttachments) {
+            auto* vkAttachment = static_cast<VulkanAttachment*>(attachment.attachment);
+
+            auto& attachmentInfo = colorAttachmentInfos.emplace_back();
+            attachmentInfo.setImageLayout(vk::ImageLayout::eColorAttachmentOptimal);
+            attachmentInfo.setStoreOp(vk::AttachmentStoreOp::eStore);
+            attachmentInfo.setLoadOp(renderingInfo.clearColorAttachments ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad);
+
+            if (renderingInfo.clearColorAttachments) {
+                attachmentInfo.setClearValue(vk::ClearValue(vk::ClearColorValue(std::array<float, 4>{renderingInfo.clearColor.r, renderingInfo.clearColor.g, renderingInfo.clearColor.b, renderingInfo.clearColor.a})));
+            }
+
+            VulkanAttachmentState neededState = {
+                .imageLayout = vk::ImageLayout::eColorAttachmentOptimal,
+                .access = vk::AccessFlagBits2::eColorAttachmentWrite | vk::AccessFlagBits2::eColorAttachmentRead,
+                .stage = vk::PipelineStageFlagBits2::eColorAttachmentOutput
+            };
+
+            if (attachment.allLayers) {
+                barrierManager.requestAttachmentState(vkAttachment, neededState, true);
+                attachmentInfo.setImageView(vkAttachment->getVulkanImageView());
+                layers = vkAttachment->getLayerCount();
+            } else {
+                barrierManager.requestAttachmentState(vkAttachment, neededState, false, attachment.layer);
+                attachmentInfo.setImageView(vkAttachment->getVulkanLayerImageView(attachment.layer));
+            }
+        }
+
+        vk::RenderingAttachmentInfo depthStencilAttachmentInfo{};
+
+        if (renderingInfo.depthStencilAttachment.attachment != nullptr) {
+            auto* vkAttachment = static_cast<VulkanAttachment*>(renderingInfo.depthStencilAttachment.attachment);
+            CG_ASSERT(vkAttachment->getType() == AttachmentType::Depth || vkAttachment->getType() == AttachmentType::DepthStencil, "DepthStencil attachment must be of type Depth or DepthStencil")
+
+            depthStencilAttachmentInfo.setImageLayout(vkAttachment->getType() == AttachmentType::Depth ? vk::ImageLayout::eDepthAttachmentOptimal : vk::ImageLayout::eDepthStencilAttachmentOptimal);
+            depthStencilAttachmentInfo.setStoreOp(vk::AttachmentStoreOp::eStore);
+            depthStencilAttachmentInfo.setLoadOp(renderingInfo.clearDepthStencilAttachment ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad);
+
+            if (renderingInfo.clearDepthStencilAttachment) {
+                depthStencilAttachmentInfo.setClearValue(vk::ClearValue(vk::ClearDepthStencilValue(1.0f, 0)));
+            }
+
+            VulkanAttachmentState neededState = {
+                .imageLayout = vkAttachment->getType() == AttachmentType::Depth ? vk::ImageLayout::eDepthAttachmentOptimal : vk::ImageLayout::eDepthStencilAttachmentOptimal,
+                .access = vk::AccessFlagBits2::eDepthStencilAttachmentWrite | vk::AccessFlagBits2::eDepthStencilAttachmentRead,
+                .stage = vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests
+            };
+
+            if (renderingInfo.depthStencilAttachment.allLayers) {
+                barrierManager.requestAttachmentState(vkAttachment, neededState, true);
+                depthStencilAttachmentInfo.setImageView(vkAttachment->getVulkanImageView());
+                layers = vkAttachment->getLayerCount();
+            } else {
+                barrierManager.requestAttachmentState(vkAttachment, neededState, false, renderingInfo.depthStencilAttachment.layer);
+                depthStencilAttachmentInfo.setImageView(vkAttachment->getVulkanLayerImageView(renderingInfo.depthStencilAttachment.layer));
+            }
+
+            if (vkAttachment->getType() == AttachmentType::Depth) {
+                vkRenderingInfo.setPDepthAttachment(&depthStencilAttachmentInfo);
+                vkRenderingInfo.setPStencilAttachment(nullptr);
+            } else {
+                vkRenderingInfo.setPDepthAttachment(&depthStencilAttachmentInfo);
+                vkRenderingInfo.setPStencilAttachment(&depthStencilAttachmentInfo);
+            }
+        }
+
+        vkRenderingInfo.setColorAttachments(colorAttachmentInfos);
+        vkRenderingInfo.setLayerCount(layers);
+        vkRenderingInfo.setRenderArea(vk::Rect2D(vk::Offset2D(0, 0), vk::Extent2D(renderingInfo.renderArea.x, renderingInfo.renderArea.y)));
+
+        barrierManager.flushBarriers(vkGraphicsComputeCommandBuffers[currentFrameIndex]);
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].beginRendering(vkRenderingInfo);
+
+        vk::Viewport viewport{};
+        viewport.setX(0.0f);
+        viewport.setY(0.0f);
+        viewport.setWidth(static_cast<float>(renderingInfo.renderArea.x));
+        viewport.setHeight(static_cast<float>(renderingInfo.renderArea.y));
+        viewport.setMinDepth(0.0f);
+        viewport.setMaxDepth(1.0f);
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].setViewport(0, 1, &viewport);
+
+
+        vk::Rect2D scissor{};
+        scissor.setOffset(vk::Offset2D(0, 0));
+        scissor.setExtent(vk::Extent2D(renderingInfo.renderArea.x, renderingInfo.renderArea.y));
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].setScissor(0, 1, &scissor);
     }
 
     void VulkanRenderer::endDynamicRendering() {
-
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].endRendering();
     }
 
     void VulkanRenderer::bindGraphicsPipeline(const GraphicsPipeline* graphicsPipeline) {
-
+        const auto* vkGraphicsPipeline = static_cast<const VulkanGraphicsPipeline*>(graphicsPipeline);
+        currentPipelineLayout = vkGraphicsPipeline->getVulkanPipelineLayout();
+        currentShaderStageFlags = vkGraphicsPipeline->getShaderStageFlags();
+        currentPipelineBindPoint = vk::PipelineBindPoint::eGraphics;
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].bindPipeline(vk::PipelineBindPoint::eGraphics, vkGraphicsPipeline->getVulkanPipeline());
     }
 
     void VulkanRenderer::bindComputePipeline(const ComputePipeline* computePipeline) {
-
+        const auto* vkComputePipeline = static_cast<const VulkanComputePipeline*>(computePipeline);
+        currentPipelineLayout = vkComputePipeline->getVulkanPipelineLayout();
+        currentShaderStageFlags = vk::ShaderStageFlagBits::eCompute;
+        currentPipelineBindPoint = vk::PipelineBindPoint::eCompute;
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].bindPipeline(vk::PipelineBindPoint::eCompute, vkComputePipeline->getVulkanPipeline());
     }
 
     void VulkanRenderer::dispatchCompute(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
+        CG_ASSERT(currentPipelineBindPoint == vk::PipelineBindPoint::eCompute, "VulkanRenderer::dispatchCompute: Current pipeline bind point is not compute!")
 
+        barrierManager.flushBarriers(vkGraphicsComputeCommandBuffers[currentFrameIndex]);
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].dispatch(groupCountX, groupCountY, groupCountZ);
     }
 
     void VulkanRenderer::clearPass(const RenderPass* renderPass, const Framebuffer* framebuffer) {
-
+        beginRenderPass(renderPass, framebuffer);
+        endRenderPass();
     }
 
     void VulkanRenderer::bindDescriptorSet(const DescriptorSet* descriptorSet, uint32_t setIndex) {
+        const auto* vkDescriptorSet = static_cast<const VulkanDescriptorSet*>(descriptorSet);
+        auto dynamicOffsets = vkDescriptorSet->getDynamicBufferOffsets();
+        vk::DescriptorSet set = vkDescriptorSet->getVulkanDescriptorSet();
 
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].bindDescriptorSets(currentPipelineBindPoint, currentPipelineLayout, setIndex, 1, &set, dynamicOffsets.size(), dynamicOffsets.data());
     }
 
     void VulkanRenderer::setPushConstants(const void* data, size_t size) {
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].pushConstants(currentPipelineLayout, currentShaderStageFlags, 0, static_cast<uint32_t>(size), data);
+    }
 
+    void VulkanRenderer::injectBarriersForDescriptorSet(const DescriptorSet *descriptorSet) {
+        const auto* vkDescriptorSet = static_cast<const VulkanDescriptorSet*>(descriptorSet);
+
+        const auto& attachmentTextureBindings = vkDescriptorSet->getAttachmentTextureBindings();
+
+        for (auto& binding : attachmentTextureBindings) {
+            auto* vkAttachment = static_cast<VulkanAttachment*>(binding.attachment);
+            DescriptorSetLayoutBindingUsage usage = vkDescriptorSet->getLayout()->getDescriptorSetLayoutBindingUsageForBindingPoint(binding.bindingPoint);
+
+            VulkanAttachmentState neededState{
+                .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
+                .access = vk::AccessFlagBits2::eShaderSampledRead,
+                .stage = VulkanHelpers::descriptorSetLayoutBindingUsageToVulkanPipelineStageFlags(usage)
+            };
+
+            barrierManager.requestAttachmentState(vkAttachment, neededState, binding.allLayers, binding.layer);
+        }
+
+        const auto& attachmentImageBindings = vkDescriptorSet->getAttachmentImageBindings();
+
+        for (auto& binding : attachmentImageBindings) {
+            auto* vkAttachment = static_cast<VulkanAttachment*>(binding.attachment);
+            DescriptorSetLayoutBindingUsage usage = vkDescriptorSet->getLayout()->getDescriptorSetLayoutBindingUsageForBindingPoint(binding.bindingPoint);
+
+            vk::AccessFlags2 access{};
+
+            if (binding.access == ShaderImageAccess::ReadOnly || binding.access == ShaderImageAccess::ReadWrite) {
+                access |= vk::AccessFlagBits2::eShaderStorageRead;
+            }
+            if (binding.access == ShaderImageAccess::WriteOnly || binding.access == ShaderImageAccess::ReadWrite) {
+                access |= vk::AccessFlagBits2::eShaderStorageWrite;
+            }
+
+            VulkanAttachmentState neededState{
+                .imageLayout = vk::ImageLayout::eGeneral,
+                .access = access,
+                .stage = VulkanHelpers::descriptorSetLayoutBindingUsageToVulkanPipelineStageFlags(usage)
+            };
+
+            barrierManager.requestAttachmentState(vkAttachment, neededState, binding.allLayers, binding.layer);
+        }
     }
 
     void VulkanRenderer::transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition) {
@@ -166,22 +519,37 @@ namespace CgEngine {
     }
 
     void VulkanRenderer::renderUnitQuad() {
+        CG_ASSERT(currentPipelineBindPoint == vk::PipelineBindPoint::eGraphics, "VulkanRenderer::renderUnitQuad: Current pipeline bind point is not graphics!")
 
+        quadVAO.bind(vkGraphicsComputeCommandBuffers[currentFrameIndex]);
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].drawIndexed(quadVAO.getIndexBuffer()->getIndexCount(), 1, 0, 0, 0);
     }
 
     void VulkanRenderer::renderUnitCube() {
+        CG_ASSERT(currentPipelineBindPoint == vk::PipelineBindPoint::eGraphics, "VulkanRenderer::renderUnitCube: Current pipeline bind point is not graphics!")
 
+        unitCubeVAO.bind(vkGraphicsComputeCommandBuffers[currentFrameIndex]);
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].drawIndexed(unitCubeVAO.getIndexBuffer()->getIndexCount(), 1, 0, 0, 0);
     }
 
     void VulkanRenderer::executeDrawCommand(const VertexArrayObject* vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex, uint32_t instanceCount) {
+        CG_ASSERT(currentPipelineBindPoint == vk::PipelineBindPoint::eGraphics, "VulkanRenderer::executeDrawCommand: Current pipeline bind point is not graphics!")
 
+        const auto* vkVao = static_cast<const VulkanVertexArrayObject*>(vao);
+        vkVao->bind(vkGraphicsComputeCommandBuffers[currentFrameIndex]);
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].drawIndexed(indexCount, instanceCount, baseIndex, baseVertex, 0);
     }
 
     void VulkanRenderer::executeDrawCommand(const VertexArrayObject* vao, uint32_t indexCount, uint32_t baseIndex, uint32_t baseVertex) {
+        CG_ASSERT(currentPipelineBindPoint == vk::PipelineBindPoint::eGraphics, "VulkanRenderer::executeDrawCommand: Current pipeline bind point is not graphics!")
 
+        const auto* vkVao = static_cast<const VulkanVertexArrayObject*>(vao);
+        vkVao->bind(vkGraphicsComputeCommandBuffers[currentFrameIndex]);
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].drawIndexed(indexCount, 1, baseIndex, baseVertex, 0);
     }
 
     void VulkanRenderer::drawArrays(const VertexArrayObject* vao, uint32_t vertexCount) {
+        CG_ASSERT(currentPipelineBindPoint == vk::PipelineBindPoint::eGraphics, "VulkanRenderer::drawArrays: Current pipeline bind point is not graphics!")
 
     }
 
@@ -194,11 +562,11 @@ namespace CgEngine {
     }
 
     TextureCube* VulkanRenderer::getBlackCubeTexture() {
-        return nullptr;
+        return &blackCubeTexture;
     }
 
     std::pair<TextureCube*, TextureCube*> VulkanRenderer::createEnvironmentMap(const std::string& hdriPath) {
-        return std::pair<TextureCube*, TextureCube*>();
+        return std::pair<TextureCube*, TextureCube*>(getBlackCubeTexture(), getBlackCubeTexture());
     }
 
     const std::vector<VertexBufferLayout> VulkanRenderer::getUnitQuadVertexInputLayout() {
@@ -210,15 +578,32 @@ namespace CgEngine {
     }
 
     PipelineAttachmentInfo VulkanRenderer::getSwapChainAttachmentInfo() {
-        return {};
+        PipelineAttachmentInfo info{};
+        info.colorAttachments = {VulkanHelpers::vkColorFormatToAttachmentType(vkSwapChainImageFormat)};
+        info.hasDepthStencilAttachment = false;
+
+        return info;
     }
 
     void VulkanRenderer::beginImGuiFrame() {
-
+        #ifdef CG_ENABLE_DEBUG_FEATURES
+            ImGui_ImplVulkan_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+        #endif
     }
 
     void VulkanRenderer::renderImGuiFrame() {
+        #ifdef CG_ENABLE_DEBUG_FEATURES
+            beginSwapChainRenderPassInternal(false);
 
+            ImGui::Render();
+            ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), vkGraphicsComputeCommandBuffers[currentFrameIndex]);
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+
+            endRenderPass();
+        #endif
     }
 
     void VulkanRenderer::executeImmediateCommand(const std::function<void(const vk::CommandBuffer&)> &lambda) const {
@@ -277,6 +662,10 @@ namespace CgEngine {
 
     vk::Device VulkanRenderer::getVkDevice() const {
         return vkDevice;
+    }
+
+    vk::CommandBuffer VulkanRenderer::getCurrentCommandBuffer() const {
+        return vkGraphicsComputeCommandBuffers[currentFrameIndex];
     }
 
     VmaAllocator VulkanRenderer::getVmaAllocator() const {
@@ -616,6 +1005,26 @@ namespace CgEngine {
         }
     }
 
+    void VulkanRenderer::recreateSwapChain(const Window &window) {
+        vkDevice.waitIdle();
+
+        for (auto imageView : vkSwapChainImageViews) {
+            vkDevice.destroyImageView(imageView);
+        }
+        vkSwapChainImageViews.clear();
+
+        vk::SwapchainKHR oldSwapChain = vkSwapChain;
+        createSwapChain(window, oldSwapChain);
+
+        if (oldSwapChain != VK_NULL_HANDLE) {
+            vkDevice.destroySwapchainKHR(oldSwapChain);
+        }
+        createSwapChainImageViews();
+        createRenderFinishedSemaphores();
+
+        framebufferResized = false;
+    }
+
     void VulkanRenderer::createCommandPools() {
         vk::CommandPoolCreateInfo graphicsComputePoolInfo{};
         graphicsComputePoolInfo.setQueueFamilyIndex(vkQueueIndices.graphicsComputeFamily);
@@ -659,17 +1068,35 @@ namespace CgEngine {
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             auto imageAvailableSemaphoreResult = vkDevice.createSemaphore(semaphoreCreateInfo);
-            auto renderFinishedSemaphoreResult = vkDevice.createSemaphore(semaphoreCreateInfo);
             auto inFlightFenceResult = vkDevice.createFence(fenceCreateInfo);
 
-            if (!imageAvailableSemaphoreResult.has_value() || !renderFinishedSemaphoreResult.has_value() || !inFlightFenceResult.has_value()) {
+            if (!imageAvailableSemaphoreResult.has_value() || !inFlightFenceResult.has_value()) {
                 CG_LOGGING_ERROR("VulkanRenderer: Failed to create synchronization objects for a frame!")
             }
 
             vkImageAvailableSemaphores.push_back(imageAvailableSemaphoreResult.value);
-            vkRenderFinishedSemaphores.push_back(renderFinishedSemaphoreResult.value);
             vkInFlightFences.push_back(inFlightFenceResult.value);
         }
+    }
+
+    void VulkanRenderer::createRenderFinishedSemaphores() {
+        for (auto semaphore : vkRenderFinishedSemaphores) {
+            vkDevice.destroySemaphore(semaphore);
+        }
+        vkRenderFinishedSemaphores.clear();
+
+        vk::SemaphoreCreateInfo semaphoreCreateInfo{};
+
+        for (size_t i = 0; i < vkSwapChainImages.size(); i++) {
+            auto renderFinishedSemaphoreResult = vkDevice.createSemaphore(semaphoreCreateInfo);
+            if (!renderFinishedSemaphoreResult.has_value()) {
+                CG_LOGGING_ERROR("VulkanRenderer: Failed to create render finished semaphore for a swap chain image!")
+            }
+
+            vkRenderFinishedSemaphores.push_back(renderFinishedSemaphoreResult.value);
+        }
+
+        vkImagesInFlight.assign(vkSwapChainImages.size(), VK_NULL_HANDLE);
     }
 
     void VulkanRenderer::createVmaAllocator() {
@@ -684,6 +1111,120 @@ namespace CgEngine {
         if (result != VK_SUCCESS) {
             CG_LOGGING_ERROR("VulkanRenderer: Failed to create VMA allocator!")
         }
+    }
+
+    void VulkanRenderer::initImGui(Window &window) {
+        #ifdef CG_ENABLE_DEBUG_FEATURES
+            IMGUI_CHECKVERSION();
+
+            vk::DescriptorPoolSize poolSizes[] = {
+                { vk::DescriptorType::eSampler, 1000 },
+                { vk::DescriptorType::eCombinedImageSampler, 1000 },
+                { vk::DescriptorType::eSampledImage, 1000 },
+                { vk::DescriptorType::eStorageImage, 1000 },
+                { vk::DescriptorType::eUniformTexelBuffer, 1000 },
+                { vk::DescriptorType::eStorageTexelBuffer, 1000 },
+                { vk::DescriptorType::eUniformBuffer, 1000 },
+                { vk::DescriptorType::eStorageBuffer, 1000 },
+                { vk::DescriptorType::eUniformBufferDynamic, 1000 },
+                { vk::DescriptorType::eStorageBufferDynamic, 1000 },
+                { vk::DescriptorType::eInputAttachment, 1000 },
+            };
+
+            vk::DescriptorPoolCreateInfo poolCreateInfo{};
+            poolCreateInfo.setMaxSets(1000 * std::size(poolSizes));
+            poolCreateInfo.setPoolSizes(poolSizes);
+            poolCreateInfo.setPoolSizeCount(std::size(poolSizes));
+            poolCreateInfo.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet);
+
+            auto poolCreateResult = vkDevice.createDescriptorPool(poolCreateInfo);
+
+            if (!poolCreateResult.has_value()) {
+                CG_LOGGING_ERROR("VulkanRenderer: Failed to create descriptor pool!")
+            }
+            imguiDescriptorPool = poolCreateResult.value;
+
+            ImGui::CreateContext();
+
+            ImGuiIO& io = ImGui::GetIO(); (void)io;
+            io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+            io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+            io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+            glm::vec2 contentScale = window.getContentScale();
+
+            ImGui::StyleColorsDark();
+            ImGui::GetStyle().ScaleAllSizes(glm::max(contentScale.x, contentScale.y));
+
+            ImGui_ImplGlfw_InitForVulkan(&window.getWindowHandle(), true);
+
+            vk::PipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo{};
+            pipelineRenderingCreateInfo.setColorAttachmentCount(1);
+            pipelineRenderingCreateInfo.setPColorAttachmentFormats(&vkSwapChainImageFormat);
+
+            ImGui_ImplVulkan_InitInfo initInfo{};
+            initInfo.ApiVersion = VK_API_VERSION_1_3;
+            initInfo.Instance = vkInstance;
+            initInfo.PhysicalDevice = vkPhysicalDevice;
+            initInfo.Device = vkDevice;
+            initInfo.QueueFamily = vkQueueIndices.graphicsComputeFamily;
+            initInfo.Queue = vkGraphicsComputeQueue;
+            initInfo.DescriptorPool = imguiDescriptorPool;
+            initInfo.MinImageCount = vkSwapChainImages.size();
+            initInfo.ImageCount = vkSwapChainImages.size();
+            initInfo.UseDynamicRendering = true;
+            initInfo.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+            initInfo.PipelineInfoMain.PipelineRenderingCreateInfo = pipelineRenderingCreateInfo;
+
+            ImGui_ImplVulkan_Init(&initInfo);
+        #endif
+    }
+
+    void VulkanRenderer::shutdownImGui() {
+        #ifdef CG_ENABLE_DEBUG_FEATURES
+            ImGui_ImplVulkan_Shutdown();
+            ImGui_ImplGlfw_Shutdown();
+            ImGui::DestroyContext();
+
+            vkDevice.destroyDescriptorPool(imguiDescriptorPool);
+        #endif
+    }
+
+    void VulkanRenderer::beginSwapChainRenderPassInternal(bool clear) {
+        vk::RenderingAttachmentInfo colorAttachmentInfo{};
+        colorAttachmentInfo.setImageView(vkSwapChainImageViews[currentSwapChainImageIndex]);
+        colorAttachmentInfo.setImageLayout(vk::ImageLayout::eColorAttachmentOptimal);
+        colorAttachmentInfo.setStoreOp(vk::AttachmentStoreOp::eStore);
+
+        if (clear) {
+            colorAttachmentInfo.setClearValue(vk::ClearValue(vk::ClearColorValue(std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f})));
+            colorAttachmentInfo.setLoadOp(vk::AttachmentLoadOp::eClear);
+        } else {
+            colorAttachmentInfo.setLoadOp(vk::AttachmentLoadOp::eLoad);
+        }
+
+        vk::RenderingInfo renderingInfo{};
+        renderingInfo.setColorAttachmentCount(1);
+        renderingInfo.setPColorAttachments(&colorAttachmentInfo);
+        renderingInfo.setLayerCount(1);
+        renderingInfo.setRenderArea(vk::Rect2D(vk::Offset2D(0, 0), vkSwapChainExtent));
+
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].beginRendering(renderingInfo);
+
+        vk::Viewport viewport{};
+        viewport.setX(0.0f);
+        viewport.setY(0.0f);
+        viewport.setWidth(static_cast<float>(vkSwapChainExtent.width));
+        viewport.setHeight(static_cast<float>(vkSwapChainExtent.height));
+        viewport.setMinDepth(0.0f);
+        viewport.setMaxDepth(1.0f);
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].setViewport(0, 1, &viewport);
+
+
+        vk::Rect2D scissor{};
+        scissor.setOffset(vk::Offset2D(0, 0));
+        scissor.setExtent(vk::Extent2D(vkSwapChainExtent.width, vkSwapChainExtent.height));
+        vkGraphicsComputeCommandBuffers[currentFrameIndex].setScissor(0, 1, &scissor);
     }
 
     vk::Bool32 VulkanRenderer::debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT messageSeverity, vk::DebugUtilsMessageTypeFlagsEXT messageType, const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {

@@ -40,6 +40,8 @@ namespace CgEngine {
         static void bindDescriptorSet(const DescriptorSet* descriptorSet, uint32_t setIndex);
         static void setPushConstants(const void* data, size_t size);
 
+        static void injectBarriersForDescriptorSet(const DescriptorSet* descriptorSet);
+
         static void transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition);
         static void memoryBarrierForVertexBufferAfterCompute(const VertexBuffer* vertexBuffer);
         static void memoryBarrierForAttachmentAfterComputeToCompute(Attachment* attachment);

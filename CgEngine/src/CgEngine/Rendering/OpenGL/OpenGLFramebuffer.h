@@ -24,6 +24,11 @@ namespace CgEngine {
         uint32_t getWidth() const override;
         uint32_t getHeight() const override;
 
+        const std::vector<FramebufferAttachment> & getColorFramebufferAttachments() const override;
+        const FramebufferAttachment & getDepthStencilFramebufferAttachment() const override;
+
+        bool isReady() const override;
+
         uint32_t getOpenGLHandle() const;
         bool hasStencilAttachment() const;
 

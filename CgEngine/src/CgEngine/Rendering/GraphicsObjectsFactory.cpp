@@ -28,6 +28,11 @@
 #include "Rendering/Vulkan/VulkanGraphicsPipeline.h"
 #include "Rendering/Vulkan/VulkanImmutableShaderStorageBuffer.h"
 #include "Rendering/Vulkan/VulkanTexture2D.h"
+#include "Rendering/Vulkan/VulkanRenderPass.h"
+#include "Rendering/Vulkan/VulkanFramebuffer.h"
+#include "Rendering/Vulkan/VulkanDescriptorSet.h"
+#include "Rendering/Vulkan/VulkanComputePipeline.h"
+#include "Rendering/Vulkan/VulkanTextureCube.h"
 
 namespace CgEngine {
 
@@ -123,7 +128,7 @@ namespace CgEngine {
     RenderPass* GraphicsObjectsFactory::createRenderPass() {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanRenderPass();
             case GraphicsAPI::OpenGL:
                 return new OpenGLRenderPass();
         }
@@ -132,7 +137,7 @@ namespace CgEngine {
     RenderPass* GraphicsObjectsFactory::createRenderPass(const RenderPassSpecification& spec) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanRenderPass(spec);
             case GraphicsAPI::OpenGL:
                 return new OpenGLRenderPass(spec);
         }
@@ -159,7 +164,7 @@ namespace CgEngine {
     Framebuffer* GraphicsObjectsFactory::createFramebuffer() {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanFramebuffer();
             case GraphicsAPI::OpenGL:
                 return new OpenGLFramebuffer();
         }
@@ -168,7 +173,7 @@ namespace CgEngine {
     Framebuffer* GraphicsObjectsFactory::createFramebuffer(const FramebufferSpecification& spec) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanFramebuffer(spec);
             case GraphicsAPI::OpenGL:
                 return new OpenGLFramebuffer(spec);
         }
@@ -258,7 +263,7 @@ namespace CgEngine {
     DescriptorSet* GraphicsObjectsFactory::createDescriptorSet() {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanDescriptorSet();
             case GraphicsAPI::OpenGL:
                 return new OpenGLDescriptorSet();
         }
@@ -267,7 +272,7 @@ namespace CgEngine {
     DescriptorSet* GraphicsObjectsFactory::createDescriptorSet(const DescriptorSetSpecification& spec) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanDescriptorSet(spec);
             case GraphicsAPI::OpenGL:
                 return new OpenGLDescriptorSet(spec);
         }
@@ -276,7 +281,7 @@ namespace CgEngine {
     DescriptorSet* GraphicsObjectsFactory::createDescriptorSet(const DescriptorSetLayout* layout) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanDescriptorSet(layout);
             case GraphicsAPI::OpenGL:
                 return new OpenGLDescriptorSet(layout);
         }
@@ -285,7 +290,7 @@ namespace CgEngine {
     TextureCube* GraphicsObjectsFactory::createTextureCube() {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanTextureCube();
             case GraphicsAPI::OpenGL:
                 return new OpenGLTextureCube();
         }
@@ -294,7 +299,7 @@ namespace CgEngine {
     TextureCube* GraphicsObjectsFactory::createTextureCube(TextureFormat format, uint32_t width, uint32_t height, MipMapFiltering mipMapFiltering) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanTextureCube(format, width, height, mipMapFiltering);
             case GraphicsAPI::OpenGL:
                 return new OpenGLTextureCube(format, width, height, mipMapFiltering);
         }
@@ -303,7 +308,7 @@ namespace CgEngine {
     TextureCube* GraphicsObjectsFactory::createTextureCube(TextureFormat format, uint32_t width, uint32_t height, const void* data, MipMapFiltering mipMapFiltering) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanTextureCube(format, width, height, data, mipMapFiltering);
             case GraphicsAPI::OpenGL:
                 return new OpenGLTextureCube(format, width, height, data, mipMapFiltering);
         }
@@ -312,7 +317,7 @@ namespace CgEngine {
     ComputePipeline* GraphicsObjectsFactory::createComputePipeline() {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanComputePipeline();
             case GraphicsAPI::OpenGL:
                 return new OpenGLComputePipeline();
         }
@@ -321,7 +326,7 @@ namespace CgEngine {
     ComputePipeline* GraphicsObjectsFactory::createComputePipeline(const ComputePipelineSpecification& spec) {
         switch (api) {
             case GraphicsAPI::Vulkan:
-                return nullptr;
+                return new VulkanComputePipeline(spec);
             case GraphicsAPI::OpenGL:
                 return new OpenGLComputePipeline(spec);
         }

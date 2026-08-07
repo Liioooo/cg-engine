@@ -9,6 +9,8 @@ namespace CgEngine {
         std::vector<const DescriptorSetLayout*> descriptorSetLayouts;
         std::string engineShaderName;
         std::string customShader;
+        bool usesPushConstants = false;
+        uint32_t pushConstantsSize = 0;
     };
 
     class ComputePipeline {

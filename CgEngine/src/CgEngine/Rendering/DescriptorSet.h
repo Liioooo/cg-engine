@@ -42,14 +42,7 @@ namespace CgEngine {
         uint32_t bindingPoint;
         uint32_t layer = ~0;
         bool allLayers = true;
-        const Attachment* attachment = nullptr;
-    };
-
-    struct DescSetImageCubeBinding {
-        uint32_t bindingPoint;
-        uint32_t mipLevel = 0;
-        ShaderImageAccess access;
-        const TextureCube* texture = nullptr;
+        Attachment* attachment = nullptr;
     };
 
     struct DescSetAttachmentImageBinding {
@@ -57,7 +50,7 @@ namespace CgEngine {
         uint32_t layer = ~0;
         bool allLayers = true;
         ShaderImageAccess access;
-        const Attachment* attachment = nullptr;
+        Attachment* attachment = nullptr;
     };
 
     struct DescSetVertexBufferSSBOBinding {
@@ -73,7 +66,6 @@ namespace CgEngine {
         std::vector<DescSetTexture2DBinding> texture2DBindings;
         std::vector<DescSetTextureCubeBinding> textureCubeBindings;
         std::vector<DescSetAttachmentTextureBinding> attachmentTextureBindings;
-        std::vector<DescSetImageCubeBinding> imageCubeBindings;
         std::vector<DescSetAttachmentImageBinding> attachmentImageBindings;
         std::vector<DescSetVertexBufferSSBOBinding> vertexBufferSSBOBindings;
     };

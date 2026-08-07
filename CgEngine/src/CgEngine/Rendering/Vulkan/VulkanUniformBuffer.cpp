@@ -1,5 +1,6 @@
 #include "VulkanUniformBuffer.h"
 
+#include "Asserts.h"
 #include "VulkanHelpers.h"
 #include "VulkanRenderer.h"
 #include "Rendering/Renderer.h"
@@ -104,6 +105,10 @@ namespace CgEngine {
         std::memcpy(mappedPtr + offset, data, size);
 
         lastWrittenFrameIndex = frameIndex;
+    }
+
+    size_t VulkanUniformBuffer::getAlignedFrameSize() const {
+        return alignedFrameSize;
     }
 
     vk::Buffer VulkanUniformBuffer::getVulkanBufferHandle() const {

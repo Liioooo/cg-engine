@@ -1,4 +1,6 @@
 #include "OpenGLUniformBuffer.h"
+#include "Asserts.h"
+#include "glad/glad.h"
 
 namespace CgEngine {
     OpenGLUniformBuffer::OpenGLUniformBuffer(size_t size) : size(size) {

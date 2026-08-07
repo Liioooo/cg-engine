@@ -5,7 +5,7 @@
 #include "imgui.h"
 #include "ImGui/ImGuiWidgets.h"
 #include "ImGui/ImGuiSceneView.h"
-#include "OpenGLTimer.h"
+#include "GPUTimer.h"
 #include "CgEngineSharedUtils/LoaderUtils.h"
 #include "CgEngineSharedUtils/StringUtils.h"
 #include "Rendering/GraphicsObjectsFactory.h"

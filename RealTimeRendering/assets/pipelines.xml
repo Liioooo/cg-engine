@@ -147,9 +147,9 @@
             <UboBindingPoints>
                 <Binding bindingPoint="2" usage="Vertex"/>
             </UboBindingPoints>
-            <SsboBindingPoints>
+            <ImmutableSsboBindingPoints>
                 <Binding bindingPoint="6" usage="Vertex"/>
-            </SsboBindingPoints>
+            </ImmutableSsboBindingPoints>
         </DescriptorSetLayout>
         <DepthCompareOperator>Less</DepthCompareOperator>
         <DepthTest>true</DepthTest>

@@ -3,9 +3,12 @@
 #include "Rendering/RendererBackendBase.h"
 #include <vulkan/vulkan.hpp>
 #include "vk_mem_alloc.h"
+#include "VulkanBarrierManager.h"
 #include "VulkanDescriptorAllocator.h"
+#include "VulkanDescriptorSet.h"
 #include "VulkanSamplerManager.h"
 #include "VulkanTexture2D.h"
+#include "VulkanTextureCube.h"
 #include "VulkanVertexArrayObject.h"
 
 namespace CgEngine {
@@ -51,6 +54,8 @@ namespace CgEngine {
         void bindDescriptorSet(const DescriptorSet* descriptorSet, uint32_t setIndex) override;
         void setPushConstants(const void* data, size_t size) override;
 
+        void injectBarriersForDescriptorSet(const DescriptorSet *descriptorSet) override;
+
         void transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition) override;
         void memoryBarrierForVertexBufferAfterCompute(const VertexBuffer* vertexBuffer) override;
         void memoryBarrierForAttachmentAfterComputeToCompute(Attachment* attachment) override;
@@ -81,6 +86,7 @@ namespace CgEngine {
         const uint32_t getCurrentFrameIndex() const;
         vk::PhysicalDevice getVkPhysicalDevice() const;
         vk::Device getVkDevice() const;
+        vk::CommandBuffer getCurrentCommandBuffer() const;
         VmaAllocator getVmaAllocator() const;
         VulkanDescriptorAllocator& getDescriptorAllocator();
         VulkanSamplerManager& getSamplerManager();
@@ -93,6 +99,12 @@ namespace CgEngine {
         const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
         uint32_t currentFrameIndex = 0;
+        uint32_t currentSwapChainImageIndex = 0;
+        bool framebufferResized = false;
+
+        vk::PipelineLayout currentPipelineLayout = VK_NULL_HANDLE;
+        vk::PipelineBindPoint currentPipelineBindPoint{};
+        vk::ShaderStageFlags currentShaderStageFlags{};
 
         vk::Instance vkInstance;
         vk::detail::DispatchLoaderDynamic vkDispatchLoaderDynamic;
@@ -120,9 +132,11 @@ namespace CgEngine {
         std::vector<vk::Semaphore> vkImageAvailableSemaphores;
         std::vector<vk::Semaphore> vkRenderFinishedSemaphores;
         std::vector<vk::Fence> vkInFlightFences;
+        std::vector<vk::Fence> vkImagesInFlight;
 
         VulkanDescriptorAllocator descriptorAllocator{};
         VulkanSamplerManager samplerManager{};
+        VulkanBarrierManager barrierManager{};
 
         VmaAllocator vmaAllocator;
 
@@ -131,6 +145,9 @@ namespace CgEngine {
 
         VulkanTexture2D whiteTexture{};
         VulkanTexture2D brdfLUT{};
+        VulkanTextureCube blackCubeTexture{};
+
+        vk::DescriptorPool imguiDescriptorPool{};
 
         bool checkValidationLayerSupport();
         void populateDebugMessengerCreateInfo(vk::DebugUtilsMessengerCreateInfoEXT& createInfo);
@@ -147,10 +164,15 @@ namespace CgEngine {
         vk::PresentModeKHR chooseSwapPresentMode(const std::vector<vk::PresentModeKHR>& availablePresentModes, const Window& window);
         vk::Extent2D chooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities, const Window& window);
         void createSwapChainImageViews();
+        void recreateSwapChain(const Window& window);
         void createCommandPools();
         void createGraphicsComputeCommandBuffers();
         void createSyncObjects();
+        void createRenderFinishedSemaphores();
         void createVmaAllocator();
+        void initImGui(Window& window);
+        void shutdownImGui();
+        void beginSwapChainRenderPassInternal(bool clear);
 
         static VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT messageSeverity, vk::DebugUtilsMessageTypeFlagsEXT messageType,const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData,void* pUserData);
     };

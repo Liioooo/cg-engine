@@ -70,7 +70,7 @@ namespace CgEngine {
         }
 
         glm::mat4 getUiProjectionMatrix() const;
-        const Attachment* getUiAttachment() const;
+        Attachment* getUiAttachment() const;
         std::vector<UiDrawCommand> getUiDrawCommands() const;
         glm::ivec2 getPixelSize() const;
         const DescriptorSet* getAttachmentSamplerDescriptorSet() const;

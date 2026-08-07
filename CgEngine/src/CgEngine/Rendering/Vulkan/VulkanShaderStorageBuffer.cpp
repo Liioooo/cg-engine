@@ -135,6 +135,10 @@ namespace CgEngine {
         lastWrittenFrameIndex = frameIndex;
     }
 
+    size_t VulkanShaderStorageBuffer::getAlignedFrameSize() const {
+        return alignedFrameSize;
+    }
+
     vk::Buffer VulkanShaderStorageBuffer::getVulkanBufferHandle() const {
         return buffer;
     }

@@ -188,6 +188,9 @@ namespace CgEngine {
             switch (type) {
                 case AttachmentType::RGBA8:
                     return GL_RGBA8;
+                case AttachmentType::RGBA8_SRGB:
+                case AttachmentType::BGRA8_SRGB:
+                    return GL_SRGB8_ALPHA8;
                 case AttachmentType::RGBA16F:
                     return GL_RGBA16F;
                 case AttachmentType::RGBA32F:

@@ -1,7 +1,7 @@
 #include "RendererBackendBase.h"
 
 namespace CgEngine {
-    std::tuple<std::vector<RendererBackendBase::QuadVertex>, std::vector<uint32_t>, std::vector<VertexBufferElement>> RendererBackendBase::getUnitQuadVerticesAndIndices() const {
+    std::tuple<std::vector<RendererBackendBase::QuadVertex>, std::vector<uint32_t>, std::vector<VertexBufferElement>> RendererBackendBase::getUnitQuadVerticesAndIndices(bool invertWindingOrder) const {
         std::vector<QuadVertex> vertices;
         vertices.resize(4);
         vertices[0].pos = {-1.0f, -1.0f, 0.0f};
@@ -16,7 +16,14 @@ namespace CgEngine {
         vertices[3].pos = {-1.0f, 1.0f, 0.0f};
         vertices[3].uv = {0.0f, 1.0f};
 
-        std::vector<uint32_t> indices = {0, 1, 2, 2, 3, 0 };
+        std::vector<uint32_t> indices{};
+        indices.reserve(6);
+
+        if (invertWindingOrder) {
+            indices = {0, 2, 1, 2, 0, 3};
+        } else {
+            indices = {0, 1, 2, 2, 3, 0};
+        }
 
         std::vector<VertexBufferElement> vertexBufferElements = {{ShaderDataType::Float3, true}, {ShaderDataType::Float2, true}};
 

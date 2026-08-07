@@ -29,7 +29,9 @@ namespace CgEngine {
 
     struct DescriptorSetLayoutSpecification {
         std::vector<DescriptorSetLayoutBinding> uboBindingPoints;
+        std::vector<DescriptorSetLayoutBinding> immutableSsboBindingPoints;
         std::vector<DescriptorSetLayoutBinding> ssboBindingPoints;
+        std::vector<DescriptorSetLayoutBinding> vertexBufferSsboBindingPoints;
         std::vector<DescriptorSetLayoutBinding> texture2DAndAttachmentBindingPoints;
         std::vector<DescriptorSetLayoutBinding> imageBindingPoints;
     };
@@ -46,10 +48,13 @@ namespace CgEngine {
         DescriptorSetLayout(DescriptorSetLayout& other) = delete;
         DescriptorSetLayout& operator=(DescriptorSetLayout& other) = delete;
 
+        virtual DescriptorSetLayoutBindingUsage getDescriptorSetLayoutBindingUsageForBindingPoint(uint32_t bindingPoint) const = 0;
+
         virtual bool isReady() const = 0;
 
     protected:
         static bool validateBindingPoints(std::vector<std::pair<std::vector<DescriptorSetLayoutBinding>, const char*>> bindingPoints);
+        static std::unordered_map<uint32_t, DescriptorSetLayoutBindingUsage> createBindingPointUsageMap(const DescriptorSetLayoutSpecification& spec);
     };
 
 }

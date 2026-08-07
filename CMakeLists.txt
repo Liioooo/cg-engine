@@ -94,6 +94,8 @@ file(GLOB IMGUI_GLOB
         ${IMGUI_PATH}/backends/imgui_impl_glfw.cpp
         ${IMGUI_PATH}/backends/imgui_impl_opengl3.h
         ${IMGUI_PATH}/backends/imgui_impl_opengl3.cpp
+        ${IMGUI_PATH}/backends/imgui_impl_vulkan.h
+        ${IMGUI_PATH}/backends/imgui_impl_vulkan.cpp
 )
 add_library(imgui STATIC ${IMGUI_GLOB})
 target_include_directories(imgui PUBLIC ${IMGUI_PATH})

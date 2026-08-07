@@ -17,6 +17,11 @@ namespace CgEngine {
             std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
         };
 
+        struct VulkanComputeShaderInfo {
+            vk::ShaderModule computeModule = VK_NULL_HANDLE;
+            vk::PipelineShaderStageCreateInfo shaderStage;
+        };
+
         struct VulkanPipelineVertexInputInfo {
             vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
             std::vector<vk::VertexInputBindingDescription> bindings;
@@ -24,11 +29,13 @@ namespace CgEngine {
         };
 
         vk::ImageView createImageView2D(vk::Image image, vk::Format format, uint32_t levelCount, uint32_t layerCount, vk::ImageAspectFlags aspectFlags, uint32_t baseArrayLayer = 0);
+        vk::ImageView createImageViewCube(vk::Image image, vk::Format format, uint32_t levelCount, vk::ImageAspectFlags aspectFlags);
         void copyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
         size_t alignUp(size_t value, size_t alignment);
         vk::Format findSupportedDepthFormat(const std::vector<vk::Format>& candidates);
         bool hasFormatStencilComponent(vk::Format format);
         vk::Format attachmentTypeToVulkanColorFormat(AttachmentType attachmentType);
+        AttachmentType vkColorFormatToAttachmentType(vk::Format format);
         vk::ImageAspectFlags attachmentTypeToAspectFlags(AttachmentType attachmentType);
         vk::ImageUsageFlags attachmentTypeToUsageFlags(bool usableAsTexture, bool usableAsStorageImage, AttachmentType attachmentType);
         VulkanGraphicsShaderInfo loadVulkanGraphicsShader(const std::string& name, ShaderEnv env);
@@ -44,6 +51,11 @@ namespace CgEngine {
         vk::BlendFactor blendingFunctionToVulkan(BlendingFunction fn);
         vk::Format depthStencilAttachmentFormatToVulkanFormat(DepthStencilAttachmentFormat format);
         vk::ShaderStageFlags descriptorSetLayoutBindingUsageToVulkanShaderStageFlags(DescriptorSetLayoutBindingUsage usage);
+        vk::PipelineStageFlags2 descriptorSetLayoutBindingUsageToVulkanPipelineStageFlags(DescriptorSetLayoutBindingUsage usage);
         vk::Format textureFormatToVulkanFormat(TextureFormat format);
+        VulkanComputeShaderInfo loadVulkanComputeShader(const std::string& name, ShaderEnv env);
+        VulkanComputeShaderInfo loadVulkanCustomComputeShader(const std::string& name);
+        VulkanComputeShaderInfo createVulkanComputeShaderInfoFromSource(const std::vector<uint8_t>& source);
+        void destroyVulkanComputeShaderModule(VulkanComputeShaderInfo& shaderInfo);
     }
 }

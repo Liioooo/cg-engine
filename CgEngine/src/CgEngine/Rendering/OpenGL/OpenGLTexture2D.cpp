@@ -19,6 +19,8 @@ namespace CgEngine {
         GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format);
         GLenum glFormat = OpenGLHelpers::getOpenGLTextureFormat(format);
         GLenum type = OpenGLHelpers::getOpenGLTextureType(format);
+        // All pixel data handed to this class is tightly packed, so rows must not be assumed to be 4-byte aligned
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, glFormat, type, data);
 
         if (mipMapFiltering == MipMapFiltering::Trilinear || mipMapFiltering == MipMapFiltering::Anisotropic) {
@@ -49,6 +51,8 @@ namespace CgEngine {
         GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format);
         GLint glFormat = OpenGLHelpers::getOpenGLTextureFormat(format);
         GLenum type = OpenGLHelpers::getOpenGLTextureType(format);
+        // stb_image returns tightly packed rows, so rows must not be assumed to be 4-byte aligned
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, glFormat, type, loadData.data);
 
         if (mipMapFiltering == MipMapFiltering::Trilinear || mipMapFiltering == MipMapFiltering::Anisotropic) {
@@ -81,6 +85,8 @@ namespace CgEngine {
         GLint internalFormat = OpenGLHelpers::getOpenGLTextureInternalFormat(format);
         GLint glFormat = OpenGLHelpers::getOpenGLTextureFormat(format);
         GLenum type = OpenGLHelpers::getOpenGLTextureType(format);
+        // stb_image returns tightly packed rows, so rows must not be assumed to be 4-byte aligned
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, glFormat, type, loadData.data);
 
         if (mipMapFiltering == MipMapFiltering::Trilinear || mipMapFiltering == MipMapFiltering::Anisotropic) {

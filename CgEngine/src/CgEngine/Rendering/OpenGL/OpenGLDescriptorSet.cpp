@@ -9,6 +9,7 @@
 #include "OpenGLTextureCube.h"
 #include "OpenGLVertexBuffer.h"
 #include "OpenGLHelpers.h"
+#include "glad/glad.h"
 
 namespace CgEngine {
 
@@ -105,9 +106,6 @@ namespace CgEngine {
                 glBindTextureUnit(attachment.bindingPoint, static_cast<const OpenGLAttachment*>(attachment.attachment)->getOpenGLLayerViewHandle(attachment.layer));
             }
         }
-        for (const auto imageCubeBinding : specification.imageCubeBindings) {
-            glBindImageTexture(imageCubeBinding.bindingPoint, static_cast<const OpenGLTextureCube*>(imageCubeBinding.texture)->getOpenGLHandle(), imageCubeBinding.mipLevel, GL_TRUE, 0, OpenGLHelpers::shaderImageAccessToOpenGL(imageCubeBinding.access), OpenGLHelpers::getOpenGLTextureFormatForImageBind(imageCubeBinding.texture->getFormat()));
-        }
         for (const auto attachmentImageBinding : specification.attachmentImageBindings) {
             if (attachmentImageBinding.allLayers) {
                 glBindImageTexture(attachmentImageBinding.bindingPoint, static_cast<const OpenGLAttachment*>(attachmentImageBinding.attachment)->getOpenGLHandle(), 0, GL_TRUE, 0, OpenGLHelpers::shaderImageAccessToOpenGL(attachmentImageBinding.access), OpenGLHelpers::attachmentTypeToOpenGLInternalFormat(attachmentImageBinding.attachment->getType()));
@@ -154,19 +152,30 @@ namespace CgEngine {
 
         {
             std::vector<uint32_t> ssboBindings;
-            ssboBindings.reserve(spec.ssboBindings.size() + spec.immutableSsboBindings.size() + spec.vertexBufferSSBOBindings.size());
+            std::vector<uint32_t> immutableSsboBindings;
+            std::vector<uint32_t> vertexBufferSsboBindings;
 
             for (const auto& b : spec.ssboBindings)
                 ssboBindings.push_back(b.bindingPoint);
 
             for (const auto& b : spec.immutableSsboBindings)
-                ssboBindings.push_back(b.bindingPoint);
+                immutableSsboBindings.push_back(b.bindingPoint);
 
             for (const auto& b : spec.vertexBufferSSBOBindings)
-                ssboBindings.push_back(b.bindingPoint);
+                vertexBufferSsboBindings.push_back(b.bindingPoint);
 
             if (!validateBindings(layoutSpec.ssboBindingPoints, ssboBindings, [](const auto& binding) { return binding; })) {
                 CG_LOGGING_ERROR("DescriptorSet: SSBO bindings do not match layout!")
+                return false;
+            }
+
+            if (!validateBindings(layoutSpec.immutableSsboBindingPoints, immutableSsboBindings, [](const auto& binding) { return binding; })) {
+                CG_LOGGING_ERROR("DescriptorSet: Immutable SSBO bindings do not match layout!")
+                return false;
+            }
+
+            if (!validateBindings(layoutSpec.vertexBufferSsboBindingPoints, vertexBufferSsboBindings, [](const auto& binding) { return binding; })) {
+                CG_LOGGING_ERROR("DescriptorSet: Vertex Buffer SSBO bindings do not match layout!")
                 return false;
             }
         }
@@ -192,10 +201,7 @@ namespace CgEngine {
 
         {
             std::vector<uint32_t> imageBindings;
-            imageBindings.reserve(spec.imageCubeBindings.size() + spec.attachmentImageBindings.size());
-
-            for (const auto& b : spec.imageCubeBindings)
-                imageBindings.push_back(b.bindingPoint);
+            imageBindings.reserve(spec.attachmentImageBindings.size());
 
             for (const auto& b : spec.attachmentImageBindings)
                 imageBindings.push_back(b.bindingPoint);
