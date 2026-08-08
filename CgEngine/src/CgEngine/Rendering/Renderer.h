@@ -64,6 +64,8 @@ namespace CgEngine {
         static void beginImGuiFrame();
         static void renderImGuiFrame();
 
+        static uint64_t getFrameIndex();
+
         static OpenGLRenderer* getOpenGLBackend();
         static VulkanRenderer* getVulkanBackend();
 

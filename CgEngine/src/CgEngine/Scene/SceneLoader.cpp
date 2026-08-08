@@ -324,6 +324,7 @@ namespace CgEngine {
         if (!node.attribute("x-align").empty()) params.xAlignment = LoaderUtils::stringToUIXAlignment(node.attribute("x-align").as_string());
         if (!node.attribute("y-align").empty()) params.yAlignment = LoaderUtils::stringToUIYAlignment(node.attribute("y-align").as_string());
         if (!node.attribute("receive-input").empty()) params.receiveInputEvents = node.attribute("receive-input").as_bool();
+        if (!node.attribute("z-index").empty()) params.zIndex = node.attribute("z-index").as_uint(0u);
 
         scene->attachComponent<UiCanvasComponent2D>(entity, params);
     }

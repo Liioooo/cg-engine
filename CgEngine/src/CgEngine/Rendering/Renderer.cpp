@@ -158,6 +158,10 @@ namespace CgEngine {
         backend->renderImGuiFrame();
     }
 
+    uint64_t Renderer::getFrameIndex() {
+        return backend->getFrameIndex();
+    }
+
     OpenGLRenderer* Renderer::getOpenGLBackend() {
         CG_ASSERT(backend->getGraphicsAPI() == GraphicsAPI::OpenGL, "Renderer::getOpenGLBackend: Renderer backend is not OpenGL!")
         return static_cast<OpenGLRenderer*>(backend);

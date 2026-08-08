@@ -134,6 +134,7 @@ namespace CgEngine {
         }
 
         framebufferResized = false;
+        frameIndex++;
 
         return true;
     }
@@ -540,6 +541,10 @@ namespace CgEngine {
             ImGui::RenderPlatformWindowsDefault();
             glfwMakeContextCurrent(backup_current_context);
         #endif
+    }
+
+    uint64_t OpenGLRenderer::getFrameIndex() {
+        return frameIndex;
     }
 
     void OpenGLRenderer::initImGui(Window& window) {

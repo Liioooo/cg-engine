@@ -78,6 +78,8 @@ namespace CgEngine {
         void beginImGuiFrame() override;
         void renderImGuiFrame() override;
 
+        uint64_t getFrameIndex() override;
+
         void executeImmediateCommand(const std::function<void (const vk::CommandBuffer&)>& lambda) const;
 
         GraphicsAPI getGraphicsAPI() const override { return GraphicsAPI::Vulkan; }
@@ -101,6 +103,7 @@ namespace CgEngine {
         uint32_t currentFrameIndex = 0;
         uint32_t currentSwapChainImageIndex = 0;
         bool framebufferResized = false;
+        uint64_t frameIndex = 0;
 
         vk::PipelineLayout currentPipelineLayout = VK_NULL_HANDLE;
         vk::PipelineBindPoint currentPipelineBindPoint{};

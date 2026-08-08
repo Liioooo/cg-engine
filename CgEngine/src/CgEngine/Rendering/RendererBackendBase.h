@@ -83,6 +83,8 @@ namespace CgEngine {
         virtual void beginImGuiFrame() = 0;
         virtual void renderImGuiFrame() = 0;
 
+        virtual uint64_t getFrameIndex() = 0;
+
         virtual GraphicsAPI getGraphicsAPI() const = 0;
 
     protected:

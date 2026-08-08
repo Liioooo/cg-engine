@@ -2057,7 +2057,7 @@ namespace CgEngine {
     }
 
     void SceneRenderer::ui2DPass() {
-        CG_GPU_DEBUG_GROUP("UiCanvasPass")
+        CG_GPU_DEBUG_GROUP("Ui2DPass")
         CG_GPU_TIME_FN(&renderingStats.ui2DTimer)
 
         std::sort(ui2DDrawCommandQueue.begin(), ui2DDrawCommandQueue.end(), [](const auto& a, const auto& b) {

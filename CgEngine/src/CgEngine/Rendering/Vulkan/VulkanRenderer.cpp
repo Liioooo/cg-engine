@@ -168,6 +168,8 @@ namespace CgEngine {
         depInfo.setImageMemoryBarriers(imageBarrier);
         vkGraphicsComputeCommandBuffers[currentFrameIndex].pipelineBarrier2(depInfo);
 
+        frameIndex++;
+
         return true;
     }
 
@@ -610,6 +612,10 @@ namespace CgEngine {
 
             endRenderPass();
         #endif
+    }
+
+    uint64_t VulkanRenderer::getFrameIndex() {
+        return frameIndex;
     }
 
     void VulkanRenderer::executeImmediateCommand(const std::function<void(const vk::CommandBuffer&)> &lambda) const {

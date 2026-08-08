@@ -62,6 +62,8 @@ namespace CgEngine {
         void beginImGuiFrame() override;
         void renderImGuiFrame() override;
 
+        uint64_t getFrameIndex() override;
+
         GraphicsAPI getGraphicsAPI() const override { return GraphicsAPI::OpenGL; }
 
     private:
@@ -99,6 +101,8 @@ namespace CgEngine {
         OpenGLVertexArrayObject unitCubeVAO;
 
         unsigned int pushConstantsBuffer = ~0;
+
+        uint64_t frameIndex = 0;
 
         void initImGui(Window& window);
         void shutdownImGui();

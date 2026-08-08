@@ -6,7 +6,6 @@
 #include "UiCircle.h"
 #include "Rendering/GraphicsObjectsFactory.h"
 #include "CgEngineSharedUtils/UIPosUtils.h"
-#include "Rendering/Helpers.h"
 
 namespace CgEngine {
 

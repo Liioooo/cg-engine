@@ -30,7 +30,14 @@ namespace CgEngine {
 
     private:
         DescriptorSetSpecification specification{};
-        vk::DescriptorSet descriptorSet = VK_NULL_HANDLE;
+        std::vector<vk::DescriptorSet> descriptorSets;
+        size_t lastUpdatedSlot = 0;
+        bool configuredBefore = false;
+        uint64_t lastWrittenOnFrameIndex = 0;
         std::map<uint32_t, std::function<uint32_t()>> dynamicBufferOffsetGetters{};
+
+        void growToMaxFramesInFlight();
+        void rebuildDynamicBufferOffsetGetters();
+        void applyWrites(vk::DescriptorSet target);
     };
 }

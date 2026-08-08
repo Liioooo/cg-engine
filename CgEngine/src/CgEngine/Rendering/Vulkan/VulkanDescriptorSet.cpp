@@ -13,8 +13,9 @@ namespace CgEngine {
     VulkanDescriptorSet::VulkanDescriptorSet(const DescriptorSetSpecification &spec) : specification(spec) {
         CG_ASSERT(spec.layout != nullptr, "DescriptorSet: Layout is null!")
 
-        descriptorSet = Renderer::getVulkanBackend()->getDescriptorAllocator().allocateDescriptorSet(static_cast<const VulkanDescriptorSetLayout*>(spec.layout)->getDescriptorSetLayout());
-        VulkanDescriptorSet::recreate();
+        descriptorSets.push_back(Renderer::getVulkanBackend()->getDescriptorAllocator().allocateDescriptorSet(static_cast<const VulkanDescriptorSetLayout*>(spec.layout)->getDescriptorSetLayout()));
+        rebuildDynamicBufferOffsetGetters();
+        applyWrites(descriptorSets[lastUpdatedSlot]);
     }
 
     VulkanDescriptorSet::VulkanDescriptorSet(const DescriptorSetLayout *layout) {
@@ -33,12 +34,81 @@ namespace CgEngine {
     }
 
     bool VulkanDescriptorSet::isReady() const {
-        return descriptorSet != VK_NULL_HANDLE;
+        return !descriptorSets.empty();
     }
 
     void VulkanDescriptorSet::recreate() {
         CG_ASSERT(isReady(), "DescriptorSet: Cannot recreate a descriptor set that is not ready!")
 
+        rebuildDynamicBufferOffsetGetters();
+        growToMaxFramesInFlight();
+
+        if (lastWrittenOnFrameIndex != Renderer::getFrameIndex()) {
+            lastUpdatedSlot = (lastUpdatedSlot + 1) % Renderer::getVulkanBackend()->getMaxFramesInFlight();
+            lastWrittenOnFrameIndex = Renderer::getFrameIndex();
+        }
+
+        applyWrites(descriptorSets[lastUpdatedSlot]);
+    }
+
+    void VulkanDescriptorSet::reconfigure(const DescriptorSetSpecification &spec) {
+        CG_ASSERT(spec.layout == nullptr || spec.layout == specification.layout, "DescriptorSet: Cannot change layout during reconfiguration!")
+
+        auto savedLayout = specification.layout;
+        specification = spec;
+        specification.layout = savedLayout;
+
+        if (descriptorSets.empty()) {
+            descriptorSets.push_back(Renderer::getVulkanBackend()->getDescriptorAllocator().allocateDescriptorSet(static_cast<const VulkanDescriptorSetLayout*>(specification.layout)->getDescriptorSetLayout()));
+            rebuildDynamicBufferOffsetGetters();
+            applyWrites(descriptorSets[lastUpdatedSlot]);
+            return;
+        }
+
+        recreate();
+    }
+
+    void VulkanDescriptorSet::growToMaxFramesInFlight() {
+        uint32_t maxFramesInFlight = Renderer::getVulkanBackend()->getMaxFramesInFlight();
+        if (descriptorSets.size() >= maxFramesInFlight) {
+            return;
+        }
+
+        vk::DescriptorSetLayout vkLayout = static_cast<const VulkanDescriptorSetLayout*>(specification.layout)->getDescriptorSetLayout();
+        auto& allocator = Renderer::getVulkanBackend()->getDescriptorAllocator();
+
+        descriptorSets.clear();
+        for (uint32_t i = 0; i < maxFramesInFlight; i++) {
+            descriptorSets.push_back(allocator.allocateDescriptorSet(vkLayout));
+        }
+    }
+
+    void VulkanDescriptorSet::rebuildDynamicBufferOffsetGetters() {
+        dynamicBufferOffsetGetters.clear();
+
+        for (const auto& binding: specification.uboBindings) {
+            const auto* ub = static_cast<const VulkanUniformBuffer*>(binding.ubo);
+            dynamicBufferOffsetGetters[binding.bindingPoint] = [ub] {
+                return static_cast<uint32_t>(ub->getOffsetForCurrentFrame());
+            };
+        }
+
+        for (const auto& binding: specification.ssboBindings) {
+            const auto* ssbo = static_cast<const VulkanShaderStorageBuffer*>(binding.ssbo);
+            dynamicBufferOffsetGetters[binding.bindingPoint] = [ssbo] {
+                return static_cast<uint32_t>(ssbo->getOffsetForCurrentFrame());
+            };
+        }
+
+        for (const auto& binding: specification.vertexBufferSSBOBindings) {
+            const auto* vb = static_cast<const VulkanVertexBuffer*>(binding.vertexBuffer);
+            dynamicBufferOffsetGetters[binding.bindingPoint] = [vb] {
+                return static_cast<uint32_t>(vb->getOffsetForCurrentFrame());
+            };
+        }
+    }
+
+    void VulkanDescriptorSet::applyWrites(vk::DescriptorSet target) {
         std::vector<vk::WriteDescriptorSet> writes;
         writes.reserve(
             specification.uboBindings.size() +
@@ -71,8 +141,6 @@ namespace CgEngine {
         std::vector<vk::DescriptorImageInfo> textureInfos{};
         textureInfos.reserve(textureInfoCount);
 
-        dynamicBufferOffsetGetters.clear();
-
         for (const auto& binding: specification.uboBindings) {
             const auto* ub = static_cast<const VulkanUniformBuffer*>(binding.ubo);
 
@@ -82,7 +150,7 @@ namespace CgEngine {
             bufferInfo.range = ub->getAlignedFrameSize();
 
             vk::WriteDescriptorSet write{};
-            write.setDstSet(descriptorSet);
+            write.setDstSet(target);
             write.setDstArrayElement(0);
             write.setDstBinding(binding.bindingPoint);
             write.setDescriptorType(vk::DescriptorType::eUniformBufferDynamic);
@@ -90,10 +158,6 @@ namespace CgEngine {
             write.setPBufferInfo(&bufferInfo);
 
             writes.push_back(write);
-
-            dynamicBufferOffsetGetters[binding.bindingPoint] = [ub] {
-                return static_cast<uint32_t>(ub->getOffsetForCurrentFrame());
-            };
         }
 
         for (const auto& binding: specification.ssboBindings) {
@@ -105,7 +169,7 @@ namespace CgEngine {
             bufferInfo.range = ssbo->getAlignedFrameSize();
 
             vk::WriteDescriptorSet write{};
-            write.setDstSet(descriptorSet);
+            write.setDstSet(target);
             write.setDstArrayElement(0);
             write.setDstBinding(binding.bindingPoint);
             write.setDescriptorType(vk::DescriptorType::eStorageBufferDynamic);
@@ -113,10 +177,6 @@ namespace CgEngine {
             write.setPBufferInfo(&bufferInfo);
 
             writes.push_back(write);
-
-            dynamicBufferOffsetGetters[binding.bindingPoint] = [ssbo] {
-                return static_cast<uint32_t>(ssbo->getOffsetForCurrentFrame());
-            };
         }
 
         for (const auto& binding: specification.immutableSsboBindings) {
@@ -128,7 +188,7 @@ namespace CgEngine {
             bufferInfo.range = VK_WHOLE_SIZE;
 
             vk::WriteDescriptorSet write{};
-            write.setDstSet(descriptorSet);
+            write.setDstSet(target);
             write.setDstArrayElement(0);
             write.setDstBinding(binding.bindingPoint);
             write.setDescriptorType(vk::DescriptorType::eStorageBuffer);
@@ -148,7 +208,7 @@ namespace CgEngine {
                 textureInfo.sampler = tex->getVulkanSampler();
 
                 vk::WriteDescriptorSet write{};
-                write.setDstSet(descriptorSet);
+                write.setDstSet(target);
                 write.setDstArrayElement(0);
                 write.setDstBinding(binding.bindingPoint);
                 write.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
@@ -169,7 +229,7 @@ namespace CgEngine {
                 }
 
                 vk::WriteDescriptorSet write{};
-                write.setDstSet(descriptorSet);
+                write.setDstSet(target);
                 write.setDstArrayElement(0);
                 write.setDstBinding(binding.bindingPoint);
                 write.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
@@ -190,7 +250,7 @@ namespace CgEngine {
                 textureInfo.sampler = tex->getVulkanSampler();
 
                 vk::WriteDescriptorSet write{};
-                write.setDstSet(descriptorSet);
+                write.setDstSet(target);
                 write.setDstArrayElement(0);
                 write.setDstBinding(binding.bindingPoint);
                 write.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
@@ -211,7 +271,7 @@ namespace CgEngine {
                 }
 
                 vk::WriteDescriptorSet write{};
-                write.setDstSet(descriptorSet);
+                write.setDstSet(target);
                 write.setDstArrayElement(0);
                 write.setDstBinding(binding.bindingPoint);
                 write.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
@@ -235,7 +295,7 @@ namespace CgEngine {
             textureInfo.sampler = attachment->getVulkanSampler();
 
             vk::WriteDescriptorSet write{};
-            write.setDstSet(descriptorSet);
+            write.setDstSet(target);
             write.setDstArrayElement(0);
             write.setDstBinding(binding.bindingPoint);
             write.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
@@ -258,7 +318,7 @@ namespace CgEngine {
             textureInfo.sampler = VK_NULL_HANDLE;
 
             vk::WriteDescriptorSet write{};
-            write.setDstSet(descriptorSet);
+            write.setDstSet(target);
             write.setDstArrayElement(0);
             write.setDstBinding(binding.bindingPoint);
             write.setDescriptorType(vk::DescriptorType::eStorageImage);
@@ -277,7 +337,7 @@ namespace CgEngine {
             bufferInfo.range = VK_WHOLE_SIZE;
 
             vk::WriteDescriptorSet write{};
-            write.setDstSet(descriptorSet);
+            write.setDstSet(target);
             write.setDstArrayElement(0);
             write.setDstBinding(binding.bindingPoint);
             write.setDescriptorType(vk::DescriptorType::eStorageBufferDynamic);
@@ -285,10 +345,6 @@ namespace CgEngine {
             write.setPBufferInfo(&bufferInfo);
 
             writes.push_back(write);
-
-            dynamicBufferOffsetGetters[binding.bindingPoint] = [vb] {
-                return static_cast<uint32_t>(vb->getOffsetForCurrentFrame());
-            };
         }
 
         if (!writes.empty()) {
@@ -296,23 +352,9 @@ namespace CgEngine {
         }
     }
 
-    void VulkanDescriptorSet::reconfigure(const DescriptorSetSpecification &spec) {
-        CG_ASSERT(spec.layout == nullptr || spec.layout == specification.layout, "DescriptorSet: Cannot change layout during reconfiguration!")
-
-        if (descriptorSet == VK_NULL_HANDLE) {
-            descriptorSet = Renderer::getVulkanBackend()->getDescriptorAllocator().allocateDescriptorSet(static_cast<const VulkanDescriptorSetLayout*>(specification.layout)->getDescriptorSetLayout());
-        }
-
-        auto savedLayout = specification.layout;
-        specification = spec;
-        specification.layout = savedLayout;
-
-        recreate();
-    }
-
     vk::DescriptorSet VulkanDescriptorSet::getVulkanDescriptorSet() const {
         CG_ASSERT(isReady(), "DescriptorSet: Cannot get Vulkan descriptor set from a descriptor set that is not ready!")
-        return descriptorSet;
+        return descriptorSets[lastUpdatedSlot];
     }
 
     std::vector<uint32_t> VulkanDescriptorSet::getDynamicBufferOffsets() const {
