@@ -28,16 +28,17 @@ namespace CgEngine {
         }
 
         std::vector<vk::DescriptorSetLayout> layouts(count, layout);
+        std::vector<vk::DescriptorSet> sets(count);
 
         vk::DescriptorSetAllocateInfo allocInfo{};
         allocInfo.setDescriptorPool(currentDescriptorPool->vulkanDescriptorPool);
         allocInfo.setSetLayouts(layouts);
 
-        auto setsResults = vkDevice.allocateDescriptorSets(allocInfo);
+        vk::Result result = vkDevice.allocateDescriptorSets(&allocInfo, sets.data());
 
-        if (setsResults.result == vk::Result::eSuccess) {
+        if (result == vk::Result::eSuccess) {
             currentDescriptorPool->setsAllocated += count;
-            return setsResults.value;
+            return sets;
         }
 
         uint32_t newSize = BASE_POOL_SIZE * (1u << descriptorPools.size());
@@ -46,14 +47,14 @@ namespace CgEngine {
 
         allocInfo.setDescriptorPool(currentDescriptorPool->vulkanDescriptorPool);
 
-        setsResults = vkDevice.allocateDescriptorSets(allocInfo);
+        result = vkDevice.allocateDescriptorSets(&allocInfo, sets.data());
 
-        if (setsResults.result != vk::Result::eSuccess) {
+        if (result != vk::Result::eSuccess) {
             CG_LOGGING_ERROR("VulkanDescriptorAllocator: Failed to allocate descriptor sets even after creating new pool!")
         }
 
         currentDescriptorPool->setsAllocated += count;
-        return setsResults.value;
+        return sets;
     }
 
     vk::DescriptorSet VulkanDescriptorAllocator::allocateDescriptorSet(vk::DescriptorSetLayout layout) {

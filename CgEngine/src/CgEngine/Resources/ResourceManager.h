@@ -44,6 +44,10 @@ namespace CgEngine {
             map.erase(it);
         }
 
+        void clear() {
+            map.clear();
+        }
+
     private:
         std::unordered_map<std::string, ResRef<R>> map{};
     };
@@ -122,6 +126,18 @@ namespace CgEngine {
             unloadUnusedResourceType<CustomComputePipeline>();
         }
 
+        void unloadAllResources() {
+            unloadAllResourceType<MeshVertices>();
+            unloadAllResourceType<PBRMaterial>();
+            unloadAllResourceType<Texture2D>();
+            unloadAllResourceType<TextureCube>();
+            unloadAllResourceType<PhysicsMaterial>();
+            unloadAllResourceType<Font>();
+            unloadAllResourceType<AudioFile>();
+            unloadAllResourceType<CustomGraphicsPipeline>();
+            unloadAllResourceType<CustomComputePipeline>();
+        }
+
     private:
         std::unordered_map<const char*, void*> resourceMaps;
 
@@ -150,6 +166,12 @@ namespace CgEngine {
                     ++it;
                 }
             }
+        }
+
+        template<typename R>
+        void unloadAllResourceType() {
+            ResourceMap<R>& resourceMap = getResourceMap<R>();
+            resourceMap.clear();
         }
     };
 

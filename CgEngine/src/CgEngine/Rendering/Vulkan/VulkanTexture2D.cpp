@@ -45,15 +45,7 @@ namespace CgEngine {
     }
 
     VulkanTexture2D::~VulkanTexture2D() {
-        auto device = Renderer::getVulkanBackend()->getVkDevice();
-
-        if (imageView) {
-            device.destroyImageView(imageView);
-        }
-        if (image) {
-            VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
-            vmaDestroyImage(allocator, image, allocation);
-        }
+        deferredDestroyCurrentResources();
     }
 
     VulkanTexture2D::VulkanTexture2D(VulkanTexture2D &&other) noexcept : Texture2D(std::move(other)) {
@@ -76,15 +68,7 @@ namespace CgEngine {
         if (this != &other) {
             Texture2D::operator=(std::move(other));
 
-            auto device = Renderer::getVulkanBackend()->getVkDevice();
-
-            if (imageView) {
-                device.destroyImageView(imageView);
-            }
-            if (image) {
-                VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
-                vmaDestroyImage(allocator, image, allocation);
-            }
+            deferredDestroyCurrentResources();
 
             image = other.image;
             allocation = other.allocation;
@@ -165,6 +149,7 @@ namespace CgEngine {
             &stagingAllocation,
             &stagingAllocDetails
         );
+        vmaSetAllocationName(allocator, stagingAllocation, "VulkanTexture2D_Staging");
 
         std::memcpy(stagingAllocDetails.pMappedData, data, bufferSize);
 
@@ -194,6 +179,7 @@ namespace CgEngine {
             &allocation,
             nullptr
         );
+        vmaSetAllocationName(allocator, allocation, "VulkanTexture2D");
 
         image = rawImage;
 
@@ -364,5 +350,31 @@ namespace CgEngine {
         vmaDestroyBuffer(allocator, stagingBuffer, stagingAllocation);
 
         imageView = VulkanHelpers::createImageView2D(image, vulkanFormat, mipLevels, 1, vk::ImageAspectFlagBits::eColor);
+    }
+
+    void VulkanTexture2D::deferredDestroyCurrentResources() {
+        if (!image && !imageView) {
+            return;
+        }
+
+        vk::Image oldImage = image;
+        VmaAllocation oldAllocation = allocation;
+        vk::ImageView oldImageView = imageView;
+
+        image = VK_NULL_HANDLE;
+        allocation = VK_NULL_HANDLE;
+        imageView = VK_NULL_HANDLE;
+
+        Renderer::getVulkanBackend()->deferDestruction([oldImage, oldAllocation, oldImageView] {
+            auto device = Renderer::getVulkanBackend()->getVkDevice();
+
+            if (oldImageView) {
+                device.destroyImageView(oldImageView);
+            }
+            if (oldImage) {
+                VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
+                vmaDestroyImage(allocator, oldImage, oldAllocation);
+            }
+        });
     }
 }

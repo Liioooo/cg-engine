@@ -4,13 +4,7 @@
 
 namespace CgEngine {
     VulkanVertexArrayObject::~VulkanVertexArrayObject() {
-        if (!usingExistingIndexBuffer) {
-            delete indexBuffer;
-        }
-
-        for (auto* item: vertexBuffers) {
-            delete item;
-        }
+        deferredDestroyCurrentResources();
     }
 
     VulkanVertexArrayObject::VulkanVertexArrayObject(VulkanVertexArrayObject &&other) noexcept : VertexArrayObject(std::move(other)) {
@@ -25,13 +19,7 @@ namespace CgEngine {
         if (this != &other) {
             VertexArrayObject::operator=(std::move(other));
 
-            if (!usingExistingIndexBuffer) {
-                delete indexBuffer;
-            }
-
-            for (auto* item: vertexBuffers) {
-                delete item;
-            }
+            deferredDestroyCurrentResources();
 
             vertexBuffers = std::move(other.vertexBuffers);
             indexBuffer = other.indexBuffer;
@@ -96,5 +84,18 @@ namespace CgEngine {
         if (indexBuffer && indexBuffer->hasData()) {
             commandBuffer.bindIndexBuffer(indexBuffer->getVulkanBufferHandle(), 0, indexBuffer->getVulkanIndexType());
         }
+    }
+
+    void VulkanVertexArrayObject::deferredDestroyCurrentResources() {
+        if (!usingExistingIndexBuffer) {
+            delete indexBuffer;
+        }
+        indexBuffer = nullptr;
+        usingExistingIndexBuffer = false;
+
+        for (auto* item: vertexBuffers) {
+            delete item;
+        }
+        vertexBuffers.clear();
     }
 }

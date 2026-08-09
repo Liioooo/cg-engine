@@ -13,11 +13,40 @@ namespace CgEngine {
     }
 
     VulkanFramebuffer::VulkanFramebuffer(VulkanFramebuffer &&other) noexcept : Framebuffer(std::move(other)) {
+        height = other.height;
+        width = other.width;
+        ready = other.ready;
+        layers = other.layers;
+        colorAttachmentImageViews = std::move(other.colorAttachmentImageViews);
+        depthAttachmentImageView = other.depthAttachmentImageView;
+        stencilAttachmentImageView = other.stencilAttachmentImageView;
+        colorAttachments = std::move(other.colorAttachments);
+        depthStencilAttachment = other.depthStencilAttachment;
+
+        other.ready = false;
+        other.depthAttachmentImageView = VK_NULL_HANDLE;
+        other.stencilAttachmentImageView = VK_NULL_HANDLE;
+        other.depthStencilAttachment = {};
     }
 
     VulkanFramebuffer & VulkanFramebuffer::operator=(VulkanFramebuffer &&other) noexcept {
         if (this != &other) {
             Framebuffer::operator=(std::move(other));
+
+            height = other.height;
+            width = other.width;
+            ready = other.ready;
+            layers = other.layers;
+            colorAttachmentImageViews = std::move(other.colorAttachmentImageViews);
+            depthAttachmentImageView = other.depthAttachmentImageView;
+            stencilAttachmentImageView = other.stencilAttachmentImageView;
+            colorAttachments = std::move(other.colorAttachments);
+            depthStencilAttachment = other.depthStencilAttachment;
+
+            other.ready = false;
+            other.depthAttachmentImageView = VK_NULL_HANDLE;
+            other.stencilAttachmentImageView = VK_NULL_HANDLE;
+            other.depthStencilAttachment = {};
         }
         return *this;
     }

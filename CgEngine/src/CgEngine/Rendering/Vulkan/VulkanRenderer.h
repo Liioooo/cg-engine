@@ -4,6 +4,7 @@
 #include <vulkan/vulkan.hpp>
 #include "vk_mem_alloc.h"
 #include "VulkanBarrierManager.h"
+#include "VulkanComputePipeline.h"
 #include "VulkanDescriptorAllocator.h"
 #include "VulkanDescriptorSet.h"
 #include "VulkanSamplerManager.h"
@@ -93,6 +94,8 @@ namespace CgEngine {
         VulkanDescriptorAllocator& getDescriptorAllocator();
         VulkanSamplerManager& getSamplerManager();
 
+        void deferDestruction(std::function<void()> destroyFn);
+
     private:
         bool ENABLE_VALIDATION_LAYERS = false;
         const uint32_t MAX_FRAMES_IN_FLIGHT = 2;
@@ -141,6 +144,13 @@ namespace CgEngine {
         VulkanSamplerManager samplerManager{};
         VulkanBarrierManager barrierManager{};
 
+        struct DeferredDestruction {
+            uint64_t safeAtFrameIndex;
+            std::function<void()> destroy;
+        };
+        std::vector<DeferredDestruction> pendingDestructions;
+        void flushPendingDestructions();
+
         VmaAllocator vmaAllocator;
 
         VulkanVertexArrayObject quadVAO;
@@ -149,6 +159,11 @@ namespace CgEngine {
         VulkanTexture2D whiteTexture{};
         VulkanTexture2D brdfLUT{};
         VulkanTextureCube blackCubeTexture{};
+
+        VulkanDescriptorSetLayout environmentMapComputeDescriptorSetLayout{};
+        VulkanComputePipeline computeSphereToCube{};
+        VulkanComputePipeline computePrefilterMap{};
+        VulkanComputePipeline computeIrradianceMap{};
 
         vk::DescriptorPool imguiDescriptorPool{};
 

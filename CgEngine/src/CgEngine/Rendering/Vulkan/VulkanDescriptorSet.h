@@ -32,7 +32,6 @@ namespace CgEngine {
         DescriptorSetSpecification specification{};
         std::vector<vk::DescriptorSet> descriptorSets;
         size_t lastUpdatedSlot = 0;
-        bool configuredBefore = false;
         uint64_t lastWrittenOnFrameIndex = 0;
         std::map<uint32_t, std::function<uint32_t()>> dynamicBufferOffsetGetters{};
 

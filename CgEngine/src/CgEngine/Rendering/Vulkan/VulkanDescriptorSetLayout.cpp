@@ -86,10 +86,7 @@ namespace CgEngine {
     }
 
     VulkanDescriptorSetLayout::~VulkanDescriptorSetLayout() {
-        if (descriptorSetLayout != VK_NULL_HANDLE) {
-            auto device = Renderer::getVulkanBackend()->getVkDevice();
-            device.destroyDescriptorSetLayout(descriptorSetLayout);
-        }
+        deferredDestroyCurrentResources();
     }
 
     VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(VulkanDescriptorSetLayout &&other) noexcept : DescriptorSetLayout(std::move(other)) {
@@ -102,10 +99,7 @@ namespace CgEngine {
         if (this != &other) {
             DescriptorSetLayout::operator=(std::move(other));
 
-            if (descriptorSetLayout != VK_NULL_HANDLE) {
-                auto device = Renderer::getVulkanBackend()->getVkDevice();
-                device.destroyDescriptorSetLayout(descriptorSetLayout);
-            }
+            deferredDestroyCurrentResources();
 
             descriptorSetLayout = other.descriptorSetLayout;
             other.descriptorSetLayout = VK_NULL_HANDLE;
@@ -124,5 +118,18 @@ namespace CgEngine {
 
     vk::DescriptorSetLayout VulkanDescriptorSetLayout::getDescriptorSetLayout() const {
         return descriptorSetLayout;
+    }
+
+    void VulkanDescriptorSetLayout::deferredDestroyCurrentResources() {
+        if (descriptorSetLayout == VK_NULL_HANDLE) {
+            return;
+        }
+
+        vk::DescriptorSetLayout oldDescriptorSetLayout = descriptorSetLayout;
+        descriptorSetLayout = VK_NULL_HANDLE;
+
+        Renderer::getVulkanBackend()->deferDestruction([oldDescriptorSetLayout] {
+            Renderer::getVulkanBackend()->getVkDevice().destroyDescriptorSetLayout(oldDescriptorSetLayout);
+        });
     }
 }

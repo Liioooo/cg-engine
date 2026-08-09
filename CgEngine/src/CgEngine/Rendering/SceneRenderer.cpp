@@ -1114,6 +1114,7 @@ namespace CgEngine {
         delete pbrFramebuffer;
         delete pbrDescriptorSet;
         delete pbrDescriptorSetLayout;
+        delete pbrMaterialDescriptorSetLayout;
 
         delete afterPbrRenderPass;
         delete afterPbrFramebuffer;

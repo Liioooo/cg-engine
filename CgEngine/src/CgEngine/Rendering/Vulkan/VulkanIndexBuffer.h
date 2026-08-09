@@ -25,6 +25,8 @@ namespace CgEngine {
         vk::Buffer getVulkanBufferHandle() const;
         vk::IndexType getVulkanIndexType() const;
 
+        void deferredDestroyCurrentBuffer();
+
     private:
         vk::Buffer buffer = VK_NULL_HANDLE;
         VmaAllocation allocation = VK_NULL_HANDLE;

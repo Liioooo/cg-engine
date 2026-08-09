@@ -189,17 +189,7 @@ namespace CgEngine {
     }
 
     VulkanGraphicsPipeline::~VulkanGraphicsPipeline() {
-        auto device = Renderer::getVulkanBackend()->getVkDevice();
-
-        if (pipeline != VK_NULL_HANDLE) {
-            device.destroyPipeline(pipeline);
-            pipeline = VK_NULL_HANDLE;
-        }
-
-        if (pipelineLayout != VK_NULL_HANDLE) {
-            device.destroyPipelineLayout(pipelineLayout);
-            pipelineLayout = VK_NULL_HANDLE;
-        }
+        deferredDestroyCurrentResources();
     }
 
     VulkanGraphicsPipeline::VulkanGraphicsPipeline(VulkanGraphicsPipeline &&other) noexcept : GraphicsPipeline(std::move(other)) {
@@ -215,14 +205,7 @@ namespace CgEngine {
         if (this != &other) {
             GraphicsPipeline::operator=(std::move(other));
 
-            auto device = Renderer::getVulkanBackend()->getVkDevice();
-
-            if (pipeline != VK_NULL_HANDLE) {
-                device.destroyPipeline(pipeline);
-            }
-            if (pipelineLayout != VK_NULL_HANDLE) {
-                device.destroyPipelineLayout(pipelineLayout);
-            }
+            deferredDestroyCurrentResources();
 
             pipelineLayout = other.pipelineLayout;
             pipeline = other.pipeline;
@@ -248,5 +231,28 @@ namespace CgEngine {
 
     vk::ShaderStageFlags VulkanGraphicsPipeline::getShaderStageFlags() const {
         return shaderStageFlags;
+    }
+
+    void VulkanGraphicsPipeline::deferredDestroyCurrentResources() {
+        if (pipeline == VK_NULL_HANDLE && pipelineLayout == VK_NULL_HANDLE) {
+            return;
+        }
+
+        vk::Pipeline oldPipeline = pipeline;
+        vk::PipelineLayout oldPipelineLayout = pipelineLayout;
+
+        pipeline = VK_NULL_HANDLE;
+        pipelineLayout = VK_NULL_HANDLE;
+
+        Renderer::getVulkanBackend()->deferDestruction([oldPipeline, oldPipelineLayout] {
+            auto device = Renderer::getVulkanBackend()->getVkDevice();
+
+            if (oldPipeline != VK_NULL_HANDLE) {
+                device.destroyPipeline(oldPipeline);
+            }
+            if (oldPipelineLayout != VK_NULL_HANDLE) {
+                device.destroyPipelineLayout(oldPipelineLayout);
+            }
+        });
     }
 }

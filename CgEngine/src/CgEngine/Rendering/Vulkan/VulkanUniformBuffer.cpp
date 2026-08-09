@@ -36,17 +36,13 @@ namespace CgEngine {
             &allocation,
             nullptr
         );
+        vmaSetAllocationName(allocator, allocation, "VulkanUniformBuffer");
 
         buffer = rawBuffer;
     }
 
     VulkanUniformBuffer::~VulkanUniformBuffer() {
-        if (buffer != VK_NULL_HANDLE) {
-            VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
-            vmaDestroyBuffer(allocator, buffer, allocation);
-            buffer = VK_NULL_HANDLE;
-            allocation = VK_NULL_HANDLE;
-        }
+        deferredDestroyCurrentBuffer();
     }
 
     VulkanUniformBuffer::VulkanUniformBuffer(VulkanUniformBuffer &&other) noexcept : UniformBuffer(std::move(other)) {
@@ -64,10 +60,7 @@ namespace CgEngine {
         if (this != &other) {
             UniformBuffer::operator=(std::move(other));
 
-            if (buffer != VK_NULL_HANDLE) {
-                VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
-                vmaDestroyBuffer(allocator, buffer, allocation);
-            }
+            deferredDestroyCurrentBuffer();
 
             buffer = other.buffer;
             allocation = other.allocation;
@@ -117,5 +110,22 @@ namespace CgEngine {
 
     size_t VulkanUniformBuffer::getOffsetForCurrentFrame() const {
         return alignedFrameSize * lastWrittenFrameIndex;
+    }
+
+    void VulkanUniformBuffer::deferredDestroyCurrentBuffer() {
+        if (buffer == VK_NULL_HANDLE) {
+            return;
+        }
+
+        vk::Buffer oldBuffer = buffer;
+        VmaAllocation oldAllocation = allocation;
+
+        buffer = VK_NULL_HANDLE;
+        allocation = VK_NULL_HANDLE;
+
+        Renderer::getVulkanBackend()->deferDestruction([oldBuffer, oldAllocation] {
+            VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
+            vmaDestroyBuffer(allocator, oldBuffer, oldAllocation);
+        });
     }
 }

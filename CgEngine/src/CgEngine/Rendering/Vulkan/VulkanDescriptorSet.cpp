@@ -24,11 +24,22 @@ namespace CgEngine {
     }
 
     VulkanDescriptorSet::VulkanDescriptorSet(VulkanDescriptorSet &&other) noexcept : DescriptorSet(std::move(other)) {
+        specification = other.specification;
+        descriptorSets = std::move(other.descriptorSets);
+        lastUpdatedSlot = other.lastUpdatedSlot;
+        lastWrittenOnFrameIndex = other.lastWrittenOnFrameIndex;
+        dynamicBufferOffsetGetters = std::move(other.dynamicBufferOffsetGetters);
     }
 
     VulkanDescriptorSet & VulkanDescriptorSet::operator=(VulkanDescriptorSet &&other) noexcept {
         if (this != &other) {
             DescriptorSet::operator=(std::move(other));
+
+            specification = other.specification;
+            descriptorSets = std::move(other.descriptorSets);
+            lastUpdatedSlot = other.lastUpdatedSlot;
+            lastWrittenOnFrameIndex = other.lastWrittenOnFrameIndex;
+            dynamicBufferOffsetGetters = std::move(other.dynamicBufferOffsetGetters);
         }
         return *this;
     }

@@ -33,6 +33,7 @@ namespace CgEngine {
             &stagingAllocation,
             &stagingAllocDetails
         );
+        vmaSetAllocationName(allocator, stagingAllocation, "VulkanImmutableShaderStorageBuffer_Staging");
 
         std::memcpy(stagingAllocDetails.pMappedData, data, size);
 
@@ -46,13 +47,14 @@ namespace CgEngine {
         bufferAllocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 
         vmaCreateBuffer(
-                allocator,
-                reinterpret_cast<const VkBufferCreateInfo*>(&bufferInfo),
-                &bufferAllocInfo,
-                &rawBuffer,
-                &allocation,
-                nullptr
-            );
+            allocator,
+            reinterpret_cast<const VkBufferCreateInfo*>(&bufferInfo),
+            &bufferAllocInfo,
+            &rawBuffer,
+            &allocation,
+            nullptr
+        );
+        vmaSetAllocationName(allocator, allocation, "VulkanImmutableShaderStorageBuffer");
 
         buffer = rawBuffer;
 
@@ -61,12 +63,7 @@ namespace CgEngine {
     }
 
     VulkanImmutableShaderStorageBuffer::~VulkanImmutableShaderStorageBuffer() {
-        if (buffer != VK_NULL_HANDLE) {
-            VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
-            vmaDestroyBuffer(allocator, buffer, allocation);
-            buffer = VK_NULL_HANDLE;
-            allocation = VK_NULL_HANDLE;
-        }
+        deferredDestroyCurrentBuffer();
     }
 
     VulkanImmutableShaderStorageBuffer::VulkanImmutableShaderStorageBuffer(VulkanImmutableShaderStorageBuffer &&other) noexcept : ImmutableShaderStorageBuffer(std::move(other)) {
@@ -82,10 +79,7 @@ namespace CgEngine {
         if (this != &other) {
             ImmutableShaderStorageBuffer::operator=(std::move(other));
 
-            if (buffer != VK_NULL_HANDLE) {
-                VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
-                vmaDestroyBuffer(allocator, buffer, allocation);
-            }
+            deferredDestroyCurrentBuffer();
 
             buffer = other.buffer;
             allocation = other.allocation;
@@ -109,5 +103,22 @@ namespace CgEngine {
     vk::Buffer VulkanImmutableShaderStorageBuffer::getVulkanBufferHandle() const {
         CG_ASSERT(isReady(), "Shader Storage Buffer is not ready!")
         return buffer;
+    }
+
+    void VulkanImmutableShaderStorageBuffer::deferredDestroyCurrentBuffer() {
+        if (buffer == VK_NULL_HANDLE) {
+            return;
+        }
+
+        vk::Buffer oldBuffer = buffer;
+        VmaAllocation oldAllocation = allocation;
+
+        buffer = VK_NULL_HANDLE;
+        allocation = VK_NULL_HANDLE;
+
+        Renderer::getVulkanBackend()->deferDestruction([oldBuffer, oldAllocation] {
+            VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
+            vmaDestroyBuffer(allocator, oldBuffer, oldAllocation);
+        });
     }
 }

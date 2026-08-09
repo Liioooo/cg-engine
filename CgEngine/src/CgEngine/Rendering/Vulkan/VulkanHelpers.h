@@ -29,7 +29,7 @@ namespace CgEngine {
         };
 
         vk::ImageView createImageView2D(vk::Image image, vk::Format format, uint32_t levelCount, uint32_t layerCount, vk::ImageAspectFlags aspectFlags, uint32_t baseArrayLayer = 0);
-        vk::ImageView createImageViewCube(vk::Image image, vk::Format format, uint32_t levelCount, vk::ImageAspectFlags aspectFlags);
+        vk::ImageView createImageViewCube(vk::Image image, vk::Format format, uint32_t levelCount, vk::ImageAspectFlags aspectFlags, uint32_t baseMipLevel = 0);
         void copyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
         size_t alignUp(size_t value, size_t alignment);
         vk::Format findSupportedDepthFormat(const std::vector<vk::Format>& candidates);

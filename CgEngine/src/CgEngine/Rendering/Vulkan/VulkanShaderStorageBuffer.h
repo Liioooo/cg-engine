@@ -30,6 +30,8 @@ namespace CgEngine {
         vk::Buffer getVulkanBufferHandle() const;
         size_t getOffsetForCurrentFrame() const;
 
+        void deferredDestroyCurrentBuffer();
+
     private:
         vk::Buffer buffer = VK_NULL_HANDLE;
         VmaAllocation allocation = VK_NULL_HANDLE;

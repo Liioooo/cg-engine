@@ -28,6 +28,8 @@ namespace CgEngine {
         vk::ImageView getVulkanImageView() const;
         vk::Sampler getVulkanSampler() const;
 
+        void deferredDestroyCurrentResources();
+
     private:
         uint32_t width;
         uint32_t height;

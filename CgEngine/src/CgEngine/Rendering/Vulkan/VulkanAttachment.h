@@ -42,6 +42,8 @@ namespace CgEngine {
         vk::ImageAspectFlags getVulkanAspectFlags() const;
         std::vector<VulkanAttachmentState>& getSubresourceStates();
 
+        void deferredDestroyCurrentResources();
+
     private:
         vk::Image image = VK_NULL_HANDLE;
         VmaAllocation allocation = VK_NULL_HANDLE;

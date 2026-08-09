@@ -11,7 +11,7 @@ namespace CgEngine {
         explicit VulkanVertexBuffer(size_t size, VertexBufferUsage usage);
         VulkanVertexBuffer(const void* data, size_t size, VertexBufferUsage usage = VertexBufferUsage::Static);
 
-        ~VulkanVertexBuffer();
+        ~VulkanVertexBuffer() override;
 
         VulkanVertexBuffer(VulkanVertexBuffer&& other) noexcept;
         VulkanVertexBuffer& operator=(VulkanVertexBuffer&& other) noexcept;
@@ -28,6 +28,8 @@ namespace CgEngine {
 
         const vk::Buffer& getVulkanBufferHandle() const;
         size_t getOffsetForCurrentFrame() const;
+
+        void deferredDestroyCurrentBuffer();
 
     private:
         vk::Buffer buffer = VK_NULL_HANDLE;

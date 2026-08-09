@@ -75,8 +75,8 @@ namespace CgEngine {
         delete uiCircleVAO;
         delete uiRectVAO;
         delete uiTextVAO;
-        delete uiAttachment;
         delete attachmentSamplerDescriptorSet;
+        delete uiAttachment;
 
         for (auto& item: uiDescriptorSets) {
             delete item;

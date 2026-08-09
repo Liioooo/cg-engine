@@ -11,12 +11,7 @@ namespace CgEngine {
     }
 
     VulkanIndexBuffer::~VulkanIndexBuffer() {
-        if (buffer != VK_NULL_HANDLE) {
-            VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
-            vmaDestroyBuffer(allocator, buffer, allocation);
-            buffer = VK_NULL_HANDLE;
-            allocation = VK_NULL_HANDLE;
-        }
+        deferredDestroyCurrentBuffer();
     }
 
     VulkanIndexBuffer::VulkanIndexBuffer(VulkanIndexBuffer &&other) noexcept : IndexBuffer(std::move(other)) {
@@ -31,10 +26,7 @@ namespace CgEngine {
         if (this != &other) {
             IndexBuffer::operator=(std::move(other));
 
-            if (buffer != VK_NULL_HANDLE) {
-                VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
-                vmaDestroyBuffer(allocator, buffer, allocation);
-            }
+            deferredDestroyCurrentBuffer();
 
             buffer = other.buffer;
             allocation = other.allocation;
@@ -100,6 +92,7 @@ namespace CgEngine {
             &stagingAllocation,
             &stagingAllocDetails
         );
+        vmaSetAllocationName(allocator, stagingAllocation, "VulkanIndexBuffer_Staging");
 
         memcpy(stagingAllocDetails.pMappedData, indices, bufferSize);
 
@@ -120,9 +113,27 @@ namespace CgEngine {
             &allocation,
             nullptr
         );
+        vmaSetAllocationName(allocator, allocation, "VulkanIndexBuffer");
 
         buffer = rawBuffer;
         VulkanHelpers::copyBuffer(stagingBuffer, buffer, bufferSize);
         vmaDestroyBuffer(allocator, stagingBuffer, stagingAllocation);
+    }
+
+    void VulkanIndexBuffer::deferredDestroyCurrentBuffer() {
+        if (buffer == VK_NULL_HANDLE) {
+            return;
+        }
+
+        vk::Buffer oldBuffer = buffer;
+        VmaAllocation oldAllocation = allocation;
+
+        buffer = VK_NULL_HANDLE;
+        allocation = VK_NULL_HANDLE;
+
+        Renderer::getVulkanBackend()->deferDestruction([oldBuffer, oldAllocation] {
+            VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
+            vmaDestroyBuffer(allocator, oldBuffer, oldAllocation);
+        });
     }
 }

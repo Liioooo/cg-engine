@@ -138,6 +138,7 @@ namespace CgEngine {
 
     PBRMaterial::~PBRMaterial() {
         delete descriptorSet;
+        delete materialBuffer;
     }
 
     const Uuid& PBRMaterial::getUuid() const {

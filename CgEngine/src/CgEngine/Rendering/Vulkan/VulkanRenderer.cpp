@@ -5,6 +5,7 @@
 #include "FileSystem.h"
 #include "Logging.h"
 #include "vk_mem_alloc.h"
+#include "Rendering/Helpers.h"
 #include "VulkanFramebuffer.h"
 #include "VulkanRenderPass.h"
 #include "imgui.h"
@@ -105,14 +106,86 @@ namespace CgEngine {
 
         brdfLUT = VulkanTexture2D(FileSystem::getAsEnginePath("ibl_brdf_lut.png"), false, TextureWrap::Clamp, MipMapFiltering::Bilinear);
 
+        DescriptorSetLayoutSpecification envMapComputeLayoutSpec{};
+        envMapComputeLayoutSpec.texture2DAndAttachmentBindingPoints = {{0, DescriptorSetLayoutBindingUsage::Compute}};
+        envMapComputeLayoutSpec.imageBindingPoints = {{1, DescriptorSetLayoutBindingUsage::Compute}};
+        environmentMapComputeDescriptorSetLayout = VulkanDescriptorSetLayout(envMapComputeLayoutSpec);
+
+        ComputePipelineSpecification sphereToCubeSpec{};
+        sphereToCubeSpec.engineShaderName = "sphereToCube";
+        sphereToCubeSpec.descriptorSetLayouts = {&environmentMapComputeDescriptorSetLayout};
+        computeSphereToCube = VulkanComputePipeline(sphereToCubeSpec);
+
+        ComputePipelineSpecification prefilterMapSpec{};
+        prefilterMapSpec.engineShaderName = "prefilterMap";
+        prefilterMapSpec.descriptorSetLayouts = {&environmentMapComputeDescriptorSetLayout};
+        prefilterMapSpec.usesPushConstants = true;
+        prefilterMapSpec.pushConstantsSize = sizeof(float);
+        computePrefilterMap = VulkanComputePipeline(prefilterMapSpec);
+
+        ComputePipelineSpecification irradianceMapSpec{};
+        irradianceMapSpec.engineShaderName = "irradianceMap";
+        irradianceMapSpec.descriptorSetLayouts = {&environmentMapComputeDescriptorSetLayout};
+        computeIrradianceMap = VulkanComputePipeline(irradianceMapSpec);
+
         initImGui(window);
     }
 
     void VulkanRenderer::shutdown() {
+        const auto idleResult = vkDevice.waitIdle();
+        if (idleResult != vk::Result::eSuccess) {
+            CG_LOGGING_ERROR("VulkanRenderer::shutdown: failed on waitIdle");
+        }
+
         shutdownImGui();
+        brdfLUT.deferredDestroyCurrentResources();
+        whiteTexture.deferredDestroyCurrentResources();
+        blackCubeTexture.deferredDestroyCurrentResources();
+        unitCubeVAO.deferredDestroyCurrentResources();
+        quadVAO.deferredDestroyCurrentResources();
+        computeSphereToCube.deferredDestroyCurrentResources();
+        computePrefilterMap.deferredDestroyCurrentResources();
+        computeIrradianceMap.deferredDestroyCurrentResources();
+        environmentMapComputeDescriptorSetLayout.deferredDestroyCurrentResources();
+
+        for (auto& pending : pendingDestructions) {
+            pending.destroy();
+        }
+        pendingDestructions.clear();
 
         descriptorAllocator.shutdown();
         samplerManager.shutdown();
+
+        vmaDestroyAllocator(vmaAllocator);
+
+        for (auto semaphore : vkRenderFinishedSemaphores) {
+            vkDevice.destroySemaphore(semaphore);
+        }
+        vkRenderFinishedSemaphores.clear();
+
+        for (auto semaphore : vkImageAvailableSemaphores) {
+            vkDevice.destroySemaphore(semaphore);
+        }
+        for (auto fence : vkInFlightFences) {
+            vkDevice.destroyFence(fence);
+        }
+
+        vkDevice.freeCommandBuffers(vkGraphicsComputeCommandPool, vkGraphicsComputeCommandBuffers);
+        vkDevice.destroyCommandPool(vkTransientCommandPool);
+        vkDevice.destroyCommandPool(vkGraphicsComputeCommandPool);
+
+        for (const auto view : vkSwapChainImageViews) {
+            vkDevice.destroyImageView(view);
+        }
+
+        vkDevice.destroySwapchainKHR(vkSwapChain);
+        vkDevice.destroy();
+
+        if (ENABLE_VALIDATION_LAYERS) {
+            vkInstance.destroyDebugUtilsMessengerEXT(debugMessenger, nullptr, vkDispatchLoaderDynamic);
+        }
+        vkInstance.destroySurfaceKHR(vkSurface);
+        vkInstance.destroy();
     }
 
     void VulkanRenderer::setFramebufferResized() {
@@ -169,6 +242,7 @@ namespace CgEngine {
         vkGraphicsComputeCommandBuffers[currentFrameIndex].pipelineBarrier2(depInfo);
 
         frameIndex++;
+        flushPendingDestructions();
 
         return true;
     }
@@ -574,7 +648,84 @@ namespace CgEngine {
     }
 
     std::pair<TextureCube*, TextureCube*> VulkanRenderer::createEnvironmentMap(const std::string& hdriPath) {
-        return std::pair<TextureCube*, TextureCube*>(getBlackCubeTexture(), getBlackCubeTexture());
+        CG_LOGGING_DEBUG("Creating Environment Map from: {0}", hdriPath)
+
+        constexpr uint32_t MAP_SIZE = 1024;
+        constexpr vk::PipelineStageFlags2 computeStage = vk::PipelineStageFlagBits2::eComputeShader;
+
+        VulkanTexture2D sphereMap(FileSystem::getAsGamePath(hdriPath), false);
+
+        // Allocates a one-off descriptor set binding (0: sampled source, 1: storage image target mip), dispatches
+        // the compute shader once and transitions the target mip back to shader-read-only for the next pass to sample.
+        auto dispatchEnvMapCompute = [&](vk::Pipeline pipeline, vk::PipelineLayout pipelineLayout, vk::ImageView sampledView, vk::Sampler sampledSampler, VulkanTextureCube* targetCube, uint32_t targetMip, uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ, const void* pushConstantData, uint32_t pushConstantSize) {
+            vk::DescriptorSet descriptorSet = descriptorAllocator.allocateDescriptorSet(environmentMapComputeDescriptorSetLayout.getDescriptorSetLayout());
+            vk::ImageView storageView = targetCube->createStorageImageView(targetMip);
+
+            vk::DescriptorImageInfo sampledInfo{};
+            sampledInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+            sampledInfo.imageView = sampledView;
+            sampledInfo.sampler = sampledSampler;
+
+            vk::DescriptorImageInfo storageInfo{};
+            storageInfo.imageLayout = vk::ImageLayout::eGeneral;
+            storageInfo.imageView = storageView;
+
+            vk::WriteDescriptorSet sampledWrite{};
+            sampledWrite.setDstSet(descriptorSet);
+            sampledWrite.setDstArrayElement(0);
+            sampledWrite.setDstBinding(0);
+            sampledWrite.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
+            sampledWrite.setDescriptorCount(1);
+            sampledWrite.setPImageInfo(&sampledInfo);
+
+            vk::WriteDescriptorSet storageWrite{};
+            storageWrite.setDstSet(descriptorSet);
+            storageWrite.setDstArrayElement(0);
+            storageWrite.setDstBinding(1);
+            storageWrite.setDescriptorType(vk::DescriptorType::eStorageImage);
+            storageWrite.setDescriptorCount(1);
+            storageWrite.setPImageInfo(&storageInfo);
+
+            std::vector<vk::WriteDescriptorSet> writes = {sampledWrite, storageWrite};
+            vkDevice.updateDescriptorSets(writes, {});
+
+            executeImmediateCommand([&](const vk::CommandBuffer commandBuffer) {
+                targetCube->recordLayoutTransition(commandBuffer, targetMip, 1, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eGeneral, computeStage, vk::AccessFlagBits2::eShaderSampledRead, computeStage, vk::AccessFlagBits2::eShaderStorageWrite);
+
+                commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, pipeline);
+                commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
+                if (pushConstantData != nullptr) {
+                    commandBuffer.pushConstants(pipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, pushConstantSize, pushConstantData);
+                }
+                commandBuffer.dispatch(groupsX, groupsY, groupsZ);
+
+                targetCube->recordLayoutTransition(commandBuffer, targetMip, 1, vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal, computeStage, vk::AccessFlagBits2::eShaderStorageWrite, computeStage, vk::AccessFlagBits2::eShaderSampledRead);
+            });
+
+            vkDevice.destroyImageView(storageView);
+        };
+
+        // Equirectangular HDRI -> cube map (mip 0), then the regular mip chain is blitted from it.
+        VulkanTextureCube cubeMap(TextureFormat::Float32A, MAP_SIZE, MAP_SIZE, MipMapFiltering::Trilinear);
+        dispatchEnvMapCompute(computeSphereToCube.getVulkanPipeline(), computeSphereToCube.getVulkanPipelineLayout(), sphereMap.getVulkanImageView(), sphereMap.getVulkanSampler(), &cubeMap, 0, MAP_SIZE / 32, MAP_SIZE / 32, 6, nullptr, 0);
+        cubeMap.generateMipMaps();
+
+        // Prefiltered (roughness-mapped) mip chain, sampled from the mipped cubeMap with increasing roughness per mip.
+        auto* prefilterMap = new VulkanTextureCube(TextureFormat::Float32A, MAP_SIZE, MAP_SIZE, MipMapFiltering::Trilinear);
+        uint32_t mipCount = Helpers::calculateMipCount(MAP_SIZE, MAP_SIZE);
+        for (uint32_t i = 0, size = MAP_SIZE; i < mipCount; i++, size /= 2) {
+            uint32_t numGroups = glm::max(1u, size / 32);
+            float roughness = mipCount > 1 ? static_cast<float>(i) / static_cast<float>(mipCount - 1) : 0.0f;
+
+            dispatchEnvMapCompute(computePrefilterMap.getVulkanPipeline(), computePrefilterMap.getVulkanPipelineLayout(), cubeMap.getVulkanImageView(), cubeMap.getVulkanSampler(), prefilterMap, i, numGroups, numGroups, 6, &roughness, sizeof(float));
+        }
+
+        // Diffuse irradiance map, convolved from the prefiltered map.
+        auto* irradianceMap = new VulkanTextureCube(TextureFormat::Float32A, 32, 32, MipMapFiltering::Bilinear);
+        uint32_t irradianceGroups = irradianceMap->getWidth() / 2;
+        dispatchEnvMapCompute(computeIrradianceMap.getVulkanPipeline(), computeIrradianceMap.getVulkanPipelineLayout(), prefilterMap->getVulkanImageView(), prefilterMap->getVulkanSampler(), irradianceMap, 0, irradianceGroups, irradianceGroups, 6, nullptr, 0);
+
+        return {irradianceMap, prefilterMap};
     }
 
     const std::vector<VertexBufferLayout> VulkanRenderer::getUnitQuadVertexInputLayout() {
@@ -666,6 +817,20 @@ namespace CgEngine {
 
     const uint32_t VulkanRenderer::getCurrentFrameIndex() const {
         return currentFrameIndex;
+    }
+
+    void VulkanRenderer::deferDestruction(std::function<void()> destroyFn) {
+        pendingDestructions.push_back({frameIndex + MAX_FRAMES_IN_FLIGHT, std::move(destroyFn)});
+    }
+
+    void VulkanRenderer::flushPendingDestructions() {
+        std::erase_if(pendingDestructions, [this](const DeferredDestruction& pending) {
+            if (pending.safeAtFrameIndex > frameIndex) {
+                return false;
+            }
+            pending.destroy();
+            return true;
+        });
     }
 
     vk::PhysicalDevice VulkanRenderer::getVkPhysicalDevice() const {

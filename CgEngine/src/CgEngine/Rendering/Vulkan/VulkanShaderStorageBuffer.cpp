@@ -40,6 +40,7 @@ namespace CgEngine {
             &allocation,
             &allocDetails
         );
+        vmaSetAllocationName(allocator, allocation, "VulkanShaderStorageBuffer");
 
         buffer = rawBuffer;
 
@@ -52,12 +53,7 @@ namespace CgEngine {
     }
 
     VulkanShaderStorageBuffer::~VulkanShaderStorageBuffer() {
-        if (buffer != VK_NULL_HANDLE) {
-            VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
-            vmaDestroyBuffer(allocator, buffer, allocation);
-            buffer = VK_NULL_HANDLE;
-            allocation = VK_NULL_HANDLE;
-        }
+        deferredDestroyCurrentBuffer();
     }
 
     VulkanShaderStorageBuffer::VulkanShaderStorageBuffer(VulkanShaderStorageBuffer &&other) noexcept : ShaderStorageBuffer(std::move(other)) {
@@ -75,10 +71,7 @@ namespace CgEngine {
         if (this != &other) {
             ShaderStorageBuffer::operator=(std::move(other));
 
-            if (buffer != VK_NULL_HANDLE) {
-                VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
-                vmaDestroyBuffer(allocator, buffer, allocation);
-            }
+            deferredDestroyCurrentBuffer();
 
             buffer = other.buffer;
             allocation = other.allocation;
@@ -145,6 +138,23 @@ namespace CgEngine {
 
     size_t VulkanShaderStorageBuffer::getOffsetForCurrentFrame() const {
         return alignedFrameSize * lastWrittenFrameIndex;
+    }
+
+    void VulkanShaderStorageBuffer::deferredDestroyCurrentBuffer() {
+        if (buffer == VK_NULL_HANDLE) {
+            return;
+        }
+
+        vk::Buffer oldBuffer = buffer;
+        VmaAllocation oldAllocation = allocation;
+
+        buffer = VK_NULL_HANDLE;
+        allocation = VK_NULL_HANDLE;
+
+        Renderer::getVulkanBackend()->deferDestruction([oldBuffer, oldAllocation] {
+            VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
+            vmaDestroyBuffer(allocator, oldBuffer, oldAllocation);
+        });
     }
 
 }

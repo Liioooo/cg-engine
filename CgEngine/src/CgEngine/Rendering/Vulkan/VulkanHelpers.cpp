@@ -29,7 +29,7 @@ namespace CgEngine {
             return result.value;
         }
 
-        vk::ImageView createImageViewCube(vk::Image image, vk::Format format, uint32_t levelCount, vk::ImageAspectFlags aspectFlags) {
+        vk::ImageView createImageViewCube(vk::Image image, vk::Format format, uint32_t levelCount, vk::ImageAspectFlags aspectFlags, uint32_t baseMipLevel) {
             vk::ImageViewCreateInfo createInfo{};
             createInfo.image = image;
             createInfo.viewType = vk::ImageViewType::eCube;
@@ -39,7 +39,7 @@ namespace CgEngine {
             createInfo.components.b = vk::ComponentSwizzle::eIdentity;
             createInfo.components.a = vk::ComponentSwizzle::eIdentity;
             createInfo.subresourceRange.aspectMask = aspectFlags;
-            createInfo.subresourceRange.baseMipLevel = 0;
+            createInfo.subresourceRange.baseMipLevel = baseMipLevel;
             createInfo.subresourceRange.levelCount = levelCount;
             createInfo.subresourceRange.baseArrayLayer = 0;
             createInfo.subresourceRange.layerCount = 6;

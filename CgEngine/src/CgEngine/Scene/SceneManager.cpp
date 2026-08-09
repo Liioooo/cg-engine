@@ -48,6 +48,14 @@ namespace CgEngine {
         switchedScenes = false;
     }
 
+    void SceneManager::destroyAllScenes() {
+        delete nextScene;
+        delete activeScene;
+
+        nextScene = nullptr;
+        activeScene = nullptr;
+    }
+
     XMLFile& SceneManager::getXMLFileForScene(const string& name) {
         auto& xmlFile = xmlSceneFileCache[name];
         if (!xmlFile.isLoaded()) {

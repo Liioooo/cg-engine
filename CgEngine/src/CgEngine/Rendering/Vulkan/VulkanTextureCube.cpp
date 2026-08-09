@@ -20,15 +20,7 @@ namespace CgEngine {
     }
 
     VulkanTextureCube::~VulkanTextureCube() {
-        auto device = Renderer::getVulkanBackend()->getVkDevice();
-
-        if (imageView) {
-            device.destroyImageView(imageView);
-        }
-        if (image) {
-            VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
-            vmaDestroyImage(allocator, image, allocation);
-        }
+        deferredDestroyCurrentResources();
     }
 
     VulkanTextureCube::VulkanTextureCube(VulkanTextureCube &&other) noexcept : TextureCube(std::move(other)) {
@@ -51,15 +43,7 @@ namespace CgEngine {
         if (this != &other) {
             TextureCube::operator=(std::move(other));
 
-            auto device = Renderer::getVulkanBackend()->getVkDevice();
-
-            if (imageView) {
-                device.destroyImageView(imageView);
-            }
-            if (image) {
-                VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
-                vmaDestroyImage(allocator, image, allocation);
-            }
+            deferredDestroyCurrentResources();
 
             image = other.image;
             allocation = other.allocation;
@@ -117,6 +101,11 @@ namespace CgEngine {
         return sampler;
     }
 
+    vk::ImageView VulkanTextureCube::createStorageImageView(uint32_t mipLevel) const {
+        CG_ASSERT(isReady(), "VulkanTextureCube::createStorageImageView: Texture has not been created properly.")
+        return VulkanHelpers::createImageViewCube(image, VulkanHelpers::textureFormatToVulkanFormat(format), 1, vk::ImageAspectFlagBits::eColor, mipLevel);
+    }
+
     void VulkanTextureCube::createVulkanTextureCube(const void *data, MipMapFiltering mipMapFiltering) {
         CG_ASSERT(width == height, "VulkanTextureCube: Cube map faces have to be square!")
 
@@ -163,6 +152,7 @@ namespace CgEngine {
             &allocation,
             nullptr
         );
+        vmaSetAllocationName(allocator, allocation, "VulkanTextureCube");
 
         image = rawImage;
         imageView = VulkanHelpers::createImageViewCube(image, vulkanFormat, mipLevels, vk::ImageAspectFlagBits::eColor);
@@ -198,6 +188,7 @@ namespace CgEngine {
             &stagingAllocation,
             &stagingAllocDetails
         );
+        vmaSetAllocationName(allocator, stagingAllocation, "VulkanTextureCube_Staging");
 
         std::memcpy(stagingAllocDetails.pMappedData, data, faceSize);
 
@@ -305,5 +296,31 @@ namespace CgEngine {
 
         // The last mip level was only ever written to (as a blit destination), so it still needs a transition of its own.
         recordLayoutTransition(commandBuffer, mipLevels - 1, 1, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, vk::PipelineStageFlagBits2::eTransfer, vk::AccessFlagBits2::eTransferWrite, shaderReadStages, vk::AccessFlagBits2::eShaderRead);
+    }
+
+    void VulkanTextureCube::deferredDestroyCurrentResources() {
+        if (!image && !imageView) {
+            return;
+        }
+
+        vk::Image oldImage = image;
+        VmaAllocation oldAllocation = allocation;
+        vk::ImageView oldImageView = imageView;
+
+        image = VK_NULL_HANDLE;
+        allocation = VK_NULL_HANDLE;
+        imageView = VK_NULL_HANDLE;
+
+        Renderer::getVulkanBackend()->deferDestruction([oldImage, oldAllocation, oldImageView] {
+            auto device = Renderer::getVulkanBackend()->getVkDevice();
+
+            if (oldImageView) {
+                device.destroyImageView(oldImageView);
+            }
+            if (oldImage) {
+                VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
+                vmaDestroyImage(allocator, oldImage, oldAllocation);
+            }
+        });
     }
 }

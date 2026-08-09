@@ -22,6 +22,8 @@ namespace CgEngine {
 
         vk::DescriptorSetLayout getDescriptorSetLayout() const;
 
+        void deferredDestroyCurrentResources();
+
     private:
         vk::DescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
         std::unordered_map<uint32_t, DescriptorSetLayoutBindingUsage> bindingPointUsageMap{};

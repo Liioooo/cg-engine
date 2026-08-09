@@ -27,6 +27,10 @@ namespace CgEngine {
 
         vk::ImageView getVulkanImageView() const;
         vk::Sampler getVulkanSampler() const;
+        vk::ImageView createStorageImageView(uint32_t mipLevel) const;
+        void recordLayoutTransition(const vk::CommandBuffer& commandBuffer, uint32_t baseMipLevel, uint32_t levelCount, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, vk::PipelineStageFlags2 srcStage, vk::AccessFlags2 srcAccess, vk::PipelineStageFlags2 dstStage, vk::AccessFlags2 dstAccess) const;
+
+        void deferredDestroyCurrentResources();
 
     private:
         static constexpr uint32_t FACE_COUNT = 6;
@@ -44,7 +48,6 @@ namespace CgEngine {
         vk::Sampler sampler = VK_NULL_HANDLE;
 
         void createVulkanTextureCube(const void* data, MipMapFiltering mipMapFiltering);
-        void recordLayoutTransition(const vk::CommandBuffer& commandBuffer, uint32_t baseMipLevel, uint32_t levelCount, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, vk::PipelineStageFlags2 srcStage, vk::AccessFlags2 srcAccess, vk::PipelineStageFlags2 dstStage, vk::AccessFlags2 dstAccess) const;
         void recordMipMapGeneration(const vk::CommandBuffer& commandBuffer) const;
     };
 }

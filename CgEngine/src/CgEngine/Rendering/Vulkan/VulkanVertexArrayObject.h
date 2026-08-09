@@ -26,6 +26,8 @@ namespace CgEngine {
 
         void bind(const vk::CommandBuffer& commandBuffer) const;
 
+        void deferredDestroyCurrentResources();
+
     private:
         std::vector<VulkanVertexBuffer*> vertexBuffers{};
         const VulkanIndexBuffer* indexBuffer = nullptr;

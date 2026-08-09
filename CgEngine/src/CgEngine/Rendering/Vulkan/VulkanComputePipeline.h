@@ -21,6 +21,8 @@ namespace CgEngine {
         vk::Pipeline getVulkanPipeline() const;
         vk::PipelineLayout getVulkanPipelineLayout() const;
 
+        void deferredDestroyCurrentResources();
+
     private:
         vk::PipelineLayout pipelineLayout = VK_NULL_HANDLE;
         vk::Pipeline pipeline = VK_NULL_HANDLE;

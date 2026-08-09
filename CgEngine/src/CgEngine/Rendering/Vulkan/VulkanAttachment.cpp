@@ -45,19 +45,7 @@ namespace CgEngine {
     }
 
     VulkanAttachment::~VulkanAttachment() {
-        auto device = Renderer::getVulkanBackend()->getVkDevice();
-
-        for (auto view : layerImageViews) {
-            device.destroyImageView(view);
-        }
-        if (imageView) {
-            device.destroyImageView(imageView);
-        }
-        if (image) {
-            VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
-            vmaDestroyImage(allocator, image, allocation);
-        }
-
+        deferredDestroyCurrentResources();
     }
 
     VulkanAttachment::VulkanAttachment(VulkanAttachment &&other) noexcept : Attachment(std::move(other)) {
@@ -86,18 +74,7 @@ namespace CgEngine {
         if (this != &other) {
             Attachment::operator=(std::move(other));
 
-            auto device = Renderer::getVulkanBackend()->getVkDevice();
-
-            for (auto view : layerImageViews) {
-                device.destroyImageView(view);
-            }
-            if (imageView) {
-                device.destroyImageView(imageView);
-            }
-            if (image) {
-                VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
-                vmaDestroyImage(allocator, image, allocation);
-            }
+            deferredDestroyCurrentResources();
 
             image = other.image;
             allocation = other.allocation;
@@ -151,18 +128,7 @@ namespace CgEngine {
     }
 
     void VulkanAttachment::resize(uint32_t newWidth, uint32_t newHeight) {
-         auto device = Renderer::getVulkanBackend()->getVkDevice();
-
-        for (auto view : layerImageViews) {
-            device.destroyImageView(view);
-        }
-        if (imageView) {
-            device.destroyImageView(imageView);
-        }
-        if (image) {
-            VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
-            vmaDestroyImage(allocator, image, allocation);
-        }
+        deferredDestroyCurrentResources();
 
         width = newWidth;
         height = newHeight;
@@ -241,6 +207,7 @@ namespace CgEngine {
             &allocation,
             nullptr
         );
+        vmaSetAllocationName(allocator, allocation, "VulkanAttachment");
 
         image = rawImage;
     }
@@ -256,5 +223,36 @@ namespace CgEngine {
                 layerImageViews[layer] = VulkanHelpers::createImageView2D(image, vulkanFormat, 1, 1, aspectFlags, layer);
             }
         }
+    }
+
+    void VulkanAttachment::deferredDestroyCurrentResources() {
+        if (!image && !imageView && layerImageViews.empty()) {
+            return;
+        }
+
+        vk::Image oldImage = image;
+        VmaAllocation oldAllocation = allocation;
+        vk::ImageView oldImageView = imageView;
+        std::vector<vk::ImageView> oldLayerImageViews = std::move(layerImageViews);
+
+        image = VK_NULL_HANDLE;
+        allocation = VK_NULL_HANDLE;
+        imageView = VK_NULL_HANDLE;
+        layerImageViews.clear();
+
+        Renderer::getVulkanBackend()->deferDestruction([oldImage, oldAllocation, oldImageView, oldLayerImageViews] {
+            auto device = Renderer::getVulkanBackend()->getVkDevice();
+
+            for (auto view : oldLayerImageViews) {
+                device.destroyImageView(view);
+            }
+            if (oldImageView) {
+                device.destroyImageView(oldImageView);
+            }
+            if (oldImage) {
+                VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
+                vmaDestroyImage(allocator, oldImage, oldAllocation);
+            }
+        });
     }
 }

@@ -44,6 +44,7 @@ namespace CgEngine {
                     &stagingAllocation,
                     &stagingAllocDetails
                 );
+                vmaSetAllocationName(allocator, stagingAllocation, "VulkanVertexBuffer_Staging");
 
                 std::memcpy(stagingAllocDetails.pMappedData, data, size);
             }
@@ -69,6 +70,7 @@ namespace CgEngine {
                 &allocation,
                 nullptr
             );
+            vmaSetAllocationName(allocator, allocation, "VulkanVertexBuffer");
 
             buffer = rawBuffer;
 
@@ -102,6 +104,7 @@ namespace CgEngine {
                 &allocation,
                 &vmaInfo
             );
+            vmaSetAllocationName(allocator, allocation, "VulkanVertexBuffer");
 
             buffer = rawBuffer;
 
@@ -115,12 +118,7 @@ namespace CgEngine {
     }
 
     VulkanVertexBuffer::~VulkanVertexBuffer() {
-        if (buffer != VK_NULL_HANDLE) {
-            VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
-            vmaDestroyBuffer(allocator, buffer, allocation);
-            buffer = VK_NULL_HANDLE;
-            allocation = VK_NULL_HANDLE;
-        }
+        deferredDestroyCurrentBuffer();
     }
 
     VulkanVertexBuffer::VulkanVertexBuffer(VulkanVertexBuffer &&other) noexcept : VertexBuffer(std::move(other)) {
@@ -139,10 +137,7 @@ namespace CgEngine {
         if (this != &other) {
             VertexBuffer::operator=(std::move(other));
 
-            if (buffer != VK_NULL_HANDLE) {
-                VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
-                vmaDestroyBuffer(allocator, buffer, allocation);
-            }
+            deferredDestroyCurrentBuffer();
 
             buffer = other.buffer;
             allocation = other.allocation;
@@ -213,5 +208,22 @@ namespace CgEngine {
         }
 
         return 0;
+    }
+
+    void VulkanVertexBuffer::deferredDestroyCurrentBuffer() {
+        if (buffer == VK_NULL_HANDLE) {
+            return;
+        }
+
+        vk::Buffer oldBuffer = buffer;
+        VmaAllocation oldAllocation = allocation;
+
+        buffer = VK_NULL_HANDLE;
+        allocation = VK_NULL_HANDLE;
+
+        Renderer::getVulkanBackend()->deferDestruction([oldBuffer, oldAllocation] {
+            VmaAllocator allocator = Renderer::getVulkanBackend()->getVmaAllocator();
+            vmaDestroyBuffer(allocator, oldBuffer, oldAllocation);
+        });
     }
 }

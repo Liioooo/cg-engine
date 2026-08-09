@@ -17,6 +17,8 @@ namespace CgEngine {
         bool shouldSwapScenes() const;
         void swapScenes();
 
+        void destroyAllScenes();
+
     private:
         XMLFile& getXMLFileForScene(const std::string& name);
 
