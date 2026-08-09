@@ -1449,10 +1449,13 @@ namespace CgEngine {
         }
 
         pbrPass();
+        skyboxPass();
+
+        if (applicationOptions.enableBloom) {
+            bloomPass();
+        }
 
         Renderer::beginRenderPass(afterPbrRenderPass, afterPbrFramebuffer);
-
-        skyboxPass();
 
         #ifdef CG_ENABLE_DEBUG_FEATURES
             if (applicationOptions.debugShowPhysicsColliders) {
@@ -1471,10 +1474,6 @@ namespace CgEngine {
         }
 
         Renderer::endRenderPass();
-
-        if (applicationOptions.enableBloom) {
-            bloomPass();
-        }
 
         Renderer::injectBarriersForDescriptorSet(finalImageCompositeDescriptorSet);
         for (const auto& command: ui2DDrawCommandQueue) {
@@ -1960,11 +1959,15 @@ namespace CgEngine {
         CG_GPU_DEBUG_GROUP("SkyboxPass")
         CG_GPU_TIME_FN(&renderingStats.skyboxTimer)
 
+        Renderer::injectBarriersForDescriptorSet(skyboxDescriptorSet);
+        Renderer::injectBarriersForDescriptorSet(currentSceneEnvironment.environmentMapDescriptorSet);
+        Renderer::beginRenderPass(afterPbrRenderPass, afterPbrFramebuffer);
         Renderer::bindGraphicsPipeline(skyboxPipeline);
         Renderer::bindDescriptorSet(skyboxDescriptorSet, 0);
         Renderer::bindDescriptorSet(currentSceneEnvironment.environmentMapDescriptorSet, 1);
         Renderer::setPushConstants(&skyboxPushConstants, sizeof(SkyboxPushConstants));
         Renderer::renderUnitCube();
+        Renderer::endRenderPass();
     }
 
     void SceneRenderer::physicsCollidersPass() {
