@@ -867,7 +867,7 @@ namespace CgEngine {
             AttachmentSpecification  finalImageLinearAttachmentSpec{};
             finalImageLinearAttachmentSpec.width = viewportWidth;
             finalImageLinearAttachmentSpec.height = viewportHeight;
-            finalImageLinearAttachmentSpec.type = AttachmentType::RGBA8;
+            finalImageLinearAttachmentSpec.type = AttachmentType::RGBA16F;
             finalImageLinearAttachmentSpec.usableAsTexture = true;
             finalImageLinearAttachmentSpec.textureWrap = TextureWrap::Clamp;
             finalImageLinearAttachmentSpec.mipMapFiltering = MipMapFiltering::Bilinear;
