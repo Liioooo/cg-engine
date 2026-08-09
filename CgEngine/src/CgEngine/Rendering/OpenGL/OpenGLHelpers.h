@@ -18,7 +18,7 @@ namespace CgEngine {
         unsigned int getOpenGLDrawMode(DrawMode mode);
         void applyMipMapFiltering(MipMapFiltering mipMapFiltering, unsigned int textureType);
         int attachmentTypeToOpenGLInternalFormat(AttachmentType type);
-        int shaderImageAccessToOpenGL(ShaderImageAccess access);
+        int shaderImageAccessToOpenGL(ShaderStorageAccess access);
         int getOpenGLTextureFormatForImageBind(TextureFormat format);
         uint32_t loadOpenGLGraphicsShader(const std::string& name, ShaderEnv env);
         uint32_t loadOpenGLGraphicsShader(const std::string& vertex, const std::string& fragment, const std::string& geometry, const std::string& tcs, const std::string& tes, ShaderEnv env);

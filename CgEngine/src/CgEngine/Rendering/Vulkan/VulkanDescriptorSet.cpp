@@ -392,4 +392,8 @@ namespace CgEngine {
     const std::vector<DescSetAttachmentImageBinding>& VulkanDescriptorSet::getAttachmentImageBindings() const {
         return specification.attachmentImageBindings;
     }
+
+    const std::vector<DescSetVertexBufferSSBOBinding> & VulkanDescriptorSet::getVertexBufferSsboBindings() const {
+        return specification.vertexBufferSSBOBindings;
+    }
 }

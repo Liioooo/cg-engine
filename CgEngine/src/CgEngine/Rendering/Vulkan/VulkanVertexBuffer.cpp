@@ -198,6 +198,10 @@ namespace CgEngine {
         return layout;
     }
 
+    VertexBufferUsage VulkanVertexBuffer::getUsage() const {
+        return usage;
+    }
+
     const vk::Buffer& VulkanVertexBuffer::getVulkanBufferHandle() const {
         return buffer;
     }
@@ -208,6 +212,11 @@ namespace CgEngine {
         }
 
         return 0;
+    }
+
+    VulkanGPUDynamicVertexBufferState & VulkanVertexBuffer::getState() {
+        CG_ASSERT(usage == VertexBufferUsage::GPUDynamic, "Only GPUDynamic vertex buffers have a GPU State");
+        return state;
     }
 
     void VulkanVertexBuffer::deferredDestroyCurrentBuffer() {

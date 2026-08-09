@@ -23,6 +23,7 @@ namespace CgEngine {
         void setLayout(std::vector<VertexBufferElement> elements) override;
 
         const VertexBufferLayout& getLayout() const override;
+        VertexBufferUsage getUsage() const override;
 
         uint32_t getOpenGLHandle() const;
 

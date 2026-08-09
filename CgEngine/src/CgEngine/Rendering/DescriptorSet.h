@@ -49,13 +49,14 @@ namespace CgEngine {
         uint32_t bindingPoint;
         uint32_t layer = ~0;
         bool allLayers = true;
-        ShaderImageAccess access;
+        ShaderStorageAccess access;
         Attachment* attachment = nullptr;
     };
 
     struct DescSetVertexBufferSSBOBinding {
         uint32_t bindingPoint;
-        const VertexBuffer* vertexBuffer = nullptr;
+        VertexBuffer* vertexBuffer = nullptr;
+        ShaderStorageAccess access;
     };
 
     struct DescriptorSetSpecification {

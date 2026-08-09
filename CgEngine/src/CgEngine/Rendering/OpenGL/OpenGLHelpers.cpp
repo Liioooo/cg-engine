@@ -209,13 +209,13 @@ namespace CgEngine {
             return GL_RGBA8;
         }
 
-        int shaderImageAccessToOpenGL(ShaderImageAccess access) {
+        int shaderImageAccessToOpenGL(ShaderStorageAccess access) {
             switch (access) {
-                case ShaderImageAccess::ReadOnly:
+                case ShaderStorageAccess::ReadOnly:
                     return GL_READ_ONLY;
-                case ShaderImageAccess::WriteOnly:
+                case ShaderStorageAccess::WriteOnly:
                     return GL_WRITE_ONLY;
-                case ShaderImageAccess::ReadWrite:
+                case ShaderStorageAccess::ReadWrite:
                     return GL_READ_WRITE;
             }
             return GL_READ_ONLY;

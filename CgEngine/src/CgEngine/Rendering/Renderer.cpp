@@ -76,16 +76,8 @@ namespace CgEngine {
         backend->injectBarriersForDescriptorSet(descriptorSet);
     }
 
-    void Renderer::transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition) {
-        backend->transitionImageLayoutFromComputeToShaderReadOnly(attachment, stageUsingAttachmentAfterTransition);
-    }
-
-    void Renderer::memoryBarrierForVertexBufferAfterCompute(const VertexBuffer* vertexBuffer) {
+    void Renderer::memoryBarrierForVertexBufferAfterCompute(VertexBuffer* vertexBuffer) {
         backend->memoryBarrierForVertexBufferAfterCompute(vertexBuffer);
-    }
-
-    void Renderer::memoryBarrierForAttachmentAfterComputeToCompute(Attachment* attachment) {
-        backend->memoryBarrierForAttachmentAfterComputeToCompute(attachment);
     }
 
     void Renderer::renderUnitQuad() {

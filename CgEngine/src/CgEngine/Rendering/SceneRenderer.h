@@ -392,7 +392,7 @@ namespace CgEngine {
 
         struct SkinningInfo {
             const DescriptorSet* descriptorSet;
-            const VertexBuffer* skinnedVertexBuffer;
+            VertexBuffer* skinnedVertexBuffer;
             uint32_t numVertices;
         };
 

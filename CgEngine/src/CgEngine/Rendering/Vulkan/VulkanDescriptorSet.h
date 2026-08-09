@@ -27,6 +27,7 @@ namespace CgEngine {
         const VulkanDescriptorSetLayout* getLayout() const;
         const std::vector<DescSetAttachmentTextureBinding>& getAttachmentTextureBindings() const;
         const std::vector<DescSetAttachmentImageBinding>& getAttachmentImageBindings() const;
+        const std::vector<DescSetVertexBufferSSBOBinding>& getVertexBufferSsboBindings() const;
 
     private:
         DescriptorSetSpecification specification{};

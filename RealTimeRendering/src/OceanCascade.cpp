@@ -59,8 +59,8 @@ namespace RTR {
             {0, gaussianNoise}
         };
         initialSpectrumDescriptorSetSpec.attachmentImageBindings = {
-            {1, ~0u, true, CgEngine::ShaderImageAccess::WriteOnly, initialSpectrum},
-            {2, ~0u, true, CgEngine::ShaderImageAccess::WriteOnly, waveData},
+            {1, ~0u, true, CgEngine::ShaderStorageAccess::WriteOnly, initialSpectrum},
+            {2, ~0u, true, CgEngine::ShaderStorageAccess::WriteOnly, waveData},
         };
         auto* initialSpectrumDescriptorSet = CgEngine::GraphicsObjectsFactory::createDescriptorSet(initialSpectrumDescriptorSetSpec);
 
@@ -79,23 +79,22 @@ namespace RTR {
         initialSpectrumUBO->setData(&initialSpectrumUboData, sizeof(InitialSpectrumUBOData));
 
         CgEngine::Renderer::bindComputePipeline(initialSpectrumShader->getComputePipeline());
+        CgEngine::Renderer::injectBarriersForDescriptorSet(initialSpectrumDescriptorSet);
         CgEngine::Renderer::bindDescriptorSet(initialSpectrumDescriptorSet, 0);
         CgEngine::Renderer::dispatchCompute(oceanParams.size / 8, oceanParams.size / 8, 1);
-        CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(initialSpectrum);
-        CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(waveData);
 
         CgEngine::DescriptorSetSpecification conjugateSpectrumDescriptorSetSpec{};
         conjugateSpectrumDescriptorSetSpec.layout = conjugateSpectrumShader->getDescriptorSetLayout();
         conjugateSpectrumDescriptorSetSpec.attachmentImageBindings = {
-            {0, ~0u, true, CgEngine::ShaderImageAccess::ReadWrite, initialSpectrum}
+            {0, ~0u, true, CgEngine::ShaderStorageAccess::ReadWrite, initialSpectrum}
         };
 
         auto* conjugateSpectrumDescriptorSet = CgEngine::GraphicsObjectsFactory::createDescriptorSet(conjugateSpectrumDescriptorSetSpec);
 
         CgEngine::Renderer::bindComputePipeline(conjugateSpectrumShader->getComputePipeline());
+        CgEngine::Renderer::injectBarriersForDescriptorSet(conjugateSpectrumDescriptorSet);
         CgEngine::Renderer::bindDescriptorSet(conjugateSpectrumDescriptorSet, 0);
         CgEngine::Renderer::dispatchCompute(oceanParams.size / 8, oceanParams.size / 8, 1);
-        CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(initialSpectrum);
 
         delete initialSpectrumUBO;
         delete initialSpectrumDescriptorSet;
@@ -104,12 +103,12 @@ namespace RTR {
         CgEngine::DescriptorSetSpecification timeSpectrumDescriptorSetSpec{};
         timeSpectrumDescriptorSetSpec.layout = timeSpectrumShader->getDescriptorSetLayout();
         timeSpectrumDescriptorSetSpec.attachmentImageBindings = {
-            {0, ~0u, true, CgEngine::ShaderImageAccess::ReadOnly, initialSpectrum},
-            {1, ~0u, true, CgEngine::ShaderImageAccess::ReadOnly, waveData},
-            {2, ~0u, true, CgEngine::ShaderImageAccess::WriteOnly, dxDz},
-            {3, ~0u, true, CgEngine::ShaderImageAccess::WriteOnly, dyDxz},
-            {4, ~0u, true, CgEngine::ShaderImageAccess::WriteOnly, dyxDyz},
-            {5, ~0u, true, CgEngine::ShaderImageAccess::WriteOnly, dxxDzz},
+            {0, ~0u, true, CgEngine::ShaderStorageAccess::ReadOnly, initialSpectrum},
+            {1, ~0u, true, CgEngine::ShaderStorageAccess::ReadOnly, waveData},
+            {2, ~0u, true, CgEngine::ShaderStorageAccess::WriteOnly, dxDz},
+            {3, ~0u, true, CgEngine::ShaderStorageAccess::WriteOnly, dyDxz},
+            {4, ~0u, true, CgEngine::ShaderStorageAccess::WriteOnly, dyxDyz},
+            {5, ~0u, true, CgEngine::ShaderStorageAccess::WriteOnly, dxxDzz},
         };
 
         timeSpectrumDescriptorSet = CgEngine::GraphicsObjectsFactory::createDescriptorSet(timeSpectrumDescriptorSetSpec);
@@ -117,29 +116,26 @@ namespace RTR {
         CgEngine::DescriptorSetSpecification finalTexturesDescriptorSetSpec{};
         finalTexturesDescriptorSetSpec.layout = finalTexturesShader->getDescriptorSetLayout();
         finalTexturesDescriptorSetSpec.attachmentImageBindings = {
-            {0, ~0u, true, CgEngine::ShaderImageAccess::ReadOnly, dxDz},
-            {1, ~0u, true, CgEngine::ShaderImageAccess::ReadOnly, dyDxz},
-            {2, ~0u, true, CgEngine::ShaderImageAccess::ReadOnly, dyxDyz},
-            {3, ~0u, true, CgEngine::ShaderImageAccess::ReadOnly, dxxDzz},
-            {4, ~0u, true, CgEngine::ShaderImageAccess::WriteOnly, displacement},
-            {5, ~0u, true, CgEngine::ShaderImageAccess::WriteOnly, derivatives},
-            {6, ~0u, true, CgEngine::ShaderImageAccess::ReadWrite, turbulence},
+            {0, ~0u, true, CgEngine::ShaderStorageAccess::ReadOnly, dxDz},
+            {1, ~0u, true, CgEngine::ShaderStorageAccess::ReadOnly, dyDxz},
+            {2, ~0u, true, CgEngine::ShaderStorageAccess::ReadOnly, dyxDyz},
+            {3, ~0u, true, CgEngine::ShaderStorageAccess::ReadOnly, dxxDzz},
+            {4, ~0u, true, CgEngine::ShaderStorageAccess::WriteOnly, displacement},
+            {5, ~0u, true, CgEngine::ShaderStorageAccess::WriteOnly, derivatives},
+            {6, ~0u, true, CgEngine::ShaderStorageAccess::ReadWrite, turbulence},
         };
         finalTexturesDescriptorSet = CgEngine::GraphicsObjectsFactory::createDescriptorSet(finalTexturesDescriptorSetSpec);
     }
 
     void OceanCascade::calculateStateAtTime(float time, float deltaT) {
         CgEngine::Renderer::bindComputePipeline(timeSpectrumShader->getComputePipeline());
+        CgEngine::Renderer::injectBarriersForDescriptorSet(timeSpectrumDescriptorSet);
         CgEngine::Renderer::bindDescriptorSet(timeSpectrumDescriptorSet, 0);
 
         SimulateOceanPC simulateOceanPc{};
         simulateOceanPc.time = time;
         CgEngine::Renderer::setPushConstants(&simulateOceanPc, sizeof(SimulateOceanPC));
         CgEngine::Renderer::dispatchCompute(oceanParams.size / 8, oceanParams.size / 8, 1);
-        CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(dxDz);
-        CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(dyDxz);
-        CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(dyxDyz);
-        CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(dxxDzz);
 
         fastFourierTransform.inverseTransform(dxDz);
         fastFourierTransform.inverseTransform(dyDxz);
@@ -147,6 +143,7 @@ namespace RTR {
         fastFourierTransform.inverseTransform(dxxDzz);
 
         CgEngine::Renderer::bindComputePipeline(finalTexturesShader->getComputePipeline());
+        CgEngine::Renderer::injectBarriersForDescriptorSet(finalTexturesDescriptorSet);
         CgEngine::Renderer::bindDescriptorSet(finalTexturesDescriptorSet, 0);
 
         FinalTexturesPC finalTexturesPc{};
@@ -154,9 +151,6 @@ namespace RTR {
         finalTexturesPc.deltaTime = deltaT;
         CgEngine::Renderer::setPushConstants(&finalTexturesPc, sizeof(FinalTexturesPC));
         CgEngine::Renderer::dispatchCompute(oceanParams.size / 8, oceanParams.size / 8, 1);
-        CgEngine::Renderer::transitionImageLayoutFromComputeToShaderReadOnly(displacement, CgEngine::ShaderStage::Fragment);
-        CgEngine::Renderer::transitionImageLayoutFromComputeToShaderReadOnly(turbulence, CgEngine::ShaderStage::Fragment);
-        CgEngine::Renderer::transitionImageLayoutFromComputeToShaderReadOnly(derivatives, CgEngine::ShaderStage::Fragment);
     }
 
     void OceanCascade::generateGaussianNoise() {

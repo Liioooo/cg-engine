@@ -69,8 +69,8 @@ namespace CgEngine {
             {1, mesh->getBoneInfluencesBuffer()}
         };
         skinningDescriptorSetSpecification.vertexBufferSSBOBindings = {
-            {3, mesh->getVAO()->getVertexBuffer(0)},
-            {4, skinnedVAO->getVertexBuffer(0)}
+            {3, mesh->getVAO()->getVertexBuffer(0), ShaderStorageAccess::ReadOnly},
+            {4, skinnedVAO->getVertexBuffer(0), ShaderStorageAccess::WriteOnly}
         };
 
         skinningDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(skinningDescriptorSetSpecification);

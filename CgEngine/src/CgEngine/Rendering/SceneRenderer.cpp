@@ -350,7 +350,7 @@ namespace CgEngine {
             hbaoComputeDescriptorSetSpec.attachmentImageBindings[0].attachment = hbaoResult;
             hbaoComputeDescriptorSetSpec.attachmentImageBindings[0].bindingPoint = 2;
             hbaoComputeDescriptorSetSpec.attachmentImageBindings[0].allLayers = true;
-            hbaoComputeDescriptorSetSpec.attachmentImageBindings[0].access = ShaderImageAccess::WriteOnly;
+            hbaoComputeDescriptorSetSpec.attachmentImageBindings[0].access = ShaderStorageAccess::WriteOnly;
             hbaoComputeDescriptorSetSpec.uboBindings = {
                     {3, ubScreenData},
                     {4, ubHBAOData}
@@ -1787,9 +1787,11 @@ namespace CgEngine {
         SkinningPushConstants pc{};
 
         Renderer::bindComputePipeline(skinningComputePipeline);
+        Renderer::injectBarriersForDescriptorSet(skinningDescriptorSet);
         Renderer::bindDescriptorSet(skinningDescriptorSet, 0);
 
         for (uint32_t i = 0; i < skinningQueue.size(); i++) {
+            Renderer::injectBarriersForDescriptorSet(skinningQueue[i].descriptorSet);
             Renderer::bindDescriptorSet(skinningQueue[i].descriptorSet, 1);
             pc.componentIndex = i;
             Renderer::setPushConstants(&pc, sizeof(SkinningPushConstants));
@@ -1870,7 +1872,6 @@ namespace CgEngine {
         Renderer::bindComputePipeline(hbaoComputePipeline);
         Renderer::bindDescriptorSet(hbaoComputeDescriptorSet, 0);
         Renderer::dispatchCompute(hbaoWorkGroupSize.x, hbaoWorkGroupSize.y, hbaoWorkGroupSize.z);
-        Renderer::transitionImageLayoutFromComputeToShaderReadOnly(hbaoResult, ShaderStage::Fragment);
     }
 
     void SceneRenderer::hbaoReinterleavingPass() {

@@ -80,6 +80,7 @@ namespace CgEngine {
         virtual void setLayout(std::vector<VertexBufferElement> elements) = 0;
 
         virtual const VertexBufferLayout& getLayout() const = 0;
+        virtual VertexBufferUsage getUsage() const = 0;;
     };
 
 }

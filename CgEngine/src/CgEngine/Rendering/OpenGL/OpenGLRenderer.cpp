@@ -379,19 +379,41 @@ namespace CgEngine {
     }
 
     void OpenGLRenderer::injectBarriersForDescriptorSet(const DescriptorSet *descriptorSet) {
+        const auto* glDescriptorSet = static_cast<const OpenGLDescriptorSet*>(descriptorSet);
+        const DescriptorSetSpecification& spec = glDescriptorSet->getSpecification();
 
+        GLbitfield barrierBits = 0;
+
+        for (const auto& binding : spec.attachmentTextureBindings) {
+            auto* glAttachment = static_cast<OpenGLAttachment*>(binding.attachment);
+
+            if (glAttachment->getState() == OpenGLAttachmentState::ComputeImageWrite) {
+                barrierBits |= GL_TEXTURE_FETCH_BARRIER_BIT;
+                glAttachment->setState(OpenGLAttachmentState::None);
+            }
+        }
+
+        for (const auto& binding : spec.attachmentImageBindings) {
+            auto* glAttachment = static_cast<OpenGLAttachment*>(binding.attachment);
+
+            if (glAttachment->getState() == OpenGLAttachmentState::ComputeImageWrite) {
+                barrierBits |= GL_SHADER_IMAGE_ACCESS_BARRIER_BIT;
+            }
+
+            if (binding.access == ShaderStorageAccess::WriteOnly || binding.access == ShaderStorageAccess::ReadWrite) {
+                glAttachment->setState(OpenGLAttachmentState::ComputeImageWrite);
+            } else {
+                glAttachment->setState(OpenGLAttachmentState::None);
+            }
+        }
+
+        if (barrierBits != 0) {
+            glMemoryBarrier(barrierBits);
+        }
     }
 
-    void OpenGLRenderer::transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition) {
-        glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
-    }
-
-    void OpenGLRenderer::memoryBarrierForVertexBufferAfterCompute(const VertexBuffer* vertexBuffer) {
+    void OpenGLRenderer::memoryBarrierForVertexBufferAfterCompute(VertexBuffer* vertexBuffer) {
         glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
-    }
-
-    void OpenGLRenderer::memoryBarrierForAttachmentAfterComputeToCompute(Attachment* attachment) {
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     }
 
     void OpenGLRenderer::renderUnitQuad() {
@@ -463,7 +485,7 @@ namespace CgEngine {
 
         glUseProgram(computeEnvironmentMapSphereToCube.getOpenGLShaderHandle());
         glBindTextureUnit(0, sphereMap.getOpenGLHandle());
-        glBindImageTexture(1, cubeMap.getOpenGLHandle(), 0, GL_TRUE, 0, OpenGLHelpers::shaderImageAccessToOpenGL(ShaderImageAccess::WriteOnly), OpenGLHelpers::getOpenGLTextureFormatForImageBind(cubeMap.getFormat()));
+        glBindImageTexture(1, cubeMap.getOpenGLHandle(), 0, GL_TRUE, 0, OpenGLHelpers::shaderImageAccessToOpenGL(ShaderStorageAccess::WriteOnly), OpenGLHelpers::getOpenGLTextureFormatForImageBind(cubeMap.getFormat()));
         glDispatchCompute(MAP_SIZE / 32, MAP_SIZE / 32, 6);
         glMemoryBarrier(GL_ALL_BARRIER_BITS);
         cubeMap.generateMipMaps();
@@ -487,7 +509,7 @@ namespace CgEngine {
             float roughness = static_cast<float>(i) / static_cast<float>(mipCount - 1);
             prefilterPushConstantsData.roughness = roughness;
             setPushConstants(&prefilterPushConstantsData, sizeof(PrefilterPushConstants));
-            glBindImageTexture(1, prefilterMap->getOpenGLHandle(), static_cast<int>(i), GL_TRUE, 0, OpenGLHelpers::shaderImageAccessToOpenGL(ShaderImageAccess::WriteOnly), OpenGLHelpers::getOpenGLTextureFormatForImageBind(prefilterMap->getFormat()));
+            glBindImageTexture(1, prefilterMap->getOpenGLHandle(), static_cast<int>(i), GL_TRUE, 0, OpenGLHelpers::shaderImageAccessToOpenGL(ShaderStorageAccess::WriteOnly), OpenGLHelpers::getOpenGLTextureFormatForImageBind(prefilterMap->getFormat()));
             glDispatchCompute(numGroups, numGroups, 6);
             glMemoryBarrier(GL_ALL_BARRIER_BITS);
         }
@@ -496,7 +518,7 @@ namespace CgEngine {
 
         glUseProgram(computeEnvironmentMapIrradianceMap.getOpenGLShaderHandle());
         glBindTextureUnit(0, prefilterMap->getOpenGLHandle());
-        glBindImageTexture(1, irradianceMap->getOpenGLHandle(), 0, GL_TRUE, 0, OpenGLHelpers::shaderImageAccessToOpenGL(ShaderImageAccess::WriteOnly), OpenGLHelpers::getOpenGLTextureFormatForImageBind(irradianceMap->getFormat()));
+        glBindImageTexture(1, irradianceMap->getOpenGLHandle(), 0, GL_TRUE, 0, OpenGLHelpers::shaderImageAccessToOpenGL(ShaderStorageAccess::WriteOnly), OpenGLHelpers::getOpenGLTextureFormatForImageBind(irradianceMap->getFormat()));
         glDispatchCompute(irradianceMap->getWidth() / 2, irradianceMap->getWidth() / 2, 6);
         glMemoryBarrier(GL_ALL_BARRIER_BITS);
 

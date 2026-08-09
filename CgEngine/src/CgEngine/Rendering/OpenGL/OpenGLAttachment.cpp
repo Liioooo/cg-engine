@@ -233,4 +233,12 @@ namespace CgEngine {
         CG_ASSERT(!layerViewHandles.empty(), "Attachment::getOpenGLLayerViewHandle: Attachment has not been created properly.")
         return layerViewHandles[layer];
     }
+
+    OpenGLAttachmentState OpenGLAttachment::getState() const {
+        return state;
+    }
+
+    void OpenGLAttachment::setState(OpenGLAttachmentState newState) {
+        state = newState;
+    }
 }

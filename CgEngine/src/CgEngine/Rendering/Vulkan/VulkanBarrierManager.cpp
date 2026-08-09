@@ -5,6 +5,10 @@ namespace CgEngine {
         attachmentStates.push_back({attachment, newState, allLayers, layer});
     }
 
+    void VulkanBarrierManager::requestGpuDynamicVertexBufferState(VulkanVertexBuffer *buffer, VulkanGPUDynamicVertexBufferState newState) {
+        bufferStates.push_back({buffer, newState});
+    }
+
     void VulkanBarrierManager::flushBarriers(vk::CommandBuffer commandBuffer) {
         std::vector<vk::ImageMemoryBarrier2> barriers;
 
@@ -66,12 +70,33 @@ namespace CgEngine {
             flushGroup();
         }
 
-        if (!barriers.empty()) {
+        std::vector<vk::BufferMemoryBarrier2> bufferBarriers;
+
+        for (auto& bufferState : bufferStates) {
+            VulkanGPUDynamicVertexBufferState& oldState = bufferState.buffer->getState();
+
+            if (oldState.access != bufferState.newState.access || oldState.stage != bufferState.newState.stage) {
+                vk::BufferMemoryBarrier2& barrier = bufferBarriers.emplace_back();
+                barrier.setSrcStageMask(oldState.stage);
+                barrier.setSrcAccessMask(oldState.access);
+                barrier.setDstStageMask(bufferState.newState.stage);
+                barrier.setDstAccessMask(bufferState.newState.access);
+                barrier.setBuffer(bufferState.buffer->getVulkanBufferHandle());
+                barrier.setOffset(0);
+                barrier.setSize(VK_WHOLE_SIZE);
+            }
+
+            oldState = bufferState.newState;
+        }
+
+        if (!barriers.empty() || !bufferBarriers.empty()) {
             vk::DependencyInfo depInfo{};
             depInfo.setImageMemoryBarriers(barriers);
+            depInfo.setBufferMemoryBarriers(bufferBarriers);
             commandBuffer.pipelineBarrier2(depInfo);
         }
 
         attachmentStates.clear();
+        bufferStates.clear();
     }
 }

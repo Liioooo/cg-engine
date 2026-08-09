@@ -60,10 +60,7 @@ namespace CgEngine {
         virtual void setPushConstants(const void* data, size_t size) = 0;
 
         virtual void injectBarriersForDescriptorSet(const DescriptorSet* descriptorSet) = 0;
-
-        virtual void transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition) = 0;
-        virtual void memoryBarrierForVertexBufferAfterCompute(const VertexBuffer* vertexBuffer) = 0;
-        virtual void memoryBarrierForAttachmentAfterComputeToCompute(Attachment* attachment) = 0;
+        virtual void memoryBarrierForVertexBufferAfterCompute(VertexBuffer* vertexBuffer) = 0;
 
         virtual void renderUnitQuad() = 0;
         virtual void renderUnitCube() = 0;

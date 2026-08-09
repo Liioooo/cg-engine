@@ -6,6 +6,11 @@
 
 namespace CgEngine {
 
+    struct VulkanGPUDynamicVertexBufferState {
+        vk::AccessFlags2 access = {};
+        vk::PipelineStageFlags2 stage = {};
+    };
+
     class VulkanVertexBuffer : public VertexBuffer {
     public:
         explicit VulkanVertexBuffer(size_t size, VertexBufferUsage usage);
@@ -25,9 +30,11 @@ namespace CgEngine {
         void setLayout(std::vector<VertexBufferElement> elements) override;
 
         const VertexBufferLayout& getLayout() const override;
+        VertexBufferUsage getUsage() const override;
 
         const vk::Buffer& getVulkanBufferHandle() const;
         size_t getOffsetForCurrentFrame() const;
+        VulkanGPUDynamicVertexBufferState& getState();
 
         void deferredDestroyCurrentBuffer();
 
@@ -40,6 +47,8 @@ namespace CgEngine {
 
         VertexBufferLayout layout;
         VertexBufferUsage usage;
+
+        VulkanGPUDynamicVertexBufferState state{};
     };
 
 }

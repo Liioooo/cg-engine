@@ -36,7 +36,7 @@ namespace RTR {
             CgEngine::DescriptorSetSpecification descSetSpec{};
             descSetSpec.layout = precomputeTwiddleFactorsAndInputIndicesShader->getDescriptorSetLayout();
             descSetSpec.attachmentImageBindings = {
-                    {0, ~0u, true, CgEngine::ShaderImageAccess::WriteOnly, twiddleFactors},
+                    {0, ~0u, true, CgEngine::ShaderStorageAccess::WriteOnly, twiddleFactors},
             };
             auto* descSet = CgEngine::GraphicsObjectsFactory::createDescriptorSet(descSetSpec);
 
@@ -47,10 +47,10 @@ namespace RTR {
             pcData.size = input->getWidth();
 
             CgEngine::Renderer::bindComputePipeline(precomputeTwiddleFactorsAndInputIndicesShader->getComputePipeline());
+            CgEngine::Renderer::injectBarriersForDescriptorSet(descSet);
             CgEngine::Renderer::bindDescriptorSet(descSet, 0);
             CgEngine::Renderer::setPushConstants(&pcData, sizeof(int));
             CgEngine::Renderer::dispatchCompute(logSize, static_cast<int>(input->getHeight() / 2.0 / 8.0), 1);
-            CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(twiddleFactors);
 
             delete descSet;
         }
@@ -73,9 +73,9 @@ namespace RTR {
             CgEngine::DescriptorSetSpecification fftDescSetSpec{};
             fftDescSetSpec.layout = horizontalStepInverseFftShader->getDescriptorSetLayout();
             fftDescSetSpec.attachmentImageBindings = {
-                    {0, ~0u, true, CgEngine::ShaderImageAccess::ReadOnly, twiddleFactors},
-                    {1, ~0u, true, CgEngine::ShaderImageAccess::ReadWrite, input},
-                    {2, ~0u, true, CgEngine::ShaderImageAccess::ReadWrite, buffer},
+                    {0, ~0u, true, CgEngine::ShaderStorageAccess::ReadOnly, twiddleFactors},
+                    {1, ~0u, true, CgEngine::ShaderStorageAccess::ReadWrite, input},
+                    {2, ~0u, true, CgEngine::ShaderStorageAccess::ReadWrite, buffer},
             };
             auto* fftDescSet = CgEngine::GraphicsObjectsFactory::createDescriptorSet(fftDescSetSpec);
             fftDescriptorSets[input] = std::unique_ptr<CgEngine::DescriptorSet>(fftDescSet);
@@ -93,9 +93,8 @@ namespace RTR {
             pcData.pingPong = pingPong ? 1 : 0;
 
             CgEngine::Renderer::setPushConstants(&pcData, sizeof(PCFft));
+            CgEngine::Renderer::injectBarriersForDescriptorSet(fftDescriptorSets.at(input).get());
             CgEngine::Renderer::dispatchCompute(input->getWidth() / 8, input->getHeight() / 8, 1);
-            CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(input);
-            CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(buffer);
         }
 
         CgEngine::Renderer::bindComputePipeline(verticalStepInverseFftShader->getComputePipeline());
@@ -108,16 +107,15 @@ namespace RTR {
             pcData.pingPong = pingPong ? 1 : 0;
 
             CgEngine::Renderer::setPushConstants(&pcData, sizeof(PCFft));
+            CgEngine::Renderer::injectBarriersForDescriptorSet(fftDescriptorSets.at(input).get());
             CgEngine::Renderer::dispatchCompute(input->getWidth() / 8, input->getHeight() / 8, 1);
-            CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(input);
-            CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(buffer);
         }
 
         if (permuteDescriptorSets.find(input) == permuteDescriptorSets.end()) {
             CgEngine::DescriptorSetSpecification permuteDescSetSpec{};
             permuteDescSetSpec.layout = permuteShader->getDescriptorSetLayout();
             permuteDescSetSpec.attachmentImageBindings = {
-                    {0, ~0u, true, CgEngine::ShaderImageAccess::ReadWrite, input},
+                    {0, ~0u, true, CgEngine::ShaderStorageAccess::ReadWrite, input},
             };
             auto* permuteDescSet = CgEngine::GraphicsObjectsFactory::createDescriptorSet(permuteDescSetSpec);
             permuteDescriptorSets[input] = std::unique_ptr<CgEngine::DescriptorSet>(permuteDescSet);
@@ -125,8 +123,8 @@ namespace RTR {
 
         CgEngine::Renderer::bindComputePipeline(permuteShader->getComputePipeline());
         CgEngine::Renderer::bindDescriptorSet(permuteDescriptorSets.at(input).get(), 0);
+        CgEngine::Renderer::injectBarriersForDescriptorSet(permuteDescriptorSets.at(input).get());
         CgEngine::Renderer::dispatchCompute(input->getWidth() / 8, input->getHeight() / 8, 1);
-        CgEngine::Renderer::memoryBarrierForAttachmentAfterComputeToCompute(input);
     }
 
 }

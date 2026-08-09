@@ -4,6 +4,11 @@
 
 namespace CgEngine {
 
+    enum class OpenGLAttachmentState {
+        None,
+        ComputeImageWrite
+    };
+
     class OpenGLAttachment : public Attachment {
     public:
         OpenGLAttachment() = default;
@@ -30,6 +35,9 @@ namespace CgEngine {
         uint32_t getOpenGLHandle() const;
         uint32_t getOpenGLLayerViewHandle(uint32_t layer) const;
 
+        OpenGLAttachmentState getState() const;
+        void setState(OpenGLAttachmentState newState);
+
     private:
         uint32_t attachmentHandle = ~0;
         DepthStencilAttachmentFormat depthFormat;
@@ -43,5 +51,6 @@ namespace CgEngine {
         std::vector<uint32_t> layerViewHandles;
         uint32_t width = 0;
         uint32_t height = 0;
+        OpenGLAttachmentState state = OpenGLAttachmentState::None;
     };
 }

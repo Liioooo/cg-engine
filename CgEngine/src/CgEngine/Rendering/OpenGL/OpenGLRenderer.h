@@ -39,10 +39,7 @@ namespace CgEngine {
         void setPushConstants(const void* data, size_t size) override;
 
         void injectBarriersForDescriptorSet(const DescriptorSet *descriptorSet) override;
-
-        void transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition) override;
-        void memoryBarrierForVertexBufferAfterCompute(const VertexBuffer* vertexBuffer) override;
-        void memoryBarrierForAttachmentAfterComputeToCompute(Attachment* attachment) override;
+        void memoryBarrierForVertexBufferAfterCompute(VertexBuffer* vertexBuffer) override;
 
         void renderUnitQuad() override;
         void renderUnitCube() override;

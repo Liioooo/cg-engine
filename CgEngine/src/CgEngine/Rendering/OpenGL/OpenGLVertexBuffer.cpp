@@ -75,6 +75,10 @@ namespace CgEngine {
         return layout;
     }
 
+    VertexBufferUsage OpenGLVertexBuffer::getUsage() const {
+        return usage;
+    }
+
     uint32_t OpenGLVertexBuffer::getOpenGLHandle() const {
         CG_ASSERT(vbo != ~0, "OpenGLVertexBuffer has no OpenGL handle")
         return vbo;

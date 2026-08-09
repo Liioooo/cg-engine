@@ -25,7 +25,13 @@ namespace CgEngine {
         for (const auto& binding : spec.uboBindingPoints) {
            out[binding.bindingPoint] = binding.usage;
         }
+        for (const auto& binding : spec.immutableSsboBindingPoints) {
+            out[binding.bindingPoint] = binding.usage;
+        }
         for (const auto& binding : spec.ssboBindingPoints) {
+            out[binding.bindingPoint] = binding.usage;
+        }
+        for (const auto& binding : spec.vertexBufferSsboBindingPoints) {
             out[binding.bindingPoint] = binding.usage;
         }
         for (const auto& binding : spec.texture2DAndAttachmentBindingPoints) {

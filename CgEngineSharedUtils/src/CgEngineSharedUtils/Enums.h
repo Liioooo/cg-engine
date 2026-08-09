@@ -75,7 +75,7 @@ namespace CgEngine {
         Depth32Float, Depth32FloatStencil8, Depth24Stencil8
     };
 
-    enum class ShaderImageAccess {
+    enum class ShaderStorageAccess {
         WriteOnly, ReadOnly, ReadWrite
     };
 
@@ -89,13 +89,6 @@ namespace CgEngine {
 
     enum class IndexBufferDataType {
         UInt8, UInt16, UInt32
-    };
-
-    enum class ShaderStage {
-        Undefined,
-        Fragment,
-        Compute,
-        FragmentAndCompute
     };
 
     enum class DrawMode : uint8_t {

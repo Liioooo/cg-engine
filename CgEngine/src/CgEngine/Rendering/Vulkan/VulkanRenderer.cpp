@@ -571,14 +571,14 @@ namespace CgEngine {
 
             vk::AccessFlags2 access{};
 
-            if (binding.access == ShaderImageAccess::ReadOnly || binding.access == ShaderImageAccess::ReadWrite) {
+            if (binding.access == ShaderStorageAccess::ReadOnly || binding.access == ShaderStorageAccess::ReadWrite) {
                 access |= vk::AccessFlagBits2::eShaderStorageRead;
             }
-            if (binding.access == ShaderImageAccess::WriteOnly || binding.access == ShaderImageAccess::ReadWrite) {
+            if (binding.access == ShaderStorageAccess::WriteOnly || binding.access == ShaderStorageAccess::ReadWrite) {
                 access |= vk::AccessFlagBits2::eShaderStorageWrite;
             }
 
-            VulkanAttachmentState neededState{
+            const VulkanAttachmentState neededState{
                 .imageLayout = vk::ImageLayout::eGeneral,
                 .access = access,
                 .stage = VulkanHelpers::descriptorSetLayoutBindingUsageToVulkanPipelineStageFlags(usage)
@@ -586,18 +586,44 @@ namespace CgEngine {
 
             barrierManager.requestAttachmentState(vkAttachment, neededState, binding.allLayers, binding.layer);
         }
+
+        const auto& vertexBufferSsboBindings = vkDescriptorSet->getVertexBufferSsboBindings();
+
+        for (auto binding : vertexBufferSsboBindings) {
+            if (binding.vertexBuffer->getUsage() != VertexBufferUsage::GPUDynamic) {
+                continue;
+            }
+
+            auto* vkBuffer = static_cast<VulkanVertexBuffer*>(binding.vertexBuffer);
+            DescriptorSetLayoutBindingUsage usage = vkDescriptorSet->getLayout()->getDescriptorSetLayoutBindingUsageForBindingPoint(binding.bindingPoint);
+
+            vk::AccessFlags2 access{};
+
+            if (binding.access == ShaderStorageAccess::ReadOnly || binding.access == ShaderStorageAccess::ReadWrite) {
+                access |= vk::AccessFlagBits2::eShaderStorageRead;
+            }
+            if (binding.access == ShaderStorageAccess::WriteOnly || binding.access == ShaderStorageAccess::ReadWrite) {
+                access |= vk::AccessFlagBits2::eShaderStorageWrite;
+            }
+
+            const VulkanGPUDynamicVertexBufferState neededState{
+                .access = access,
+                .stage = VulkanHelpers::descriptorSetLayoutBindingUsageToVulkanPipelineStageFlags(usage)
+            };
+
+            barrierManager.requestGpuDynamicVertexBufferState(vkBuffer, neededState);
+        }
     }
 
-    void VulkanRenderer::transitionImageLayoutFromComputeToShaderReadOnly(Attachment* attachment, ShaderStage stageUsingAttachmentAfterTransition) {
+    void VulkanRenderer::memoryBarrierForVertexBufferAfterCompute(VertexBuffer* vertexBuffer) {
+        auto* vkBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
 
-    }
+        constexpr VulkanGPUDynamicVertexBufferState neededState{
+            .access = vk::AccessFlagBits2::eVertexAttributeRead,
+            .stage = vk::PipelineStageFlagBits2::eVertexInput
+        };
 
-    void VulkanRenderer::memoryBarrierForVertexBufferAfterCompute(const VertexBuffer* vertexBuffer) {
-
-    }
-
-    void VulkanRenderer::memoryBarrierForAttachmentAfterComputeToCompute(Attachment* attachment) {
-
+        barrierManager.requestGpuDynamicVertexBufferState(vkBuffer, neededState);
     }
 
     void VulkanRenderer::renderUnitQuad() {
