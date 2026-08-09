@@ -74,7 +74,6 @@ namespace CgEngine {
 
         glFrontFace(GL_CCW);
         glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-        glEnable(GL_FRAMEBUFFER_SRGB);
         glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
 
         uint32_t whiteTextureData = 0xffffffff;

@@ -858,43 +858,68 @@ namespace CgEngine {
             }
         }
         {
-            DescriptorSetLayoutSpecification screenDescriptorSetLayoutSpec{};
-            screenDescriptorSetLayoutSpec.uboBindingPoints = {{0, DescriptorSetLayoutBindingUsage::Fragment}};
-            screenDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {
+            RenderPassSpecification finalImageLinearRenderPassSpec{};
+            finalImageLinearRenderPassSpec.clearColorAttachments = false;
+            finalImageLinearRenderPassSpec.clearDepthStencilAttachment = false;
+
+            finalImageLinearRenderPass = GraphicsObjectsFactory::createRenderPass(finalImageLinearRenderPassSpec);
+
+            AttachmentSpecification  finalImageLinearAttachmentSpec{};
+            finalImageLinearAttachmentSpec.width = viewportWidth;
+            finalImageLinearAttachmentSpec.height = viewportHeight;
+            finalImageLinearAttachmentSpec.type = AttachmentType::RGBA8;
+            finalImageLinearAttachmentSpec.usableAsTexture = true;
+            finalImageLinearAttachmentSpec.textureWrap = TextureWrap::Clamp;
+            finalImageLinearAttachmentSpec.mipMapFiltering = MipMapFiltering::Bilinear;
+            finalImageLinearAttachmentSpec.layerCount = 1;
+
+            finalImageLinearAttachment = GraphicsObjectsFactory::createAttachment(finalImageLinearAttachmentSpec);
+
+            FramebufferSpecification finalImageLinearFramebufferSpec{};
+            finalImageLinearFramebufferSpec.width = viewportWidth;
+            finalImageLinearFramebufferSpec.height = viewportHeight;
+            finalImageLinearFramebufferSpec.colorAttachments = {
+                    {finalImageLinearAttachment}
+            };
+
+            finalImageLinearFramebuffer = GraphicsObjectsFactory::createFramebuffer(finalImageLinearFramebufferSpec);
+        }
+        {
+            DescriptorSetLayoutSpecification finalImageCompositeDescriptorSetLayoutSpec{};
+            finalImageCompositeDescriptorSetLayoutSpec.uboBindingPoints = {{0, DescriptorSetLayoutBindingUsage::Fragment}};
+            finalImageCompositeDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {
                 {1, DescriptorSetLayoutBindingUsage::Fragment},
                 {2, DescriptorSetLayoutBindingUsage::Fragment}
             };
-            screenDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(screenDescriptorSetLayoutSpec);
+            finalImageCompositeDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(finalImageCompositeDescriptorSetLayoutSpec);
 
-            GraphicsPipelineSpecification screenPipelineSpec;
-            screenPipelineSpec.engineShaderName = "screen";
-            screenPipelineSpec.depthTest = false;
-            screenPipelineSpec.depthWrite = false;
-            screenPipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
-            screenPipelineSpec.descriptorSetLayouts = {screenDescriptorSetLayout};
+            GraphicsPipelineSpecification finalImageCompositePipelineSpec;
+            finalImageCompositePipelineSpec.engineShaderName = "finalImageComposite";
+            finalImageCompositePipelineSpec.depthTest = false;
+            finalImageCompositePipelineSpec.depthWrite = false;
+            finalImageCompositePipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
+            finalImageCompositePipelineSpec.descriptorSetLayouts = {finalImageCompositeDescriptorSetLayout};
+            finalImageCompositePipelineSpec.colorAttachments = {
+                finalImageLinearAttachment->getType()
+            };
+            finalImageCompositePipelineSpec.hasDepthStencilAttachment = false;
 
-            PipelineAttachmentInfo swapChainAttachmentInfo = Renderer::getSwapChainAttachmentInfo();
+            finalImageCompositePipeline = GraphicsObjectsFactory::createGraphicsPipeline(finalImageCompositePipelineSpec);
 
-            screenPipelineSpec.colorAttachments = swapChainAttachmentInfo.colorAttachments;
-            screenPipelineSpec.hasDepthStencilAttachment = swapChainAttachmentInfo.hasDepthStencilAttachment;
-            screenPipelineSpec.depthAttachmentFormat = swapChainAttachmentInfo.depthAttachmentFormat;
-
-            screenPipeline = GraphicsObjectsFactory::createGraphicsPipeline(screenPipelineSpec);
-
-            DescriptorSetSpecification screenDescriptorSetSpec{};
-            screenDescriptorSetSpec.layout = screenDescriptorSetLayout;
-            screenDescriptorSetSpec.uboBindings = {
+            DescriptorSetSpecification finalImageCompositeDesriptorSetSpec{};
+            finalImageCompositeDesriptorSetSpec.layout = finalImageCompositeDescriptorSetLayout;
+            finalImageCompositeDesriptorSetSpec.uboBindings = {
                 {0, ubCameraData}
             };
-            screenDescriptorSetSpec.attachmentTextureBindings.resize(2);
-            screenDescriptorSetSpec.attachmentTextureBindings[0].attachment = pbrColorAttachment;
-            screenDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 1;
-            screenDescriptorSetSpec.attachmentTextureBindings[0].allLayers = true;
-            screenDescriptorSetSpec.attachmentTextureBindings[1].attachment = bloomAttachments[0];
-            screenDescriptorSetSpec.attachmentTextureBindings[1].bindingPoint = 2;
-            screenDescriptorSetSpec.attachmentTextureBindings[1].allLayers = true;
+            finalImageCompositeDesriptorSetSpec.attachmentTextureBindings.resize(2);
+            finalImageCompositeDesriptorSetSpec.attachmentTextureBindings[0].attachment = pbrColorAttachment;
+            finalImageCompositeDesriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 1;
+            finalImageCompositeDesriptorSetSpec.attachmentTextureBindings[0].allLayers = true;
+            finalImageCompositeDesriptorSetSpec.attachmentTextureBindings[1].attachment = bloomAttachments[0];
+            finalImageCompositeDesriptorSetSpec.attachmentTextureBindings[1].bindingPoint = 2;
+            finalImageCompositeDesriptorSetSpec.attachmentTextureBindings[1].allLayers = true;
 
-            screenDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(screenDescriptorSetSpec);
+            finalImageCompositeDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(finalImageCompositeDesriptorSetSpec);
         }
         {
             auto* uiIndices = new uint32_t[MAX_UI_INDICES];
@@ -1009,12 +1034,10 @@ namespace CgEngine {
             ui2DPipelineSpec.descriptorSetLayouts = {ui2DDescriptorSetLayoutCameraBuffer, uiCanvasSampleDescriptorSetLayout};
             ui2DPipelineSpec.usesPushConstants = true;
             ui2DPipelineSpec.pushConstantsSize = sizeof(glm::mat4);
-
-            PipelineAttachmentInfo swapChainAttachmentInfo = Renderer::getSwapChainAttachmentInfo();
-
-            ui2DPipelineSpec.colorAttachments = swapChainAttachmentInfo.colorAttachments;
-            ui2DPipelineSpec.hasDepthStencilAttachment = swapChainAttachmentInfo.hasDepthStencilAttachment;
-            ui2DPipelineSpec.depthAttachmentFormat = swapChainAttachmentInfo.depthAttachmentFormat;
+            ui2DPipelineSpec.colorAttachments = {
+                finalImageLinearAttachment->getType()
+            };
+            ui2DPipelineSpec.hasDepthStencilAttachment = false;
 
             ui2DPipeline = GraphicsObjectsFactory::createGraphicsPipeline(ui2DPipelineSpec);
 
@@ -1050,6 +1073,36 @@ namespace CgEngine {
             };
 
             skinningDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(skinningDescriptorSetSpec);
+        }
+        {
+            DescriptorSetLayoutSpecification toSrgbDescriptorSetLayoutSpec{};
+            toSrgbDescriptorSetLayoutSpec.texture2DAndAttachmentBindingPoints = {{0, DescriptorSetLayoutBindingUsage::Fragment}};
+
+            toSrgbDescriptorSetLayout = GraphicsObjectsFactory::createDescriptorSetLayout(toSrgbDescriptorSetLayoutSpec);
+
+            DescriptorSetSpecification toSrgbDescriptorSetSpec{};
+            toSrgbDescriptorSetSpec.layout = toSrgbDescriptorSetLayout;
+            toSrgbDescriptorSetSpec.attachmentTextureBindings.resize(1);
+            toSrgbDescriptorSetSpec.attachmentTextureBindings[0].attachment = finalImageLinearAttachment;
+            toSrgbDescriptorSetSpec.attachmentTextureBindings[0].bindingPoint = 0;
+            toSrgbDescriptorSetSpec.attachmentTextureBindings[0].allLayers = true;
+
+            toSrgbDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(toSrgbDescriptorSetSpec);
+
+            GraphicsPipelineSpecification toSrgbPipelineSpec{};
+            toSrgbPipelineSpec.descriptorSetLayouts = {toSrgbDescriptorSetLayout};
+            toSrgbPipelineSpec.engineShaderName = "toSrgb";
+            toSrgbPipelineSpec.depthWrite = false;
+            toSrgbPipelineSpec.depthTest = false;
+            toSrgbPipelineSpec.vertexInputLayout = Renderer::getUnitQuadVertexInputLayout();
+
+            PipelineAttachmentInfo swapChainAttachmentInfo = Renderer::getSwapChainAttachmentInfo();
+
+            toSrgbPipelineSpec.colorAttachments = swapChainAttachmentInfo.colorAttachments;
+            toSrgbPipelineSpec.hasDepthStencilAttachment = swapChainAttachmentInfo.hasDepthStencilAttachment;
+            toSrgbPipelineSpec.depthAttachmentFormat = swapChainAttachmentInfo.depthAttachmentFormat;
+
+            toSrgbPipeline = GraphicsObjectsFactory::createGraphicsPipeline(toSrgbPipelineSpec);
         }
     }
 
@@ -1154,9 +1207,9 @@ namespace CgEngine {
             delete descriptorSet;
         }
 
-        delete screenDescriptorSetLayout;
-        delete screenPipeline;
-        delete screenDescriptorSet;
+        delete finalImageCompositeDescriptorSetLayout;
+        delete finalImageCompositePipeline;
+        delete finalImageCompositeDescriptorSet;
 
         delete uiCirclePipeline;
         delete uiRectPipeline;
@@ -1189,6 +1242,14 @@ namespace CgEngine {
         delete ubDirShadowData;
         delete ubScreenData;
         delete ubHBAOData;
+
+        delete finalImageLinearFramebuffer;
+        delete finalImageLinearRenderPass;
+        delete finalImageLinearAttachment;
+
+        delete toSrgbPipeline;
+        delete toSrgbDescriptorSet;
+        delete toSrgbDescriptorSetLayout;
     }
 
     void SceneRenderer::setActiveScene(Scene* scene) {
@@ -1278,6 +1339,9 @@ namespace CgEngine {
                 item->recreate();
             }
 
+            finalImageLinearAttachment->resize(viewportWidth, viewportHeight);
+            finalImageLinearFramebuffer->recreate(viewportWidth, viewportHeight);
+
             hbaoDeinterleavingDescriptorSet->recreate();
             hbaoComputeDescriptorSet->recreate();
             hbaoReinterleavingDescriptorSet->recreate();
@@ -1285,7 +1349,8 @@ namespace CgEngine {
             hbaoBlurDescriptorSet0->recreate();
             hbaoBlurDescriptorSet1->recreate();
             pbrDescriptorSet->recreate();
-            screenDescriptorSet->recreate();
+            finalImageCompositeDescriptorSet->recreate();
+            toSrgbDescriptorSet->recreate();
 
             uiProjectionMatrix = glm::ortho(0.0f, static_cast<float>(viewportWidth), 0.0f, static_cast<float>(viewportHeight));
         }
@@ -1411,14 +1476,19 @@ namespace CgEngine {
             bloomPass();
         }
 
-        Renderer::injectBarriersForDescriptorSet(screenDescriptorSet);
+        Renderer::injectBarriersForDescriptorSet(finalImageCompositeDescriptorSet);
         for (const auto& command: ui2DDrawCommandQueue) {
             Renderer::injectBarriersForDescriptorSet(command.sampleCanvasDescriptorSet);
         }
 
-        Renderer::beginSwapChainRenderPass();
-        screenPass();
+        Renderer::beginRenderPass(finalImageLinearRenderPass, finalImageLinearFramebuffer);
+        finalImageCompositePass();
         ui2DPass();
+        Renderer::endRenderPass();
+
+        Renderer::injectBarriersForDescriptorSet(toSrgbDescriptorSet);
+        Renderer::beginSwapChainRenderPass();
+        toSrbPass();
         Renderer::endRenderPass();
 
         skinningQueue.clear();
@@ -1989,12 +2059,12 @@ namespace CgEngine {
         }
     }
 
-    void SceneRenderer::screenPass() {
-        CG_GPU_DEBUG_GROUP("ScreenPass")
-        CG_GPU_TIME_FN(&renderingStats.screenTimer)
+    void SceneRenderer::finalImageCompositePass() {
+        CG_GPU_DEBUG_GROUP("FinalImageCompositePass")
+        CG_GPU_TIME_FN(&renderingStats.finalImageCompositeTimer)
 
-        Renderer::bindGraphicsPipeline(screenPipeline);
-        Renderer::bindDescriptorSet(screenDescriptorSet, 0);
+        Renderer::bindGraphicsPipeline(finalImageCompositePipeline);
+        Renderer::bindDescriptorSet(finalImageCompositeDescriptorSet, 0);
         Renderer::renderUnitQuad();
     }
 
@@ -2072,6 +2142,15 @@ namespace CgEngine {
             Renderer::setPushConstants(&command.finalTransform, sizeof(glm::mat4));
             Renderer::renderUnitQuad();
         }
+    }
+
+    void SceneRenderer::toSrbPass() {
+        CG_GPU_DEBUG_GROUP("ToSrgbPass")
+        CG_GPU_TIME_FN(&renderingStats.toSrgbTimer)
+
+        Renderer::bindGraphicsPipeline(toSrgbPipeline);
+        Renderer::bindDescriptorSet(toSrgbDescriptorSet, 0);
+        Renderer::renderUnitQuad();
     }
 
     void SceneRenderer::setupShadowMapData(glm::vec3 dirLightDirection, const glm::mat4& cameraViewProjection, const Camera& camera) {

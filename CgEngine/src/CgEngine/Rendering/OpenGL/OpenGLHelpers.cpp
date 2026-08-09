@@ -187,6 +187,7 @@ namespace CgEngine {
         int attachmentTypeToOpenGLInternalFormat(AttachmentType type) {
             switch (type) {
                 case AttachmentType::RGBA8:
+                case AttachmentType::BGRA8:
                     return GL_RGBA8;
                 case AttachmentType::RGBA8_SRGB:
                 case AttachmentType::BGRA8_SRGB:

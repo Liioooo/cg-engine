@@ -98,6 +98,8 @@ namespace CgEngine {
                     return vk::Format::eR8G8B8A8Unorm;
                 case AttachmentType::RGBA8_SRGB:
                     return vk::Format::eR8G8B8A8Srgb;
+                case AttachmentType::BGRA8:
+                    return vk::Format::eB8G8R8A8Unorm;
                 case AttachmentType::BGRA8_SRGB:
                     return vk::Format::eB8G8R8A8Srgb;
                 case AttachmentType::RGBA16F:
@@ -124,6 +126,8 @@ namespace CgEngine {
                     return AttachmentType::RGBA8;
                 case vk::Format::eR8G8B8A8Srgb:
                     return AttachmentType::RGBA8_SRGB;
+                case vk::Format::eB8G8R8A8Unorm:
+                    return AttachmentType::BGRA8;
                 case vk::Format::eB8G8R8A8Srgb:
                     return AttachmentType::BGRA8_SRGB;
                 case vk::Format::eR16G16B16A16Sfloat:

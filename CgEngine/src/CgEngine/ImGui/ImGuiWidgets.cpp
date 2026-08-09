@@ -27,9 +27,10 @@ namespace CgEngine::ImGuiWidgets {
         ImGui::Text("Custom Shader: %.6fms", renderingStats.customShaderTimer);
         ImGui::Text("Skybox: %.6fms", renderingStats.skyboxTimer);
         ImGui::Text("Bloom: %.6fms", renderingStats.bloomTimer);
-        ImGui::Text("Screen: %.6fms", renderingStats.screenTimer);
         ImGui::Text("UI Canvas: %.6fms", renderingStats.uiCanvasTimer);
         ImGui::Text("UI 2D: %.6fms", renderingStats.ui2DTimer);
+        ImGui::Text("FinalImageComposite: %.6fms", renderingStats.finalImageCompositeTimer);
+        ImGui::Text("ToSrgb: %.6fms", renderingStats.toSrgbTimer);
     }
 
     void copyCurrentConfig(const std::string& compName, const std::function<void(std::unordered_map<std::string, std::string>&)>& getConfigMap) {

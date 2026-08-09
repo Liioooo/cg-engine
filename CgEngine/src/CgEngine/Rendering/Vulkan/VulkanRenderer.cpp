@@ -1136,7 +1136,7 @@ namespace CgEngine {
 
     vk::SurfaceFormatKHR VulkanRenderer::chooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats) {
         for (const auto& availableFormat : availableFormats) {
-            if ((availableFormat.format == vk::Format::eB8G8R8A8Srgb || availableFormat.format == vk::Format::eR8G8B8A8Srgb) && availableFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
+            if ((availableFormat.format == vk::Format::eB8G8R8A8Unorm || availableFormat.format == vk::Format::eR8G8B8A8Unorm) && availableFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
                 return availableFormat;
             }
         }
@@ -1329,7 +1329,7 @@ namespace CgEngine {
             ImGuiIO& io = ImGui::GetIO(); (void)io;
             io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
             io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-            io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+            //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
             glm::vec2 contentScale = window.getContentScale();
 

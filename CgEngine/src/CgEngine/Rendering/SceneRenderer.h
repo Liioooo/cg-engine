@@ -31,9 +31,10 @@ namespace CgEngine {
         float customShaderTimer = 0.0f;
         float skyboxTimer = 0.0f;
         float bloomTimer = 0.0f;
-        float screenTimer = 0.0f;
+        float finalImageCompositeTimer = 0.0f;
         float uiCanvasTimer = 0.0f;
         float ui2DTimer = 0.0f;
+        float toSrgbTimer = 0.0f;
     };
 
     class SceneRenderer {
@@ -196,9 +197,9 @@ namespace CgEngine {
         std::array<Framebuffer*, 6> bloomUpsampleFramebuffers;
         std::array<DescriptorSet*, 8> bloomDescriptorSets;
 
-        DescriptorSetLayout* screenDescriptorSetLayout;
-        GraphicsPipeline* screenPipeline;
-        DescriptorSet* screenDescriptorSet;
+        DescriptorSetLayout* finalImageCompositeDescriptorSetLayout;
+        GraphicsPipeline* finalImageCompositePipeline;
+        DescriptorSet* finalImageCompositeDescriptorSet;
 
         struct UiPushConstants {
             glm::mat4 projection;
@@ -220,6 +221,14 @@ namespace CgEngine {
 
         DescriptorSetLayout* customPipelineDescriptorSetLayout;
         DescriptorSet* customPipelineDescriptorSet;
+
+        Attachment* finalImageLinearAttachment;
+        RenderPass* finalImageLinearRenderPass;
+        Framebuffer* finalImageLinearFramebuffer;
+
+        DescriptorSetLayout* toSrgbDescriptorSetLayout;
+        DescriptorSet* toSrgbDescriptorSet;
+        GraphicsPipeline* toSrgbPipeline;
 
         struct SkinningPushConstants {
             int componentIndex;
@@ -247,9 +256,10 @@ namespace CgEngine {
         void normalsDebugPass();
         void debugLinesPass();
         void bloomPass();
-        void screenPass();
+        void finalImageCompositePass();
         void uiCanvasPass();
         void ui2DPass();
+        void toSrbPass();
 
         void setupShadowMapData(glm::vec3 dirLightDirection, const glm::mat4& cameraViewProjection, const Camera& camera);
         void setupHBAOData(const glm::mat4& cameraProjection, const Camera& camera);
