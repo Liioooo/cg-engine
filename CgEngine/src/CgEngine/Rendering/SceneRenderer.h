@@ -221,6 +221,7 @@ namespace CgEngine {
 
         DescriptorSetLayout* customPipelineDescriptorSetLayout;
         DescriptorSet* customPipelineDescriptorSet;
+        RenderPass* customPipelineRenderPass;
 
         Attachment* finalImageLinearAttachment;
         RenderPass* finalImageLinearRenderPass;

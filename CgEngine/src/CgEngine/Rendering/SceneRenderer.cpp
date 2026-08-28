@@ -205,6 +205,12 @@ namespace CgEngine {
             };
 
             customPipelineDescriptorSet = GraphicsObjectsFactory::createDescriptorSet(customPipelineDescriptorSetSpec);
+
+            RenderPassSpecification customPipelineRenderPassSpec{};
+            customPipelineRenderPassSpec.clearColorAttachments = false;
+            customPipelineRenderPassSpec.clearDepthStencilAttachment = false;
+
+            customPipelineRenderPass = GraphicsObjectsFactory::createRenderPass(customPipelineRenderPassSpec);
         }
         {
             glm::uvec2 quarterSize = (glm::uvec2(viewportWidth, viewportHeight) + 3u) / 4u;
@@ -1230,6 +1236,7 @@ namespace CgEngine {
 
         delete customPipelineDescriptorSetLayout;
         delete customPipelineDescriptorSet;
+        delete customPipelineRenderPass;
 
         delete animatedMeshDescriptorSetLayout;
         delete skinningDescriptorSetLayout;
@@ -1826,6 +1833,7 @@ namespace CgEngine {
         CG_GPU_DEBUG_GROUP("GBufferPass")
         CG_GPU_TIME_FN(&renderingStats.gBufferTimer)
 
+        Renderer::injectBarriersForDescriptorSet(gBufferDescriptorSet);
         Renderer::beginRenderPass(gBufferRenderPass, gBufferFramebuffer);
         Renderer::bindGraphicsPipeline(gBufferPipeline);
         Renderer::bindDescriptorSet(gBufferDescriptorSet, 0);
@@ -1931,14 +1939,14 @@ namespace CgEngine {
         CG_GPU_DEBUG_GROUP("CustomShaderPass")
         CG_GPU_TIME_FN(&renderingStats.customShaderTimer)
 
-        // TODO fix, barriers and clearing
-
         CustomPipelineData customPipelineData{};
+
+        Renderer::injectBarriersForDescriptorSet(customPipelineDescriptorSet);
 
         for (const auto& [pipeline, commands]: customShaderDrawCommandQueue) {
             for (const auto& command: commands) {
                 Renderer::injectBarriersForDescriptorSet(command.descriptorSet);
-                Renderer::beginRenderPass(gBufferRenderPass, gBufferFramebuffer);
+                Renderer::beginRenderPass(customPipelineRenderPass, gBufferFramebuffer);
 
                 Renderer::bindGraphicsPipeline(pipeline->getGraphicsPipeline());
                 Renderer::bindDescriptorSet(customPipelineDescriptorSet, 0);

@@ -9,7 +9,7 @@
 #include "Macros.glsl"
 #include "CustomPipelineDataPC.glsl"
 
-UNIFORM_LAYOUT_STD430(6, 1) buffer Positions {
+UNIFORM_LAYOUT_STD430(6, 1) readonly buffer Positions {
     vec2 positions[];
 } b_Positions;
 
