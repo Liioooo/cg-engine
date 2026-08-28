@@ -34,6 +34,7 @@
                 <Binding bindingPoint="5" usage="Compute"/>
             </ImageBindingPoints>
         </DescriptorSetLayout>
+        <PushConstants size="4" />
     </ComputePipeline>
     <ComputePipeline name="ocean/fft/precomputeTwiddleFactorsAndInputIndices">
         <Shader>ocean/fft/precomputeTwiddleFactorsAndInputIndices_comp</Shader>
@@ -42,6 +43,7 @@
                 <Binding bindingPoint="0" usage="Compute"/>
             </ImageBindingPoints>
         </DescriptorSetLayout>
+        <PushConstants size="4" />
     </ComputePipeline>
     <ComputePipeline name="ocean/fft/horizontalStepInverseFft">
         <Shader>ocean/fft/horizontalStepInverseFft_comp</Shader>
@@ -52,6 +54,7 @@
                 <Binding bindingPoint="2" usage="Compute"/>
             </ImageBindingPoints>
         </DescriptorSetLayout>
+        <PushConstants size="8" />
     </ComputePipeline>
     <ComputePipeline name="ocean/fft/verticalStepInverseFft">
         <Shader>ocean/fft/verticalStepInverseFft_comp</Shader>
@@ -62,6 +65,7 @@
                 <Binding bindingPoint="2" usage="Compute"/>
             </ImageBindingPoints>
         </DescriptorSetLayout>
+        <PushConstants size="8" />
     </ComputePipeline>
     <ComputePipeline name="ocean/fft/permute">
         <Shader>ocean/fft/permute_comp</Shader>
@@ -84,6 +88,7 @@
                 <Binding bindingPoint="6" usage="Compute"/>
             </ImageBindingPoints>
         </DescriptorSetLayout>
+        <PushConstants size="8" />
     </ComputePipeline>
     <GraphicsPipeline name="ocean/render">
         <Shader>

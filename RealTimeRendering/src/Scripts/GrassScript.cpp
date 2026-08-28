@@ -108,9 +108,13 @@ namespace RTR {
     }
 
     void GrassScript::onDetach() {
+        delete grassMatHigh;
+        delete grassMatLow;
         delete offsetsBuffer;
         delete geometryLow;
         delete geometryHigh;
+        delete grassDescriptorSetHigh;
+        delete grassDescriptorSetLow;
     }
 
     void GrassScript::update(CgEngine::TimeStep ts) {

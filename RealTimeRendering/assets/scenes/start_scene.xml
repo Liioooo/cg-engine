@@ -24,12 +24,12 @@
             <DirectionalLightComponent color="#fff4d6" cast-shadows="true" intensity="0.6" />
         </Components>
     </Entity>
-<!--    <Entity id="ocean">-->
-<!--        <Components>-->
-<!--            <TransformComponent position="0 2 0" rotation="0 0 0" scale="1 1 1" />-->
-<!--            <ScriptComponent script-name="ocean" />-->
-<!--        </Components>-->
-<!--    </Entity>-->
+    <Entity id="ocean">
+        <Components>
+            <TransformComponent position="0 2 0" rotation="0 0 0" scale="1 1 1" />
+            <ScriptComponent script-name="ocean" />
+        </Components>
+    </Entity>
     <Entity id="island">
         <Components>
             <TransformComponent position="0 0 0" rotation="0 0 0" scale="1 1 1" />

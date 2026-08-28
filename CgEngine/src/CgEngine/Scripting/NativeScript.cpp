@@ -60,6 +60,10 @@ namespace CgEngine {
         });
     }
 
+    void NativeScript::executeOnRender(const std::function<void(SceneRenderer &)> &function) {
+        owningScene->executeOnRender(function);
+    }
+
     const ScriptParameterMap& NativeScript::getParameterMap() {
         return owningScene->getComponent<ScriptComponent>(owningEntity)->getParameterMap();
     }

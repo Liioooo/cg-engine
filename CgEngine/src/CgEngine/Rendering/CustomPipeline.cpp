@@ -4,6 +4,7 @@
 #include <Application.h>
 #include "CustomPipeline.h"
 #include "GraphicsObjectsFactory.h"
+#include "CgEngineSharedUtils/LoaderUtils.h"
 #include "CgEngineSharedUtils/StringUtils.h"
 
 namespace CgEngine {
@@ -335,8 +336,16 @@ namespace CgEngine {
         const auto& descriptorSetLayoutNode = pipelineNode.child("DescriptorSetLayout");
         spec.descriptorSetLayoutSpecification.uboBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("UboBindingPoints"));
         spec.descriptorSetLayoutSpecification.ssboBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("SsboBindingPoints"));
+        spec.descriptorSetLayoutSpecification.vertexBufferSsboBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("VertexBufferSsboBindingPoints"));
+        spec.descriptorSetLayoutSpecification.immutableSsboBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("ImmutableSsboBindingPoints"));
         spec.descriptorSetLayoutSpecification.texture2DAndAttachmentBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("Texture2DAndAttachmentBindingPoints"));
         spec.descriptorSetLayoutSpecification.imageBindingPoints = CustomPipelinesLoaderUtils::descriptorSetLayoutBindingsFromNode(descriptorSetLayoutNode.child("ImageBindingPoints"));
+
+        const auto& pushConstantsNode = pipelineNode.child("PushConstants");
+        if (!pushConstantsNode.empty()) {
+            spec.usesPushConstants = true;
+            spec.pushConstantsSize = pushConstantsNode.attribute("size").as_uint();
+        }
 
         return new CustomComputePipeline(spec);
     }
@@ -347,6 +356,8 @@ namespace CgEngine {
         ComputePipelineSpecification pipelineSpec{};
         pipelineSpec.descriptorSetLayouts = {descriptorSetLayout};
         pipelineSpec.customShader = spec.shader;
+        pipelineSpec.usesPushConstants = spec.usesPushConstants;
+        pipelineSpec.pushConstantsSize = spec.pushConstantsSize;
 
         computePipeline = GraphicsObjectsFactory::createComputePipeline(pipelineSpec);
     }

@@ -162,11 +162,16 @@ namespace RTR {
     }
 
     void Ocean::update(CgEngine::TimeStep ts) {
+
+        const auto tsSeconds = ts.getSeconds();
+
         currentTime = currentTime + ts.getSeconds();
-        CG_GPU_DEBUG_GROUP("Ocean::update")
-        oceanCascade0->calculateStateAtTime(currentTime, ts.getSeconds());
-        oceanCascade1->calculateStateAtTime(currentTime, ts.getSeconds());
-        oceanCascade2->calculateStateAtTime(currentTime, ts.getSeconds());
+        executeOnRender([this, tsSeconds](CgEngine::SceneRenderer&) {
+            CG_GPU_DEBUG_GROUP("Ocean::update")
+            oceanCascade0->calculateStateAtTime(currentTime, tsSeconds);
+            oceanCascade1->calculateStateAtTime(currentTime, tsSeconds);
+            oceanCascade2->calculateStateAtTime(currentTime, tsSeconds);
+        });
     }
 
     void Ocean::onRenderImGui() {

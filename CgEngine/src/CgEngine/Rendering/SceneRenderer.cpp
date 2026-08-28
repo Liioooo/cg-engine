@@ -192,6 +192,7 @@ namespace CgEngine {
             DescriptorSetLayoutSpecification customPipelineDescriptorSetLayoutSpec{};
             customPipelineDescriptorSetLayoutSpec.uboBindingPoints = {
                 {0, DescriptorSetLayoutBindingUsage::AllGraphics},
+                {1, DescriptorSetLayoutBindingUsage::AllGraphics},
                 {3, DescriptorSetLayoutBindingUsage::AllGraphics}
             };
 
@@ -201,6 +202,7 @@ namespace CgEngine {
             customPipelineDescriptorSetSpec.layout = customPipelineDescriptorSetLayout;
             customPipelineDescriptorSetSpec.uboBindings = {
                 {0, ubCameraData},
+                {1, ubLightData},
                 {3, ubScreenData}
             };
 

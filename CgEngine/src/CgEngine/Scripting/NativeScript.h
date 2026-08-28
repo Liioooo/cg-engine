@@ -59,6 +59,7 @@ namespace CgEngine {
         PhysicsRaycastHit physicsRaycast(const glm::vec3& origin, const glm::vec3& direction, float maxDistance, const std::unordered_set<Entity>& excludeEntities);
 
         void drawDebugLine(const glm::vec3& from, const glm::vec3& to, const glm::vec3& color);
+        void executeOnRender(const std::function<void(SceneRenderer&)>& function);
 
         const ScriptParameterMap& getParameterMap();
 

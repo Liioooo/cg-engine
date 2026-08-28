@@ -63,6 +63,8 @@ namespace CgEngine {
     struct CustomComputePipelineSpecification {
         std::string shader;
         DescriptorSetLayoutSpecification descriptorSetLayoutSpecification = {};
+        bool usesPushConstants = false;
+        uint32_t pushConstantsSize = 0;
     };
 
     class CustomComputePipeline {
